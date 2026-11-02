@@ -504,9 +504,16 @@
         transition: opacity 0.3s;
     }
 
-    .vignette-low-hp-active {
+        .vignette-low-hp-active {
         opacity: 1 !important;
         animation: pulse-blood-opacity 0.8s infinite ease-in-out;
+        /* Desaturazione e contrasto localizzati tramite backdrop-filter */
+        backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
+        -webkit-backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
+        /* Distorsione: pattern scanline CRT + gradiente sangue concentrato ai bordi */
+        background: 
+            repeating-linear-gradient(rgba(18, 16, 16, 0) 0px, rgba(18, 16, 16, 0) 2px, rgba(0, 0, 0, 0.35) 3px, rgba(0, 0, 0, 0.35) 4px),
+            radial-gradient(circle at center, transparent 20%, rgba(220, 0, 0, 0.35) 70%, rgba(255, 0, 0, 0.75) 100%) !important;
     }
         
     .death-fade-active {
@@ -6204,23 +6211,36 @@ const UI = {
             this.cache.flashActive = false;
         }
         
-   let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
+       let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
 
-     // ATTIVAZIONE SCHERMO CRT & VIGNETTA SANGUE (Sotto il 30% HP)
-        // FIX: Includiamo lo stato WARP direttamente nella variabile per invalidare la cache
+     // ATTIVAZIONE SCHERMO LOW HP DINAMICO CON MASCHERA CONCENTRICA (Sotto il 30% HP)
         let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state !== 'WARPING_OUT' && Game.state !== 'WARPING_IN';
         
         if (this.cache.isLowHp !== isLowHp) {
             if (isLowHp) {
                 this.els.bloodVignette.classList.add('vignette-low-hp-active');
-                document.body.classList.add('crt-active');
             } else {
                 this.els.bloodVignette.classList.remove('vignette-low-hp-active');
-                if (!Game.player.dead || Game.state === 'DEAD') {
-                    document.body.classList.remove('crt-active');
-                }
+                this.els.bloodVignette.style.webkitMaskImage = '';
+                this.els.bloodVignette.style.maskImage = '';
+                this.cache.lowHpMask = null;
+                document.body.classList.remove('crt-active');
             }
             this.cache.isLowHp = isLowHp;
+        }
+
+        // Maschera radiale dinamica: si stringe al calare della vita ma protegge sempre il centro
+        if (isLowHp) {
+            let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30)); // 0.0 al 30% HP -> 1.0 all'1% HP
+            let inner = Math.round(55 - t * 33); // Da 55% a 22% (Safe-zone garantita per non coprire mai il personaggio)
+            let outer = Math.round(85 - t * 37); // Da 85% a 48% (Bordo sfumato verso l'esterno)
+            let maskStr = `radial-gradient(circle at center, transparent ${inner}%, black ${outer}%)`;
+            
+            if (this.cache.lowHpMask !== maskStr) {
+                this.els.bloodVignette.style.webkitMaskImage = maskStr;
+                this.els.bloodVignette.style.maskImage = maskStr;
+                this.cache.lowHpMask = maskStr;
+            }
         }
 
         // Lo stato dell'audio si aggiorna solo se ci sono cambiamenti
@@ -6228,18 +6248,9 @@ const UI = {
             AudioEngine.setLowHpState(isLowHp);
         }
         
-     // DESATURAZIONE DINAMICA E DISSOLVENZA ALLA MORTE
-        // Su smartphone evitiamo filter: grayscale() dinamico in combattimento sul canvas WebGL (evita readback/compositing pesante)
+     // DISSOLVENZA ALLA MORTE (Il canvas di gioco non viene più desaturato globalmente durante il combattimento)
         let container = this.els.gameContainer;
-        if (!isTouchDevice && hpRatio <= 0.30 && hpRatio > 0 && !Game.player.dead) {
-            let grayVal = 1.0 - (hpRatio / 0.30);
-            let roundedGray = Math.round(grayVal * 10) / 10; // Arrotondamento per limitare le chiamate CSS
-            if (this.cache.grayVal !== roundedGray) {
-                container.style.transition = 'none'; 
-                container.style.filter = `grayscale(${roundedGray})`;
-                this.cache.grayVal = roundedGray;
-            }
-        } else if (Game.player.dead) {
+        if (Game.player.dead) {
             if (this.cache.grayVal !== 'dead') {
                 container.style.transition = 'filter 2.5s ease-out';
                 container.style.filter = `grayscale(1)`; 
@@ -12747,13 +12758,8 @@ class Player extends Entity {
         shieldCore.scale.setScalar(0.92);
         this.shieldMesh.add(shieldCore);
 
-        this.shieldGyroMat = new THREE.MeshBasicMaterial({
-            color: 0xffffff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false
-        });
-        this.shieldGyroRing = new THREE.Mesh(SharedGeo.torus, this.shieldGyroMat);
-        this.shieldGyroRing.scale.set(1.12, 1.12, 0.35);
-        this.shieldGyroRing.rotation.x = Math.PI / 2;
-        this.shieldMesh.add(this.shieldGyroRing);
+         // Disco bianco roteante rimosso
+        this.shieldGyroRing = null;
 
         this.shieldHaloMat = new THREE.SpriteMaterial({
             map: GLOW_TEX, color: 0x00DDFF, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false
@@ -13712,10 +13718,9 @@ class Player extends Entity {
             else if (this.essence === 'blue') baseColor = ESSENCE_COLORS.blue;
             else if (this.essence === 'green') baseColor = ESSENCE_COLORS.green;
 
-            let rotBoost = this.activeShieldTimer < 1.0 ? 2.2 : 1.0;
+                        let rotBoost = this.activeShieldTimer < 1.0 ? 2.2 : 1.0;
             this.shieldMesh.rotation.y += dt * 4.5 * rotBoost;
             this.shieldMesh.rotation.z += dt * 2.8 * rotBoost;
-            if (this.shieldGyroRing) this.shieldGyroRing.rotation.y -= dt * 7.0 * rotBoost;
 
             if (this.shieldFlashTimer > 0) {
                 this.shieldFlashTimer -= dt;
