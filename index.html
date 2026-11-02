@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -2162,25 +2162,25 @@ const MathUtils = {
 const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; const MAX_TIME_STEP = 0.1;
  
   const MAP_THEMES = [
-    // TEMA 1: FORESTA INCANTATA (Verde foglia naturale bilanciato, muschio dorato e luce fatata)
+    // TEMA 1: FORESTA INCANTATA (TonalitÃ  prato viva e ciuffi perfettamente fusi senza fluorescenze)
     { 
-        dirt: 0x383322, grass: 0x3a8226, rock: 0x3d4a35, wall: 0x283322, 
-        grassShader: 0x2e6e22, grassEmissive: 0x061404,
-        canopyShader: 0x28601c, canopyEmissive: 0x061404, tree: 0x1a1812,
+        dirt: 0x383322, grass: 0x3e862e, rock: 0x3d4a35, wall: 0x283322, 
+        grassShader: 0x0d360a, grassEmissive: 0x000000,
+        canopyShader: 0x0e380b, canopyEmissive: 0x000000, tree: 0x1a1812,
         ambient: 0x2d3b22, dirLight: 0xe8ffbb, fog: 0x0b1409
     },
     // TEMA 2: FUCINA INFERNALE (Bilanciato: ossidiana calda, brace ambrata e luce vulcanica morbida)
     { 
         dirt: 0x54201c, grass: 0xb52b20, rock: 0x50211e, wall: 0x361210, 
-        grassShader: 0x541b14, grassEmissive: 0x140503,
-        canopyShader: 0x48150f, canopyEmissive: 0x140503, tree: 0x240908,
+        grassShader: 0x240b08, grassEmissive: 0x060201,
+        canopyShader: 0x200907, canopyEmissive: 0x060201, tree: 0x240908,
         ambient: 0x381614, dirLight: 0xff8547, fog: 0x120506
     },
     // TEMA 3: CAVERNA CRISTALLINA (Azzurro fiabesco limpido e luce d'aurora)
     { 
         dirt: 0x18304d, grass: 0x287ec4, rock: 0x204970, wall: 0x112640, 
-        grassShader: 0x225d88, grassEmissive: 0x061626,
-        canopyShader: 0x1e5075, canopyEmissive: 0x061626, tree: 0x081930,
+        grassShader: 0x0e2840, grassEmissive: 0x000000,
+        canopyShader: 0x0c2236, canopyEmissive: 0x000000, tree: 0x081930,
         ambient: 0x241945, dirLight: 0x88f0ff, fog: 0x060b18
     }
 ];
@@ -9137,8 +9137,8 @@ const InteractiveGrassSystem = {
 
        // Colore base muschio scuro. Nessuna emissione, deve reagire solo alla luce della lanterna!
         this.mat = new THREE.MeshLambertMaterial({
-            color: 0x2e6e22,      
-            emissive: 0x061404    // Usa la normale morbida (0,1,0) evitando sfaccettature nere e calcoli dFdx/dFdy nel Fragment Shader
+            color: 0x0d360a,      
+            emissive: 0x000000    // Usa la normale morbida (0,1,0) evitando sfaccettature nere e calcoli dFdx/dFdy nel Fragment Shader
         });
 
         this.mat.onBeforeCompile = (shader) => {
@@ -9267,16 +9267,16 @@ const InteractiveGrassSystem = {
                 vec3 baseAlbedo = diffuseColor.rgb;
                 
                 // Radici morbide calibrate per fondersi con la texture dell'erba sottostante
-                vec3 rootColor = baseAlbedo * 0.65;
+                vec3 rootColor = baseAlbedo * 0.75;
                 
                 // Punte naturali dello stesso tono della texture sottostante (zero effetto neon/fluorescente)
-                vec3 tipColor = baseAlbedo * 1.10; 
+                vec3 tipColor = baseAlbedo * 1.02; 
                 
                 // Leggera variazione organica proporzionale al colore base (senza offset luminosi additivi)
-                vec3 dryTipColor = baseAlbedo * vec3(1.03, 0.98, 0.88);
+                vec3 dryTipColor = baseAlbedo * vec3(0.98, 0.95, 0.88);
                 
                 // Mischiamo la punta principale con la sfumatura naturale
-                vec3 finalTipColor = mix(tipColor, dryTipColor, vColorRandom * 0.40);
+                vec3 finalTipColor = mix(tipColor, dryTipColor, vColorRandom * 0.30);
                 
                 // Gradiente finale dalla radice alla punta
                 // Gradiente morbido radice-punta con ambient occlusion alla base per dare volume 3D alle chiazze
@@ -18863,12 +18863,12 @@ const Preloader = {
         const ctx = canvas.getContext('2d');
         let baseColor, darkColor, lightColor;
         if (type === '_lava') {
-            baseColor = '#7a1f18'; darkColor = 'rgba(40,10,8,0.55)'; lightColor = 'rgba(200,60,30,0.35)';
+            baseColor = '#6b1812'; darkColor = 'rgba(35,8,6,0.6)'; lightColor = 'rgba(180,50,25,0.3)';
         } else if (type === '_ice') {
-            baseColor = '#1d547a'; darkColor = 'rgba(10,25,45,0.55)'; lightColor = 'rgba(75,160,220,0.35)';
+            baseColor = '#1c557d'; darkColor = 'rgba(12,30,50,0.55)'; lightColor = 'rgba(70,155,215,0.30)';
         } else {
-            // Foresta: tonalitÃ  foglia naturale ricca ed equilibrata, nÃ© fluorescente nÃ© troppo scura
-            baseColor = '#32752a'; darkColor = 'rgba(18,48,14,0.52)'; lightColor = 'rgba(85,165,58,0.36)';
+            // Foresta: tonalitÃ  prato/muschio calda e viva per matchare perfettamente i ciuffi
+            baseColor = '#3a7d2c'; darkColor = 'rgba(22,55,16,0.42)'; lightColor = 'rgba(78,158,54,0.30)';
         }
         ctx.fillStyle = baseColor;
         ctx.fillRect(0, 0, size, size);
