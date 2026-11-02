@@ -136,114 +136,235 @@
         .shop-btn.atk:hover { border-color: #f59e0b; }
         .shop-btn.crit:hover { border-color: #a855f7; }
 
-       /* --- SHOP PILASTRI ENERGETICI VERTICALI --- */
+       /* --- SHOP AD ALTA ADRENALINA: REATTORI AL PLASMA --- */
+        @keyframes plasma-flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 0% 200%; }
+        }
+        @keyframes bubble-rise {
+            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+            20% { opacity: 0.95; }
+            80% { opacity: 0.85; }
+            100% { transform: translateY(-140px) scale(1.25); opacity: 0; }
+        }
+        @keyframes orb-rune-spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.08); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        @keyframes orb-ready-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.6), inset 0 0 8px rgba(251, 191, 36, 0.4) !important; transform: scale(1); }
+            50% { box-shadow: 0 0 24px rgba(251, 191, 36, 1), 0 0 40px var(--c-main), inset 0 0 14px #ffffff !important; transform: scale(1.14); }
+        }
+        @keyframes pillar-surge-up {
+            0% { transform: translateY(100%) scaleY(0.4); opacity: 1; }
+            100% { transform: translateY(-120%) scaleY(1.6); opacity: 0; }
+        }
+        @keyframes mastery-beam-flash {
+            0% { opacity: 1; transform: scaleX(1.2); filter: brightness(2); }
+            100% { opacity: 0; transform: scaleX(0.1); filter: brightness(1); }
+        }
+        @keyframes shockwave-expand {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; border-width: 6px; }
+            100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0; border-width: 1px; }
+        }
+        @keyframes shop-screen-jolt {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-4px, 3px); }
+            40% { transform: translate(4px, -3px); }
+            60% { transform: translate(-3px, -2px); }
+            80% { transform: translate(3px, 2px); }
+        }
+        .anim-shop-jolt { animation: shop-screen-jolt 0.32s ease-out; }
+
+        /* Struttura luminosa di ogni colonna */
         #floorScreen .totem-pillar {
-            background: linear-gradient(180deg, rgba(14, 17, 30, 0.92) 0%, rgba(8, 10, 18, 0.98) 100%);
-            border: 1.5px solid rgba(255, 255, 255, 0.14);
+            background: linear-gradient(180deg, var(--c-bg-top) 0%, rgba(15, 20, 36, 0.88) 55%, var(--c-bg-bot) 100%) !important;
+            border: 1.5px solid var(--c-border) !important;
             border-radius: 14px !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.6) !important;
-            transition: transform 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            box-shadow: 0 0 18px var(--c-glow), inset 0 0 14px var(--c-glow) !important;
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, box-shadow 0.25s ease;
         }
         #floorScreen .totem-pillar.almost-mastery {
-            border-color: #fbbf24 !important;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.35), inset 0 0 15px rgba(251, 191, 36, 0.15) !important;
+            border-color: #fde047 !important;
+            box-shadow: 0 0 26px rgba(251, 191, 36, 0.55), inset 0 0 18px rgba(251, 191, 36, 0.28) !important;
+        }
+        #floorScreen .totem-pillar.mastery-maxed {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 28px var(--c-main), inset 0 0 20px var(--c-glow) !important;
         }
 
-        /* Camera energetica larga interna al pilastro */
+        /* Condotto centrale traslucido */
         #floorScreen .pillar-chamber {
-            background: rgba(4, 5, 10, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: linear-gradient(90deg, rgba(6, 9, 18, 0.85) 0%, rgba(16, 24, 42, 0.72) 50%, rgba(6, 9, 18, 0.85) 100%) !important;
+            border: 1.5px solid var(--c-border) !important;
             border-radius: 10px !important;
-            box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95) !important;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9), 0 0 10px var(--c-glow) !important;
         }
 
-        /* Singola cella d'energia (10 tacche larghe per colonna) */
-        #floorScreen .energy-cell {
+        /* Liquido al plasma continuo che sale dal basso */
+        #floorScreen .plasma-fill {
+            background: linear-gradient(180deg, #ffffff 0%, var(--c-main) 14%, var(--c-dark) 55%, var(--c-main) 100%) !important;
+            background-size: 100% 200% !important;
+            animation: plasma-flow 2.2s linear infinite !important;
+            box-shadow: 0 0 20px var(--c-main), inset 0 0 10px #ffffff !important;
+            transition: height 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+            border-radius: 6px !important;
+        }
+        /* Cresta incandescente in cima al liquido */
+        #floorScreen .plasma-fill::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: #ffffff;
+            border-radius: 999px;
+            box-shadow: 0 0 14px #ffffff, 0 0 24px var(--c-main);
+        }
+
+        /* Bolle di energia che salgono continuamente nel liquido */
+        #floorScreen .plasma-bubble {
+            position: absolute;
+            bottom: 2px;
+            border-radius: 9999px !important;
+            background: #ffffff;
+            box-shadow: 0 0 6px #ffffff, 0 0 10px var(--c-main) !important;
+            pointer-events: none;
+            animation: bubble-rise var(--dur, 1.8s) ease-in infinite;
+            animation-delay: var(--dly, 0s);
+        }
+
+        /* Tacche luminose dei 10 livelli sopra il tubo */
+        #floorScreen .chamber-step {
             width: 100%;
             flex: 1;
-            border-radius: 4px !important;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            transition: background 0.25s ease;
         }
-        #floorScreen .energy-cell.filled {
-            background: linear-gradient(90deg, var(--c-main), #ffffff, var(--c-main));
-            border-color: #ffffff;
-            box-shadow: 0 0 10px var(--c-main) !important;
+        #floorScreen .chamber-step:first-child { border-top: none; }
+        #floorScreen .chamber-step.lit {
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.24) 0%, transparent 80%);
+            border-bottom-color: rgba(255, 255, 255, 0.45);
         }
 
-        /* Medaglioni Circolari Maestria (Metà e Cima) */
+        /* Onda d'impulso verticale quando compri */
+        #floorScreen .surge-wave {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, #ffffff 45%, var(--c-main) 75%, transparent 100%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            opacity: 0;
+        }
+        #floorScreen .surge-wave.active {
+            animation: pillar-surge-up 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Fascio laser a tutta colonna allo sblocco di Grado 5 o 10 */
+        #floorScreen .mastery-beam {
+            position: absolute;
+            inset: -10px 4px;
+            background: linear-gradient(90deg, transparent 0%, var(--c-main) 25%, #ffffff 50%, var(--c-main) 75%, transparent 100%);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 30;
+            mix-blend-mode: screen;
+        }
+        #floorScreen .mastery-beam.active {
+            animation: mastery-beam-flash 0.7s ease-out forwards;
+        }
+
+        /* Medaglioni Circolari Peak (Lv.5 e Lv.10) */
         #floorScreen .mastery-orb {
             border-radius: 9999px !important;
-            background: radial-gradient(circle at 35% 35%, #1e2436 0%, #070911 100%);
-            border: 2px solid rgba(255, 255, 255, 0.28);
-            color: rgba(255, 255, 255, 0.45);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85), inset 0 1px 2px rgba(255, 255, 255, 0.2) !important;
+            background: radial-gradient(circle at 35% 35%, #252f48 0%, #0b0f1c 100%) !important;
+            border: 2px solid var(--c-border) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.9), 0 0 10px var(--c-glow), inset 0 1px 3px rgba(255, 255, 255, 0.3) !important;
             transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
         #floorScreen .mastery-orb:hover,
         #floorScreen .mastery-orb.inspected {
-            transform: scale(1.16);
+            transform: scale(1.18);
             border-color: #ffffff !important;
             color: #ffffff !important;
-            box-shadow: 0 0 18px var(--c-main), inset 0 0 8px var(--c-main) !important;
+            box-shadow: 0 0 22px var(--c-main), 0 0 35px var(--c-main), inset 0 0 10px #ffffff !important;
         }
         #floorScreen .mastery-orb.ready-next {
-            border-color: #fbbf24 !important;
-            color: #fde68a !important;
-            animation: orb-ready-pulse 1.2s infinite ease-in-out;
+            border-color: #fde047 !important;
+            color: #fef08a !important;
+            animation: orb-ready-pulse 1.15s infinite ease-in-out;
         }
         #floorScreen .mastery-orb.unlocked {
-            background: radial-gradient(circle at 35% 35%, #fef08a 0%, #d97706 55%, #451a03 100%);
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fbbf24 45%, var(--c-main) 100%) !important;
             border-color: #ffffff !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 18px rgba(251, 191, 36, 0.9), inset 0 0 8px #ffffff !important;
+            color: #090b10 !important;
+            box-shadow: 0 0 22px #fbbf24, 0 0 38px var(--c-main), inset 0 0 8px #ffffff !important;
+        }
+        /* Anello runico rotante attorno ai Medaglioni sbloccati */
+        #floorScreen .mastery-orb.unlocked::before {
+            content: "";
+            position: absolute;
+            inset: -5px;
+            border-radius: 9999px !important;
+            border: 1.5px dashed #fde047;
+            animation: orb-rune-spin 5s linear infinite;
+            pointer-events: none;
         }
 
-        /* Pulsante Acquisto alla base del pilastro */
+        /* Pulsante Compra Energizzato */
         #floorScreen .pillar-buy-btn {
             border-radius: 10px !important;
             transition: all 0.12s ease-out;
             cursor: pointer;
         }
         #floorScreen .pillar-buy-btn.can-afford {
-            background: linear-gradient(180deg, rgba(30, 35, 52, 0.95) 0%, rgba(14, 17, 28, 0.98) 100%);
-            border: 1.5px solid rgba(250, 204, 21, 0.65);
-            box-shadow: 0 0 12px rgba(250, 204, 21, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            background: linear-gradient(180deg, var(--c-btn-top) 0%, rgba(16, 20, 34, 0.96) 100%) !important;
+            border: 1.5px solid #facc15 !important;
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
         }
-        #floorScreen .pillar-buy-btn.can-afford:hover { filter: brightness(1.2); border-color: #fde047; }
-        #floorScreen .pillar-buy-btn.can-afford:active { transform: scale(0.94); }
+        #floorScreen .pillar-buy-btn.can-afford:hover {
+            filter: brightness(1.25);
+            transform: translateY(-2px);
+            box-shadow: 0 0 22px rgba(250, 204, 21, 0.6), 0 0 15px var(--c-main) !important;
+        }
+        #floorScreen .pillar-buy-btn.can-afford:active { transform: scale(0.93); }
         #floorScreen .pillar-buy-btn.locked {
-            background: rgba(10, 12, 20, 0.75);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
-            opacity: 0.55;
+            background: rgba(12, 15, 26, 0.75) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+            opacity: 0.5;
         }
 
-        @keyframes orb-ready-pulse {
-            0%, 100% { box-shadow: 0 0 8px rgba(251, 191, 36, 0.5) !important; transform: scale(1); }
-            50% { box-shadow: 0 0 20px rgba(251, 191, 36, 1) !important; transform: scale(1.12); }
+        /* Onda d'urto circolare e Particelle UI */
+        .shop-shockwave {
+            position: fixed;
+            width: 36px; height: 36px;
+            border-radius: 9999px !important;
+            border: 4px solid #fde047;
+            box-shadow: 0 0 20px #fde047, inset 0 0 12px #ffffff !important;
+            pointer-events: none;
+            z-index: 265;
+            animation: shockwave-expand 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        @keyframes totem-buy-pop {
-            0% { transform: scale(1); }
-            40% { transform: scale(1.04) translateY(-3px); filter: brightness(1.3); }
-            100% { transform: scale(1) translateY(0); filter: brightness(1); }
-        }
-        .anim-totem-pop { animation: totem-buy-pop 0.25s ease-out; }
-
-        /* Particelle GPU leggere dello Shop */
         .shop-fx-particle {
             position: fixed;
             pointer-events: none;
             border-radius: 9999px !important;
             z-index: 260;
             will-change: transform, opacity;
-            animation: shop-spark-fly 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: shop-spark-fly var(--dur, 0.6s) cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes shop-spark-fly {
-            0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+            0% { transform: translate3d(0, 0, 0) scale(1.2); opacity: 1; }
             100% { transform: translate3d(var(--tx), var(--ty), 0) scale(0.1); opacity: 0; }
         }
+        @keyframes totem-buy-pop {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.05) translateY(-4px); filter: brightness(1.45); }
+            100% { transform: scale(1) translateY(0); filter: brightness(1); }
+        }
+        .anim-totem-pop { animation: totem-buy-pop 0.28s ease-out; }
 
         /* Bagliori Morbidi al passaggio/tocco (Senza ombre flat) */
         .box-glow-red:hover { border-color: #FF1838 !important; box-shadow: 0 0 16px rgba(255, 24, 56, 0.4) !important; color: #FF1838 !important; }
@@ -889,54 +1010,61 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
     </div>
 
-    <!-- TRANSIZIONE PIANO (SHOP A PILASTRI ENERGETICI) -->
+    <!-- TRANSIZIONE PIANO (FORGIA AL PLASMA AD ALTA ADRENALINA) -->
     <div id="floorScreen" class="absolute inset-0 z-[100] hidden pointer-events-auto bg-cover bg-center bg-no-repeat overflow-hidden" style="background-image: url('bg_piano.png');">
-        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-black/75 to-black/95 pointer-events-none"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_5%,_rgba(0,0,0,0.85)_100%)] pointer-events-none"></div>
+        <!-- Overlay traslucido che lascia brillare l'illustrazione sottostante + Fasci di Luce Arcana -->
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-950/55 via-slate-950/45 to-black/85 pointer-events-none"></div>
+        <div class="absolute -top-10 left-1/4 w-80 h-56 bg-cyan-500/25 blur-3xl pointer-events-none animate-pulse"></div>
+        <div class="absolute top-1/3 -left-12 w-64 h-64 bg-red-500/20 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.7s;"></div>
+        <div class="absolute top-1/3 -right-12 w-64 h-64 bg-purple-500/25 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 1.4s;"></div>
+        <div class="absolute bottom-16 left-1/3 w-72 h-44 bg-amber-500/20 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.4s;"></div>
 
-        <!-- Layer Particelle UI -->
+        <!-- Layer Particelle & Onde d'Urto -->
         <div id="shop-fx-layer" class="fixed inset-0 pointer-events-none z-[260] overflow-hidden"></div>
 
-        <div class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-3.5 sm:py-6 relative max-w-[470px] mx-auto">
+        <div id="shop-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-3.5 sm:py-6 relative max-w-[470px] mx-auto">
             
-            <!-- 1. BARRA SUPERIORE: TITOLO & FORZIERE MONETE GIGANTE -->
-            <div class="w-full flex items-center justify-between gap-3 bg-black/80 border-2 border-yellow-500/50 rounded-xl px-4 py-2.5 shadow-[0_0_25px_rgba(234,179,8,0.2)] shrink-0">
+            <!-- 1. HEADER LUMINOSO & FORZIERE MONETE -->
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/85 border-2 border-cyan-400/50 rounded-xl px-4 py-2.5 shadow-[0_0_25px_rgba(34,211,238,0.25)] shrink-0">
                 <div class="flex flex-col text-left">
-                    <span class="text-[9px] sm:text-[10px] text-yellow-400/90 font-black tracking-[0.25em] uppercase leading-none">Massacro Concluso</span>
-                    <h1 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Altare del Potere</h1>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.25em] uppercase leading-none">Forgia dell'Ascesa</span>
+                    </div>
+                    <h1 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Infondi il Potere</h1>
                 </div>
-                <div class="flex items-center gap-2.5 bg-yellow-950/50 border border-yellow-400/60 px-3.5 py-1.5 rounded-lg">
-                    <i class="fa-solid fa-coins text-yellow-400 text-lg sm:text-2xl drop-shadow-[0_0_10px_rgba(250,204,21,0.9)]"></i>
-                    <span id="shop-coins" class="text-yellow-300 font-display font-black text-xl sm:text-3xl tracking-wider leading-none">0</span>
+                <div class="flex items-center gap-2.5 bg-amber-950/70 border-2 border-yellow-400 px-3.5 py-1.5 rounded-lg shadow-[0_0_18px_rgba(250,204,21,0.45)]">
+                    <i class="fa-solid fa-coins text-yellow-300 text-lg sm:text-2xl drop-shadow-[0_0_10px_rgba(250,204,21,1)]"></i>
+                    <span id="shop-coins" class="text-yellow-200 font-display font-black text-xl sm:text-3xl tracking-wider leading-none">0</span>
                 </div>
             </div>
 
-            <!-- 2. DISPLAY MAESTRIA (Mostra il Peak toccato o survolato) -->
-            <div id="shop-inspector" class="glass-panel w-full px-3.5 py-2.5 flex items-center gap-3 border border-white/20 shrink-0 min-h-[64px] my-1.5">
-                <div id="shop-insp-icon-wrap" class="w-11 h-11 rounded-full bg-black border-2 border-amber-400 flex items-center justify-center shrink-0 text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
-                    <i id="shop-insp-icon" class="fa-solid fa-hand-pointer text-base"></i>
+            <!-- 2. DISPLAY OLOGRAFICO DEI POTERI (5 & 10) -->
+            <div id="shop-inspector" class="w-full px-3.5 py-2.5 flex items-center gap-3 rounded-xl bg-slate-950/85 border-2 border-amber-400/50 shadow-[0_0_20px_rgba(251,191,36,0.2)] shrink-0 min-h-[64px] my-1.5 transition-all duration-200">
+                <div id="shop-insp-icon-wrap" class="w-11 h-11 rounded-full bg-black border-2 border-amber-400 flex items-center justify-center shrink-0 text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+                    <i id="shop-insp-icon" class="fa-solid fa-wand-magic-sparkles text-base"></i>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1 text-left">
                     <div class="flex items-center justify-between gap-2">
-                        <span id="shop-insp-title" class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 truncate">Tocca un Medaglione</span>
-                        <span id="shop-insp-badge" class="text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-white/10 text-gray-300 border border-white/20 shrink-0">Info Perk</span>
+                        <span id="shop-insp-title" class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 truncate">Poteri Esclusivi (Grado 5 & 10)</span>
+                        <span id="shop-insp-badge" class="text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-400/50 shrink-0">Tocca un Sigillo</span>
                     </div>
-                    <p id="shop-insp-desc" class="text-[10px] sm:text-xs text-gray-200 font-bold leading-snug mt-1 m-0">Riempi le tacche dei pilastri per sbloccare le abilità speciali a metà e in cima.</p>
+                    <p id="shop-insp-desc" class="text-[10px] sm:text-xs text-gray-100 font-bold leading-snug mt-1 m-0">Riempi i condotti di plasma e tocca i medaglioni per scoprire i poteri supremi.</p>
                 </div>
             </div>
 
-            <!-- 3. I 5 PILASTRI ENERGETICI (Spalmati dal basso verso l'alto, zero numeretti inutili) -->
-            <div id="shop-tree-container" class="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full flex-1 min-h-[260px] max-h-[54vh] my-1 items-stretch select-none">
-                <!-- Costruito da ShopSystem -->
+            <!-- 3. I 5 REATTORI AL PLASMA (Dal basso verso l'alto) -->
+            <div id="shop-tree-container" class="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full flex-1 min-h-[265px] max-h-[54vh] my-1 items-stretch select-none">
+                <!-- Costruito e animato da ShopSystem -->
             </div>
 
             <!-- 4. BOTTONI AZIONE IN BASSO -->
             <div class="w-full flex flex-col gap-2 shrink-0 z-20 mt-1">
                 <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2.5 text-[10px] sm:text-xs font-bold text-purple-300">
-                        <i class="fa-solid fa-gem"></i> Le Tue Reliquie
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2.5 text-[10px] sm:text-xs font-bold text-purple-200 border-purple-400/50">
+                        <i class="fa-solid fa-gem text-purple-400"></i> Le Tue Reliquie
                     </button>
-                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2.5 text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2.5 text-[10px] sm:text-xs font-bold text-gray-300 uppercase tracking-widest">
                         <i class="fa-solid fa-bars"></i> Menu
                     </button>
                 </div>
@@ -19067,27 +19195,37 @@ const ShopSystem = {
 
     branches: {
         hp: {
-            name: 'Vitalità', short: 'VITA', icon: 'fa-heart', color: '#22c55e', tailwind: 'green',
+            name: 'Vitalità', short: 'VITA', icon: 'fa-heart',
+            color: '#22c55e', dark: '#15803d', border: 'rgba(34, 197, 94, 0.55)', glow: 'rgba(34, 197, 94, 0.25)',
+            bgTop: 'rgba(20, 83, 45, 0.55)', bgBot: 'rgba(5, 46, 22, 0.85)', btnTop: 'rgba(22, 101, 52, 0.85)', tailwind: 'green',
             tier1: { name: 'Barriera d\'Ingresso', icon: 'fa-shield-heart', desc: 'Inizi ogni piano con uno Scudo pari al 10% HP Max e ricevi +15% Cure.' },
             tier2: { name: 'Corazza della Fenice', icon: 'fa-fire-flame-curved', desc: '-5% danno max per colpo. 1 volta a piano rinasci col 50% HP respingendo i nemici.' }
         },
         dmg: {
-            name: 'Danno', short: 'DANNO', icon: 'fa-fire', color: '#ef4444', tailwind: 'red',
+            name: 'Danno', short: 'DANNO', icon: 'fa-fire',
+            color: '#ef4444', dark: '#b91c1c', border: 'rgba(239, 68, 68, 0.55)', glow: 'rgba(239, 68, 68, 0.25)',
+            bgTop: 'rgba(127, 29, 29, 0.55)', bgBot: 'rgba(69, 10, 10, 0.85)', btnTop: 'rgba(153, 27, 27, 0.85)', tailwind: 'red',
             tier1: { name: 'Impatto Frantumante', icon: 'fa-hammer', desc: 'Infliggi +35% danni alle difese/scudi nemici e li respingi con più forza.' },
             tier2: { name: 'Dardo Perforante', icon: 'fa-angles-right', desc: 'I tuoi proiettili base trapassano il primo nemico colpito (+1 Perforazione).' }
         },
         speed: {
-            name: 'Movimento', short: 'VELOCITÀ', icon: 'fa-shoe-prints', color: '#3b82f6', tailwind: 'blue',
+            name: 'Movimento', short: 'VELOCITÀ', icon: 'fa-shoe-prints',
+            color: '#3b82f6', dark: '#1d4ed8', border: 'rgba(59, 130, 246, 0.55)', glow: 'rgba(59, 130, 246, 0.25)',
+            bgTop: 'rgba(30, 58, 138, 0.55)', bgBot: 'rgba(23, 37, 84, 0.85)', btnTop: 'rgba(29, 78, 216, 0.85)', tailwind: 'blue',
             tier1: { name: 'Passo Anfibio', icon: 'fa-water', desc: 'Lo Scudo Cinetico dura +1s e dimezzi il rallentamento in acqua e lava.' },
             tier2: { name: 'Scia Cinetica', icon: 'fa-magnet', desc: 'Ogni Scatto riduce di 0.5s la ricarica Scudo e aspira monete/essenze (+50% raggio).' }
         },
         atkSpeed: {
-            name: 'Ritmo', short: 'RITMO', icon: 'fa-bolt', color: '#f59e0b', tailwind: 'amber',
+            name: 'Ritmo', short: 'RITMO', icon: 'fa-bolt',
+            color: '#f59e0b', dark: '#b45309', border: 'rgba(245, 158, 11, 0.55)', glow: 'rgba(245, 158, 11, 0.25)',
+            bgTop: 'rgba(120, 53, 15, 0.55)', bgBot: 'rgba(69, 26, 3, 0.85)', btnTop: 'rgba(180, 83, 9, 0.85)', tailwind: 'amber',
             tier1: { name: 'Innesco Rapido', icon: 'fa-forward-fast', desc: 'Ogni 6 attacchi ottieni +1 Punto Combo extra e il colpo viaggia +25% più veloce.' },
             tier2: { name: 'Doppia Canna', icon: 'fa-clone', desc: 'Ogni 5 attacchi spari gratuitamente un secondo dardo parallelo (50% danno).' }
         },
         crit: {
-            name: 'Precisione', short: 'CRITICO', icon: 'fa-crosshairs', color: '#a855f7', tailwind: 'purple',
+            name: 'Precisione', short: 'CRITICO', icon: 'fa-crosshairs',
+            color: '#a855f7', dark: '#7e22ce', border: 'rgba(168, 85, 247, 0.55)', glow: 'rgba(168, 85, 247, 0.25)',
+            bgTop: 'rgba(88, 28, 135, 0.55)', bgBot: 'rgba(59, 7, 100, 0.85)', btnTop: 'rgba(126, 34, 206, 0.85)', tailwind: 'purple',
             tier1: { name: 'Punto Vitale', icon: 'fa-bolt-lightning', desc: 'La Combo aumenta il moltiplicatore di Danno Critico (fino a +0.50x a 100 Combo).' },
             tier2: { name: 'Eco Letale', icon: 'fa-burst', desc: 'I colpi critici scatenano un\'esplosione cinetica che infligge il 30% di danno ad area.' }
         }
@@ -19131,6 +19269,7 @@ const ShopSystem = {
             el.classList.toggle('inspected', el.dataset.nodeId === this.inspectedNode);
         });
 
+        const inspBox = document.getElementById('shop-inspector');
         const wrap = document.getElementById('shop-insp-icon-wrap');
         const icon = document.getElementById('shop-insp-icon');
         const title = document.getElementById('shop-insp-title');
@@ -19138,27 +19277,34 @@ const ShopSystem = {
         const desc = document.getElementById('shop-insp-desc');
         if (!title || !desc) return;
 
-        wrap.style.borderColor = unlocked ? '#fbbf24' : b.color;
-        wrap.style.color = unlocked ? '#fbbf24' : b.color;
+        let accentCol = unlocked ? '#fbbf24' : b.color;
+        if (inspBox) {
+            inspBox.style.borderColor = accentCol;
+            inspBox.style.boxShadow = `0 0 22px ${unlocked ? 'rgba(251,191,36,0.35)' : b.glow}`;
+        }
+        wrap.style.borderColor = accentCol;
+        wrap.style.color = accentCol;
+        wrap.style.boxShadow = `0 0 15px ${accentCol}`;
         icon.className = `fa-solid ${tData.icon} text-base`;
 
-        title.innerText = tData.name;
-        title.style.color = unlocked ? '#fbbf24' : b.color;
+        title.innerText = `${b.short} • ${tData.name}`;
+        title.style.color = accentCol;
 
         if (unlocked) {
-            badge.innerText = '★ SBLOCCATO';
-            badge.className = 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-400 shrink-0';
+            badge.innerText = '★ POTERE ATTIVO';
+            badge.className = 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/30 text-amber-200 border border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)] shrink-0';
         } else {
             let rem = reqLvl - currLvl;
-            badge.innerText = rem === 1 ? 'PROSSIMO ACQUISTO!' : `MANCANO ${rem} TACCHE`;
+            badge.innerText = rem === 1 ? '⚡ SBLOCCA COL PROSSIMO!' : `MANCANO ${rem} TACCHE`;
             badge.className = rem === 1
-                ? 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400 animate-pulse shrink-0'
-                : 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-white/10 text-gray-300 border border-white/20 shrink-0';
+                ? 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-400 animate-pulse shrink-0'
+                : 'text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-white/10 text-gray-200 border border-white/25 shrink-0';
         }
         desc.innerText = tData.desc;
     },
 
-    spawnFX(targetEl, colorHex, count = 8) {
+    // Scintille direzionali (verso l'alto quando riempi la barra, o supernova radiale quando sblocchi un potere)
+    spawnFX(targetEl, colorHex, count = 10, mode = 'upward') {
         if (AppSettings.isLow || !targetEl) return;
         const layer = document.getElementById('shop-fx-layer');
         if (!layer) return;
@@ -19166,22 +19312,47 @@ const ShopSystem = {
         const cx = rect.left + rect.width * 0.5;
         const cy = rect.top + rect.height * 0.5;
 
+        if (mode === 'mastery') {
+            const ring = document.createElement('div');
+            ring.className = 'shop-shockwave';
+            ring.style.left = `${cx}px`;
+            ring.style.top = `${cy}px`;
+            ring.style.borderColor = colorHex;
+            layer.appendChild(ring);
+            setTimeout(() => ring.remove(), 560);
+        }
+
         for (let i = 0; i < count; i++) {
             const p = document.createElement('div');
             p.className = 'shop-fx-particle';
-            const size = MathUtils.randomRange(5, 9);
-            const angle = (Math.PI * 2 / count) * i + MathUtils.randomRange(-0.25, 0.25);
-            const dist = MathUtils.randomRange(28, 68);
+            const size = mode === 'mastery' ? MathUtils.randomRange(6, 11) : MathUtils.randomRange(4, 8);
+            let tx, ty, dur;
+
+            if (mode === 'upward') {
+                // Getto di particelle che risale lungo la colonna
+                tx = MathUtils.randomRange(-22, 22);
+                ty = -MathUtils.randomRange(55, 165);
+                dur = MathUtils.randomRange(0.45, 0.70);
+            } else {
+                // Esplosione radiale a supernova per i Medaglioni 5 e 10
+                const angle = (Math.PI * 2 / count) * i + MathUtils.randomRange(-0.2, 0.2);
+                const dist = MathUtils.randomRange(45, 115);
+                tx = Math.cos(angle) * dist;
+                ty = Math.sin(angle) * dist - 15;
+                dur = MathUtils.randomRange(0.55, 0.85);
+            }
+
             p.style.width = `${size}px`;
             p.style.height = `${size}px`;
             p.style.left = `${cx - size * 0.5}px`;
             p.style.top = `${cy - size * 0.5}px`;
-            p.style.background = i % 2 === 0 ? '#ffffff' : colorHex;
-            p.style.boxShadow = `0 0 10px ${colorHex}`;
-            p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
-            p.style.setProperty('--ty', `${Math.sin(angle) * dist - 16}px`);
+            p.style.background = i % 3 === 0 ? '#ffffff' : (i % 3 === 1 ? colorHex : '#fde047');
+            p.style.boxShadow = `0 0 12px ${colorHex}`;
+            p.style.setProperty('--tx', `${tx}px`);
+            p.style.setProperty('--ty', `${ty}px`);
+            p.style.setProperty('--dur', `${dur}s`);
             layer.appendChild(p);
-            setTimeout(() => p.remove(), 560);
+            setTimeout(() => p.remove(), dur * 1000 + 50);
         }
     },
 
@@ -19192,23 +19363,31 @@ const ShopSystem = {
         keys.forEach((key) => {
             const b = this.branches[key];
 
-            // Costruisce le 5 celle superiori (Gradi 6..10, dal basso verso l'alto)
-            let upperCells = '';
-            for (let step = 10; step >= 6; step--) {
-                upperCells += `<div id="cell-${key}-${step}" class="energy-cell" style="--c-main: ${b.color}"></div>`;
+            // 10 tacche luminose di riferimento (dall'alto 10 al basso 1)
+            let stepsHtml = '';
+            for (let step = 10; step >= 1; step--) {
+                stepsHtml += `<div id="step-${key}-${step}" class="chamber-step"></div>`;
             }
 
-            // Costruisce le 5 celle inferiori (Gradi 1..5, dal basso verso l'alto)
-            let lowerCells = '';
-            for (let step = 5; step >= 1; step--) {
-                lowerCells += `<div id="cell-${key}-${step}" class="energy-cell" style="--c-main: ${b.color}"></div>`;
+            // 6 bolle di plasma ascendenti continue dentro il liquido
+            let bubblesHtml = '';
+            const bubbleLefts = [18, 42, 68, 28, 56, 78];
+            const bubbleDurs = [1.5, 2.1, 1.7, 2.4, 1.9, 1.6];
+            const bubbleDelays = [0.0, 0.4, 0.9, 0.2, 1.1, 0.6];
+            for (let i = 0; i < 6; i++) {
+                let sz = (i % 2 === 0) ? 5 : 4;
+                bubblesHtml += `<span class="plasma-bubble" style="left:${bubbleLefts[i]}%; width:${sz}px; height:${sz}px; --dur:${bubbleDurs[i]}s; --dly:${bubbleDelays[i]}s;"></span>`;
             }
 
             html += `
-                <div id="totem-col-${key}" class="totem-pillar flex flex-col items-center justify-between p-1.5 sm:p-2 relative select-none" style="--c-main: ${b.color}">
+                <div id="totem-col-${key}" class="totem-pillar flex flex-col items-center justify-between p-1.5 sm:p-2 relative select-none overflow-visible"
+                     style="--c-main:${b.color}; --c-dark:${b.dark}; --c-border:${b.border}; --c-glow:${b.glow}; --c-bg-top:${b.bgTop}; --c-bg-bot:${b.bgBot}; --c-btn-top:${b.btnTop};">
                     
-                    <!-- 1. MEDAGLIONE CIMA (PEAK II - GRADO 10) -->
-                    <div class="relative flex flex-col items-center z-20 -mb-2">
+                    <!-- Fascio Laser di Ascensione allo sblocco Maestria -->
+                    <div id="beam-${key}" class="mastery-beam rounded-xl"></div>
+
+                    <!-- 1. MEDAGLIONE CIMA (GRADO 10) -->
+                    <div class="relative flex flex-col items-center z-20 -mb-2.5">
                         <div id="node-${key}-2" data-node-id="${key}_2"
                              onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
                              ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
@@ -19216,20 +19395,27 @@ const ShopSystem = {
                              class="mastery-orb w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center relative">
                             <i class="fa-solid ${b.tier2.icon} text-sm sm:text-base pointer-events-none"></i>
                         </div>
-                        <!-- Badge Overdrive visibile solo quando superi le 10 tacche -->
-                        <span id="over-${key}" class="hidden absolute -top-1.5 -right-2 bg-amber-500 text-black font-black text-[8px] px-1.5 py-0.2 rounded-full border border-white shadow"></span>
+                        <span id="over-${key}" class="hidden absolute -top-1.5 -right-2 bg-amber-400 text-black font-black text-[8px] px-1.5 rounded-full border border-white shadow"></span>
                     </div>
 
-                    <!-- 2. CORPO DEL PILASTRO A 10 CELLE LARGHE + MEDAGLIONE CENTRALE -->
-                    <div class="pillar-chamber w-full flex-1 flex flex-col items-center justify-between p-1.5 pt-3 pb-2 my-1 relative overflow-hidden">
+                    <!-- 2. CONDOTTO AL PLASMA CON LIQUIDO VIVO, BOLLE E MEDAGLIONE CENTRALE (GRADO 5) -->
+                    <div id="chamber-${key}" class="pillar-chamber w-full flex-1 flex flex-col justify-end my-1 relative overflow-hidden">
                         
-                        <!-- Metà Alta (5 Celle) -->
-                        <div class="w-full flex-1 flex flex-col justify-between gap-1">
-                            ${upperCells}
+                        <!-- Liquido continuo che sale con bolle di plasma -->
+                        <div id="plasma-fill-${key}" class="plasma-fill w-full h-0 relative overflow-hidden">
+                            ${bubblesHtml}
                         </div>
 
-                        <!-- MEDAGLIONE META' BARRA (PEAK I - GRADO 5) -->
-                        <div class="my-1.5 z-20 flex items-center justify-center">
+                        <!-- Onda d'impulso verticale a ogni acquisto -->
+                        <div id="surge-${key}" class="surge-wave"></div>
+
+                        <!-- Griglia delle 10 tacche sovrapposta -->
+                        <div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
+                            ${stepsHtml}
+                        </div>
+
+                        <!-- MEDAGLIONE META' BARRA (GRADO 5) -->
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                             <div id="node-${key}-1" data-node-id="${key}_1"
                                  onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
                                  ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
@@ -19238,24 +19424,19 @@ const ShopSystem = {
                                 <i class="fa-solid ${b.tier1.icon} text-xs sm:text-sm pointer-events-none"></i>
                             </div>
                         </div>
-
-                        <!-- Metà Bassa (5 Celle) -->
-                        <div class="w-full flex-1 flex flex-col justify-between gap-1">
-                            ${lowerCells}
-                        </div>
                     </div>
 
-                    <!-- 3. NOME RAMO PULITO -->
+                    <!-- 3. ETICHETTA RAMO LUMINOSA -->
                     <div class="flex items-center justify-center gap-1 my-1">
-                        <i class="fa-solid ${b.icon} text-${b.tailwind}-400 text-[10px] sm:text-xs"></i>
-                        <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-gray-200">${b.short}</span>
+                        <i class="fa-solid ${b.icon} text-[10px] sm:text-xs" style="color:${b.color}; filter:drop-shadow(0 0 5px ${b.color});"></i>
+                        <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white">${b.short}</span>
                     </div>
 
-                    <!-- 4. PULSANTE ACQUISTO CON PREZZO GIGANTE -->
+                    <!-- 4. PULSANTE COMPRA CON PREZZO GIGANTE -->
                     <button id="totem-btn-${key}" onclick="ShopSystem.buy('${key}')"
                             class="pillar-buy-btn can-afford w-full py-2.5 px-1 flex items-center justify-center gap-1.5">
-                        <i id="totem-coin-icon-${key}" class="fa-solid fa-coins text-yellow-400 text-xs sm:text-sm"></i>
-                        <span id="totem-cost-${key}" class="font-display font-black text-sm sm:text-base text-yellow-300 leading-none">5</span>
+                        <i id="totem-coin-icon-${key}" class="fa-solid fa-coins text-yellow-300 text-xs sm:text-sm drop-shadow-[0_0_6px_rgba(250,204,21,0.8)]"></i>
+                        <span id="totem-cost-${key}" class="font-display font-black text-sm sm:text-base text-yellow-200 leading-none">5</span>
                     </button>
                 </div>
             `;
@@ -19286,17 +19467,26 @@ const ShopSystem = {
             const canAfford = Game.coins >= cost;
             const isOneStepAway = (lvl === 4 || lvl === 9);
 
-            // 1. Bordo dorato se manca 1 sola tacca al Medaglione
             const colEl = document.getElementById(`totem-col-${key}`);
-            if (colEl) colEl.classList.toggle('almost-mastery', isOneStepAway);
-
-            // 2. Accensione delle 10 Celle Energetiche larghe dal basso verso l'alto
-            for (let step = 1; step <= 10; step++) {
-                const cell = document.getElementById(`cell-${key}-${step}`);
-                if (cell) cell.classList.toggle('filled', lvl >= step);
+            if (colEl) {
+                colEl.classList.toggle('almost-mastery', isOneStepAway);
+                colEl.classList.toggle('mastery-maxed', lvl >= 10);
             }
 
-            // 3. Stato Medaglioni Circolari (Metà e Cima)
+            // 1. Altezza fluida del plasma vivo (0% -> 50% al Grado 5 -> 100% al Grado 10)
+            const fillEl = document.getElementById(`plasma-fill-${key}`);
+            if (fillEl) {
+                const pct = Math.min(100, (lvl / 10) * 100);
+                fillEl.style.height = `${pct}%`;
+            }
+
+            // 2. Illuminazione delle singole tacche raggiunte
+            for (let step = 1; step <= 10; step++) {
+                const stepEl = document.getElementById(`step-${key}-${step}`);
+                if (stepEl) stepEl.classList.toggle('lit', lvl >= step);
+            }
+
+            // 3. Medaglioni Grado 5 e Grado 10
             const node1 = document.getElementById(`node-${key}-1`);
             if (node1) {
                 node1.classList.toggle('unlocked', lvl >= 5);
@@ -19308,7 +19498,7 @@ const ShopSystem = {
                 node2.classList.toggle('ready-next', lvl === 9);
             }
 
-            // 4. Badge Overdrive se l'utente compra oltre il grado 10
+            // 4. Badge Overdrive oltre il Grado 10
             const overEl = document.getElementById(`over-${key}`);
             if (overEl) {
                 if (lvl > 10) {
@@ -19319,7 +19509,7 @@ const ShopSystem = {
                 }
             }
 
-            // 5. Pulsante Prezzo chiaro e leggibile
+            // 5. Pulsante Prezzo
             const btnEl = document.getElementById(`totem-btn-${key}`);
             const costEl = document.getElementById(`totem-cost-${key}`);
             const coinIcon = document.getElementById(`totem-coin-icon-${key}`);
@@ -19327,8 +19517,8 @@ const ShopSystem = {
             if (btnEl && costEl && coinIcon) {
                 btnEl.classList.toggle('can-afford', canAfford);
                 btnEl.classList.toggle('locked', !canAfford);
-                costEl.className = `font-display font-black text-sm sm:text-base leading-none ${canAfford ? 'text-yellow-300' : 'text-gray-500'}`;
-                coinIcon.className = `fa-solid fa-coins text-xs sm:text-sm ${canAfford ? 'text-yellow-400' : 'text-gray-600'}`;
+                costEl.className = `font-display font-black text-sm sm:text-base leading-none ${canAfford ? 'text-yellow-200' : 'text-gray-500'}`;
+                coinIcon.className = `fa-solid fa-coins text-xs sm:text-sm ${canAfford ? 'text-yellow-300 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)]' : 'text-gray-600'}`;
             }
         });
     },
@@ -19338,6 +19528,9 @@ const ShopSystem = {
         let cost = this.costs[type];
         const colEl = document.getElementById(`totem-col-${type}`);
         const btnEl = document.getElementById(`totem-btn-${type}`);
+        const surgeEl = document.getElementById(`surge-${type}`);
+        const beamEl = document.getElementById(`beam-${type}`);
+        const chamberEl = document.getElementById(`chamber-${type}`);
 
         if (Game.coins >= cost) {
             Game.coins -= cost;
@@ -19385,11 +19578,18 @@ const ShopSystem = {
 
             this.updateUI();
 
-            // Aggiorna automaticamente il Display sopra le colonne col prossimo Medaglione del ramo
+            // Mostra nel Display il potere appena sbloccato o il prossimo traguardo del ramo
             let inspectTier = newLvl <= 5 ? 1 : 2;
             this.inspectMastery(type, inspectTier);
 
             const bColor = this.branches[type].color;
+
+            // Impulso luminoso che risale il tubo a ogni acquisto
+            if (surgeEl) {
+                surgeEl.classList.remove('active');
+                void surgeEl.offsetWidth;
+                surgeEl.classList.add('active');
+            }
             if (colEl) {
                 colEl.classList.remove('anim-totem-pop');
                 void colEl.offsetWidth;
@@ -19397,15 +19597,31 @@ const ShopSystem = {
             }
 
             if (unlockedMastery) {
+                // ESPLOSIONE ADRENALINICA SBLOCCO GRADO 5 O GRADO 10
                 AudioEngine.playLevelUp();
-                Haptics.vibrate([30, 20, 60]);
+                AudioEngine.playShoot('chain_lightning');
+                Haptics.vibrate([40, 25, 80]);
+
+                if (beamEl) {
+                    beamEl.classList.remove('active');
+                    void beamEl.offsetWidth;
+                    beamEl.classList.add('active');
+                }
+                const wrapEl = document.getElementById('shop-main-wrap');
+                if (wrapEl && AppSettings.screenShake) {
+                    wrapEl.classList.remove('anim-shop-jolt');
+                    void wrapEl.offsetWidth;
+                    wrapEl.classList.add('anim-shop-jolt');
+                }
                 const nodeEl = document.getElementById(`node-${type}-${newLvl === 5 ? 1 : 2}`);
-                this.spawnFX(nodeEl || btnEl, '#fbbf24', 16);
+                this.spawnFX(nodeEl || btnEl, bColor, 26, 'mastery');
             } else {
+                // GETTO ENERGETICO ASCENDENTE LUNGO LA COLONNA
                 AudioEngine.playCoin();
-                Haptics.vibrate(12);
-                const cellEl = document.getElementById(`cell-${type}-${Math.min(10, newLvl)}`);
-                this.spawnFX(cellEl || btnEl, bColor, 8);
+                AudioEngine.playCollect();
+                Haptics.vibrate(15);
+                this.spawnFX(btnEl, bColor, 12, 'upward');
+                if (chamberEl) this.spawnFX(chamberEl, bColor, 6, 'upward');
             }
         } else {
             AudioEngine.playClick();
