@@ -136,28 +136,88 @@
         .shop-btn.atk:hover { border-color: #f59e0b; }
         .shop-btn.crit:hover { border-color: #a855f7; }
 
-        /* --- PATH TREE NEGOZIO --- */
-        .shop-btn .path-node {
-            width: 12px; height: 6px; border-radius: 2px !important;
-            background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.2s ease;
+        /* --- SHOP VERTICALE: CONDOTTI & CERCHI MAESTRIA --- */
+        .totem-col {
+            background: linear-gradient(180deg, rgba(10, 12, 22, 0.55) 0%, rgba(12, 14, 26, 0.88) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px !important;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
-        .shop-btn .path-node.active {
-            background: currentColor; border-color: #ffffff;
-            box-shadow: 0 0 8px currentColor !important;
-        }
-        .shop-btn .path-milestone {
-            padding: 1px 5px; border-radius: 4px !important; font-size: 8px; font-weight: 900;
-            border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(0, 0, 0, 0.6);
-            transition: all 0.2s ease;
-        }
-        .shop-btn .path-milestone.unlocked {
-            background: rgba(251, 191, 36, 0.2); border-color: #fbbf24; color: #fbbf24;
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.4) !important;
-        }
-        .shop-btn.almost-mastery {
+        .totem-col.almost-mastery {
             border-color: rgba(251, 191, 36, 0.85) !important;
-            box-shadow: 0 0 14px rgba(251, 191, 36, 0.25), inset 0 0 10px rgba(251, 191, 36, 0.12) !important;
+            box-shadow: 0 0 18px rgba(251, 191, 36, 0.22), inset 0 0 12px rgba(251, 191, 36, 0.10) !important;
+        }
+        .totem-track {
+            width: 14px;
+            background: rgba(5, 6, 12, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px !important;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9) !important;
+        }
+        .totem-fill {
+            border-radius: 999px !important;
+            transition: height 0.38s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
+        }
+        /*Tacche dei singoli livelli lungo il tubo verticale */
+        .totem-ticks {
+            background-image: repeating-linear-gradient(
+                to top,
+                transparent 0%,
+                transparent calc(10% - 1px),
+                rgba(255, 255, 255, 0.18) calc(10% - 1px),
+                rgba(255, 255, 255, 0.18) 10%
+            );
+        }
+        /* Cerchietti Maestria Lv.5 e Lv.10 */
+        #floorScreen .mastery-node {
+            border-radius: 9999px !important;
+            background: #080a12;
+            border: 2px solid rgba(255, 255, 255, 0.28);
+            color: rgba(255, 255, 255, 0.45);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        #floorScreen .mastery-node:hover,
+        #floorScreen .mastery-node.inspected {
+            transform: scale(1.18);
+            border-color: #ffffff !important;
+            color: #ffffff;
+            box-shadow: 0 0 16px currentColor !important;
+        }
+        #floorScreen .mastery-node.ready-next {
+            border-color: #fbbf24 !important;
+            color: #fde68a;
+            animation: node-ready-pulse 1.3s infinite ease-in-out;
+        }
+        #floorScreen .mastery-node.unlocked {
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.32) 0%, rgba(12, 14, 24, 0.95) 100%);
+            border-color: #fbbf24 !important;
+            color: #fbbf24;
+            box-shadow: 0 0 14px rgba(251, 191, 36, 0.65), inset 0 0 6px rgba(251, 191, 36, 0.4) !important;
+        }
+        @keyframes node-ready-pulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(251, 191, 36, 0.4) !important; transform: scale(1); }
+            50% { box-shadow: 0 0 18px rgba(251, 191, 36, 0.95) !important; transform: scale(1.12); }
+        }
+        @keyframes totem-buy-pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.06); filter: brightness(1.35); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .anim-totem-pop { animation: totem-buy-pop 0.26s ease-out; }
+
+        /* Particelle GPU leggere dello Shop */
+        .shop-fx-particle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 9999px !important;
+            z-index: 260;
+            will-change: transform, opacity;
+            animation: shop-spark-fly 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes shop-spark-fly {
+            0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+            100% { transform: translate3d(var(--tx), var(--ty), 0) scale(0.1); opacity: 0; }
         }
 
         /* Bagliori Morbidi al passaggio/tocco (Senza ombre flat) */
@@ -804,41 +864,58 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
     </div>
 
-    <!-- TRANSIZIONE PIANO -->
-    <div id="floorScreen" class="absolute inset-0 z-[100] hidden pointer-events-auto bg-cover bg-center bg-no-repeat overflow-hidden" style="background: radial-gradient(circle at center, #0f172a 0%, #050508 100%);">
-        <div class="absolute inset-0 bg-gradient-to-b from-blue-950/80 via-transparent to-black/95 pointer-events-none"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_10%,_rgba(0,0,0,0.7)_100%)] pointer-events-none"></div>
+    <!-- TRANSIZIONE PIANO (SHOP VERTICALE) -->
+    <div id="floorScreen" class="absolute inset-0 z-[100] hidden pointer-events-auto bg-cover bg-center bg-no-repeat overflow-hidden" style="background-image: url('bg_piano.png');">
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-950/85 via-black/60 to-black/95 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_10%,_rgba(0,0,0,0.8)_100%)] pointer-events-none"></div>
 
-        <div class="w-full h-full flex flex-col justify-between items-center z-10 px-4 py-8 relative">
-            <!-- TITOLO -->
-            <div class="flex flex-col items-center text-center shrink-0 gap-3 mt-4">
-                <h1 class="text-[8vw] sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 via-blue-500 to-blue-800 uppercase tracking-tighter leading-none">Massacro Concluso</h1>
-                <p class="text-[10px] sm:text-sm text-cyan-200 font-bold tracking-[0.3em] uppercase bg-blue-950/50 px-6 py-2 rounded-full border border-cyan-500/30 backdrop-blur-md">L'oscurità si intensifica...</p>
+        <!-- Pool Particelle UI Leggere -->
+        <div id="shop-fx-layer" class="fixed inset-0 pointer-events-none z-[260] overflow-hidden"></div>
+
+        <div class="w-full h-full flex flex-col justify-between items-center z-10 px-3 sm:px-5 py-4 sm:py-6 relative max-w-[480px] mx-auto">
+            
+            <!-- 1. HEADER COMPATTO + MONETE -->
+            <div class="w-full flex items-center justify-between gap-2 shrink-0">
+                <div class="flex flex-col text-left">
+                    <h1 class="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 uppercase tracking-tighter leading-none m-0">Altare dell'Ascesa</h1>
+                    <span class="text-[9px] sm:text-[10px] text-cyan-200/80 font-bold tracking-[0.2em] uppercase mt-1">Tocca i sigilli ★ per i dettagli</span>
+                </div>
+                <div class="glass-panel flex items-center gap-2 px-3.5 py-2 border border-yellow-500/50 shrink-0">
+                    <i class="fa-solid fa-coins text-yellow-400 text-sm sm:text-base"></i>
+                    <span id="shop-coins" class="text-yellow-300 font-black text-base sm:text-xl tracking-wider">0</span>
+                </div>
             </div>
 
-        <!-- NEGOZIO E STATISTICHE COMPATTO (LISTA ORIZZONTALE) -->
-            <div class="flex-1 w-full flex flex-col items-center justify-center gap-2.5 my-2 z-20 overflow-hidden">
-             <!-- TITOLO NEGOZIO & MONETE -->
-                <div class="glass-panel flex items-center justify-between w-full max-w-[450px] px-5 py-2.5 rounded-none border-2 border-yellow-600 shadow-[4px_4px_0px_rgba(202,138,4,0.6)]! shrink-0">
-                    <span class="text-gray-300 font-bold tracking-widest text-[10px] sm:text-xs uppercase">Potenziamenti:</span>
-                    <span class="text-yellow-400 font-black text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] flex items-center gap-2"><i class="fa-solid fa-coins"></i> <span id="shop-coins">0</span></span>
+            <!-- 2. ISPETTORE MAESTRIA (Mostra il perk quando passi col mouse o tocchi un cerchietto) -->
+            <div id="shop-inspector" class="hud-panel w-full px-3.5 py-2.5 flex items-center gap-3 border border-white/15 shrink-0 min-h-[60px] transition-all duration-200 my-1.5">
+                <div id="shop-insp-icon-wrap" class="w-9 h-9 rounded-full bg-black/80 border border-cyan-500/40 flex items-center justify-center shrink-0 text-cyan-400">
+                    <i id="shop-insp-icon" class="fa-solid fa-wand-magic-sparkles text-sm"></i>
                 </div>
-
-<!-- LISTA UPGRADE PATH TREE -->
-<div id="shop-tree-container" class="flex flex-col gap-2 w-full max-w-[450px] px-1 overflow-y-auto custom-scrollbar shrink h-auto max-h-[48vh] sm:max-h-[54vh]">
-    <!-- Popolato dinamicamente da ShopSystem.updateUI() -->
-</div>
+                <div class="flex flex-col min-w-0 flex-1 text-left">
+                    <div class="flex items-center justify-between gap-2">
+                        <span id="shop-insp-title" class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-cyan-300 truncate">Soglie di Maestria</span>
+                        <span id="shop-insp-badge" class="text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 bg-white/10 text-gray-300 border border-white/15 shrink-0">Grado 5 & 10</span>
+                    </div>
+                    <p id="shop-insp-desc" class="text-[9.5px] sm:text-[11px] text-gray-300 font-bold leading-tight mt-0.5 m-0">Tocca o passa sopra i cerchi sul ramo per scoprire le abilità esclusive.</p>
+                </div>
             </div>
 
-            <!-- BOTTONI BASSI (SHOP) -->
-          <div class="w-full max-w-[450px] flex flex-col gap-2 shrink-0 z-20">
-                <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-3 text-xs sm:text-sm font-bold text-purple-300">
-                    <i class="fa-solid fa-gem mr-2"></i> LE TUE RELIQUIE
-                </button>
-                <div class="w-full mt-1 flex flex-col gap-2">
-                    <button id="btn-next-floor" onclick="nextFloor(window.nextIsCorrupted)" class="w-full transition-all active:scale-95"></button>
-                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0">Torna al menu</button>
+            <!-- 3. I 5 TOTEM VERTICALI (Spalmati dal basso verso l'alto) -->
+            <div id="shop-tree-container" class="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full flex-1 min-h-[250px] max-h-[52vh] my-1 items-stretch select-none">
+                <!-- Generato una sola volta e animato da ShopSystem -->
+            </div>
+
+            <!-- 4. BOTTONI AZIONE IN BASSO -->
+            <div class="w-full flex flex-col gap-2 shrink-0 z-20 mt-1">
+                <div class="grid grid-cols-2 gap-2 w-full">
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2.5 text-[10px] sm:text-xs font-bold text-purple-300">
+                        <i class="fa-solid fa-gem"></i> Reliquie
+                    </button>
+                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2.5 text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <i class="fa-solid fa-bars"></i> Menu
+                    </button>
                 </div>
+                <button id="btn-next-floor" onclick="nextFloor(window.nextIsCorrupted)" class="w-full transition-all active:scale-95"></button>
             </div>
         </div>
     </div>
@@ -18955,38 +19032,40 @@ const Preloader = {
     }
 };
 
-  const ShopSystem = {
+ const ShopSystem = {
     bonus: { hp: 0, dmg: 0, speed: 0, atkSpeed: 0, crit: 0, critDmg: 0 },
     levels: { hp: 0, dmg: 0, speed: 0, atkSpeed: 0, crit: 0 },
     baseCosts: { hp: 5, dmg: 7, speed: 6, atkSpeed: 7, crit: 7 },
     costs: { hp: 5, dmg: 7, speed: 6, atkSpeed: 7, crit: 7 },
     totalPurchases: 0,
+    inspectedNode: null,
+    _domBuilt: false,
 
     branches: {
         hp: {
-            name: 'Vitalità', icon: 'fa-heart', color: '#22c55e', tailwind: 'green',
-            tier1: { name: 'Barriera d\'Ingresso', desc: 'Inizio piano: +10% Scudo HP e +15% Cure ricevute' },
-            tier2: { name: 'Corazza della Fenice', desc: '-5% danno max/colpo e Rinascita 50% HP (1/piano)' }
+            name: 'Vitalità', short: 'VIT', icon: 'fa-heart', color: '#22c55e', tailwind: 'green',
+            tier1: { name: 'Barriera d\'Ingresso', icon: 'fa-shield-heart', desc: 'Inizio piano: +10% Scudo HP e +15% Cure ricevute.' },
+            tier2: { name: 'Corazza della Fenice', icon: 'fa-fire-flame-curved', desc: '-5% danno max per colpo. 1 volta/piano rinasci al 50% HP respingendo i nemici.' }
         },
         dmg: {
-            name: 'Danno', icon: 'fa-fire', color: '#ef4444', tailwind: 'red',
-            tier1: { name: 'Impatto Frantumante', desc: '+35% danni a difese/scudi e spinta potenziata' },
-            tier2: { name: 'Dardo Perforante', desc: 'I proiettili base ottengono +1 Perforazione' }
+            name: 'Danno', short: 'DMG', icon: 'fa-fire', color: '#ef4444', tailwind: 'red',
+            tier1: { name: 'Impatto Frantumante', icon: 'fa-hammer', desc: '+35% danni a nemici scudati/difese e spinta maggiorata.' },
+            tier2: { name: 'Dardo Perforante', icon: 'fa-angles-right', desc: 'I proiettili base ottengono +1 Perforazione bersaglio.' }
         },
         speed: {
-            name: 'Movimento', icon: 'fa-shoe-prints', color: '#3b82f6', tailwind: 'blue',
-            tier1: { name: 'Passo Anfibio', desc: '+1s durata Scudo Cinetico e -50% rallentamento fosse' },
-            tier2: { name: 'Scia Cinetica', desc: 'Scatto: -0.5s CD Scudo e raccoglie loot (+50% raggio)' }
+            name: 'Movimento', short: 'VEL', icon: 'fa-shoe-prints', color: '#3b82f6', tailwind: 'blue',
+            tier1: { name: 'Passo Anfibio', icon: 'fa-water', desc: '+1s durata Scudo Cinetico e -50% rallentamento in acqua/lava.' },
+            tier2: { name: 'Scia Cinetica', icon: 'fa-magnet', desc: 'Lo Scatto riduce di 0.5s il CD Scudo e aspira il loot (+50% raggio).' }
         },
         atkSpeed: {
-            name: 'Ritmo', icon: 'fa-bolt', color: '#f59e0b', tailwind: 'amber',
-            tier1: { name: 'Innesco Rapido', desc: 'Ogni 6 attacchi: +1 Combo extra e +25% vel. colpo' },
-            tier2: { name: 'Doppia Canna', desc: 'Ogni 5 attacchi: 2° colpo parallelo (50% danno)' }
+            name: 'Ritmo', short: 'ATK', icon: 'fa-bolt', color: '#f59e0b', tailwind: 'amber',
+            tier1: { name: 'Innesco Rapido', icon: 'fa-forward-fast', desc: 'Ogni 6 attacchi: +1 Punto Combo extra e +25% velocità proiettile.' },
+            tier2: { name: 'Doppia Canna', icon: 'fa-clone', desc: 'Ogni 5 attacchi spari gratuitamente un 2° dardo parallelo (50% danno).' }
         },
         crit: {
-            name: 'Precisione', icon: 'fa-crosshairs', color: '#a855f7', tailwind: 'purple',
-            tier1: { name: 'Punto Vitale', desc: 'Combo aumenta Danno Critico (+0.5x a 100 Combo)' },
-            tier2: { name: 'Eco Letale', desc: 'I critici esplodono: 30% danno ad area (raggio 65)' }
+            name: 'Precisione', short: 'CRIT', icon: 'fa-crosshairs', color: '#a855f7', tailwind: 'purple',
+            tier1: { name: 'Punto Vitale', icon: 'fa-bolt-lightning', desc: 'La Combo aumenta il Danno Critico (+0.50x a 100 Combo).' },
+            tier2: { name: 'Eco Letale', icon: 'fa-burst', desc: 'I colpi critici generano un\'esplosione cinetica (30% danno ad area).' }
         }
     },
 
@@ -19010,12 +19089,8 @@ const Preloader = {
 
     applyMasteriesToPlayer(p) {
         if (!p) return;
-        if (this.hasMastery('hp', 1)) {
-            p.modifiers.healDropMult += 0.15;
-        }
-        if (this.hasMastery('speed', 1)) {
-            p.modifiers.shieldDurationAdd += 1.0;
-        }
+        if (this.hasMastery('hp', 1)) p.modifiers.healDropMult += 0.15;
+        if (this.hasMastery('speed', 1)) p.modifiers.shieldDurationAdd += 1.0;
     },
 
     getStatPreview(type) {
@@ -19024,29 +19099,168 @@ const Preloader = {
             let curr = p ? p.stats.maxHp : 100;
             let rawGain = this.getHpGainForCurrentFloor();
             let effGain = (p && p.modifiers.bloodthirst) ? Math.floor(rawGain * 0.85) : rawGain;
-            return { curr: curr, next: curr + effGain };
+            return { curr: curr, next: '+' + effGain };
         }
         if (type === 'dmg') {
             let curr = p ? p.modifiers.dmgMult : 1.0;
-            return { curr: curr.toFixed(2) + 'x', next: (curr + 0.10).toFixed(2) + 'x' };
+            return { curr: curr.toFixed(2) + 'x', next: '+0.10x' };
         }
         if (type === 'speed') {
             let curr = p ? p.modifiers.speedMult : 1.0;
-            return { curr: curr.toFixed(2) + 'x', next: (curr + 0.04).toFixed(2) + 'x' };
+            return { curr: curr.toFixed(2) + 'x', next: '+0.04x' };
         }
         if (type === 'atkSpeed') {
             let curr = p ? (1.0 + p.modifiers.bonusAtkSpeed) : 1.0;
-            return { curr: curr.toFixed(2) + 'x', next: (curr + 0.05).toFixed(2) + 'x' };
+            return { curr: curr.toFixed(2) + 'x', next: '+0.05x' };
         }
         if (type === 'crit') {
             let totalCrit = p ? (p.modifiers.critChance + p.modifiers.bonusCritChance) : 0.10;
             if (totalCrit >= 0.75 && p) {
                 let cdm = p.modifiers.critDmgMult;
-                return { curr: cdm.toFixed(2) + 'x', next: (cdm + 0.12).toFixed(2) + 'x' };
+                return { curr: cdm.toFixed(2) + 'x', next: '+0.12x' };
             }
             let curr = Math.round(totalCrit * 100);
-            return { curr: curr + '%', next: Math.min(75, curr + 5) + '%' };
+            return { curr: curr + '%', next: '+5%' };
         }
+    },
+
+    // Mostra i dettagli del cerchietto toccato o survolato col mouse
+    inspectMastery(key, tier, evt) {
+        if (evt) evt.stopPropagation();
+        const b = this.branches[key];
+        if (!b) return;
+        const tData = tier === 1 ? b.tier1 : b.tier2;
+        const reqLvl = tier === 1 ? 5 : 10;
+        const unlocked = this.levels[key] >= reqLvl;
+
+        this.inspectedNode = `${key}_${tier}`;
+        document.querySelectorAll('#shop-tree-container .mastery-node').forEach(el => {
+            el.classList.toggle('inspected', el.dataset.nodeId === this.inspectedNode);
+        });
+
+        const wrap = document.getElementById('shop-insp-icon-wrap');
+        const icon = document.getElementById('shop-insp-icon');
+        const title = document.getElementById('shop-insp-title');
+        const badge = document.getElementById('shop-insp-badge');
+        const desc = document.getElementById('shop-insp-desc');
+        if (!title || !desc) return;
+
+        wrap.style.borderColor = unlocked ? '#fbbf24' : b.color;
+        wrap.style.color = unlocked ? '#fbbf24' : b.color;
+        icon.className = `fa-solid ${tData.icon} text-sm`;
+
+        title.innerText = `${b.name} • ${tData.name}`;
+        title.style.color = unlocked ? '#fbbf24' : b.color;
+
+        if (unlocked) {
+            badge.innerText = `★ ATTIVA (LV.${reqLvl})`;
+            badge.className = 'text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-400/50 shrink-0';
+        } else {
+            let mancanti = reqLvl - this.levels[key];
+            badge.innerText = `LV.${reqLvl} (-${mancanti})`;
+            badge.className = 'text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 bg-white/10 text-gray-300 border border-white/20 shrink-0';
+        }
+        desc.innerText = tData.desc;
+    },
+
+    // Effetto particellare leggero (Zero impatto sulla memoria)
+    spawnFX(targetEl, colorHex, count = 8) {
+        if (AppSettings.isLow || !targetEl) return;
+        const layer = document.getElementById('shop-fx-layer');
+        if (!layer) return;
+        const rect = targetEl.getBoundingClientRect();
+        const cx = rect.left + rect.width * 0.5;
+        const cy = rect.top + rect.height * 0.5;
+
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'shop-fx-particle';
+            const size = MathUtils.randomRange(4, 8);
+            const angle = (Math.PI * 2 / count) * i + MathUtils.randomRange(-0.3, 0.3);
+            const dist = MathUtils.randomRange(26, 64);
+            p.style.width = `${size}px`;
+            p.style.height = `${size}px`;
+            p.style.left = `${cx - size * 0.5}px`;
+            p.style.top = `${cy - size * 0.5}px`;
+            p.style.background = i % 2 === 0 ? '#ffffff' : colorHex;
+            p.style.boxShadow = `0 0 8px ${colorHex}`;
+            p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+            p.style.setProperty('--ty', `${Math.sin(angle) * dist - 18}px`);
+            layer.appendChild(p);
+            setTimeout(() => p.remove(), 560);
+        }
+    },
+
+    // Costruisce la struttura DOM una sola volta così le barre si animano fluidamente
+    buildDOM(container) {
+        let html = '';
+        const keys = ['hp', 'dmg', 'speed', 'atkSpeed', 'crit'];
+
+        keys.forEach((key) => {
+            const b = this.branches[key];
+            html += `
+                <div id="totem-col-${key}" class="totem-col flex flex-col items-center justify-between p-1.5 sm:p-2 relative select-none">
+                    
+                    <!-- CIMA: CERCHIO MAESTRIA LV.10 -->
+                    <div class="relative flex flex-col items-center z-20 pt-0.5">
+                        <div id="node-${key}-2" data-node-id="${key}_2"
+                             onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
+                             ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
+                             onclick="ShopSystem.inspectMastery('${key}', 2, event)"
+                             style="color: ${b.color}"
+                             class="mastery-node w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center relative">
+                            <i class="fa-solid ${b.tier2.icon} text-xs sm:text-sm pointer-events-none"></i>
+                            <span class="absolute -top-1.5 -right-1.5 bg-black border border-white/30 text-[7px] font-black px-1 rounded-full text-gray-300 pointer-events-none">10</span>
+                        </div>
+                    </div>
+
+                    <!-- CORPO CENTRALE: BARRA VERTICALE CHE SALE DAL BASSO + CERCHIO LV.5 A METÀ -->
+                    <div class="relative flex-1 w-full flex items-center justify-center my-1.5">
+                        <div class="totem-track relative h-full flex items-end justify-center overflow-hidden">
+                            <!-- Riempimento fluido dal basso verso l'alto -->
+                            <div id="totem-fill-${key}" class="totem-fill w-full h-0 relative"
+                                 style="background: linear-gradient(to top, ${b.color}88, ${b.color}, #ffffff); box-shadow: 0 0 12px ${b.color};">
+                            </div>
+                            <!-- Tacche orizzontali dei 10 gradi -->
+                            <div class="totem-ticks absolute inset-0 pointer-events-none"></div>
+                        </div>
+
+                        <!-- META' RAMO (50%): CERCHIO MAESTRIA LV.5 -->
+                        <div id="node-${key}-1" data-node-id="${key}_1"
+                             onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
+                             ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
+                             onclick="ShopSystem.inspectMastery('${key}', 1, event)"
+                             style="color: ${b.color}"
+                             class="mastery-node absolute top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center">
+                            <i class="fa-solid ${b.tier1.icon} text-[11px] sm:text-xs pointer-events-none"></i>
+                            <span class="absolute -top-1.5 -right-1.5 bg-black border border-white/30 text-[7px] font-black px-1 rounded-full text-gray-300 pointer-events-none">5</span>
+                        </div>
+                    </div>
+
+                    <!-- INFO VALORE ATTUALE E GRADO -->
+                    <div class="w-full flex flex-col items-center text-center mb-1.5">
+                        <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-400">${b.short} <strong id="totem-lvl-${key}" class="text-white">Lv.0</strong></span>
+                        <span id="totem-val-${key}" class="text-[10px] sm:text-xs font-black text-white leading-tight mt-0.5">100</span>
+                        <span id="totem-next-${key}" class="text-[8px] sm:text-[9px] font-extrabold text-${b.tailwind}-400 leading-none">+15</span>
+                    </div>
+
+                    <!-- BASE: PULSANTE DI ACQUISTO -->
+                    <button id="totem-btn-${key}" onclick="ShopSystem.buy('${key}')"
+                            class="shop-btn ${key} w-full py-2 px-1 flex flex-col items-center justify-center gap-1 border border-white/20 active:scale-95">
+                        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-${b.tailwind}-950/70 border border-${b.tailwind}-500/40 flex items-center justify-center">
+                            <i class="fa-solid ${b.icon} text-${b.tailwind}-400 text-xs"></i>
+                        </div>
+                        <div id="totem-cost-wrap-${key}" class="flex items-center justify-center gap-1 text-[10px] sm:text-xs font-black">
+                            <i class="fa-solid fa-coins text-[9px]"></i>
+                            <span id="totem-cost-${key}">5</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        this._domBuilt = true;
     },
 
     updateUI() {
@@ -19057,90 +19271,67 @@ const Preloader = {
         const container = document.getElementById('shop-tree-container');
         if (!container) return;
 
+        if (!this._domBuilt || container.children.length === 0) {
+            this.buildDOM(container);
+        }
+
         this.recalculateCosts();
-        let html = '';
         const keys = ['hp', 'dmg', 'speed', 'atkSpeed', 'crit'];
 
         keys.forEach((key) => {
-            const b = this.branches[key];
             const lvl = this.levels[key];
             const cost = this.costs[key];
             const canAfford = Game.coins >= cost;
             const prev = this.getStatPreview(key);
-
-            const inTier1 = lvl < 5;
-            const targetMilestone = inTier1 ? 5 : 10;
-            const activeTier = inTier1 ? b.tier1 : b.tier2;
-            const progressInTier = inTier1 ? lvl : Math.min(5, lvl - 5);
             const isOneStepAway = (lvl === 4 || lvl === 9);
-            const isMaxMastery = lvl >= 10;
 
-            let nodesHtml = '';
-            for (let n = 1; n <= 4; n++) {
-                let filled = progressInTier >= n || isMaxMastery;
-                nodesHtml += `
-                    <div class="path-node ${filled ? 'active' : ''}" style="color: ${b.color}"></div>
-                    <div class="w-1.5 h-[2px] ${filled ? 'bg-white/60' : 'bg-white/10'}"></div>
-                `;
+            // 1. Colonna e bagliore "Quasi Maestria"
+            const colEl = document.getElementById(`totem-col-${key}`);
+            if (colEl) colEl.classList.toggle('almost-mastery', isOneStepAway);
+
+            // 2. Altezza fluida della barra verticale (0% -> 50% al Lv.5 -> 100% al Lv.10+)
+            const fillEl = document.getElementById(`totem-fill-${key}`);
+            if (fillEl) {
+                const fillPct = Math.min(100, (lvl / 10) * 100);
+                fillEl.style.height = `${fillPct}%`;
             }
 
-            let milestoneLabel = isMaxMastery ? '★ MAX' : `★ LV.${targetMilestone}`;
-            let milestoneClass = isMaxMastery ? 'unlocked' : (isOneStepAway ? 'border-amber-400 text-amber-300 animate-pulse' : 'text-gray-400');
-            nodesHtml += `<div class="path-milestone ${milestoneClass}">${milestoneLabel}</div>`;
-
-            let masteryText = '';
-            if (isMaxMastery) {
-                masteryText = `<span class="text-amber-400 font-black">MAESTRIA II ATTIVA:</span> <span class="text-gray-200">${b.tier2.name}</span>`;
-            } else if (isOneStepAway) {
-                masteryText = `<span class="text-amber-300 font-black">PROSSIMO GRADO:</span> <span class="text-white">${activeTier.desc}</span>`;
-            } else {
-                masteryText = `<span class="text-gray-400">Lv.${targetMilestone}: ${activeTier.desc}</span>`;
+            // 3. Stato Cerchietti Maestria Lv.5 e Lv.10
+            const node1 = document.getElementById(`node-${key}-1`);
+            if (node1) {
+                node1.classList.toggle('unlocked', lvl >= 5);
+                node1.classList.toggle('ready-next', lvl === 4);
+            }
+            const node2 = document.getElementById(`node-${key}-2`);
+            if (node2) {
+                node2.classList.toggle('unlocked', lvl >= 10);
+                node2.classList.toggle('ready-next', lvl === 9);
             }
 
-            html += `
-                <button onclick="ShopSystem.buy('${key}')" class="shop-btn ${key} ${isOneStepAway ? 'almost-mastery' : ''} relative w-full p-2.5 flex flex-col gap-1.5 overflow-hidden shrink-0 text-left">
-                    <div class="w-full flex items-center justify-between">
-                        <div class="flex items-center gap-2.5 w-[38%]">
-                            <div class="w-8 h-8 bg-${b.tailwind}-900/50 flex items-center justify-center border border-${b.tailwind}-500/40 shrink-0">
-                                <i class="fa-solid ${b.icon} text-${b.tailwind}-400 text-sm"></i>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-white font-black text-[10px] sm:text-[11px] uppercase tracking-wider leading-none">${b.name}</span>
-                                <span class="text-[9px] font-bold text-gray-400 mt-0.5">Grado ${lvl} ${lvl >= 5 ? '★' : ''}${lvl >= 10 ? '★' : ''}</span>
-                            </div>
-                        </div>
+            // 4. Testi compatti (Grado e Valore)
+            const lvlEl = document.getElementById(`totem-lvl-${key}`);
+            if (lvlEl) lvlEl.innerText = `Lv.${lvl}`;
+            const valEl = document.getElementById(`totem-val-${key}`);
+            if (valEl) valEl.innerText = prev.curr;
+            const nextEl = document.getElementById(`totem-next-${key}`);
+            if (nextEl) nextEl.innerText = prev.next;
 
-                        <div class="flex items-center justify-center gap-1.5 w-[34%] bg-black/50 py-1 px-2 border border-gray-800">
-                            <span class="text-gray-400 font-bold text-[9px] sm:text-[11px]">${prev.curr}</span>
-                            <i class="fa-solid fa-chevron-right text-${b.tailwind}-400 text-[8px]"></i>
-                            <span class="text-${b.tailwind}-300 font-black text-[10px] sm:text-xs">${prev.next}</span>
-                        </div>
-
-                        <div class="flex justify-end w-[24%]">
-                            <div class="bg-black/70 ${canAfford ? 'text-yellow-400 border-yellow-500/50' : 'text-gray-500 border-gray-800'} border px-2.5 py-1 text-[10px] sm:text-xs font-black flex items-center justify-center gap-1.5 min-w-[54px]">
-                                <i class="fa-solid fa-coins"></i> <span>${cost}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-full flex items-center justify-between gap-2 pt-1 border-t border-white/10">
-                        <div class="flex items-center shrink-0">
-                            ${nodesHtml}
-                        </div>
-                        <div class="text-[8.5px] sm:text-[9.5px] font-bold truncate text-right flex-1">
-                            ${masteryText}
-                        </div>
-                    </div>
-                </button>
-            `;
+            // 5. Bottone Prezzo
+            const costEl = document.getElementById(`totem-cost-${key}`);
+            if (costEl) costEl.innerText = cost;
+            const costWrap = document.getElementById(`totem-cost-wrap-${key}`);
+            if (costWrap) {
+                costWrap.className = `flex items-center justify-center gap-1 text-[10px] sm:text-xs font-black ${canAfford ? 'text-yellow-400' : 'text-gray-500'}`;
+            }
         });
-
-        container.innerHTML = html;
     },
 
     buy(type) {
         this.recalculateCosts();
         let cost = this.costs[type];
+        const colEl = document.getElementById(`totem-col-${type}`);
+        const btnEl = document.getElementById(`totem-btn-${type}`);
+
         if (Game.coins >= cost) {
             Game.coins -= cost;
             this.levels[type]++;
@@ -19149,13 +19340,6 @@ const Preloader = {
 
             if (!unlockedMastery) {
                 this.totalPurchases++;
-            }
-
-            if (unlockedMastery) {
-                AudioEngine.playLevelUp();
-                Haptics.vibrate([30, 20, 50]);
-            } else {
-                AudioEngine.playCoin();
             }
 
             let p = Game.player;
@@ -19193,19 +19377,34 @@ const Preloader = {
             }
 
             this.updateUI();
+
+            // Mostra automaticamente nell'ispettore la Maestria appena sbloccata o la prossima del ramo!
+            let inspectTier = newLvl <= 5 ? 1 : 2;
+            this.inspectMastery(type, inspectTier);
+
+            // Feedback sonoro, animazione colonna e particelle leggere
+            const bColor = this.branches[type].color;
+            if (colEl) {
+                colEl.classList.remove('anim-totem-pop');
+                void colEl.offsetWidth;
+                colEl.classList.add('anim-totem-pop');
+            }
+
+            if (unlockedMastery) {
+                AudioEngine.playLevelUp();
+                Haptics.vibrate([30, 20, 60]);
+                const nodeEl = document.getElementById(`node-${type}-${newLvl === 5 ? 1 : 2}`);
+                this.spawnFX(nodeEl || btnEl, '#fbbf24', 14);
+            } else {
+                AudioEngine.playCoin();
+                Haptics.vibrate(12);
+                this.spawnFX(btnEl, bColor, 7);
+            }
         } else {
             AudioEngine.playClick();
-            let btn = document.querySelector(`button[onclick="ShopSystem.buy('${type}')"]`);
-            if (btn) {
-                let textSpans = btn.querySelectorAll('span.text-white');
-                textSpans.forEach(span => {
-                    span.classList.remove('text-white');
-                    span.classList.add('text-red-500');
-                    setTimeout(() => {
-                        span.classList.remove('text-red-500');
-                        span.classList.add('text-white');
-                    }, 150);
-                });
+            if (btnEl) {
+                btnEl.classList.add('border-red-500');
+                setTimeout(() => btnEl.classList.remove('border-red-500'), 180);
             }
         }
     },
@@ -19214,7 +19413,9 @@ const Preloader = {
         this.bonus = { hp: 0, dmg: 0, speed: 0, atkSpeed: 0, crit: 0, critDmg: 0 };
         this.levels = { hp: 0, dmg: 0, speed: 0, atkSpeed: 0, crit: 0 };
         this.totalPurchases = 0;
+        this.inspectedNode = null;
         this.recalculateCosts();
+        if (this._domBuilt) this.updateUI();
     }
 };
 
