@@ -504,16 +504,20 @@
         transition: opacity 0.3s;
     }
 
-        .vignette-low-hp-active {
+    .vignette-low-hp-active {
         opacity: 1 !important;
         animation: pulse-blood-opacity 0.8s infinite ease-in-out;
-        /* Desaturazione e contrasto localizzati tramite backdrop-filter */
         backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
         -webkit-backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
-        /* Distorsione: pattern scanline CRT + gradiente sangue concentrato ai bordi */
         background: 
             repeating-linear-gradient(rgba(18, 16, 16, 0) 0px, rgba(18, 16, 16, 0) 2px, rgba(0, 0, 0, 0.35) 3px, rgba(0, 0, 0, 0.35) 4px),
             radial-gradient(circle at center, transparent 20%, rgba(220, 0, 0, 0.35) 70%, rgba(255, 0, 0, 0.75) 100%) !important;
+    }
+    .chromatic-flash {
+        position: absolute; inset: 0; pointer-events: none; z-index: 12; opacity: 0;
+        mix-blend-mode: screen;
+        box-shadow: inset 24px 0 35px rgba(255, 0, 75, 0.85), inset -24px 0 35px rgba(0, 220, 255, 0.85), inset 0 20px 30px rgba(255, 30, 30, 0.7), inset 0 -20px 30px rgba(0, 255, 180, 0.7);
+        transition: opacity 0.08s ease-out;
     }
         
     .death-fade-active {
@@ -1674,6 +1678,9 @@ const AudioEngine = {
     toggleSFX() {
         this.sfxMuted = !this.sfxMuted;
         if (!this.sfxMuted && this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.ambientGain && this.ctx) {
+            this.ambientGain.gain.setValueAtTime(this.sfxMuted ? 0 : 0.05, this.ctx.currentTime);
+        }
     },
     createNoiseBuffer() {
         let bufferSize = this.ctx.sampleRate * 2; 
@@ -2243,6 +2250,7 @@ playCoin() {
         this.stopMenuMusic();
         this.stopGameMusic();
         this.stopBossMusic();
+        this.stopAmbience();
     },
        playShoot(type, isCrit = false) {
         if (!this.ctx || this.sfxMuted) return; if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -2386,6 +2394,229 @@ playCoin() {
         gain.gain.setValueAtTime(0, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.4, this.ctx.currentTime + 0.1); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
         osc1.connect(gain); osc2.connect(gain); gain.connect(this.ctx.destination); osc1.start(); osc2.start(); osc1.stop(this.ctx.currentTime + 1.5); osc2.stop(this.ctx.currentTime + 1.5);
         this.playNoise(1.0, 'low');
+    },
+
+    // --- PROCEDURAL AMBIENCE & BIOME SOUND GENERATORS ---
+    currentAmbienceTheme: -1,
+    ambientTimer: 0,
+    ambientGain: null,
+    ambientSource: null,
+
+    startAmbience(themeIndex) {
+        if (!this.ctx) return;
+        if (this.currentAmbienceTheme === themeIndex && this.ambientGain) return;
+        this.stopAmbience();
+        this.currentAmbienceTheme = themeIndex;
+        this.ambientTimer = MathUtils.randomRange(6, 12);
+
+        try {
+            let t = this.ctx.currentTime;
+            this.ambientGain = this.ctx.createGain();
+            this.ambientGain.gain.setValueAtTime(this.sfxMuted ? 0 : 0.045, t);
+            let dest = this.compressor || this.ctx.destination;
+            this.ambientGain.connect(dest);
+
+            if (!this.noiseBuffer) this.createNoiseBuffer();
+            if (this.noiseBuffer) {
+                let noise = this.ctx.createBufferSource();
+                noise.buffer = this.noiseBuffer;
+                noise.loop = true;
+
+                let filter = this.ctx.createBiquadFilter();
+                if (themeIndex === 0) {
+                    // Foresta: brezza frusciante calda e rami
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(420, t);
+                    filter.Q.setValueAtTime(0.7, t);
+                } else if (themeIndex === 1) {
+                    // Vulcano: rombo tellurico profondo e magma
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(140, t);
+                    filter.Q.setValueAtTime(2.2, t);
+                } else {
+                    // Ghiaccio: sibilo d'aria gelida in alta quota
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(850, t);
+                    filter.Q.setValueAtTime(1.8, t);
+                }
+
+                noise.connect(filter);
+                filter.connect(this.ambientGain);
+                noise.start(t);
+                this.ambientSource = noise;
+            }
+        } catch (e) {
+            console.warn('Ambience init error:', e);
+        }
+    },
+
+    stopAmbience() {
+        if (this.ambientSource) {
+            try { this.ambientSource.stop(); this.ambientSource.disconnect(); } catch (e) {}
+            this.ambientSource = null;
+        }
+        if (this.ambientGain) {
+            try { this.ambientGain.disconnect(); } catch (e) {}
+            this.ambientGain = null;
+        }
+        this.currentAmbienceTheme = -1;
+    },
+
+    updateAmbience(dt) {
+        if (this.currentAmbienceTheme < 0 || this.sfxMuted || !this.ctx) return;
+        this.ambientTimer -= dt;
+        if (this.ambientTimer <= 0) {
+            this.ambientTimer = MathUtils.randomRange(10, 18);
+            if (this.currentAmbienceTheme === 0) {
+                if (Math.random() < 0.6) this.playBirdChirp();
+                else this.playTwigSnap();
+            } else if (this.currentAmbienceTheme === 1) {
+                if (Math.random() < 0.65) this.playMagmaPop();
+                else this.playEarthRumble();
+            } else if (this.currentAmbienceTheme === 2) {
+                if (Math.random() < 0.55) this.playIceCrack();
+                else this.playWindHowl();
+            }
+        }
+    },
+
+    playBirdChirp() {
+        if (!this.ctx || this.sfxMuted) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let osc = this.ctx.createOscillator();
+        let g = this.ctx.createGain();
+        osc.type = 'sine';
+        let f0 = MathUtils.randomRange(1800, 2400);
+        let f1 = f0 + MathUtils.randomRange(600, 1000);
+        osc.frequency.setValueAtTime(f0, t);
+        osc.frequency.exponentialRampToValueAtTime(f1, t + 0.05);
+        osc.frequency.exponentialRampToValueAtTime(f0 * 0.9, t + 0.12);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.045, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+        osc.connect(g); g.connect(dest);
+        osc.start(t); osc.stop(t + 0.14);
+    },
+
+    playTwigSnap() {
+        if (!this.ctx || this.sfxMuted || !this.noiseBuffer) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        let f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.setValueAtTime(1400, t);
+        f.Q.setValueAtTime(4.0, t);
+        let g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.07, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+        src.connect(f); f.connect(g); g.connect(dest);
+        src.start(t); src.stop(t + 0.05);
+    },
+
+    playMagmaPop() {
+        if (!this.ctx || this.sfxMuted) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let osc = this.ctx.createOscillator();
+        let g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(MathUtils.randomRange(180, 240), t);
+        osc.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+        g.gain.setValueAtTime(0.08, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.connect(g); g.connect(dest);
+        osc.start(t); osc.stop(t + 0.19);
+    },
+
+    playEarthRumble() {
+        if (!this.ctx || this.sfxMuted) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let osc = this.ctx.createOscillator();
+        let g = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(42, t);
+        osc.frequency.linearRampToValueAtTime(28, t + 0.7);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.09, t + 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+        osc.connect(g); g.connect(dest);
+        osc.start(t); osc.stop(t + 0.85);
+    },
+
+    playIceCrack() {
+        if (!this.ctx || this.sfxMuted) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let osc = this.ctx.createOscillator();
+        let g = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(3200, t);
+        osc.frequency.exponentialRampToValueAtTime(800, t + 0.09);
+        g.gain.setValueAtTime(0.06, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
+        osc.connect(g); g.connect(dest);
+        osc.start(t); osc.stop(t + 0.11);
+    },
+
+    playWindHowl() {
+        if (!this.ctx || this.sfxMuted || !this.noiseBuffer) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        let f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.setValueAtTime(600, t);
+        f.frequency.linearRampToValueAtTime(950, t + 0.8);
+        f.frequency.linearRampToValueAtTime(500, t + 1.8);
+        f.Q.setValueAtTime(3.5, t);
+        let g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.06, t + 0.4);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 1.9);
+        src.connect(f); f.connect(g); g.connect(dest);
+        src.start(t); src.stop(t + 2.0);
+    },
+
+    playThunder() {
+        if (!this.ctx || this.sfxMuted || !this.noiseBuffer) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        let f = this.ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.setValueAtTime(220, t);
+        f.frequency.exponentialRampToValueAtTime(60, t + 1.2);
+        let g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.18, t);
+        g.gain.exponentialRampToValueAtTime(0.002, t + 1.4);
+        src.connect(f); f.connect(g); g.connect(dest);
+        src.start(t); src.stop(t + 1.5);
+    },
+
+    playFoliageRustle() {
+        if (!this.ctx || this.sfxMuted || !this.noiseBuffer) return;
+        let t = this.ctx.currentTime;
+        let dest = this.compressor || this.ctx.destination;
+        let src = this.ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        let f = this.ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.setValueAtTime(1800, t);
+        f.Q.setValueAtTime(1.5, t);
+        let g = this.ctx.createGain();
+        for (let i = 0; i < 3; i++) {
+            let bt = t + i * 0.08;
+            g.gain.setValueAtTime(0.04, bt);
+            g.gain.exponentialRampToValueAtTime(0.002, bt + 0.06);
+        }
+        src.connect(f); f.connect(g); g.connect(dest);
+        src.start(t); src.stop(t + 0.35);
     }
 };
 
@@ -5913,6 +6144,10 @@ const UI = {
         flashDiv.style.backgroundColor = 'rgba(200, 0, 0, 0.2)';
         document.getElementById('hud').appendChild(flashDiv);
         this.els.damageFlash = flashDiv;
+        let chromDiv = document.createElement('div');
+        chromDiv.className = 'chromatic-flash';
+        document.getElementById('hud').appendChild(chromDiv);
+        this.els.chromaticFlash = chromDiv;
         // -------------------------------------------------
         
        // --- INIZIO ANNUNCIATORE ARCADE ---
@@ -6204,42 +6439,47 @@ const UI = {
         }
  // Ora si attiva SOLO se il giocatore è stato fisicamente colpito (flashTimer), non per il semplice screen shake.
         if (Game.player && Game.player.flashTimer > 0 && !Game.player.dead) {
-            this.els.damageFlash.style.opacity = (Game.player.flashTimer / 0.1) * 0.6;
+            let p = (Game.player.flashTimer / 0.1);
+            this.els.damageFlash.style.opacity = p * 0.6;
+            if (this.els.chromaticFlash) this.els.chromaticFlash.style.opacity = Math.min(1.0, p * 1.3);
             this.cache.flashActive = true;
         } else if (this.cache.flashActive) {
             this.els.damageFlash.style.opacity = '0';
+            if (this.els.chromaticFlash) this.els.chromaticFlash.style.opacity = '0';
             this.cache.flashActive = false;
         }
         
-       let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
+   let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
 
-     // ATTIVAZIONE SCHERMO LOW HP DINAMICO CON MASCHERA CONCENTRICA (Sotto il 30% HP)
+     // ATTIVAZIONE SCHERMO CRT & VIGNETTA SANGUE CON RESTRINGIMENTO PROGRESSIVO AI BORDI
         let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state !== 'WARPING_OUT' && Game.state !== 'WARPING_IN';
         
-        if (this.cache.isLowHp !== isLowHp) {
-            if (isLowHp) {
+        if (isLowHp) {
+            if (!this.cache.isLowHp) {
                 this.els.bloodVignette.classList.add('vignette-low-hp-active');
-            } else {
+                document.body.classList.add('crt-active');
+                this.cache.isLowHp = true;
+            }
+            // Calcolo del raggio di sicurezza: si stringe verso il centro ma NON copre mai il personaggio (minimo 22%)
+            let intensity = (0.30 - hpRatio) / 0.30; // 0.0 a 30% HP -> 1.0 a 0% HP
+            let innerRadius = Math.max(22, Math.round(60 - intensity * 36)); // da 60% fino a 24%, min 22%
+            let outerRadius = Math.max(40, Math.round(88 - intensity * 36)); // da 88% fino a 52%
+            let maskStr = `radial-gradient(circle at center, transparent ${innerRadius}%, black ${outerRadius}%)`;
+            if (this.cache.lastLowHpMask !== maskStr) {
+                this.els.bloodVignette.style.webkitMaskImage = maskStr;
+                this.els.bloodVignette.style.maskImage = maskStr;
+                this.cache.lastLowHpMask = maskStr;
+            }
+        } else {
+            if (this.cache.isLowHp) {
                 this.els.bloodVignette.classList.remove('vignette-low-hp-active');
                 this.els.bloodVignette.style.webkitMaskImage = '';
                 this.els.bloodVignette.style.maskImage = '';
-                this.cache.lowHpMask = null;
-                document.body.classList.remove('crt-active');
-            }
-            this.cache.isLowHp = isLowHp;
-        }
-
-        // Maschera radiale dinamica: si stringe al calare della vita ma protegge sempre il centro
-        if (isLowHp) {
-            let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30)); // 0.0 al 30% HP -> 1.0 all'1% HP
-            let inner = Math.round(55 - t * 33); // Da 55% a 22% (Safe-zone garantita per non coprire mai il personaggio)
-            let outer = Math.round(85 - t * 37); // Da 85% a 48% (Bordo sfumato verso l'esterno)
-            let maskStr = `radial-gradient(circle at center, transparent ${inner}%, black ${outer}%)`;
-            
-            if (this.cache.lowHpMask !== maskStr) {
-                this.els.bloodVignette.style.webkitMaskImage = maskStr;
-                this.els.bloodVignette.style.maskImage = maskStr;
-                this.cache.lowHpMask = maskStr;
+                this.cache.lastLowHpMask = '';
+                if (!Game.player.dead || Game.state === 'DEAD') {
+                    document.body.classList.remove('crt-active');
+                }
+                this.cache.isLowHp = false;
             }
         }
 
@@ -6248,7 +6488,7 @@ const UI = {
             AudioEngine.setLowHpState(isLowHp);
         }
         
-     // DISSOLVENZA ALLA MORTE (Il canvas di gioco non viene più desaturato globalmente durante il combattimento)
+        // DISSOLVENZA E DESATURAZIONE GLOBALE SOLO ALLA MORTE (durante il combattimento resta concentrata sui bordi)
         let container = this.els.gameContainer;
         if (Game.player.dead) {
             if (this.cache.grayVal !== 'dead') {
@@ -6713,9 +6953,19 @@ pushDebris(px, pz, radius, force) {
         
         this.bloodMesh.setMatrixAt(this.bloodIdx, dummy.matrix);
         
-        // Assegna il colore in base al tipo di ferita/esplosione!
-      if (!Game._reusableDecalColor) Game._reusableDecalColor = new THREE.Color();
-        Game._reusableDecalColor.setHex(type === 'blood' ? 0x4a0000 : (type === 'scorch' ? 0x111111 : 0x113300));
+        // RIPRISTINO SANGUE, BRUCIATURE E IMPRONTE BIOMA
+        if (type === 'footprint_snow' || type === 'footprint_ash') {
+            s = MathUtils.randomRange(0.65, 0.95);
+            dummy.scale.set(s, 1, s * 1.3);
+        }
+        // Assegna il colore in base al tipo di decal
+        if (!Game._reusableDecalColor) Game._reusableDecalColor = new THREE.Color();
+        let decalCol = 0x4a0000;
+        if (type === 'scorch') decalCol = 0x111111;
+        else if (type === 'poison') decalCol = 0x113300;
+        else if (type === 'footprint_snow') decalCol = 0xd8e8f0;
+        else if (type === 'footprint_ash') decalCol = 0x222222;
+        Game._reusableDecalColor.setHex(decalCol);
         this.bloodMesh.setColorAt(this.bloodIdx, Game._reusableDecalColor);
         
         this.bloodMesh.instanceMatrix.needsUpdate = true;
@@ -7674,6 +7924,12 @@ loop(timestamp) {
             this.difficultyMult = 1.185 + (this.floor - 12) * 0.065;
         }
         
+        // Inizializza i sistemi atmosferici e la traccia audio del bioma
+        if (typeof WeatherSystem !== 'undefined') WeatherSystem.onFloorChange(this.currentThemeIndex, this.isCorrupted);
+        if (typeof AmbientParticlesSystem !== 'undefined') AmbientParticlesSystem.setTheme(this.currentThemeIndex);
+        if (typeof WildlifeSystem !== 'undefined') WildlifeSystem.onFloorChange(this.map);
+        if (typeof AudioEngine !== 'undefined') AudioEngine.startAmbience(this.currentThemeIndex);
+
         let vignetteEl = document.getElementById('vignette');
         if (vignetteEl) {
             vignetteEl.classList.remove('vignette-darkness-active');
@@ -8280,6 +8536,13 @@ startGame(diffMult) {
             }
         }
         InteractiveGrassSystem.uniforms.uWindCount.value = windCount;
+
+        // --- AGGIORNAMENTO SISTEMI ATMOSFERA E IMMERSIONE ---
+        if (typeof WeatherSystem !== 'undefined') WeatherSystem.update(combatDt, safeVisualDt, this);
+        if (typeof AudioEngine !== 'undefined') AudioEngine.updateAmbience(safeVisualDt);
+        if (typeof AmbientParticlesSystem !== 'undefined') AmbientParticlesSystem.update(safeVisualDt, this.player);
+        if (typeof WildlifeSystem !== 'undefined') WildlifeSystem.update(safeVisualDt, this.player, this.projectiles);
+        if (typeof RippleSystem !== 'undefined') RippleSystem.update(safeVisualDt);
         // ----------------------------------------------
 
 
@@ -9866,6 +10129,397 @@ const TreeCanopySystem = {
                 `
             );
         };
+    }
+};
+
+// ============================================================================
+// --- SISTEMI ATMOSFERA E IMMERSIONE AMBIENTALE (AAA Single Draw Call) ---
+// ============================================================================
+
+const AmbientParticlesSystem = {
+    points: null,
+    geo: null,
+    mat: null,
+    count: 120,
+    theme: 0,
+    positions: null,
+    colors: null,
+    customData: null, // [0]: speed, [1]: phase, [2]: drift, [3]: initialY
+
+    init() {
+        if (this.points) return;
+        this.count = AppSettings.isLow ? 40 : (isTouchDevice ? 65 : 120);
+        this.geo = new THREE.BufferGeometry();
+        this.positions = new Float32Array(this.count * 3);
+        this.colors = new Float32Array(this.count * 3);
+        this.customData = new Float32Array(this.count * 4);
+
+        for (let i = 0; i < this.count; i++) {
+            this.positions[i * 3 + 0] = (Math.random() - 0.5) * 600;
+            this.positions[i * 3 + 1] = Math.random() * 50 + 2;
+            this.positions[i * 3 + 2] = (Math.random() - 0.5) * 600;
+
+            this.customData[i * 4 + 0] = MathUtils.randomRange(15, 35); // speed
+            this.customData[i * 4 + 1] = Math.random() * Math.PI * 2;   // phase
+            this.customData[i * 4 + 2] = MathUtils.randomRange(-15, 15); // drift
+            this.customData[i * 4 + 3] = this.positions[i * 3 + 1];
+        }
+
+        this.geo.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+        this.geo.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
+
+        this.mat = new THREE.PointsMaterial({
+            size: 4.5,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        this.points = new THREE.Points(this.geo, this.mat);
+        this.points.frustumCulled = false;
+        Game.scene.add(this.points);
+        this.setTheme(0);
+    },
+
+    setTheme(themeIndex) {
+        if (!this.points) this.init();
+        this.theme = themeIndex;
+        let cAttr = this.geo.attributes.color;
+
+        for (let i = 0; i < this.count; i++) {
+            if (themeIndex === 0) {
+                // Foresta: spore dorate e lucciole smeraldo calde
+                let isGold = Math.random() < 0.65;
+                cAttr.setXYZ(i, isGold ? 1.0 : 0.3, isGold ? 0.9 : 1.0, isGold ? 0.2 : 0.35);
+            } else if (themeIndex === 1) {
+                // Vulcano: braci incandescenti ambra e arancio vivo
+                let isYellow = Math.random() < 0.35;
+                cAttr.setXYZ(i, 1.0, isYellow ? 0.85 : 0.28, 0.05);
+            } else {
+                // Ghiaccio: fiocchi di neve e polvere di diamante ciano/bianco
+                let isCyan = Math.random() < 0.45;
+                cAttr.setXYZ(i, isCyan ? 0.75 : 0.95, isCyan ? 0.92 : 0.98, 1.0);
+            }
+        }
+        cAttr.needsUpdate = true;
+        this.mat.size = (themeIndex === 2) ? 5.2 : ((themeIndex === 1) ? 4.8 : 3.8);
+    },
+
+    update(dt, player) {
+        if (!this.points || !player) return;
+        let pos = this.geo.attributes.position;
+        let time = Game.playTime || 0;
+        let px = player.x, pz = player.y;
+        let windFactor = (typeof WeatherSystem !== 'undefined') ? WeatherSystem.windFactor : 1.0;
+
+        for (let i = 0; i < this.count; i++) {
+            let idx3 = i * 3;
+            let idx4 = i * 4;
+            let spd = this.customData[idx4 + 0];
+            let phase = this.customData[idx4 + 1];
+            let drift = this.customData[idx4 + 2];
+
+            if (this.theme === 0) {
+                // Fluttuazione morbida lucciole
+                pos.array[idx3 + 0] += (drift + Math.sin(time * 1.5 + phase) * 8 * windFactor) * dt;
+                pos.array[idx3 + 1] = 6 + Math.sin(time * 2.0 + phase) * 14;
+                pos.array[idx3 + 2] += (Math.cos(time * 1.2 + phase) * 6) * dt;
+            } else if (this.theme === 1) {
+                // Braci che salgono veloci verso l'alto
+                pos.array[idx3 + 1] += (spd * 1.8) * dt;
+                pos.array[idx3 + 0] += (drift * 0.7 + Math.sin(time * 4.0 + phase) * 12) * dt;
+                if (pos.array[idx3 + 1] > 65) pos.array[idx3 + 1] = 2;
+            } else {
+                // Neve che scende delicata
+                pos.array[idx3 + 1] -= (spd * 1.1) * dt;
+                pos.array[idx3 + 0] += (drift * 1.2 + 25 * windFactor) * dt;
+                if (pos.array[idx3 + 1] < 1) pos.array[idx3 + 1] = 60;
+            }
+
+            // Torus wrap attorno al player (raggio 320)
+            let dx = pos.array[idx3 + 0] - px;
+            let dz = pos.array[idx3 + 2] - pz;
+            if (dx > 330) pos.array[idx3 + 0] -= 660;
+            else if (dx < -330) pos.array[idx3 + 0] += 660;
+            if (dz > 330) pos.array[idx3 + 2] -= 660;
+            else if (dz < -330) pos.array[idx3 + 2] += 660;
+        }
+        pos.needsUpdate = true;
+    }
+};
+
+const WeatherSystem = {
+    theme: 0,
+    isCorrupted: false,
+    windTimer: 12,
+    windFactor: 1.0,
+    windActiveDuration: 0,
+    seismicTimer: 18,
+    blizzardTimer: 20,
+    lightningTimer: 14,
+    baseFogDensity: 0.0018,
+    dirLightBaseColor: null,
+
+    onFloorChange(themeIndex, isCorrupted) {
+        this.theme = themeIndex;
+        this.isCorrupted = isCorrupted;
+        this.windTimer = MathUtils.randomRange(12, 18);
+        this.windFactor = 1.0;
+        this.windActiveDuration = 0;
+        this.seismicTimer = MathUtils.randomRange(15, 24);
+        this.blizzardTimer = MathUtils.randomRange(16, 25);
+        this.lightningTimer = MathUtils.randomRange(10, 16);
+
+        if (Game.scene && Game.scene.fog) {
+            this.baseFogDensity = Game.scene.fog.density || 0.0018;
+        }
+        if (Game.dirLight && !this.dirLightBaseColor) {
+            this.dirLightBaseColor = Game.dirLight.color.clone();
+        }
+    },
+
+    update(combatDt, visualDt, game) {
+        if (!game) return;
+
+        // 1. FORESTA: Raffiche di vento periodiche (piegano erba e particelle)
+        if (this.theme === 0) {
+            this.windTimer -= visualDt;
+            if (this.windTimer <= 0) {
+                this.windTimer = MathUtils.randomRange(15, 24);
+                this.windActiveDuration = 3.0; // 3 secondi di raffica
+                if (typeof AudioEngine !== 'undefined') AudioEngine.playFoliageRustle();
+            }
+            if (this.windActiveDuration > 0) {
+                this.windActiveDuration -= visualDt;
+                let gustProgress = Math.sin((1.0 - (this.windActiveDuration / 3.0)) * Math.PI);
+                this.windFactor = 1.0 + gustProgress * 2.8;
+                if (typeof InteractiveGrassSystem !== 'undefined' && InteractiveGrassSystem.uniforms && InteractiveGrassSystem.uniforms.uWindForce) {
+                    InteractiveGrassSystem.uniforms.uWindForce.value = 1.0 + gustProgress * 2.2;
+                }
+            } else {
+                this.windFactor = 1.0;
+                if (typeof InteractiveGrassSystem !== 'undefined' && InteractiveGrassSystem.uniforms && InteractiveGrassSystem.uniforms.uWindForce) {
+                    InteractiveGrassSystem.uniforms.uWindForce.value = 1.0;
+                }
+            }
+        }
+
+        // 2. VULCANO: Scosse telluriche, pioggia di braci e lampo rosso da dirLight
+        if (this.theme === 1) {
+            this.seismicTimer -= visualDt;
+            if (this.seismicTimer <= 0) {
+                this.seismicTimer = MathUtils.randomRange(18, 28);
+                game.addTrauma(0.18);
+                if (typeof AudioEngine !== 'undefined') AudioEngine.playEarthRumble();
+
+                // Lampo rosso incandescente
+                if (game.dirLight) {
+                    game.dirLight.color.setHex(0xff3311);
+                    setTimeout(() => {
+                        if (game.dirLight && WeatherSystem.dirLightBaseColor) {
+                            game.dirLight.color.copy(WeatherSystem.dirLightBaseColor);
+                        }
+                    }, 380);
+                }
+            }
+        }
+
+        // 3. GHIACCIO: Bufera breve con nebbia densa e neve orizzontale
+        if (this.theme === 2) {
+            this.blizzardTimer -= visualDt;
+            if (this.blizzardTimer <= 0) {
+                this.blizzardTimer = MathUtils.randomRange(20, 30);
+                this.blizzardActiveDuration = 3.5;
+                if (typeof AudioEngine !== 'undefined') AudioEngine.playWindHowl();
+            }
+            if (this.blizzardActiveDuration > 0) {
+                this.blizzardActiveDuration -= visualDt;
+                let progress = Math.sin((1.0 - (this.blizzardActiveDuration / 3.5)) * Math.PI);
+                this.windFactor = 1.0 + progress * 3.5;
+                if (game.scene && game.scene.fog) {
+                    game.scene.fog.density = this.baseFogDensity + progress * 0.0015;
+                }
+            } else {
+                this.windFactor = 1.0;
+                if (game.scene && game.scene.fog && Math.abs(game.scene.fog.density - this.baseFogDensity) > 0.0001) {
+                    game.scene.fog.density = this.baseFogDensity;
+                }
+            }
+        }
+
+        // 4. PIANI CORROTTI: Fulmini con flash ambientLight 80ms e tuono in ritardo
+        if (this.isCorrupted) {
+            this.lightningTimer -= visualDt;
+            if (this.lightningTimer <= 0) {
+                this.lightningTimer = MathUtils.randomRange(14, 22);
+                if (game.ambientLight) {
+                    let prevAmb = game.ambientLight.intensity;
+                    game.ambientLight.intensity = prevAmb * 1.85;
+                    setTimeout(() => {
+                        if (game.ambientLight) game.ambientLight.intensity = prevAmb;
+                    }, 80);
+
+                    // Tuono a propagazione fisica ritardata (350ms)
+                    setTimeout(() => {
+                        if (typeof AudioEngine !== 'undefined') AudioEngine.playThunder();
+                        game.addTrauma(0.12);
+                    }, 350);
+                }
+            }
+        }
+    }
+};
+
+const WildlifeSystem = {
+    creatures: [],
+    maxCreatures: 8,
+
+    onFloorChange(map) {
+        this.clear();
+        if (!map || !map.grid) return;
+        let count = AppSettings.isLow ? 3 : (isTouchDevice ? 5 : this.maxCreatures);
+
+        for (let i = 0; i < count; i++) {
+            let wx = (Math.random() - 0.5) * 500;
+            let wz = (Math.random() - 0.5) * 500;
+            let sprMat = (Game.currentThemeIndex === 0) ? SharedMat.spriteGreen : SharedMat.spriteWhite;
+            let spr = new THREE.Sprite(sprMat);
+            spr.scale.set(4.5, 4.5, 1);
+            spr.position.set(wx, 12, wz);
+            Game.scene.add(spr);
+
+            this.creatures.push({
+                mesh: spr,
+                x: wx,
+                z: wz,
+                y: 12,
+                vx: 0,
+                vy: 0,
+                vz: 0,
+                fleeing: false,
+                life: 0
+            });
+        }
+    },
+
+    update(dt, player, projectiles) {
+        if (!player || this.creatures.length === 0) return;
+        let px = player.x, pz = player.y;
+
+        for (let i = 0; i < this.creatures.length; i++) {
+            let c = this.creatures[i];
+            if (!c.fleeing) {
+                let distSq = (c.x - px) ** 2 + (c.z - pz) ** 2;
+                let startled = distSq < 135 * 135;
+
+                // Spavento da proiettile vicino
+                if (!startled && projectiles) {
+                    for (let j = 0; j < Math.min(projectiles.length, 10); j++) {
+                        let pr = projectiles[j];
+                        if (pr && pr.active && ((c.x - pr.x) ** 2 + (c.z - pr.y) ** 2 < 85 * 85)) {
+                            startled = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (startled) {
+                    c.fleeing = true;
+                    let angle = Math.atan2(c.z - pz, c.x - px) + MathUtils.randomRange(-0.4, 0.4);
+                    let spd = MathUtils.randomRange(110, 160);
+                    c.vx = Math.cos(angle) * spd;
+                    c.vz = Math.sin(angle) * spd;
+                    c.vy = MathUtils.randomRange(65, 95);
+                    if (typeof AudioEngine !== 'undefined' && Math.random() < 0.6) AudioEngine.playBirdChirp();
+                }
+            } else {
+                c.life += dt;
+                c.x += c.vx * dt;
+                c.y += c.vy * dt;
+                c.z += c.vz * dt;
+                c.mesh.position.set(c.x, c.y, c.z);
+                let flap = Math.sin(c.life * 26) * 1.8;
+                c.mesh.scale.set(4.5 + flap, 4.5 - flap * 0.5, 1);
+                c.mesh.material.opacity = Math.max(0, 1.0 - c.life / 2.2);
+
+                if (c.life >= 2.2) {
+                    c.mesh.visible = false;
+                }
+            }
+        }
+    },
+
+    clear() {
+        for (let i = 0; i < this.creatures.length; i++) {
+            if (this.creatures[i].mesh) Game.scene.remove(this.creatures[i].mesh);
+        }
+        this.creatures.length = 0;
+    }
+};
+
+const RippleSystem = {
+    ripples: [],
+    maxRipples: 14,
+    geo: null,
+    mat: null,
+
+    init() {
+        if (this.geo) return;
+        this.geo = new THREE.RingGeometry(0.8, 1.25, 24);
+        this.geo.rotateX(-Math.PI / 2);
+        for (let i = 0; i < this.maxRipples; i++) {
+            let m = new THREE.MeshBasicMaterial({
+                color: 0x99ddff,
+                transparent: true,
+                opacity: 0,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            let mesh = new THREE.Mesh(this.geo, m);
+            mesh.visible = false;
+            Game.scene.add(mesh);
+            this.ripples.push({ mesh, active: false, x: 0, z: 0, rad: 1, maxRad: 18, life: 0, maxLife: 0.8 });
+        }
+    },
+
+    spawn(x, z, scale = 1.0) {
+        if (!this.geo) this.init();
+        for (let i = 0; i < this.maxRipples; i++) {
+            let r = this.ripples[i];
+            if (!r.active) {
+                r.active = true;
+                r.x = x;
+                r.z = z;
+                r.rad = 2.0 * scale;
+                r.maxRad = 22.0 * scale;
+                r.life = 0;
+                r.maxLife = 0.75 * scale;
+                r.mesh.position.set(x, 0.25, z);
+                r.mesh.visible = true;
+                r.mesh.scale.set(1, 1, 1);
+                r.mesh.material.opacity = 0.75;
+                break;
+            }
+        }
+    },
+
+    update(dt) {
+        for (let i = 0; i < this.ripples.length; i++) {
+            let r = this.ripples[i];
+            if (!r.active) continue;
+            r.life += dt;
+            if (r.life >= r.maxLife) {
+                r.active = false;
+                r.mesh.visible = false;
+                continue;
+            }
+            let progress = r.life / r.maxLife;
+            let curRad = r.rad + (r.maxRad - r.rad) * progress;
+            r.mesh.scale.set(curRad, 1, curRad);
+            r.mesh.material.opacity = (1.0 - progress) * 0.65;
+        }
     }
 };
 
@@ -12758,7 +13412,8 @@ class Player extends Entity {
         shieldCore.scale.setScalar(0.92);
         this.shieldMesh.add(shieldCore);
 
-         // Disco bianco roteante rimosso
+        // Disco bianco roteante rimosso su richiesta
+        this.shieldGyroMat = null;
         this.shieldGyroRing = null;
 
         this.shieldHaloMat = new THREE.SpriteMaterial({
@@ -13718,9 +14373,10 @@ class Player extends Entity {
             else if (this.essence === 'blue') baseColor = ESSENCE_COLORS.blue;
             else if (this.essence === 'green') baseColor = ESSENCE_COLORS.green;
 
-                        let rotBoost = this.activeShieldTimer < 1.0 ? 2.2 : 1.0;
+            let rotBoost = this.activeShieldTimer < 1.0 ? 2.2 : 1.0;
             this.shieldMesh.rotation.y += dt * 4.5 * rotBoost;
             this.shieldMesh.rotation.z += dt * 2.8 * rotBoost;
+            // Rotazione disco bianco rimossa
 
             if (this.shieldFlashTimer > 0) {
                 this.shieldFlashTimer -= dt;
@@ -14251,11 +14907,28 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 let stepRate = hasRelicStep ? (isTouchDevice ? 4 : 3) : 6;
                 if (Game.frameCount % stepRate === 0) {
                     if (inPit) {
-                        if (Game.currentThemeIndex === 0) Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteBlue, 'dust');
-                        else if (Game.currentThemeIndex === 1) Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteRed, 'spark');
-                        else Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteWhite, 'dust');
+                        if (Game.currentThemeIndex === 0) {
+                            Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteBlue, 'dust');
+                            if (typeof RippleSystem !== 'undefined') RippleSystem.spawn(this.x, this.y, 0.55);
+                        } else if (Game.currentThemeIndex === 1) {
+                            Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteRed, 'spark');
+                        } else {
+                            Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteWhite, 'dust');
+                        }
                     } else if (!hasRelicStep) {
                         Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteDust, 'dust');
+                        // Impronte temporanee su neve e cenere
+                        if (Game.frameCount % 12 === 0) {
+                            let isSnow = (Game.currentThemeIndex === 2);
+                            let isAsh = (Game.currentThemeIndex === 1);
+                            if (isSnow || isAsh) {
+                                let side = (Game.frameCount % 24 === 0) ? -5 : 5;
+                                let perp = (this.angle || 0) + Math.PI / 2;
+                                let fx = this.x + Math.cos(perp) * side;
+                                let fz = this.y + Math.sin(perp) * side;
+                                Game.spawnDecal(fx, fz, isSnow ? 'footprint_snow' : 'footprint_ash');
+                            }
+                        }
                     } else {
                         let stepEffects = [];
                         if (this.modifiers.miserPact) stepEffects.push('gold');
@@ -18288,6 +18961,10 @@ if (type === 'arrow' || type === 'homing_arrow') {
                 // QoL AAA: Luce esplosiva intensa e macchia bruciata sul terreno!
                 Game.spawnLightFlash(this.x, this.y, 0xff3300, 8.0, 500);
                 Game.spawnDecal(this.x, this.y, 'scorch');
+            }
+            // Onde concentriche se cade in pozze d'acqua (Foresta)
+            if (Game.currentThemeIndex === 0 && Game.map && Game.map.getPitDepthInfo && Game.map.getPitDepthInfo(this.x, this.y).inPit) {
+                if (typeof RippleSystem !== 'undefined') RippleSystem.spawn(this.x, this.y, 0.85);
             }
     }
 }
