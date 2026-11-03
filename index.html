@@ -435,68 +435,148 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .stagger-enter { animation: slide-in-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-/* --- STILE TITOLO 3D PROSPETTICO STILE MINECRAFT --- */
+/* --- STILE TITOLO 3D "CICCIOTTO" PROSPETTICO + FUMO MAGICO --- */
         @keyframes mc-title-float {
-            0%, 100% { transform: perspective(380px) rotateX(25deg) translateY(0px) scale(1); }
-            50% { transform: perspective(380px) rotateX(22deg) translateY(-6px) scale(1.02); }
+            0%, 100% {
+                transform: perspective(420px) rotateX(16deg) rotateY(-2deg) translateY(0px) scale(1.02, 1.14);
+            }
+            50% {
+                transform: perspective(420px) rotateX(19deg) rotateY(2deg) translateY(-9px) scale(1.05, 1.18);
+            }
         }
+        @keyframes magic-smoke-drift-1 {
+            0%, 100% { transform: translate3d(-6%, -2%, 0) scale(1.05) rotate(-3deg); opacity: 0.55; }
+            50% { transform: translate3d(6%, 3%, 0) scale(1.22) rotate(4deg); opacity: 0.85; }
+        }
+        @keyframes magic-smoke-drift-2 {
+            0%, 100% { transform: translate3d(7%, 2%, 0) scale(1.18) rotate(3deg); opacity: 0.45; }
+            50% { transform: translate3d(-7%, -3%, 0) scale(1.02) rotate(-4deg); opacity: 0.75; }
+        }
+        @keyframes magic-aura-pulse {
+            0%, 100% { transform: scale(0.95, 0.9); opacity: 0.65; filter: hue-rotate(0deg); }
+            50% { transform: scale(1.12, 1.08); opacity: 0.95; filter: hue-rotate(25deg); }
+        }
+
         .title-3d-text {
             transform-style: preserve-3d;
-            animation: mc-title-float 4.2s ease-in-out infinite;
-            filter: drop-shadow(0px 22px 20px rgba(0, 0, 0, 0.92));
+            animation: mc-title-float 4.5s ease-in-out infinite;
+            will-change: transform;
         }
+
+        /* Bagliore e Fumo Magico dietro al titolo (indipendenti dal cubo) */
+        .title-magic-backdrop {
+            position: absolute;
+            inset: -28px -45px;
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .title-magic-glow {
+            position: absolute;
+            width: 115%;
+            height: 125%;
+            background:
+                radial-gradient(ellipse at 50% 55%, rgba(0, 221, 255, 0.48) 0%, rgba(168, 85, 247, 0.34) 38%, rgba(255, 24, 56, 0.18) 62%, transparent 78%);
+            filter: blur(16px);
+            animation: magic-aura-pulse 5s ease-in-out infinite;
+        }
+        .title-magic-smoke {
+            position: absolute;
+            width: 125%;
+            height: 140%;
+            background-image: url('smoke.png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            mix-blend-mode: screen;
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 72%);
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 72%);
+        }
+        .title-magic-smoke.layer-1 {
+            filter: sepia(1) saturate(4) hue-rotate(155deg) brightness(1.15);
+            animation: magic-smoke-drift-1 7s ease-in-out infinite;
+        }
+        .title-magic-smoke.layer-2 {
+            filter: sepia(1) saturate(4) hue-rotate(255deg) brightness(1.1);
+            animation: magic-smoke-drift-2 9s ease-in-out infinite;
+        }
+
+        /* Lettere 3D Cicciotte e Scolpite */
         .mc-block-word {
             position: relative;
             display: inline-block;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             text-transform: uppercase;
-            color: #1e293b;
-            -webkit-text-stroke: 5px #050811;
+            color: #334155;
+            /* Contorno esterno spesso che ingrossa il corpo di ogni lettera */
+            -webkit-text-stroke: 8px #070b14;
             paint-order: stroke fill;
-            /* Estrusione 3D profonda a blocchi verso il basso */
+            /* Estrusione 3D piena e profonda a blocchi */
             text-shadow:
-                0px 1px 0px #64748b,
+                0px 1px 0px #94a3b8,
                 0px 2px 0px #64748b,
-                0px 3px 0px #475569,
+                -2px 2px 0px #070b14,
+                2px 2px 0px #070b14,
+                0px 3px 0px #64748b,
                 0px 4px 0px #475569,
-                0px 5px 0px #334155,
+                -3px 4px 0px #070b14,
+                3px 4px 0px #070b14,
+                0px 5px 0px #475569,
                 0px 6px 0px #334155,
-                0px 7px 0px #1e293b,
+                -3px 6px 0px #070b14,
+                3px 6px 0px #070b14,
+                0px 7px 0px #334155,
                 0px 8px 0px #1e293b,
-                0px 9px 0px #0f172a,
+                -3px 8px 0px #050811,
+                3px 8px 0px #050811,
+                0px 9px 0px #1e293b,
                 0px 10px 0px #0f172a,
-                0px 11px 0px #090d16,
-                0px 12px 0px #050811,
-                0px 13px 0px #020409,
-                0px 14px 0px #000000,
-                -2px 14px 0px #000000,
-                2px 14px 0px #000000;
+                -3px 10px 0px #050811,
+                3px 10px 0px #050811,
+                0px 11px 0px #0f172a,
+                0px 12px 0px #090d16,
+                -3px 12px 0px #020409,
+                3px 12px 0px #020409,
+                0px 14px 0px #020409,
+                0px 20px 30px rgba(0, 0, 0, 0.95),
+                0px 0px 28px rgba(0, 221, 255, 0.45);
         }
-        /* Faccia anteriore scolpita sopra il blocco 3D */
+        /* Faccia anteriore brillante e "cicciotta" (il bordo chiaro espande lo spessore delle lettere) */
         .mc-block-word::before {
             content: attr(data-text);
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 28%, #94a3b8 52%, #e2e8f0 56%, #64748b 90%, #334155 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #ffffff 35%, #dbeafe 65%, #93c5fd 88%, #e2e8f0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            -webkit-text-stroke: 2px #0f172a;
-            text-shadow: none;
+            -webkit-text-stroke: 2px #ffffff;
+            text-shadow: 0px -1px 0px #ffffff;
             pointer-events: none;
         }
         .mc-word-sub {
+            -webkit-text-stroke: 6px #070b14;
             text-shadow:
-                0px 1px 0px #64748b,
-                0px 2px 0px #475569,
-                0px 3px 0px #334155,
-                0px 4px 0px #1e293b,
-                0px 5px 0px #0f172a,
-                0px 6px 0px #090d16,
-                0px 7px 0px #050811,
-                0px 8px 0px #000000,
-                -1.5px 8px 0px #000000,
-                1.5px 8px 0px #000000;
+                0px 1px 0px #94a3b8,
+                0px 2px 0px #64748b,
+                -2px 2px 0px #070b14,
+                2px 2px 0px #070b14,
+                0px 3px 0px #475569,
+                0px 4px 0px #334155,
+                -2px 4px 0px #070b14,
+                2px 4px 0px #070b14,
+                0px 5px 0px #1e293b,
+                0px 6px 0px #0f172a,
+                -2px 6px 0px #050811,
+                2px 6px 0px #050811,
+                0px 8px 0px #020409,
+                0px 14px 22px rgba(0, 0, 0, 0.95),
+                0px 0px 22px rgba(0, 221, 255, 0.45);
+        }
+        .mc-word-sub::before {
+            -webkit-text-stroke: 1.5px #ffffff;
         }
         @keyframes rune-spin-slow {
             0% { transform: rotate(0deg) scale(1); }
@@ -763,12 +843,20 @@ body.colorblind-mode #opt-colorblind-text {
 
         <div class="w-full h-full flex flex-col justify-between items-center z-10 px-4 py-4 sm:py-6 pointer-events-none">
             
-            <!-- HEADER MONUMENTALE 3D PROSPETTICO STILE MINECRAFT: INTO / THE BOX -->
-            <div class="relative w-full flex flex-col items-center justify-start pt-1 sm:pt-3 pointer-events-none select-none">
-                <div class="title-3d-text relative flex flex-col items-center leading-none">
-                    <div class="absolute -inset-8 bg-gradient-to-b from-cyan-400/15 via-white/10 to-transparent blur-2xl rounded-full pointer-events-none"></div>
-                    <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.26em] text-[9.5vw] sm:text-5xl md:text-6xl leading-none pl-[0.26em] z-10 m-0">INTO</span>
-                    <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.04em] text-[17.5vw] sm:text-8xl md:text-9xl leading-none -mt-1 sm:-mt-2 whitespace-nowrap z-20 m-0">THE BOX</h1>
+            <!-- HEADER MONUMENTALE 3D "CICCIOTTO" CON FUMO MAGICO E FLUTTUAZIONE INDIPENDENTE -->
+            <div class="relative w-full flex flex-col items-center justify-start pt-2 sm:pt-4 pointer-events-none select-none">
+                
+                <!-- Fumo Magico e Bagliore Arcano (animati per conto loro dietro al titolo) -->
+                <div class="title-magic-backdrop">
+                    <div class="title-magic-glow"></div>
+                    <div class="title-magic-smoke layer-1"></div>
+                    <div class="title-magic-smoke layer-2"></div>
+                </div>
+
+                <!-- Blocco Titolo 3D Fluttuante -->
+                <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
+                    <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.22em] text-[11vw] sm:text-6xl md:text-7xl leading-none pl-[0.22em] z-10 m-0">INTO</span>
+                    <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-0.5 sm:mt-1 whitespace-nowrap z-20 m-0">THE BOX</h1>
                 </div>
             </div>
 
