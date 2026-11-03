@@ -3806,24 +3806,31 @@ const DeathSceneSystem = {
     scene: null, camera: null, renderer: null, container: null, irisEl: null,
     worldRoot: null, stageGroup: null, floorMesh: null,
     enemyGroup: null, enemyParts: null, playerGroup: null, playerParts: null,
-    attackProjGroup: null, impactWaveMesh: null,
-    tombGroup: null, ghostGroup: null, ghostParts: null, soulMotes: [],
+    attackProjGroup: null,
+    tombGroup: null, ghostGroup: null, ghostParts: null, ghostMaterials: [],
     breakPieces: [], shattersTriggered: false, buttonsUnlocked: false,
-    mainLight: null, rimLight: null, impactLight: null,
+    mainLight: null, rimLight: null,
     mode: 'fallen', killerInfo: null,
     time: 0, camAngle: 0.75,
     initialized: false, active: false,
-    _transitionTimeout: null,
+    _transitionTimeout: null, _rafId: null,
 
     init() {
         this.container = document.getElementById('death-3d-canvas-container');
         if (!this.container || this.initialized) return;
 
-        // Crea l'overlay circolare GPU (cerchio che si chiude dai bordi verso il centro)
+        // Cerchio nero con bordo morbido sfumato (zero scatti, accelerato via GPU)
         if (!document.getElementById('death-iris-overlay')) {
             const iris = document.createElement('div');
             iris.id = 'death-iris-overlay';
-            iris.style.cssText = 'position:fixed;left:50%;top:50%;width:150vmax;height:150vmax;border-radius:50%;box-shadow:0 0 0 200vmax #000000;pointer-events:none;z-index:9998;transform:translate(-50%,-50%) scale(1);opacity:0;will-change:transform,opacity;';
+            iris.style.cssText = [
+                'position:fixed', 'left:50%', 'top:50%',
+                'width:160vmax', 'height:160vmax', 'border-radius:50%',
+                'box-shadow:inset 0 0 90px 45px #000000, 0 0 0 220vmax #000000',
+                'pointer-events:none', 'z-index:9998',
+                'transform:translate(-50%,-50%) scale(1)',
+                'opacity:0', 'will-change:transform,opacity'
+            ].join(';');
             document.body.appendChild(iris);
             this.irisEl = iris;
         } else {
@@ -3834,9 +3841,8 @@ const DeathSceneSystem = {
         let h = this.container.clientHeight || window.innerHeight;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x000000, 900, 2600);
+        this.scene.fog = new THREE.Fog(0x000000, 950, 2800);
 
-        // Stesso FOV (50°) e inquadratura alta del gameplay
         this.camera = new THREE.PerspectiveCamera(50, w / h, 10, 3500);
 
         this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
@@ -3847,36 +3853,30 @@ const DeathSceneSystem = {
         this.renderer.autoClear = false;
         this.container.appendChild(this.renderer.domElement);
 
-        const amb = new THREE.HemisphereLight(0xffffff, 0x0a0a14, 0.9);
+        // Luci pulite sui modelli 3D (non creano alcuna macchia sul pavimento)
+        const amb = new THREE.HemisphereLight(0xffffff, 0x101018, 0.95);
         this.scene.add(amb);
 
-        this.rimLight = new THREE.DirectionalLight(0xcce0ff, 1.5);
-        this.rimLight.position.set(-250, 650, -250);
+        this.rimLight = new THREE.DirectionalLight(0xdbeafe, 1.45);
+        this.rimLight.position.set(-220, 620, -240);
         this.scene.add(this.rimLight);
 
-        this.mainLight = new THREE.PointLight(0xff2244, 4.5, 950, 1.5);
-        this.mainLight.position.set(0, 160, 20);
+        this.mainLight = new THREE.PointLight(0xffffff, 2.2, 950, 1.5);
+        this.mainLight.position.set(40, 150, 60);
         this.scene.add(this.mainLight);
 
-        this.impactLight = new THREE.PointLight(0xffffff, 0, 800, 1.5);
-        this.impactLight.position.set(0, 40, 26);
-        this.scene.add(this.impactLight);
-
-        // Root specchiabile per generare il riflesso 3D reale sul piano nero
+        // Gruppo specchiabile per il riflesso 3D dei soli personaggi/tomba
         this.worldRoot = new THREE.Group();
         this.scene.add(this.worldRoot);
 
         this.stageGroup = new THREE.Group();
         this.worldRoot.add(this.stageGroup);
 
-        // Piano completamente nero, vuoto e riflettente
-        const floorGeo = new THREE.CircleGeometry(1600, 48);
+        // Piano nero puro immune alle macchie di luce: lascia trasparire solo il riflesso sottostante
+        const floorGeo = new THREE.CircleGeometry(1800, 36);
         floorGeo.rotateX(-Math.PI / 2);
-        const floorMat = new THREE.MeshPhongMaterial({
-            color: 0x020205,
-            emissive: 0x000000,
-            specular: 0x2e364a,
-            shininess: 95,
+        const floorMat = new THREE.MeshBasicMaterial({
+            color: 0x000000,
             transparent: true,
             opacity: 0.72,
             depthWrite: true
@@ -3885,46 +3885,45 @@ const DeathSceneSystem = {
         this.floorMesh.position.y = 0;
         this.scene.add(this.floorMesh);
 
-        // Onda d'urto sul pavimento nero riflettente
-        this.impactWaveMesh = new THREE.Mesh(
-            SharedGeo.auraRing,
-            new THREE.MeshBasicMaterial({ color: 0xff2244, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false })
-        );
-        this.impactWaveMesh.rotation.x = -Math.PI / 2;
-        this.impactWaveMesh.position.y = 0.2;
-        this.stageGroup.add(this.impactWaveMesh);
-
         window.addEventListener('resize', () => this.resize());
         this.initialized = true;
     },
 
-    // Chiude rapidamente un cerchio nero dai bordi al centro e avvia la scena 3D senza stacchi
+    // Chiusura circolare dolce, lenta e fluida dai bordi al centro
     playDeathTransition(onClosedCallback) {
         this.init();
         if (this._transitionTimeout) clearTimeout(this._transitionTimeout);
+        if (this._rafId) cancelAnimationFrame(this._rafId);
+
         const iris = this.irisEl;
         if (!iris) {
             if (onClosedCallback) onClosedCallback();
             return;
         }
 
+        // Prepara il cerchio aperto sopra i bordi dello schermo
         iris.style.transition = 'none';
-        iris.style.opacity = '1';
-        iris.style.transform = 'translate(-50%, -50%) scale(1)';
-        void iris.offsetWidth;
+        iris.style.opacity = '0';
+        iris.style.transform = 'translate(-50%, -50%) scale(1.08)';
 
-        // Chiusura rapida del cerchio dai bordi fino al centro (380ms)
-        iris.style.transition = 'transform 0.38s cubic-bezier(0.55, 0.05, 0.67, 0.19)';
-        iris.style.transform = 'translate(-50%, -50%) scale(0)';
+        // Attende il frame successivo al colpo fatale per garantire fluidità a 60fps
+        this._rafId = requestAnimationFrame(() => {
+            this._rafId = requestAnimationFrame(() => {
+                iris.style.transition = 'opacity 0.22s ease-out, transform 0.88s cubic-bezier(0.33, 1, 0.68, 1)';
+                iris.style.opacity = '1';
+                iris.style.transform = 'translate(-50%, -50%) scale(0)';
 
-        this._transitionTimeout = setTimeout(() => {
-            if (onClosedCallback) onClosedCallback();
-            // Dissolvenza morbida del nero che rivela la scena 3D (anch'essa su sfondo nero #000)
-            requestAnimationFrame(() => {
-                iris.style.transition = 'opacity 0.26s ease-out';
-                iris.style.opacity = '0';
+                this._transitionTimeout = setTimeout(() => {
+                    if (onClosedCallback) onClosedCallback();
+                    // Renderizza subito il primo frame 3D a sipario chiuso, poi dissolve dolcemente
+                    if (this.active) this.update(0.016);
+                    requestAnimationFrame(() => {
+                        iris.style.transition = 'opacity 0.48s ease-in-out';
+                        iris.style.opacity = '0';
+                    });
+                }, 880);
             });
-        }, 380);
+        });
     },
 
     setButtonsLocked(locked) {
@@ -3933,9 +3932,9 @@ const DeathSceneSystem = {
         if (!panel) return;
         if (locked) {
             panel.style.pointerEvents = 'none';
-            panel.style.opacity = '0.38';
-            panel.style.filter = 'grayscale(0.8)';
-            panel.style.transition = 'opacity 0.35s ease, filter 0.35s ease';
+            panel.style.opacity = '0.35';
+            panel.style.filter = 'grayscale(0.85)';
+            panel.style.transition = 'opacity 0.4s ease, filter 0.4s ease';
         } else {
             panel.style.pointerEvents = 'auto';
             panel.style.opacity = '1';
@@ -3945,29 +3944,35 @@ const DeathSceneSystem = {
 
     clearStageActors() {
         if (!this.stageGroup) return;
-        const keep = new Set([this.impactWaveMesh]);
         for (let i = this.stageGroup.children.length - 1; i >= 0; i--) {
-            let child = this.stageGroup.children[i];
-            if (!keep.has(child)) {
-                this.stageGroup.remove(child);
-            }
+            this.stageGroup.remove(this.stageGroup.children[i]);
         }
         this.enemyGroup = null; this.enemyParts = null;
         this.playerGroup = null; this.playerParts = null;
         this.attackProjGroup = null;
         this.tombGroup = null; this.ghostGroup = null; this.ghostParts = null;
+        this.ghostMaterials = [];
         this.breakPieces = [];
-        this.soulMotes = [];
     },
 
-    setDoubleSide(root) {
+    // Rimuove sprite 2D (che creano aloni piatti sul pavimento) e abilita il DoubleSide per il riflesso
+    prepareModelForReflection(root) {
         if (!root) return;
+        const spritesToRemove = [];
         root.traverse(c => {
-            if (c.isMesh && c.material) {
+            if (c.isSprite) {
+                spritesToRemove.push(c);
+            } else if (c.isMesh && c.material) {
+                if (c.name === 'auraMesh' || c.material.map === GLOW_TEX) {
+                    c.visible = false;
+                }
                 if (Array.isArray(c.material)) c.material.forEach(m => { m.side = THREE.DoubleSide; });
                 else c.material.side = THREE.DoubleSide;
             }
         });
+        for (let i = 0; i < spritesToRemove.length; i++) {
+            if (spritesToRemove[i].parent) spritesToRemove[i].parent.remove(spritesToRemove[i]);
+        }
     },
 
     start(mode = 'fallen', killerInfo = null) {
@@ -3980,10 +3985,7 @@ const DeathSceneSystem = {
         this.time = 0;
         this.camAngle = 0.75;
         this.shattersTriggered = false;
-        this.impactWaveMesh.material.opacity = 0;
-        this.impactLight.intensity = 0;
 
-        // Blocca i tasti finché l'animazione dell'attacco e della rottura non è terminata
         this.setButtonsLocked(true);
 
         if (mode === 'fallen') {
@@ -4000,6 +4002,10 @@ const DeathSceneSystem = {
             clearTimeout(this._transitionTimeout);
             this._transitionTimeout = null;
         }
+        if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
         if (this.irisEl) {
             this.irisEl.style.transition = 'none';
             this.irisEl.style.opacity = '0';
@@ -4010,26 +4016,25 @@ const DeathSceneSystem = {
     setupFallenScene() {
         const k = this.killerInfo;
         const eType = k.type || 'orc';
-        this.mainLight.color.setHex(0xff2244);
-        this.mainLight.intensity = 4.5;
-        this.mainLight.position.set(0, 160, 0);
+        this.mainLight.color.setHex(0xffe4e6);
+        this.mainLight.intensity = 2.4;
 
         // 1. PERSONAGGIO CON SKIN EQUIPAGGIATA (a z = +26)
         const skin = SkinSystem.getCurrentSkin();
         const bodyMat = new THREE.MeshStandardMaterial({ color: skin.colors.body, roughness: 0.65, metalness: 0.15, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide });
-        const gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.4, side: THREE.DoubleSide });
+        const gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.2, side: THREE.DoubleSide });
         this.playerParts = ModelFactory.buildPlayer(bodyMat, gemMat);
         this.playerGroup = this.playerParts.group;
         this.playerParts.head.material.color.setHex(skin.colors.head);
         this.playerParts.scarf.material.color.setHex(skin.colors.scarf);
         if (this.playerParts.staff) this.playerParts.staff.material.color.setHex(skin.colors.staff);
-        this.setDoubleSide(this.playerGroup);
+        if (this.playerParts.auraMesh) this.playerParts.auraMesh.visible = false;
+        this.prepareModelForReflection(this.playerGroup);
 
         this.playerGroup.position.set(0, 0, 26);
         this.playerGroup.rotation.y = Math.PI;
         this.stageGroup.add(this.playerGroup);
 
-        // Pre-costruisce i pezzi fisici che compongono il personaggio (come nella morte in-game)
         this.buildBreakablePlayerPieces(skin, bodyMat, gemMat);
 
         // 2. NEMICO UCCISORE (a z = -38, rivolto verso il personaggio)
@@ -4041,33 +4046,31 @@ const DeathSceneSystem = {
         let eColor = k.color || 0x5c4033;
         let eMat = applyCharacterShader(new THREE.MeshLambertMaterial({ color: eColor, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide }), 0.75);
         if (eType === 'slime' || eType === 'slime_mini') {
-            eMat = new THREE.MeshLambertMaterial({ color: eColor, emissive: eColor, emissiveIntensity: 0.35, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+            eMat = new THREE.MeshLambertMaterial({ color: eColor, emissive: eColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
         } else if (k.isPursuer) {
-            eMat = new THREE.MeshLambertMaterial({ color: 0x050505, emissive: 0xaa0000, emissiveIntensity: 1.5, side: THREE.DoubleSide });
+            eMat = new THREE.MeshLambertMaterial({ color: 0x050505, emissive: 0xaa0000, emissiveIntensity: 1.4, side: THREE.DoubleSide });
         } else if (k.isGolden) {
-            eMat = new THREE.MeshLambertMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 1.2, side: THREE.DoubleSide });
+            eMat = new THREE.MeshLambertMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 1.1, side: THREE.DoubleSide });
         }
 
         const builtEnemy = ModelFactory.buildEnemy(eType, baseSize, eMat);
         this.enemyGroup = builtEnemy.group;
         this.enemyParts = builtEnemy.parts;
-        this.setDoubleSide(this.enemyGroup);
+        this.prepareModelForReflection(this.enemyGroup);
         this.enemyGroup.position.set(0, 0, -38);
         this.enemyGroup.rotation.y = 0;
         this.stageGroup.add(this.enemyGroup);
 
-        // 3. PROIETTILE PER NEMICI A DISTANZA
+        // 3. PROIETTILE 3D SOLIDO PER NEMICI A DISTANZA (Senza sprite che macchiano il pavimento)
         const isRanged = (eType === 'skeleton_archer' || eType === 'mage' || eType === 'pyromancer' || eType === 'fire_demon' || eType === 'ring_walker' || eType === 'dark_prophet' || eType === 'crystal');
         this.killerIsRanged = isRanged;
         if (isRanged) {
             this.attackProjGroup = new THREE.Group();
-            let pColor = (eType === 'mage' || eType === 'crystal') ? 0xaa00ff : (eType === 'skeleton_archer' ? 0xe2e8f0 : 0xff3300);
+            let pColor = (eType === 'mage' || eType === 'crystal') ? 0xc084fc : (eType === 'skeleton_archer' ? 0xe2e8f0 : 0xff4400);
             let pGeo = (eType === 'skeleton_archer') ? new THREE.ConeGeometry(2.8, 24, 6).rotateX(Math.PI / 2) : SharedGeo.energyOrb;
             let pMesh = new THREE.Mesh(pGeo, new THREE.MeshBasicMaterial({ color: pColor, side: THREE.DoubleSide }));
-            if (eType !== 'skeleton_archer') pMesh.scale.setScalar(8.0);
-            let pGlow = new THREE.Sprite(eType === 'mage' || eType === 'crystal' ? SharedMat.spritePink : SharedMat.spriteRed);
-            pGlow.scale.set(36, 36, 1);
-            this.attackProjGroup.add(pMesh, pGlow);
+            if (eType !== 'skeleton_archer') pMesh.scale.setScalar(7.5);
+            this.attackProjGroup.add(pMesh);
             this.attackProjGroup.visible = false;
             this.stageGroup.add(this.attackProjGroup);
         }
@@ -4079,24 +4082,20 @@ const DeathSceneSystem = {
         const scarfMat = this.playerParts.scarf.material;
         const staffMat = this.playerParts.staff.material;
 
-        // 1. Busto / Mantello (+ eventuali ali/accenti della skin)
         const pBody = new THREE.Mesh(geos.body, bodyMat);
         if (geos.accent) {
             const acc = new THREE.Mesh(geos.accent, gemMat);
             pBody.add(acc);
         }
 
-        // 2. Testa / Elmo (+ eventuale corona/visore della skin)
         const pHead = new THREE.Mesh(geos.head, headMat);
         if (geos.headAccent) {
             const hAcc = new THREE.Mesh(geos.headAccent, gemMat);
             pHead.add(hAcc);
         }
 
-        // 3. Sciarpa / Collare
         const pScarf = new THREE.Mesh(geos.scarf, scarfMat);
 
-        // 4. Arma completa (Asta + Gemma + Aureola, come deadWeapon in-game)
         const pWeapon = new THREE.Group();
         const sMesh = new THREE.Mesh(geos.staff, staffMat);
         const gMesh = new THREE.Mesh(geos.gem, gemMat);
@@ -4118,7 +4117,7 @@ const DeathSceneSystem = {
         this.breakPieces = [];
         for (let i = 0; i < rawList.length; i++) {
             const item = rawList[i];
-            this.setDoubleSide(item.mesh);
+            this.prepareModelForReflection(item.mesh);
             item.mesh.visible = false;
             this.stageGroup.add(item.mesh);
             this.breakPieces.push({
@@ -4138,9 +4137,9 @@ const DeathSceneSystem = {
         if (this.attackProjGroup) this.attackProjGroup.visible = false;
 
         const baseZ = this.playerGroup ? this.playerGroup.position.z : 26;
-
-        // Smembramento fisico nei pezzi che compongono il personaggio (identico alla morte in-game)
         const dirAngles = [0.0, -0.45, 0.52, -0.95];
+
+        // Fisica più morbida e lenta per far apprezzare il distacco e i rimbalzi dei singoli pezzi
         for (let i = 0; i < this.breakPieces.length; i++) {
             const p = this.breakPieces[i];
             p.resting = false;
@@ -4148,45 +4147,36 @@ const DeathSceneSystem = {
             p.mesh.position.set(p.ox, p.oy, baseZ + p.oz);
             p.mesh.rotation.set(0, Math.PI, 0);
 
-            const spreadAng = dirAngles[i] + MathUtils.randomRange(-0.2, 0.2);
-            const horizSpd = MathUtils.randomRange(55, 115);
+            const spreadAng = dirAngles[i] + MathUtils.randomRange(-0.18, 0.18);
+            const horizSpd = MathUtils.randomRange(38, 78);
             p.vx = Math.sin(spreadAng) * horizSpd;
-            // Spinta in avanti nella direzione del colpo nemico (+Z)
-            p.vz = Math.cos(spreadAng) * horizSpd + MathUtils.randomRange(45, 90);
-            p.vy = MathUtils.randomRange(175, 290);
+            p.vz = Math.cos(spreadAng) * horizSpd + MathUtils.randomRange(30, 62);
+            p.vy = MathUtils.randomRange(130, 210);
 
-            p.rx = MathUtils.randomRange(-7, 7);
-            p.ry = MathUtils.randomRange(-5, 5);
-            p.rz = MathUtils.randomRange(-7, 7);
+            p.rx = MathUtils.randomRange(-4.5, 4.5);
+            p.ry = MathUtils.randomRange(-3.5, 3.5);
+            p.rz = MathUtils.randomRange(-4.5, 4.5);
         }
-
-        this.impactLight.color.setHex(0xff3355);
-        this.impactLight.intensity = 10.0;
-        this.impactWaveMesh.position.set(0, 0.2, baseZ);
-        this.impactWaveMesh.scale.set(10, 10, 1);
-        this.impactWaveMesh.material.color.setHex(0xff2244);
-        this.impactWaveMesh.material.opacity = 0.9;
 
         if (typeof AudioEngine !== 'undefined') AudioEngine.playHit('player');
         if (typeof Haptics !== 'undefined') Haptics.vibrate([30, 20, 40]);
     },
 
     setupRipScene() {
-        this.mainLight.color.setHex(0xa855f7);
-        this.mainLight.intensity = 4.5;
-        this.mainLight.position.set(0, 160, 25);
+        this.mainLight.color.setHex(0xe0e7ff);
+        this.mainLight.intensity = 2.4;
 
-        // 1. TOMBA AL CENTRO (0, 0, 0)
+        // 1. TOMBA 3D SOLIDA AL CENTRO (Senza cerchi luminosi a terra che macchiano il riflesso)
         this.tombGroup = new THREE.Group();
         this.tombGroup.scale.setScalar(1.45);
 
         const stoneMat = new THREE.MeshStandardMaterial({
-            color: 0x383e4c, roughness: 0.8, metalness: 0.25, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide
+            color: 0x3b4252, roughness: 0.8, metalness: 0.22, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide
         });
         const darkTrimMat = new THREE.MeshStandardMaterial({
-            color: 0x181b22, roughness: 0.9, metalness: 0.3, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide
+            color: 0x1e222a, roughness: 0.9, metalness: 0.28, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide
         });
-        const runeCrossMat = new THREE.MeshBasicMaterial({ color: 0xe9d5ff, side: THREE.DoubleSide });
+        const runeCrossMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, side: THREE.DoubleSide });
 
         const step1 = new THREE.Mesh(SharedGeo.box, darkTrimMat);
         step1.scale.set(36, 4.5, 24); step1.position.y = 2.25;
@@ -4211,48 +4201,43 @@ const DeathSceneSystem = {
         const crossH = new THREE.Mesh(SharedGeo.box, runeCrossMat);
         crossH.scale.set(8.2, 2.4, 7.6); crossH.position.set(0, 26.5, 0);
 
-        const graveRune = new THREE.Mesh(
-            new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2),
-            new THREE.MeshBasicMaterial({ map: RUNE_TEX, color: 0xa855f7, transparent: true, opacity: 0.48, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
-        );
-        graveRune.position.y = 0.2;
-
-        this.tombGroup.add(step1, step2, slab, arch, pilL, pilR, crossV, crossH, graveRune);
+        this.tombGroup.add(step1, step2, slab, arch, pilL, pilR, crossV, crossH);
         this.stageGroup.add(this.tombGroup);
 
-        // 2. FANTASMINO DEL PERSONAGGIO (CON SKIN EQUIPAGGIATA) CHE LEVITA SOPRA LA TOMBA
+        // 2. FANTASMINO DEL PERSONAGGIO (CON SKIN EQUIPAGGIATA) CHE NASCE DALLA TOMBA E SALE ONDEGGIANDO
         const skin = SkinSystem.getCurrentSkin();
-        const ghostTint = new THREE.Color(0x7dd3fc);
+        const ghostTint = new THREE.Color(0x93c5fd);
         const cBody = new THREE.Color(skin.colors.body).lerp(ghostTint, 0.45);
         const cHead = new THREE.Color(skin.colors.head).lerp(new THREE.Color(0xe0f2fe), 0.55);
         const cScarf = new THREE.Color(skin.colors.scarf).lerp(new THREE.Color(0xc084fc), 0.35);
         const cStaff = new THREE.Color(skin.colors.staff).lerp(ghostTint, 0.45);
 
         const gBodyMat = new THREE.MeshPhongMaterial({
-            color: cBody, emissive: cBody, emissiveIntensity: 0.6,
-            transparent: true, opacity: 0.74, shininess: 80, side: THREE.DoubleSide
+            color: cBody, emissive: cBody, emissiveIntensity: 0.55,
+            transparent: true, opacity: 0.0, shininess: 80, side: THREE.DoubleSide
         });
         const gGemMat = new THREE.MeshBasicMaterial({
-            color: 0xe0f2fe, transparent: true, opacity: 0.92, side: THREE.DoubleSide
+            color: 0xe0f2fe, transparent: true, opacity: 0.0, side: THREE.DoubleSide
+        });
+        const gHeadMat = new THREE.MeshPhongMaterial({
+            color: cHead, emissive: cHead, emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.0, side: THREE.DoubleSide
+        });
+        const gScarfMat = new THREE.MeshPhongMaterial({
+            color: cScarf, emissive: cScarf, emissiveIntensity: 0.65,
+            transparent: true, opacity: 0.0, side: THREE.DoubleSide
+        });
+        const gStaffMat = new THREE.MeshPhongMaterial({
+            color: cStaff, emissive: cStaff, emissiveIntensity: 0.5,
+            transparent: true, opacity: 0.0, side: THREE.DoubleSide
         });
 
         this.ghostParts = ModelFactory.buildPlayer(gBodyMat, gGemMat);
         this.ghostGroup = this.ghostParts.group;
-
-        this.ghostParts.head.material = new THREE.MeshPhongMaterial({
-            color: cHead, emissive: cHead, emissiveIntensity: 0.65,
-            transparent: true, opacity: 0.84, side: THREE.DoubleSide
-        });
-        this.ghostParts.scarf.material = new THREE.MeshPhongMaterial({
-            color: cScarf, emissive: cScarf, emissiveIntensity: 0.7,
-            transparent: true, opacity: 0.85, side: THREE.DoubleSide
-        });
-        if (this.ghostParts.staff) {
-            this.ghostParts.staff.material = new THREE.MeshPhongMaterial({
-                color: cStaff, emissive: cStaff, emissiveIntensity: 0.55,
-                transparent: true, opacity: 0.78, side: THREE.DoubleSide
-            });
-        }
+        this.ghostParts.head.material = gHeadMat;
+        this.ghostParts.scarf.material = gScarfMat;
+        if (this.ghostParts.staff) this.ghostParts.staff.material = gStaffMat;
+        if (this.ghostParts.auraMesh) this.ghostParts.auraMesh.visible = false;
 
         const tailGeo = new THREE.ConeGeometry(8.5, 15, 8);
         tailGeo.rotateX(Math.PI);
@@ -4261,36 +4246,27 @@ const DeathSceneSystem = {
         this.ghostParts.ghostTail = ghostTail;
         this.ghostGroup.add(ghostTail);
 
-        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
         const eyeL = new THREE.Mesh(SharedGeo.sphere, eyeMat);
         eyeL.scale.set(1.2, 1.5, 0.9); eyeL.position.set(-2.0, 0.5, 5.4);
         const eyeR = new THREE.Mesh(SharedGeo.sphere, eyeMat);
         eyeR.scale.set(1.2, 1.5, 0.9); eyeR.position.set(2.0, 0.5, 5.4);
         this.ghostParts.head.add(eyeL, eyeR);
 
-        const ghostAura = new THREE.Sprite(SharedMat.spriteBlue);
-        ghostAura.scale.set(58, 58, 1);
-        ghostAura.position.set(0, 16, 0);
-        this.ghostGroup.add(ghostAura);
+        this.ghostMaterials = [
+            { mat: gBodyMat, maxOp: 0.76 },
+            { mat: gGemMat,  maxOp: 0.92 },
+            { mat: gHeadMat, maxOp: 0.85 },
+            { mat: gScarfMat, maxOp: 0.85 },
+            { mat: gStaffMat, maxOp: 0.78 },
+            { mat: eyeMat,   maxOp: 0.95 }
+        ];
 
-        this.setDoubleSide(this.ghostGroup);
-        this.ghostGroup.scale.setScalar(1.22);
-        this.ghostGroup.position.set(0, 68, 0);
+        this.prepareModelForReflection(this.ghostGroup);
+        // Parte nascosto dentro la base della tomba
+        this.ghostGroup.scale.setScalar(0.25);
+        this.ghostGroup.position.set(0, 6, 0);
         this.stageGroup.add(this.ghostGroup);
-
-        // 3. Fiammette spirituali attorno alla tomba
-        const moteMats = [SharedMat.spriteBlue, SharedMat.spritePink, SharedMat.spriteWhite];
-        for (let i = 0; i < 20; i++) {
-            let sp = new THREE.Sprite(moteMats[i % 3]);
-            let s = MathUtils.randomRange(8, 16);
-            sp.scale.set(s, s, 1);
-            let ang = (Math.PI * 2 / 20) * i;
-            let rad = MathUtils.randomRange(28, 85);
-            let y = MathUtils.randomRange(6, 105);
-            sp.position.set(Math.cos(ang) * rad, y, Math.sin(ang) * rad);
-            this.stageGroup.add(sp);
-            this.soulMotes.push({ sprite: sp, angle: ang, radius: rad, y: y, vy: MathUtils.randomRange(12, 24), spd: MathUtils.randomRange(0.4, 1.0) });
-        }
     },
 
     resize() {
@@ -4309,24 +4285,24 @@ const DeathSceneSystem = {
         const safeDt = Math.min(dt, 0.033);
         this.time += safeDt;
 
-        // Sblocco automatico dei pulsanti solo quando l'animazione d'attacco e caduta dei pezzi è conclusa
-        const unlockDelay = (this.mode === 'fallen') ? 2.0 : 1.0;
+        // Sblocco dei pulsanti solo dopo che l'animazione principale si è compiuta
+        const unlockDelay = (this.mode === 'fallen') ? 2.75 : 2.1;
         if (!this.buttonsUnlocked && this.time >= unlockDelay) {
             this.setButtonsLocked(false);
         }
 
-        // TELECAMERA ANCORA PIÙ LONTANA E ALTA (Stessa prospettiva del gameplay)
-        this.camAngle += safeDt * 0.40;
+        // Rotazione orbitale lenta e solenne con vista dall'alto stile gameplay
+        this.camAngle += safeDt * 0.26;
         const aspect = this.camera.aspect || 0.56;
         const isPortrait = aspect < 0.78;
 
         const camHeight = isPortrait ? 680 : 540;
         const camDist = isPortrait ? 460 : 365;
-        const lookY = (this.mode === 'fallen') ? 8 : 26;
+        const lookY = (this.mode === 'fallen') ? 8 : 28;
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
-            camHeight + Math.sin(this.time * 0.8) * 6,
+            camHeight + Math.sin(this.time * 0.6) * 5,
             Math.sin(this.camAngle) * camDist
         );
         this.camera.lookAt(0, lookY, 0);
@@ -4337,17 +4313,17 @@ const DeathSceneSystem = {
             this.updateRipAnimation(safeDt);
         }
 
-        // RENDER A DOPPIO PASSAGGIO SUL PIANO NERO RIFLETTENTE
+        // RENDER A DOPPIO PASSAGGIO: Il pavimento nero riflette SOLO i personaggi e la tomba
         this.renderer.clear();
 
-        // 1. Riflesso speculare sotto il pavimento nero
+        // 1. Riflesso speculare dei personaggi sotto il piano nero
         this.worldRoot.scale.y = -1;
         this.floorMesh.visible = false;
         this.renderer.render(this.scene, this.camera);
 
         this.renderer.clearDepth();
 
-        // 2. Piano nero riflettente + Scena reale sopra
+        // 2. Piano nero puro + Personaggi reali sopra
         this.worldRoot.scale.y = 1;
         this.floorMesh.visible = true;
         this.renderer.render(this.scene, this.camera);
@@ -4355,31 +4331,30 @@ const DeathSceneSystem = {
 
     updateFallenAnimation(dt) {
         const t = this.time;
-        const impactTime = 0.78;
+        const impactTime = 1.32; // Rallentato per rendere ben leggibile il caricamento e il colpo
 
-        // Fase 1 (0.0s -> 0.78s): Il nemico compie l'attacco sul personaggio
         if (t < impactTime) {
-            const p = t / impactTime;
+            const p = t / impactTime; // 0 -> 1
             if (this.playerGroup && this.playerParts) {
                 this.playerGroup.visible = true;
-                this.playerGroup.position.set(0, 0, 26 + p * 3.0);
-                this.playerParts.weaponGroup.rotation.x = -0.35 - p * 0.65;
-                this.playerParts.body.rotation.x = -p * 0.14;
+                this.playerGroup.position.set(0, 0, 26 + p * 2.5);
+                this.playerParts.weaponGroup.rotation.x = -0.25 - p * 0.60;
+                this.playerParts.body.rotation.x = -p * 0.12;
             }
 
             if (this.enemyGroup) {
                 if (this.killerIsRanged) {
-                    const recoil = p < 0.45 ? -(p / 0.45) * 5.0 : -5.0 + ((p - 0.45) / 0.55) * 8.0;
+                    const recoil = p < 0.48 ? -(p / 0.48) * 5.5 : -5.5 + ((p - 0.48) / 0.52) * 8.0;
                     this.enemyGroup.position.set(0, 0, -38 + recoil);
-                    if (this.enemyParts && this.enemyParts.crystals) this.enemyParts.crystals.rotation.y += dt * 8;
-                    if (this.enemyParts && this.enemyParts.ringPivot) this.enemyParts.fireRingDisc.rotation.y -= dt * 12;
+                    if (this.enemyParts && this.enemyParts.crystals) this.enemyParts.crystals.rotation.y += dt * 5;
+                    if (this.enemyParts && this.enemyParts.ringPivot) this.enemyParts.fireRingDisc.rotation.y -= dt * 8;
 
                     if (this.attackProjGroup) {
-                        if (p >= 0.38) {
-                            const flight = (p - 0.38) / 0.62;
+                        if (p >= 0.42) {
+                            const flight = (p - 0.42) / 0.58;
                             this.attackProjGroup.visible = true;
                             this.attackProjGroup.position.set(0, 20, -32 + flight * 58);
-                            this.attackProjGroup.rotation.z += dt * 15;
+                            this.attackProjGroup.rotation.z += dt * 10;
                         } else {
                             this.attackProjGroup.visible = false;
                         }
@@ -4387,15 +4362,16 @@ const DeathSceneSystem = {
                 } else {
                     let zPos = -38;
                     let yPos = 0;
-                    if (p < 0.35) {
-                        zPos = -38 - (p / 0.35) * 7;
-                        if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -(p / 0.35) * 2.2;
-                        if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -(p / 0.35) * 1.1;
+                    if (p < 0.42) {
+                        const w = p / 0.42;
+                        zPos = -38 - w * 7;
+                        if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -w * 2.2;
+                        if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -w * 1.1;
                     } else {
-                        const strike = (p - 0.35) / 0.65;
+                        const strike = (p - 0.42) / 0.58;
                         const ease = strike * strike * (3 - 2 * strike);
-                        zPos = -45 + ease * 50; // Scatta fino al personaggio
-                        yPos = Math.sin(strike * Math.PI) * 15;
+                        zPos = -45 + ease * 50;
+                        yPos = Math.sin(strike * Math.PI) * 14;
                         if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -2.2 + ease * 3.4;
                         if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -1.1 + ease * 1.8;
                     }
@@ -4403,25 +4379,24 @@ const DeathSceneSystem = {
                 }
             }
         } else {
-            // Fase 2: Il personaggio si distrugge nei suoi pezzi (busto, testa, sciarpa, arma)
             if (!this.shattersTriggered) {
                 this.triggerPlayerBreak();
             }
 
             if (this.enemyGroup) {
-                this.enemyGroup.position.z += (-22 - this.enemyGroup.position.z) * dt * 3.2;
-                this.enemyGroup.position.y = Math.abs(Math.sin(t * 3.2)) * 2.0;
+                this.enemyGroup.position.z += (-22 - this.enemyGroup.position.z) * dt * 2.2;
+                this.enemyGroup.position.y = Math.abs(Math.sin(t * 2.2)) * 1.8;
                 if (this.enemyParts && this.enemyParts.armR) {
-                    this.enemyParts.armR.rotation.x += (-0.4 + Math.sin(t * 4) * 0.22 - this.enemyParts.armR.rotation.x) * dt * 6;
+                    this.enemyParts.armR.rotation.x += (-0.35 + Math.sin(t * 2.8) * 0.18 - this.enemyParts.armR.rotation.x) * dt * 4;
                 }
             }
 
-            // Fisica di caduta e rimbalzo dei pezzi del personaggio (identica a quella in-game)
+            // Fisica rallentata dei pezzi del personaggio sul piano riflettente
             for (let i = 0; i < this.breakPieces.length; i++) {
                 const p = this.breakPieces[i];
                 if (p.resting) continue;
 
-                p.vy -= 850 * dt;
+                p.vy -= 520 * dt;
                 p.mesh.position.x += p.vx * dt;
                 p.mesh.position.y += p.vy * dt;
                 p.mesh.position.z += p.vz * dt;
@@ -4432,59 +4407,58 @@ const DeathSceneSystem = {
 
                 if (p.mesh.position.y <= p.floorY) {
                     p.mesh.position.y = p.floorY;
-                    p.vy *= -0.42;
-                    p.vx *= 0.65;
-                    p.vz *= 0.65;
-                    p.rx *= 0.6;
+                    p.vy *= -0.44;
+                    p.vx *= 0.68;
+                    p.vz *= 0.68;
+                    p.rx *= 0.62;
                     p.ry *= 0.65;
-                    p.rz *= 0.6;
-                    if (Math.abs(p.vy) < 18 && (p.vx * p.vx + p.vz * p.vz) < 25) {
+                    p.rz *= 0.62;
+                    if (Math.abs(p.vy) < 12 && (p.vx * p.vx + p.vz * p.vz) < 16) {
                         p.vy = 0; p.vx = 0; p.vz = 0;
                         p.resting = true;
                     }
                 }
-            }
-
-            if (this.impactLight.intensity > 0) {
-                this.impactLight.intensity = Math.max(0, this.impactLight.intensity - dt * 16);
-            }
-            if (this.impactWaveMesh.material.opacity > 0) {
-                const s = this.impactWaveMesh.scale.x + dt * 240;
-                this.impactWaveMesh.scale.set(s, s, 1);
-                this.impactWaveMesh.material.opacity = Math.max(0, this.impactWaveMesh.material.opacity - dt * 1.3);
             }
         }
     },
 
     updateRipAnimation(dt) {
         if (this.ghostGroup && this.ghostParts) {
-            const bob = Math.sin(this.time * 2.4) * 6.5;
-            this.ghostGroup.position.set(
-                Math.sin(this.time * 1.1) * 3.5,
-                68 + bob,
-                Math.cos(this.time * 0.9) * 3.5
-            );
-            this.ghostGroup.rotation.y = Math.sin(this.time * 0.85) * 0.6;
-            this.ghostGroup.rotation.z = Math.cos(this.time * 1.5) * 0.09;
+            // Il fantasmino emerge dall'interno della tomba nei primi 2.8 secondi e sale verso l'alto ondeggiando
+            const riseDuration = 2.8;
+            const riseProg = Math.min(1.0, this.time / riseDuration);
+            const easeOut = 1.0 - Math.pow(1.0 - riseProg, 3);
+
+            // Opacità e scala crescono mentre emerge dalla pietra della tomba
+            const fade = Math.min(1.0, this.time / 1.4);
+            for (let i = 0; i < this.ghostMaterials.length; i++) {
+                const gm = this.ghostMaterials[i];
+                gm.mat.opacity = gm.maxOp * fade;
+            }
+
+            const gScale = 0.28 + 0.94 * easeOut;
+            this.ghostGroup.scale.setScalar(gScale);
+
+            // Sale da y = 6 (dentro la tomba) fino a y = 74, ondeggiando dolcemente a destra e sinistra
+            const baseAscentY = 6 + easeOut * 68;
+            const hoverBob = riseProg >= 1.0 ? Math.sin((this.time - riseDuration) * 1.6) * 5.5 : 0;
+            const swayX = Math.sin(this.time * 1.55) * (3.5 + easeOut * 7.5);
+            const swayZ = Math.cos(this.time * 1.15) * (2.0 + easeOut * 3.5);
+
+            this.ghostGroup.position.set(swayX, baseAscentY + hoverBob, swayZ);
+            this.ghostGroup.rotation.y = Math.sin(this.time * 0.8) * 0.45;
+            this.ghostGroup.rotation.z = -Math.cos(this.time * 1.55) * 0.14;
 
             if (this.ghostParts.ghostTail) {
-                this.ghostParts.ghostTail.rotation.z = Math.sin(this.time * 4.5) * 0.24;
-                this.ghostParts.ghostTail.rotation.x = Math.cos(this.time * 3.8) * 0.18;
+                this.ghostParts.ghostTail.rotation.z = Math.sin(this.time * 3.2) * 0.24;
+                this.ghostParts.ghostTail.rotation.x = Math.cos(this.time * 2.6) * 0.16;
             }
             if (this.ghostParts.weaponGroup) {
-                this.ghostParts.weaponGroup.position.y = 16 + Math.sin(this.time * 3.2) * 2.5;
-                this.ghostParts.weaponGroup.rotation.z = Math.sin(this.time * 2.1) * 0.16;
+                this.ghostParts.weaponGroup.position.y = 16 + Math.sin(this.time * 2.2) * 2.2;
+                this.ghostParts.weaponGroup.rotation.z = Math.sin(this.time * 1.6) * 0.14;
             }
-            if (this.ghostParts.halo) this.ghostParts.halo.rotation.z += dt * 2.2;
-            if (this.ghostParts.staffGem) this.ghostParts.staffGem.rotation.y += dt * 2.5;
-        }
-
-        for (let i = 0; i < this.soulMotes.length; i++) {
-            const m = this.soulMotes[i];
-            m.angle += m.spd * dt;
-            m.y += m.vy * dt;
-            if (m.y > 110) m.y = 4;
-            m.sprite.position.set(Math.cos(m.angle) * m.radius, m.y, Math.sin(m.angle) * m.radius);
+            if (this.ghostParts.halo) this.ghostParts.halo.rotation.z += dt * 1.5;
+            if (this.ghostParts.staffGem) this.ghostParts.staffGem.rotation.y += dt * 1.8;
         }
     }
 };
