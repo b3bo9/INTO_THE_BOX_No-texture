@@ -435,13 +435,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .stagger-enter { animation: slide-in-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-/* --- STILE TITOLO 3D "CICCIOTTO" PROSPETTICO + FUMO MAGICO --- */
+/* --- STILE TITOLO 3D "CICCIOTTO" PROSPETTICO + FUMO MAGICO (100% VERTICALE) --- */
         @keyframes mc-title-float {
             0%, 100% {
-                transform: perspective(420px) rotateX(16deg) rotateY(-2deg) translateY(0px) scale(1.02, 1.14);
+                transform: perspective(400px) rotateX(18deg) translateY(0px) scale(1.02, 1.14);
             }
             50% {
-                transform: perspective(420px) rotateX(19deg) rotateY(2deg) translateY(-9px) scale(1.05, 1.18);
+                transform: perspective(400px) rotateX(22deg) translateY(-8px) scale(1.05, 1.18);
             }
         }
         @keyframes magic-smoke-drift-1 {
@@ -503,52 +503,42 @@
             animation: magic-smoke-drift-2 9s ease-in-out infinite;
         }
 
-        /* Lettere 3D Cicciotte e Scolpite */
+        /* Lettere 3D Cicciotte con Estrusione Puramente Verticale (Stile THE BOX per entrambe le righe) */
         .mc-block-word {
             position: relative;
             display: inline-block;
+            padding: 0 !important;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             text-transform: uppercase;
             color: #334155;
-            /* Contorno esterno spesso che ingrossa il corpo di ogni lettera */
             -webkit-text-stroke: 8px #070b14;
             paint-order: stroke fill;
-            /* Estrusione 3D piena e profonda a blocchi */
             text-shadow:
                 0px 1px 0px #94a3b8,
                 0px 2px 0px #64748b,
-                -2px 2px 0px #070b14,
-                2px 2px 0px #070b14,
                 0px 3px 0px #64748b,
                 0px 4px 0px #475569,
-                -3px 4px 0px #070b14,
-                3px 4px 0px #070b14,
                 0px 5px 0px #475569,
                 0px 6px 0px #334155,
-                -3px 6px 0px #070b14,
-                3px 6px 0px #070b14,
                 0px 7px 0px #334155,
                 0px 8px 0px #1e293b,
-                -3px 8px 0px #050811,
-                3px 8px 0px #050811,
                 0px 9px 0px #1e293b,
                 0px 10px 0px #0f172a,
-                -3px 10px 0px #050811,
-                3px 10px 0px #050811,
                 0px 11px 0px #0f172a,
                 0px 12px 0px #090d16,
-                -3px 12px 0px #020409,
-                3px 12px 0px #020409,
+                0px 13px 0px #050811,
                 0px 14px 0px #020409,
                 0px 20px 30px rgba(0, 0, 0, 0.95),
                 0px 0px 28px rgba(0, 221, 255, 0.45);
         }
-        /* Faccia anteriore brillante e "cicciotta" (il bordo chiaro espande lo spessore delle lettere) */
         .mc-block-word::before {
             content: attr(data-text);
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(180deg, #ffffff 0%, #ffffff 35%, #dbeafe 65%, #93c5fd 88%, #e2e8f0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -557,23 +547,21 @@
             pointer-events: none;
         }
         .mc-word-sub {
-            -webkit-text-stroke: 6px #070b14;
+            -webkit-text-stroke: 7px #070b14;
             text-shadow:
                 0px 1px 0px #94a3b8,
                 0px 2px 0px #64748b,
-                -2px 2px 0px #070b14,
-                2px 2px 0px #070b14,
-                0px 3px 0px #475569,
-                0px 4px 0px #334155,
-                -2px 4px 0px #070b14,
-                2px 4px 0px #070b14,
-                0px 5px 0px #1e293b,
-                0px 6px 0px #0f172a,
-                -2px 6px 0px #050811,
-                2px 6px 0px #050811,
-                0px 8px 0px #020409,
-                0px 14px 22px rgba(0, 0, 0, 0.95),
-                0px 0px 22px rgba(0, 221, 255, 0.45);
+                0px 3px 0px #64748b,
+                0px 4px 0px #475569,
+                0px 5px 0px #475569,
+                0px 6px 0px #334155,
+                0px 7px 0px #1e293b,
+                0px 8px 0px #0f172a,
+                0px 9px 0px #090d16,
+                0px 10px 0px #050811,
+                0px 11px 0px #020409,
+                0px 16px 24px rgba(0, 0, 0, 0.95),
+                0px 0px 24px rgba(0, 221, 255, 0.45);
         }
         .mc-word-sub::before {
             -webkit-text-stroke: 1.5px #ffffff;
@@ -853,10 +841,10 @@ body.colorblind-mode #opt-colorblind-text {
                     <div class="title-magic-smoke layer-2"></div>
                 </div>
 
-                <!-- Blocco Titolo 3D Fluttuante -->
+               <!-- Blocco Titolo 3D Fluttuante (Allineamento 100% verticale su entrambe le righe) -->
                 <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
-                    <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.22em] text-[11vw] sm:text-6xl md:text-7xl leading-none pl-[0.22em] z-10 m-0">INTO</span>
-                    <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-0.5 sm:mt-1 whitespace-nowrap z-20 m-0">THE BOX</h1>
+                    <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.06em] text-[12vw] sm:text-6xl md:text-7xl leading-none whitespace-nowrap z-10 m-0">INTO</span>
+                    <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-1 sm:mt-1.5 whitespace-nowrap z-20 m-0">THE BOX</h1>
                 </div>
             </div>
 
