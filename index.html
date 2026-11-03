@@ -3803,32 +3803,41 @@ const SkinSystem = {
     }
 };
 const DeathSceneSystem = {
-    scene: null, camera: null, renderer: null, container: null,
+    scene: null, camera: null, renderer: null, container: null, irisEl: null,
     worldRoot: null, stageGroup: null, floorMesh: null,
     enemyGroup: null, enemyParts: null, playerGroup: null, playerParts: null,
     attackProjGroup: null, impactWaveMesh: null,
     tombGroup: null, ghostGroup: null, ghostParts: null, soulMotes: [],
-    shatterMesh: null, shatterData: null, shatterCount: 1000,
-    shattersTriggered: false, shattersSettled: false, buttonsUnlocked: false,
+    breakPieces: [], shattersTriggered: false, buttonsUnlocked: false,
     mainLight: null, rimLight: null, impactLight: null,
     mode: 'fallen', killerInfo: null,
-    time: 0, camAngle: 0.55,
+    time: 0, camAngle: 0.75,
     initialized: false, active: false,
-    _dummy: new THREE.Object3D(),
-    _color: new THREE.Color(),
+    _transitionTimeout: null,
 
     init() {
         this.container = document.getElementById('death-3d-canvas-container');
         if (!this.container || this.initialized) return;
 
+        // Crea l'overlay circolare GPU (cerchio che si chiude dai bordi verso il centro)
+        if (!document.getElementById('death-iris-overlay')) {
+            const iris = document.createElement('div');
+            iris.id = 'death-iris-overlay';
+            iris.style.cssText = 'position:fixed;left:50%;top:50%;width:150vmax;height:150vmax;border-radius:50%;box-shadow:0 0 0 200vmax #000000;pointer-events:none;z-index:9998;transform:translate(-50%,-50%) scale(1);opacity:0;will-change:transform,opacity;';
+            document.body.appendChild(iris);
+            this.irisEl = iris;
+        } else {
+            this.irisEl = document.getElementById('death-iris-overlay');
+        }
+
         let w = this.container.clientWidth || window.innerWidth;
         let h = this.container.clientHeight || window.innerHeight;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x000000, 650, 2200);
+        this.scene.fog = new THREE.Fog(0x000000, 900, 2600);
 
-        // Stesso FOV (50°) e proporzioni della visuale di gameplay
-        this.camera = new THREE.PerspectiveCamera(50, w / h, 10, 3000);
+        // Stesso FOV (50°) e inquadratura alta del gameplay
+        this.camera = new THREE.PerspectiveCamera(50, w / h, 10, 3500);
 
         this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
         this.renderer.setClearColor(0x000000, 1);
@@ -3838,20 +3847,19 @@ const DeathSceneSystem = {
         this.renderer.autoClear = false;
         this.container.appendChild(this.renderer.domElement);
 
-        // Illuminazione calibrata per visuale alta da gameplay
-        const amb = new THREE.HemisphereLight(0xffffff, 0x0a0a14, 0.85);
+        const amb = new THREE.HemisphereLight(0xffffff, 0x0a0a14, 0.9);
         this.scene.add(amb);
 
-        this.rimLight = new THREE.DirectionalLight(0xcce0ff, 1.45);
-        this.rimLight.position.set(-220, 550, -220);
+        this.rimLight = new THREE.DirectionalLight(0xcce0ff, 1.5);
+        this.rimLight.position.set(-250, 650, -250);
         this.scene.add(this.rimLight);
 
-        this.mainLight = new THREE.PointLight(0xff2244, 4.2, 750, 1.6);
-        this.mainLight.position.set(0, 140, 20);
+        this.mainLight = new THREE.PointLight(0xff2244, 4.5, 950, 1.5);
+        this.mainLight.position.set(0, 160, 20);
         this.scene.add(this.mainLight);
 
-        this.impactLight = new THREE.PointLight(0xffffff, 0, 650, 1.5);
-        this.impactLight.position.set(0, 40, 28);
+        this.impactLight = new THREE.PointLight(0xffffff, 0, 800, 1.5);
+        this.impactLight.position.set(0, 40, 26);
         this.scene.add(this.impactLight);
 
         // Root specchiabile per generare il riflesso 3D reale sul piano nero
@@ -3861,13 +3869,13 @@ const DeathSceneSystem = {
         this.stageGroup = new THREE.Group();
         this.worldRoot.add(this.stageGroup);
 
-        // Piano completamente nero, vuoto e riflettente (ampio per la vista dall'alto)
-        const floorGeo = new THREE.CircleGeometry(1200, 48);
+        // Piano completamente nero, vuoto e riflettente
+        const floorGeo = new THREE.CircleGeometry(1600, 48);
         floorGeo.rotateX(-Math.PI / 2);
         const floorMat = new THREE.MeshPhongMaterial({
             color: 0x020205,
             emissive: 0x000000,
-            specular: 0x2a3246,
+            specular: 0x2e364a,
             shininess: 95,
             transparent: true,
             opacity: 0.72,
@@ -3886,24 +3894,37 @@ const DeathSceneSystem = {
         this.impactWaveMesh.position.y = 0.2;
         this.stageGroup.add(this.impactWaveMesh);
 
-        // Pre-allocazione 1.000 frammenti 3D (1 sola Draw Call)
-        const shardGeo = new THREE.TetrahedronGeometry(1.6, 0);
-        const shardMat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-        this.shatterMesh = new THREE.InstancedMesh(shardGeo, shardMat, this.shatterCount);
-        this.shatterMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        this.shatterMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(this.shatterCount * 3), 3);
-        this.shatterMesh.frustumCulled = false;
-        this.shatterMesh.visible = false;
-        this.stageGroup.add(this.shatterMesh);
-
-        this.shatterData = Array.from({ length: this.shatterCount }, () => ({
-            x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0,
-            rx: 0, ry: 0, rz: 0, avx: 0, avy: 0, avz: 0,
-            sx: 1, sy: 1, sz: 1, resting: false
-        }));
-
         window.addEventListener('resize', () => this.resize());
         this.initialized = true;
+    },
+
+    // Chiude rapidamente un cerchio nero dai bordi al centro e avvia la scena 3D senza stacchi
+    playDeathTransition(onClosedCallback) {
+        this.init();
+        if (this._transitionTimeout) clearTimeout(this._transitionTimeout);
+        const iris = this.irisEl;
+        if (!iris) {
+            if (onClosedCallback) onClosedCallback();
+            return;
+        }
+
+        iris.style.transition = 'none';
+        iris.style.opacity = '1';
+        iris.style.transform = 'translate(-50%, -50%) scale(1)';
+        void iris.offsetWidth;
+
+        // Chiusura rapida del cerchio dai bordi fino al centro (380ms)
+        iris.style.transition = 'transform 0.38s cubic-bezier(0.55, 0.05, 0.67, 0.19)';
+        iris.style.transform = 'translate(-50%, -50%) scale(0)';
+
+        this._transitionTimeout = setTimeout(() => {
+            if (onClosedCallback) onClosedCallback();
+            // Dissolvenza morbida del nero che rivela la scena 3D (anch'essa su sfondo nero #000)
+            requestAnimationFrame(() => {
+                iris.style.transition = 'opacity 0.26s ease-out';
+                iris.style.opacity = '0';
+            });
+        }, 380);
     },
 
     setButtonsLocked(locked) {
@@ -3924,7 +3945,7 @@ const DeathSceneSystem = {
 
     clearStageActors() {
         if (!this.stageGroup) return;
-        const keep = new Set([this.shatterMesh, this.impactWaveMesh]);
+        const keep = new Set([this.impactWaveMesh]);
         for (let i = this.stageGroup.children.length - 1; i >= 0; i--) {
             let child = this.stageGroup.children[i];
             if (!keep.has(child)) {
@@ -3935,6 +3956,7 @@ const DeathSceneSystem = {
         this.playerGroup = null; this.playerParts = null;
         this.attackProjGroup = null;
         this.tombGroup = null; this.ghostGroup = null; this.ghostParts = null;
+        this.breakPieces = [];
         this.soulMotes = [];
     },
 
@@ -3958,12 +3980,10 @@ const DeathSceneSystem = {
         this.time = 0;
         this.camAngle = 0.75;
         this.shattersTriggered = false;
-        this.shattersSettled = false;
-        this.shatterMesh.visible = false;
         this.impactWaveMesh.material.opacity = 0;
         this.impactLight.intensity = 0;
 
-        // Blocca i tasti finché l'animazione principale non si è conclusa
+        // Blocca i tasti finché l'animazione dell'attacco e della rottura non è terminata
         this.setButtonsLocked(true);
 
         if (mode === 'fallen') {
@@ -3976,6 +3996,14 @@ const DeathSceneSystem = {
 
     stop() {
         this.active = false;
+        if (this._transitionTimeout) {
+            clearTimeout(this._transitionTimeout);
+            this._transitionTimeout = null;
+        }
+        if (this.irisEl) {
+            this.irisEl.style.transition = 'none';
+            this.irisEl.style.opacity = '0';
+        }
         this.setButtonsLocked(false);
     },
 
@@ -3983,10 +4011,10 @@ const DeathSceneSystem = {
         const k = this.killerInfo;
         const eType = k.type || 'orc';
         this.mainLight.color.setHex(0xff2244);
-        this.mainLight.intensity = 4.2;
-        this.mainLight.position.set(0, 140, 0);
+        this.mainLight.intensity = 4.5;
+        this.mainLight.position.set(0, 160, 0);
 
-        // 1. PERSONAGGIO CON SKIN EQUIPAGGIATA (posizionato a z = +28)
+        // 1. PERSONAGGIO CON SKIN EQUIPAGGIATA (a z = +26)
         const skin = SkinSystem.getCurrentSkin();
         const bodyMat = new THREE.MeshStandardMaterial({ color: skin.colors.body, roughness: 0.65, metalness: 0.15, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide });
         const gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.4, side: THREE.DoubleSide });
@@ -3997,17 +4025,18 @@ const DeathSceneSystem = {
         if (this.playerParts.staff) this.playerParts.staff.material.color.setHex(skin.colors.staff);
         this.setDoubleSide(this.playerGroup);
 
-        this.playerGroup.scale.setScalar(1.35);
-        this.playerGroup.position.set(0, 0, 28);
+        this.playerGroup.position.set(0, 0, 26);
         this.playerGroup.rotation.y = Math.PI;
         this.stageGroup.add(this.playerGroup);
 
-        // 2. NEMICO CHE L'HA UCCISO (posizionato a z = -42, rivolto verso il giocatore)
+        // Pre-costruisce i pezzi fisici che compongono il personaggio (come nella morte in-game)
+        this.buildBreakablePlayerPieces(skin, bodyMat, gemMat);
+
+        // 2. NEMICO UCCISORE (a z = -38, rivolto verso il personaggio)
         let baseSize = k.size || 16;
         if (eType === 'boss') baseSize = 28;
-        else if (eType === 'golem') baseSize = 22;
+        else if (eType === 'golem') baseSize = 20;
         else if (eType === 'orc') baseSize = 18;
-        else baseSize = Math.max(15, baseSize * 1.2);
 
         let eColor = k.color || 0x5c4033;
         let eMat = applyCharacterShader(new THREE.MeshLambertMaterial({ color: eColor, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide }), 0.75);
@@ -4023,119 +4052,131 @@ const DeathSceneSystem = {
         this.enemyGroup = builtEnemy.group;
         this.enemyParts = builtEnemy.parts;
         this.setDoubleSide(this.enemyGroup);
-        this.enemyGroup.scale.setScalar(1.25);
-        this.enemyGroup.position.set(0, 0, -42);
+        this.enemyGroup.position.set(0, 0, -38);
         this.enemyGroup.rotation.y = 0;
         this.stageGroup.add(this.enemyGroup);
 
-        // 3. PROIETTILE / DARDI PER NEMICI A DISTANZA
+        // 3. PROIETTILE PER NEMICI A DISTANZA
         const isRanged = (eType === 'skeleton_archer' || eType === 'mage' || eType === 'pyromancer' || eType === 'fire_demon' || eType === 'ring_walker' || eType === 'dark_prophet' || eType === 'crystal');
         this.killerIsRanged = isRanged;
         if (isRanged) {
             this.attackProjGroup = new THREE.Group();
             let pColor = (eType === 'mage' || eType === 'crystal') ? 0xaa00ff : (eType === 'skeleton_archer' ? 0xe2e8f0 : 0xff3300);
-            let pGeo = (eType === 'skeleton_archer') ? new THREE.ConeGeometry(3.2, 26, 6).rotateX(Math.PI / 2) : SharedGeo.energyOrb;
+            let pGeo = (eType === 'skeleton_archer') ? new THREE.ConeGeometry(2.8, 24, 6).rotateX(Math.PI / 2) : SharedGeo.energyOrb;
             let pMesh = new THREE.Mesh(pGeo, new THREE.MeshBasicMaterial({ color: pColor, side: THREE.DoubleSide }));
-            if (eType !== 'skeleton_archer') pMesh.scale.setScalar(9.0);
+            if (eType !== 'skeleton_archer') pMesh.scale.setScalar(8.0);
             let pGlow = new THREE.Sprite(eType === 'mage' || eType === 'crystal' ? SharedMat.spritePink : SharedMat.spriteRed);
-            pGlow.scale.set(42, 42, 1);
+            pGlow.scale.set(36, 36, 1);
             this.attackProjGroup.add(pMesh, pGlow);
             this.attackProjGroup.visible = false;
             this.stageGroup.add(this.attackProjGroup);
         }
     },
 
-    triggerShatter() {
+    buildBreakablePlayerPieces(skin, bodyMat, gemMat) {
+        const geos = PlayerGeometryBuilder.getGeometries(skin.id);
+        const headMat = this.playerParts.head.material;
+        const scarfMat = this.playerParts.scarf.material;
+        const staffMat = this.playerParts.staff.material;
+
+        // 1. Busto / Mantello (+ eventuali ali/accenti della skin)
+        const pBody = new THREE.Mesh(geos.body, bodyMat);
+        if (geos.accent) {
+            const acc = new THREE.Mesh(geos.accent, gemMat);
+            pBody.add(acc);
+        }
+
+        // 2. Testa / Elmo (+ eventuale corona/visore della skin)
+        const pHead = new THREE.Mesh(geos.head, headMat);
+        if (geos.headAccent) {
+            const hAcc = new THREE.Mesh(geos.headAccent, gemMat);
+            pHead.add(hAcc);
+        }
+
+        // 3. Sciarpa / Collare
+        const pScarf = new THREE.Mesh(geos.scarf, scarfMat);
+
+        // 4. Arma completa (Asta + Gemma + Aureola, come deadWeapon in-game)
+        const pWeapon = new THREE.Group();
+        const sMesh = new THREE.Mesh(geos.staff, staffMat);
+        const gMesh = new THREE.Mesh(geos.gem, gemMat);
+        const hMesh = new THREE.Mesh(geos.halo, gemMat);
+        let gemY = 28, gemZ = 0;
+        if (skin.id === 'cyber_phantom') { gemY = 1.2; gemZ = 22.5; }
+        else if (skin.id === 'void_walker') { gemY = 14.0; gemZ = 0.0; }
+        gMesh.position.set(0, gemY, gemZ);
+        hMesh.position.set(0, gemY, gemZ);
+        pWeapon.add(sMesh, gMesh, hMesh);
+
+        const rawList = [
+            { mesh: pBody,   ox: 0,   oy: 12, oz: 0,  floorY: 3.5 },
+            { mesh: pHead,   ox: 0,   oy: 29, oz: 0,  floorY: 5.5 },
+            { mesh: pScarf,  ox: 0,   oy: 24, oz: 0,  floorY: 2.5 },
+            { mesh: pWeapon, ox: -12, oy: 16, oz: -8, floorY: 3.0 }
+        ];
+
+        this.breakPieces = [];
+        for (let i = 0; i < rawList.length; i++) {
+            const item = rawList[i];
+            this.setDoubleSide(item.mesh);
+            item.mesh.visible = false;
+            this.stageGroup.add(item.mesh);
+            this.breakPieces.push({
+                mesh: item.mesh,
+                ox: item.ox, oy: item.oy, oz: item.oz,
+                floorY: item.floorY,
+                vx: 0, vy: 0, vz: 0,
+                rx: 0, ry: 0, rz: 0,
+                resting: false
+            });
+        }
+    },
+
+    triggerPlayerBreak() {
         this.shattersTriggered = true;
         if (this.playerGroup) this.playerGroup.visible = false;
         if (this.attackProjGroup) this.attackProjGroup.visible = false;
-        this.shatterMesh.visible = true;
 
-        const skin = SkinSystem.getCurrentSkin();
-        const palette = [
-            skin.colors.body, skin.colors.body, skin.colors.body,
-            skin.colors.scarf, skin.colors.scarf,
-            skin.colors.head, skin.colors.staff,
-            0xffdd44, 0xff2244
-        ];
+        const baseZ = this.playerGroup ? this.playerGroup.position.z : 26;
 
-        for (let i = 0; i < this.shatterCount; i++) {
-            const d = this.shatterData[i];
-            d.resting = false;
+        // Smembramento fisico nei pezzi che compongono il personaggio (identico alla morte in-game)
+        const dirAngles = [0.0, -0.45, 0.52, -0.95];
+        for (let i = 0; i < this.breakPieces.length; i++) {
+            const p = this.breakPieces[i];
+            p.resting = false;
+            p.mesh.visible = true;
+            p.mesh.position.set(p.ox, p.oy, baseZ + p.oz);
+            p.mesh.rotation.set(0, Math.PI, 0);
 
-            const hBand = Math.random();
-            let localY, radSpread, colHex;
-            if (hBand < 0.62) {
-                localY = 3 + hBand * 44;
-                radSpread = (1.0 - hBand * 0.6) * 14.0;
-                colHex = (Math.random() < 0.78) ? skin.colors.body : skin.colors.scarf;
-            } else if (hBand < 0.85) {
-                localY = 32 + (hBand - 0.62) * 45;
-                radSpread = 7.5;
-                colHex = (Math.random() < 0.7) ? skin.colors.head : skin.colors.scarf;
-            } else {
-                localY = 18 + (hBand - 0.85) * 110;
-                radSpread = 10.5;
-                colHex = palette[i % palette.length];
-            }
+            const spreadAng = dirAngles[i] + MathUtils.randomRange(-0.2, 0.2);
+            const horizSpd = MathUtils.randomRange(55, 115);
+            p.vx = Math.sin(spreadAng) * horizSpd;
+            // Spinta in avanti nella direzione del colpo nemico (+Z)
+            p.vz = Math.cos(spreadAng) * horizSpd + MathUtils.randomRange(45, 90);
+            p.vy = MathUtils.randomRange(175, 290);
 
-            const theta = i * 2.39996 + Math.random() * 0.3;
-            const r = Math.sqrt(Math.random()) * radSpread;
-            d.x = Math.cos(theta) * r;
-            d.y = localY;
-            d.z = 28 + Math.sin(theta) * r;
-
-            // Esplosione ampia visibile dall'alto su tutto il piano nero riflettente
-            const outAngle = theta + (Math.random() - 0.5) * 0.45;
-            const outSpeed = MathUtils.randomRange(55, 290);
-            d.vx = Math.cos(outAngle) * outSpeed;
-            d.vz = Math.sin(outAngle) * outSpeed + MathUtils.randomRange(35, 140);
-            d.vy = MathUtils.randomRange(70, 260) + (localY * 1.6);
-
-            d.rx = Math.random() * Math.PI * 2;
-            d.ry = Math.random() * Math.PI * 2;
-            d.rz = Math.random() * Math.PI * 2;
-            d.avx = MathUtils.randomRange(-16, 16);
-            d.avy = MathUtils.randomRange(-16, 16);
-            d.avz = MathUtils.randomRange(-16, 16);
-
-            const baseS = MathUtils.randomRange(0.75, 2.1);
-            d.sx = baseS * MathUtils.randomRange(0.7, 1.4);
-            d.sy = baseS * MathUtils.randomRange(0.5, 1.3);
-            d.sz = baseS * MathUtils.randomRange(0.7, 1.4);
-
-            this._color.setHex(colHex);
-            this._color.offsetHSL(0, 0, (Math.random() - 0.5) * 0.12);
-            this.shatterMesh.setColorAt(i, this._color);
-
-            this._dummy.position.set(d.x, d.y, d.z);
-            this._dummy.rotation.set(d.rx, d.ry, d.rz);
-            this._dummy.scale.set(d.sx, d.sy, d.sz);
-            this._dummy.updateMatrix();
-            // FIX: Passiamo this._dummy.matrix (THREE.Matrix4)
-            this.shatterMesh.setMatrixAt(i, this._dummy.matrix);
+            p.rx = MathUtils.randomRange(-7, 7);
+            p.ry = MathUtils.randomRange(-5, 5);
+            p.rz = MathUtils.randomRange(-7, 7);
         }
 
-        this.shatterMesh.instanceColor.needsUpdate = true;
-        this.shatterMesh.instanceMatrix.needsUpdate = true;
-
         this.impactLight.color.setHex(0xff3355);
-        this.impactLight.intensity = 12.0;
-        this.impactWaveMesh.position.set(0, 0.2, 28);
+        this.impactLight.intensity = 10.0;
+        this.impactWaveMesh.position.set(0, 0.2, baseZ);
         this.impactWaveMesh.scale.set(10, 10, 1);
         this.impactWaveMesh.material.color.setHex(0xff2244);
-        this.impactWaveMesh.material.opacity = 0.95;
+        this.impactWaveMesh.material.opacity = 0.9;
 
-        if (typeof AudioEngine !== 'undefined') AudioEngine.playHit('crit');
+        if (typeof AudioEngine !== 'undefined') AudioEngine.playHit('player');
         if (typeof Haptics !== 'undefined') Haptics.vibrate([30, 20, 40]);
     },
 
     setupRipScene() {
         this.mainLight.color.setHex(0xa855f7);
-        this.mainLight.intensity = 4.2;
-        this.mainLight.position.set(0, 140, 25);
+        this.mainLight.intensity = 4.5;
+        this.mainLight.position.set(0, 160, 25);
 
-        // 1. TOMBA MONUMENTALE AL CENTRO (Scalata per essere ben leggibile dalla vista alta)
+        // 1. TOMBA AL CENTRO (0, 0, 0)
         this.tombGroup = new THREE.Group();
         this.tombGroup.scale.setScalar(1.45);
 
@@ -4268,20 +4309,20 @@ const DeathSceneSystem = {
         const safeDt = Math.min(dt, 0.033);
         this.time += safeDt;
 
-        // Sblocco automatico dei pulsanti solo a fine animazione d'attacco/rottura
-        const unlockDelay = (this.mode === 'fallen') ? 2.2 : 1.1;
+        // Sblocco automatico dei pulsanti solo quando l'animazione d'attacco e caduta dei pezzi è conclusa
+        const unlockDelay = (this.mode === 'fallen') ? 2.0 : 1.0;
         if (!this.buttonsUnlocked && this.time >= unlockDelay) {
             this.setButtonsLocked(false);
         }
 
-        // VISUALE ALTA DALL'ALTO IDENTICA AL GAMEPLAY (Rapporto Altezza/Distanza 1.5x)
-        this.camAngle += safeDt * 0.42;
+        // TELECAMERA ANCORA PIÙ LONTANA E ALTA (Stessa prospettiva del gameplay)
+        this.camAngle += safeDt * 0.40;
         const aspect = this.camera.aspect || 0.56;
         const isPortrait = aspect < 0.78;
 
-        const camHeight = isPortrait ? 490 : 390;
-        const camDist = isPortrait ? 330 : 265;
-        const lookY = (this.mode === 'fallen') ? 10 : 28;
+        const camHeight = isPortrait ? 680 : 540;
+        const camDist = isPortrait ? 460 : 365;
+        const lookY = (this.mode === 'fallen') ? 8 : 26;
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
@@ -4314,14 +4355,14 @@ const DeathSceneSystem = {
 
     updateFallenAnimation(dt) {
         const t = this.time;
-        const impactTime = 0.85;
+        const impactTime = 0.78;
 
-        // Fase 1 (0.0s -> 0.85s): Il nemico attacca il personaggio
+        // Fase 1 (0.0s -> 0.78s): Il nemico compie l'attacco sul personaggio
         if (t < impactTime) {
             const p = t / impactTime;
             if (this.playerGroup && this.playerParts) {
                 this.playerGroup.visible = true;
-                this.playerGroup.position.set(0, 0, 28 + p * 3.5);
+                this.playerGroup.position.set(0, 0, 26 + p * 3.0);
                 this.playerParts.weaponGroup.rotation.x = -0.35 - p * 0.65;
                 this.playerParts.body.rotation.x = -p * 0.14;
             }
@@ -4329,32 +4370,32 @@ const DeathSceneSystem = {
             if (this.enemyGroup) {
                 if (this.killerIsRanged) {
                     const recoil = p < 0.45 ? -(p / 0.45) * 5.0 : -5.0 + ((p - 0.45) / 0.55) * 8.0;
-                    this.enemyGroup.position.set(0, 0, -42 + recoil);
+                    this.enemyGroup.position.set(0, 0, -38 + recoil);
                     if (this.enemyParts && this.enemyParts.crystals) this.enemyParts.crystals.rotation.y += dt * 8;
                     if (this.enemyParts && this.enemyParts.ringPivot) this.enemyParts.fireRingDisc.rotation.y -= dt * 12;
 
                     if (this.attackProjGroup) {
-                        if (p >= 0.40) {
-                            const flight = (p - 0.40) / 0.60;
+                        if (p >= 0.38) {
+                            const flight = (p - 0.38) / 0.62;
                             this.attackProjGroup.visible = true;
-                            this.attackProjGroup.position.set(0, 22, -34 + flight * 62);
+                            this.attackProjGroup.position.set(0, 20, -32 + flight * 58);
                             this.attackProjGroup.rotation.z += dt * 15;
                         } else {
                             this.attackProjGroup.visible = false;
                         }
                     }
                 } else {
-                    let zPos = -42;
+                    let zPos = -38;
                     let yPos = 0;
-                    if (p < 0.36) {
-                        zPos = -42 - (p / 0.36) * 8;
-                        if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -(p / 0.36) * 2.2;
-                        if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -(p / 0.36) * 1.1;
+                    if (p < 0.35) {
+                        zPos = -38 - (p / 0.35) * 7;
+                        if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -(p / 0.35) * 2.2;
+                        if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -(p / 0.35) * 1.1;
                     } else {
-                        const strike = (p - 0.36) / 0.64;
+                        const strike = (p - 0.35) / 0.65;
                         const ease = strike * strike * (3 - 2 * strike);
-                        zPos = -50 + ease * 52; // Scatta fino al personaggio
-                        yPos = Math.sin(strike * Math.PI) * 16;
+                        zPos = -45 + ease * 50; // Scatta fino al personaggio
+                        yPos = Math.sin(strike * Math.PI) * 15;
                         if (this.enemyParts && this.enemyParts.armR) this.enemyParts.armR.rotation.x = -2.2 + ease * 3.4;
                         if (this.enemyParts && this.enemyParts.armL) this.enemyParts.armL.rotation.x = -1.1 + ease * 1.8;
                     }
@@ -4362,68 +4403,55 @@ const DeathSceneSystem = {
                 }
             }
         } else {
-            // Fase 2: Il personaggio esplode in 1.000 pezzi che restano sparsi sul piano riflettente
+            // Fase 2: Il personaggio si distrugge nei suoi pezzi (busto, testa, sciarpa, arma)
             if (!this.shattersTriggered) {
-                this.triggerShatter();
+                this.triggerPlayerBreak();
             }
 
             if (this.enemyGroup) {
-                this.enemyGroup.position.z += (-24 - this.enemyGroup.position.z) * dt * 3.0;
-                this.enemyGroup.position.y = Math.abs(Math.sin(t * 3.2)) * 2.2;
+                this.enemyGroup.position.z += (-22 - this.enemyGroup.position.z) * dt * 3.2;
+                this.enemyGroup.position.y = Math.abs(Math.sin(t * 3.2)) * 2.0;
                 if (this.enemyParts && this.enemyParts.armR) {
                     this.enemyParts.armR.rotation.x += (-0.4 + Math.sin(t * 4) * 0.22 - this.enemyParts.armR.rotation.x) * dt * 6;
                 }
             }
 
-            if (!this.shattersSettled) {
-                let anyMoving = false;
-                for (let i = 0; i < this.shatterCount; i++) {
-                    const d = this.shatterData[i];
-                    if (d.resting) continue;
-                    anyMoving = true;
+            // Fisica di caduta e rimbalzo dei pezzi del personaggio (identica a quella in-game)
+            for (let i = 0; i < this.breakPieces.length; i++) {
+                const p = this.breakPieces[i];
+                if (p.resting) continue;
 
-                    d.vy -= 520 * dt;
-                    d.x += d.vx * dt;
-                    d.y += d.vy * dt;
-                    d.z += d.vz * dt;
+                p.vy -= 850 * dt;
+                p.mesh.position.x += p.vx * dt;
+                p.mesh.position.y += p.vy * dt;
+                p.mesh.position.z += p.vz * dt;
 
-                    d.rx += d.avx * dt;
-                    d.ry += d.avy * dt;
-                    d.rz += d.avz * dt;
+                p.mesh.rotation.x += p.rx * dt;
+                p.mesh.rotation.y += p.ry * dt;
+                p.mesh.rotation.z += p.rz * dt;
 
-                    const floorLim = d.sy * 0.55;
-                    if (d.y < floorLim) {
-                        d.y = floorLim;
-                        d.vy *= -0.44;
-                        d.vx *= 0.75;
-                        d.vz *= 0.75;
-                        d.avx *= 0.65;
-                        d.avy *= 0.72;
-                        d.avz *= 0.65;
-                        if (Math.abs(d.vy) < 12 && (d.vx * d.vx + d.vz * d.vz) < 45) {
-                            d.vy = 0; d.vx = 0; d.vz = 0;
-                            d.resting = true;
-                        }
+                if (p.mesh.position.y <= p.floorY) {
+                    p.mesh.position.y = p.floorY;
+                    p.vy *= -0.42;
+                    p.vx *= 0.65;
+                    p.vz *= 0.65;
+                    p.rx *= 0.6;
+                    p.ry *= 0.65;
+                    p.rz *= 0.6;
+                    if (Math.abs(p.vy) < 18 && (p.vx * p.vx + p.vz * p.vz) < 25) {
+                        p.vy = 0; p.vx = 0; p.vz = 0;
+                        p.resting = true;
                     }
-
-                    this._dummy.position.set(d.x, d.y, d.z);
-                    this._dummy.rotation.set(d.rx, d.ry, d.rz);
-                    this._dummy.scale.set(d.sx, d.sy, d.sz);
-                    this._dummy.updateMatrix();
-                    // FIX: Passiamo this._dummy.matrix (THREE.Matrix4)
-                    this.shatterMesh.setMatrixAt(i, this._dummy.matrix);
                 }
-                this.shatterMesh.instanceMatrix.needsUpdate = true;
-                if (!anyMoving) this.shattersSettled = true;
             }
 
             if (this.impactLight.intensity > 0) {
                 this.impactLight.intensity = Math.max(0, this.impactLight.intensity - dt * 16);
             }
             if (this.impactWaveMesh.material.opacity > 0) {
-                const s = this.impactWaveMesh.scale.x + dt * 260;
+                const s = this.impactWaveMesh.scale.x + dt * 240;
                 this.impactWaveMesh.scale.set(s, s, 1);
-                this.impactWaveMesh.material.opacity = Math.max(0, this.impactWaveMesh.material.opacity - dt * 1.2);
+                this.impactWaveMesh.material.opacity = Math.max(0, this.impactWaveMesh.material.opacity - dt * 1.3);
             }
         }
     },
@@ -16543,18 +16571,13 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.auraRingMesh.visible = false;
                 this.auraGlow.visible = false;
 
-                // Sipario di sangue: Ritardato per godersi i pezzi che cadono (1.5s)
-                if (UI.els.bloodVignette) {
-                    UI.els.bloodVignette.classList.remove('vignette-low-hp-active');
-                    setTimeout(() => {
-                        if (Game.state !== 'MENU') UI.els.bloodVignette.classList.add('death-fade-active');
-                    }, 1500); 
+        if (UI.els.bloodVignette) {
+                    UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
                 }
 
-             // Determina con precisione il nemico che ha inflitto il colpo fatale
+                // Determina il nemico uccisore
                 let killerEntity = (source && typeof source === 'object' && source.type) ? source : null;
                 if (killerEntity && killerEntity.owner === 'enemy') {
-                    // Se la sorgente è un proiettile senza sourceEntity, risale al tipo di nemico
                     const projToEnemy = { arrow: 'skeleton_archer', enemy_bolt: 'mage', enemy_fireball: 'fire_demon', fire_shape: 'pyromancer', orc_club: 'orc', homing_arrow: 'boss' };
                     killerEntity = { type: projToEnemy[killerEntity.type] || 'orc' };
                 }
@@ -16589,7 +16612,8 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     size: killerEntity.baseModelSize || 16
                 };
 
-                setTimeout(() => {
+                // Chiude subito il cerchio nero dai bordi verso il centro e mostra la scena 3D senza interrompere il flow
+                DeathSceneSystem.playDeathTransition(() => {
                     if (Game.state === 'MENU' || !this.dead) return;
 
                     Game.state = 'DEAD';
@@ -16634,10 +16658,10 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                         btnSave.innerText = 'SALVA';
                         btnSave.disabled = false;
                         btnSave.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-green-700');
-                        btnSave.classList.add('bg-red-950', 'hover:bg-red-700');
+                        btnSave.classList.add('bg-red-900', 'hover:bg-red-700');
                         DeathSceneSystem.start('rip', Game.lastKillerInfo);
                     }
-                }, 1100);
+                });
             }
         }
     }
@@ -21155,7 +21179,7 @@ history.pushState(null, null, document.URL);
     window.onload = () => {
     AppSettings.loadAndDetect(); AppSettings.init(); UIManager.updateOptionsUI();
     Preloader.init(); // Avvia il LoadingManager globale
-    ScoreManager.init(); SkinSystem.init(); Game.init(); TitleSystem.init();
+    ScoreManager.init(); SkinSystem.init(); Game.init(); TitleSystem.init(); DeathSceneSystem.init();
     const initScreen = document.getElementById('initScreen'); const mainMenu = document.getElementById('mainMenu');
     
     let mobileControls = document.getElementById('mobile-controls-desc');
