@@ -716,6 +716,9 @@ body.colorblind-mode #opt-colorblind-text {
 
             <!-- ZONA CENTRALE LIBERA PER IL CUBO E IL DIORAMA 3D -->
             <div class="flex-1 w-full min-h-[25px]"></div>
+
+            <!-- CONSOLE COMANDI IN BASSO (Ripristina larghezza piena e click sui bottoni) -->
+            <div class="w-full max-w-[440px] flex flex-col gap-2.5 pointer-events-auto shrink-0 relative z-20 mb-1 sm:mb-4">
                 
                 <!-- Bagliore Tri-Elementale Sotto la Console -->
                 <div class="absolute -inset-6 bg-gradient-to-r from-[#FF1838]/15 via-[#00CCFF]/15 to-[#22FF44]/15 blur-2xl pointer-events-none"></div>
@@ -3447,18 +3450,18 @@ const SkinSystem = {
             this.heroLight.intensity = Math.max(3.0, this.heroLight.intensity - safeDt * 10);
         }
 
-        // 1. ORBITA CINEMATOGRAFICA FLUIDA ATTORNO AL GIOCATORE
+        // 1. ORBITA CINEMATOGRAFICA FLUIDA ATTORNO AL GIOCATORE (Visuale più alta e panoramica)
         this.camAngle += safeDt * 0.16;
         let aspect = this.camera.aspect || 0.6;
-        let camDist = aspect < 0.75 ? 350 : (aspect < 1.0 ? 310 : 275);
-        let camHeight = aspect < 0.75 ? 245 : (aspect < 1.0 ? 215 : 195);
+        let camDist = aspect < 0.75 ? 355 : (aspect < 1.0 ? 315 : 280);
+        let camHeight = aspect < 0.75 ? 300 : (aspect < 1.0 ? 265 : 240);
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
             camHeight + Math.sin(this.time * 0.65) * 6,
             Math.sin(this.camAngle) * camDist
         );
-        this.camera.lookAt(0, 22, 0);
+        this.camera.lookAt(0, 14, 0);
 
         // 2. ANIMAZIONE NATURALE DELL'EROE AL CENTRO DELLA RUNA
         if (this.heroGroup && this.heroParts) {
