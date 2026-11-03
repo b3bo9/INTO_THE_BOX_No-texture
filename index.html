@@ -1061,18 +1061,18 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
         </div>
     </div>
-<!-- SCHERMATA MORTE (SFONDO NERO PROTETTO E BOTTONI OSCURATI FINO A FINE ANIMAZIONE) -->
-    <div id="deathScreen" class="absolute inset-0 z-[150] hidden pointer-events-auto overflow-hidden bg-black">
+<!-- SCHERMATA MORTE (SFONDO NERO PROTETTO E BOTTONI SEMPRE VISIBILI ED ACCESSIBILI) -->
+    <div id="deathScreen" class="absolute inset-0 z-[150] hidden pointer-events-auto overflow-y-auto overflow-x-hidden bg-black select-none">
         <!-- CONTAINER 3D FULLSCREEN -->
-        <div id="death-3d-canvas-container" class="absolute inset-0 w-full h-full z-0 pointer-events-none bg-black"></div>
+        <div id="death-3d-canvas-container" class="fixed inset-0 w-full h-full z-0 pointer-events-none bg-black"></div>
 
         <!-- Vignettatura superiore e inferiore -->
-        <div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-[1]"></div>
-        <div class="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none z-[1]"></div>
+        <div class="fixed inset-x-0 top-0 h-32 sm:h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-[1]"></div>
+        <div class="fixed inset-x-0 bottom-0 h-44 sm:h-56 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none z-[1]"></div>
 
-        <div class="w-full h-full flex flex-col justify-between items-center z-10 px-3 sm:px-6 py-4 sm:py-8 relative pointer-events-none">
+        <div class="w-full min-h-full flex flex-col justify-between items-center z-10 px-3 sm:px-6 py-3 sm:py-6 relative pointer-events-none">
             <!-- HEADER COMPATTO IN ALTO -->
-            <div class="flex flex-col items-center text-center w-full max-w-[600px] shrink-0 mt-1 sm:mt-4 pointer-events-auto">
+            <div class="flex flex-col items-center text-center w-full max-w-[600px] shrink-0 mt-1 sm:mt-2 pointer-events-auto">
                 <h1 id="deathTitle" class="text-[11vw] sm:text-7xl md:text-8xl font-display font-black text-red-600 mb-1 drop-shadow-[0_0_30px_rgba(220,38,38,1)] tracking-tighter uppercase whitespace-nowrap leading-none">R I P</h1>
                 <p id="deathSubtitle" class="text-[9px] sm:text-xs md:text-sm font-display font-bold text-red-200 px-4 py-1.5 bg-black/75 rounded-full border border-red-900/60 drop-shadow-[0_0_12px_rgba(220,38,38,0.5)] tracking-widest mt-1.5"></p>
                 <p id="deathQuote" class="text-[10px] sm:text-xs text-gray-300 italic mt-1.5 max-w-xs sm:max-w-md hidden px-3 drop-shadow-md font-semibold leading-tight"></p>
@@ -1080,32 +1080,32 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
 
             <!-- FINESTRA CENTRALE LIBERA PER L'ANIMAZIONE 3D -->
-            <div class="flex-1 w-full min-h-[180px] sm:min-h-[240px] pointer-events-none"></div>
+            <div class="flex-1 w-full min-h-[40px] sm:min-h-[80px] pointer-events-none"></div>
 
-            <!-- CONSOLE AZIONI IN BASSO (Bloccata e oscurata finché l'animazione non finisce) -->
-            <div class="glass-panel flex flex-col gap-2 sm:gap-2.5 items-center w-full max-w-[390px] shrink-0 p-3.5 sm:p-5 border-2 border-red-900/80 mb-1 sm:mb-4 pointer-events-auto" style="pointer-events: none; opacity: 0.35; filter: grayscale(0.85); transition: opacity 0.4s ease, filter 0.4s ease;">
+            <!-- CONSOLE AZIONI IN BASSO (Pulsanti ad alto contrasto, nitidi e reattivi fin dal primo istante) -->
+            <div class="glass-panel flex flex-col gap-2 sm:gap-2.5 items-center w-full max-w-[390px] shrink-0 p-3 sm:p-4 border-2 border-red-800/80 bg-black/85 shadow-[0_0_25px_rgba(220,38,38,0.3)] mb-1 sm:mb-2 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
                 <div id="score-save-container" class="w-full flex flex-col gap-1.5 mb-1 hidden">
                     <p class="text-[9px] sm:text-[10px] text-red-400 font-bold uppercase tracking-widest text-center m-0"><i class="fa-solid fa-pen-fancy"></i> Registra la tua fine</p>
                     <div class="flex gap-2 w-full">
-                        <input type="text" id="playerName" maxlength="10" placeholder="IL TUO NOME..." class="flex-1 min-w-0 bg-black/85 border-2 border-red-900 text-white font-bold text-center py-2.5 focus:outline-none focus:border-red-500 uppercase tracking-widest text-xs transition-all">
-                        <button id="btn-save-score" onclick="submitScore()" class="btn-cyber box-glow-red px-4 bg-red-950 text-white font-bold py-2.5 text-xs border-2 border-red-600 transition-colors uppercase tracking-wider shrink-0">Salva</button>
+                        <input type="text" id="playerName" maxlength="10" placeholder="IL TUO NOME..." class="flex-1 min-w-0 bg-black/90 border-2 border-red-700 text-white font-bold text-center py-2.5 focus:outline-none focus:border-red-400 uppercase tracking-widest text-xs transition-all">
+                        <button id="btn-save-score" onclick="submitScore()" class="btn-cyber box-glow-red px-4 bg-red-900 hover:bg-red-700 text-white font-bold py-2.5 text-xs border-2 border-red-500 transition-colors uppercase tracking-wider shrink-0">Salva</button>
                     </div>
                 </div>
 
-                <button id="btn-restart" onclick="restartGame()" class="btn-cyber glass-panel box-glow-purple w-full py-3 sm:py-4 text-lg sm:text-xl font-display text-purple-400 border-purple-500/30 group">
-                    <i class="fa-solid fa-rotate-right group-hover:animate-spin"></i> RIPROVA
+                <button id="btn-restart" onclick="restartGame()" class="btn-cyber glass-panel box-glow-purple w-full py-3 sm:py-3.5 text-base sm:text-lg font-display font-black text-purple-200 border-2 border-purple-500/60 bg-purple-950/60 hover:bg-purple-900/80 shadow-[0_0_20px_rgba(168,85,247,0.4)] group transition-all">
+                    <i class="fa-solid fa-rotate-right group-hover:animate-spin mr-1"></i> RIPROVA
                 </button>
 
-                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber glass-panel box-glow-purple w-full py-3.5 sm:py-4 text-lg sm:text-xl font-display text-purple-400 border-purple-500/30">
-                    <i class="fa-solid fa-bolt"></i> RITORNA IN BATTAGLIA
+                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber glass-panel box-glow-purple w-full py-3 sm:py-3.5 text-base sm:text-lg font-display font-black text-cyan-200 border-2 border-cyan-500/60 bg-cyan-950/60 hover:bg-cyan-900/80 shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
+                    <i class="fa-solid fa-bolt mr-1"></i> RITORNA IN BATTAGLIA
                 </button>
 
                 <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2.5 text-[10px] sm:text-xs font-bold text-purple-300">
-                        <i class="fa-solid fa-gem"></i> RELIQUIE
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2 text-[10px] sm:text-xs font-bold text-purple-200 border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60">
+                        <i class="fa-solid fa-gem mr-1"></i> RELIQUIE
                     </button>
-                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2.5 text-[10px] sm:text-xs font-bold text-gray-400">
-                        <i class="fa-solid fa-bars"></i> MENU
+                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2 text-[10px] sm:text-xs font-bold text-gray-200 border border-gray-600/50 bg-black/60 hover:bg-white/10">
+                        <i class="fa-solid fa-bars mr-1"></i> MENU
                     </button>
                 </div>
             </div>
@@ -3819,23 +3819,20 @@ const DeathSceneSystem = {
         this.container = document.getElementById('death-3d-canvas-container');
         if (!this.container || this.initialized) return;
 
-        // Cerchio nero con bordo morbido sfumato (zero scatti, accelerato via GPU)
-        if (!document.getElementById('death-iris-overlay')) {
-            const iris = document.createElement('div');
-            iris.id = 'death-iris-overlay';
-            iris.style.cssText = [
-                'position:fixed', 'left:50%', 'top:50%',
-                'width:160vmax', 'height:160vmax', 'border-radius:50%',
-                'box-shadow:inset 0 0 90px 45px #000000, 0 0 0 220vmax #000000',
-                'pointer-events:none', 'z-index:9998',
-                'transform:translate(-50%,-50%) scale(1)',
-                'opacity:0', 'will-change:transform,opacity'
-            ].join(';');
-            document.body.appendChild(iris);
-            this.irisEl = iris;
+        // Canvas dedicato fullscreen per la transizione iris senza alcun leak o sfarfallio
+        if (!document.getElementById('death-iris-canvas')) {
+            const canvas = document.createElement('canvas');
+            canvas.id = 'death-iris-canvas';
+            canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9998;display:none;';
+            document.body.appendChild(canvas);
+            this.irisEl = canvas;
         } else {
-            this.irisEl = document.getElementById('death-iris-overlay');
+            this.irisEl = document.getElementById('death-iris-canvas');
         }
+
+        // Rimuove eventuale vecchio overlay difettoso dal DOM
+        const oldIris = document.getElementById('death-iris-overlay');
+        if (oldIris && oldIris.parentNode) oldIris.parentNode.removeChild(oldIris);
 
         let w = this.container.clientWidth || window.innerWidth;
         let h = this.container.clientHeight || window.innerHeight;
@@ -3889,57 +3886,114 @@ const DeathSceneSystem = {
         this.initialized = true;
     },
 
-    // Chiusura circolare dolce, lenta e fluida dai bordi al centro
+    // Chiusura circolare dolce e fluida sul giocatore: schermo 100% nero solido fino ai bordi estremi
     playDeathTransition(onClosedCallback) {
         this.init();
         if (this._transitionTimeout) clearTimeout(this._transitionTimeout);
         if (this._rafId) cancelAnimationFrame(this._rafId);
 
-        const iris = this.irisEl;
-        if (!iris) {
+        const canvas = this.irisEl;
+        if (!canvas) {
             if (onClosedCallback) onClosedCallback();
             return;
         }
 
-        // Prepara il cerchio aperto sopra i bordi dello schermo
-        iris.style.transition = 'none';
-        iris.style.opacity = '0';
-        iris.style.transform = 'translate(-50%, -50%) scale(1.08)';
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            if (onClosedCallback) onClosedCallback();
+            return;
+        }
 
-        // Attende il frame successivo al colpo fatale per garantire fluidità a 60fps
-        this._rafId = requestAnimationFrame(() => {
-            this._rafId = requestAnimationFrame(() => {
-                iris.style.transition = 'opacity 0.22s ease-out, transform 0.88s cubic-bezier(0.33, 1, 0.68, 1)';
-                iris.style.opacity = '1';
-                iris.style.transform = 'translate(-50%, -50%) scale(0)';
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.style.transition = 'none';
+        canvas.style.opacity = '1';
+        canvas.style.display = 'block';
 
+        // Punto di chiusura: coordinate a schermo del giocatore (o fallback perfetto al centro)
+        let cx = w / 2;
+        let cy = h / 2;
+        try {
+            if (Game && Game.player && Game.camera && typeof Game.toScreenPosition === 'function') {
+                const sPos = Game.toScreenPosition(Game.player.x, 0, Game.player.y);
+                if (sPos && Number.isFinite(sPos.x) && Number.isFinite(sPos.y)) {
+                    cx = Math.max(0, Math.min(w, sPos.x));
+                    cy = Math.max(0, Math.min(h, sPos.y));
+                }
+            }
+        } catch (err) {
+            cx = w / 2;
+            cy = h / 2;
+        }
+
+        // Raggio massimo per coprire completamente tutti e quattro gli angoli
+        const maxRadius = Math.hypot(Math.max(cx, w - cx), Math.max(cy, h - cy)) * 1.05;
+        const duration = 850; // ms
+        const startTime = performance.now();
+
+        const renderFrame = (now) => {
+            const elapsed = now - startTime;
+            const p = Math.min(1.0, elapsed / duration);
+            // Easing cubico per una chiusura morbida ed elegante
+            const ease = 1 - Math.pow(1 - p, 3);
+            const radius = Math.max(0, maxRadius * (1 - ease));
+
+            // Disegna nero solido su TUTTO lo schermo: matematicamente impossibile che si intraveda il campo sotto
+            ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, w, h);
+
+            if (radius > 0.5) {
+                // Svuota il cerchio sul giocatore con morbida sfumatura radiale
+                ctx.globalCompositeOperation = 'destination-out';
+                const feather = Math.min(32, radius * 0.35);
+                const grad = ctx.createRadialGradient(cx, cy, Math.max(0, radius - feather), cx, cy, radius);
+                grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (p < 1.0) {
+                this._rafId = requestAnimationFrame(renderFrame);
+            } else {
+                // Sipario completamente chiuso al 100% nero
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, w, h);
+
+                if (onClosedCallback) onClosedCallback();
+
+                // Renderizza subito il primo frame 3D
+                if (this.active) this.update(0.016);
+
+                // Dissolvenza morbida del velo nero per rivelare la scena 3D
+                canvas.style.transition = 'opacity 0.38s ease-out';
+                canvas.style.opacity = '0';
                 this._transitionTimeout = setTimeout(() => {
-                    if (onClosedCallback) onClosedCallback();
-                    // Renderizza subito il primo frame 3D a sipario chiuso, poi dissolve dolcemente
-                    if (this.active) this.update(0.016);
-                    requestAnimationFrame(() => {
-                        iris.style.transition = 'opacity 0.48s ease-in-out';
-                        iris.style.opacity = '0';
-                    });
-                }, 880);
-            });
-        });
+                    canvas.style.display = 'none';
+                    ctx.clearRect(0, 0, w, h);
+                }, 380);
+            }
+        };
+
+        this._rafId = requestAnimationFrame(renderFrame);
     },
 
     setButtonsLocked(locked) {
-        this.buttonsUnlocked = !locked;
+        // I pulsanti rimangono sempre nitidi, ben visibili e reattivi
+        this.buttonsUnlocked = true;
         const panel = document.querySelector('#deathScreen .glass-panel');
         if (!panel) return;
-        if (locked) {
-            panel.style.pointerEvents = 'none';
-            panel.style.opacity = '0.35';
-            panel.style.filter = 'grayscale(0.85)';
-            panel.style.transition = 'opacity 0.4s ease, filter 0.4s ease';
-        } else {
-            panel.style.pointerEvents = 'auto';
-            panel.style.opacity = '1';
-            panel.style.filter = 'none';
-        }
+        panel.style.pointerEvents = 'auto';
+        panel.style.opacity = '1';
+        panel.style.filter = 'none';
+        panel.style.transition = 'none';
     },
 
     clearStageActors() {
@@ -3986,7 +4040,7 @@ const DeathSceneSystem = {
         this.camAngle = 0.75;
         this.shattersTriggered = false;
 
-        this.setButtonsLocked(true);
+        this.setButtonsLocked(false);
 
         if (mode === 'fallen') {
             this.setupFallenScene();
@@ -4009,6 +4063,12 @@ const DeathSceneSystem = {
         if (this.irisEl) {
             this.irisEl.style.transition = 'none';
             this.irisEl.style.opacity = '0';
+            this.irisEl.style.display = 'none';
+            const ctx = this.irisEl.getContext ? this.irisEl.getContext('2d') : null;
+            if (ctx) ctx.clearRect(0, 0, this.irisEl.width || window.innerWidth, this.irisEl.height || window.innerHeight);
+        }
+        if (this.renderer) {
+            this.renderer.clear();
         }
         this.setButtonsLocked(false);
     },
@@ -4278,6 +4338,10 @@ const DeathSceneSystem = {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(w, h);
         }
+        if (this.irisEl && this.irisEl.tagName === 'CANVAS') {
+            this.irisEl.width = window.innerWidth;
+            this.irisEl.height = window.innerHeight;
+        }
     },
 
     update(dt) {
@@ -4285,9 +4349,8 @@ const DeathSceneSystem = {
         const safeDt = Math.min(dt, 0.033);
         this.time += safeDt;
 
-        // Sblocco dei pulsanti solo dopo che l'animazione principale si è compiuta
-        const unlockDelay = (this.mode === 'fallen') ? 2.75 : 2.1;
-        if (!this.buttonsUnlocked && this.time >= unlockDelay) {
+        // I pulsanti sono sempre nitidi ed utilizzabili
+        if (!this.buttonsUnlocked) {
             this.setButtonsLocked(false);
         }
 
@@ -16545,9 +16608,16 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.auraRingMesh.visible = false;
                 this.auraGlow.visible = false;
 
-        if (UI.els.bloodVignette) {
-                    UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
-                }
+        if (typeof UI !== 'undefined' && UI.els && UI.els.bloodVignette) {
+            UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
+            UI.els.bloodVignette.style.webkitMaskImage = '';
+            UI.els.bloodVignette.style.maskImage = '';
+            UI.els.bloodVignette.style.opacity = '0';
+            if (UI.cache) {
+                UI.cache.isLowHp = false;
+                UI.cache.lowHpMask = null;
+            }
+        }
 
                 // Determina il nemico uccisore
                 let killerEntity = (source && typeof source === 'object' && source.type) ? source : null;
@@ -20202,11 +20272,33 @@ function clearScene() {
 function respawnPlayer() {
     AudioEngine.playClick();
     TransitionSystem.wipeIn(() => {
-        
+        if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
+        document.getElementById('deathScreen').classList.add('hidden');
 
-       if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
-document.getElementById('deathScreen').classList.add('hidden');
-        UI.els.bloodVignette.classList.remove('death-fade-active');
+        // Reset completo UI e filtri grafici per evitare sfarfallii o glitch di layer
+        if (typeof UI !== 'undefined' && UI.els) {
+            if (UI.els.bloodVignette) {
+                UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
+                UI.els.bloodVignette.style.webkitMaskImage = '';
+                UI.els.bloodVignette.style.maskImage = '';
+                UI.els.bloodVignette.style.opacity = '0';
+                UI.els.bloodVignette.style.background = '';
+                UI.els.bloodVignette.style.zIndex = '';
+            }
+            if (UI.els.damageFlash) {
+                UI.els.damageFlash.style.opacity = '0';
+            }
+            if (UI.els.gameContainer) {
+                UI.els.gameContainer.style.transition = 'none';
+                UI.els.gameContainer.style.filter = 'none';
+            }
+            if (UI.cache) {
+                UI.cache.isLowHp = false;
+                UI.cache.lowHpMask = null;
+                UI.cache.flashActive = false;
+                UI.cache.grayVal = 0;
+            }
+        }
         document.body.classList.remove('crt-active'); // Failsafe
         
         let pos = Game.map.getRandomFloorTile(); let attempts = 0;
@@ -20278,17 +20370,34 @@ function goToMainMenu() {
     AudioEngine.playClick();
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
-document.getElementById('deathScreen').classList.add('hidden');
+        document.getElementById('deathScreen').classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
         document.getElementById('score-save-container').classList.add('hidden'); 
         document.getElementById('pauseModal').classList.add('hidden');
         
-        let bgv = document.getElementById('blood-vignette');
-        if (bgv) {
-            bgv.classList.remove('death-fade-active');
-            bgv.style.opacity = '0';
-            bgv.style.background = '';
-            bgv.style.zIndex = '';
+        // Reset completo UI e filtri grafici per evitare sfarfallii
+        if (typeof UI !== 'undefined' && UI.els) {
+            if (UI.els.bloodVignette) {
+                UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
+                UI.els.bloodVignette.style.webkitMaskImage = '';
+                UI.els.bloodVignette.style.maskImage = '';
+                UI.els.bloodVignette.style.opacity = '0';
+                UI.els.bloodVignette.style.background = '';
+                UI.els.bloodVignette.style.zIndex = '';
+            }
+            if (UI.els.damageFlash) {
+                UI.els.damageFlash.style.opacity = '0';
+            }
+            if (UI.els.gameContainer) {
+                UI.els.gameContainer.style.transition = 'none';
+                UI.els.gameContainer.style.filter = 'none';
+            }
+            if (UI.cache) {
+                UI.cache.isLowHp = false;
+                UI.cache.lowHpMask = null;
+                UI.cache.flashActive = false;
+                UI.cache.grayVal = 0;
+            }
         }
         
         document.body.classList.remove('crt-active'); // Failsafe
@@ -20347,15 +20456,33 @@ function restartGame() {
     AudioEngine.playClick();
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
-document.getElementById('deathScreen').classList.add('hidden');
+        document.getElementById('deathScreen').classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
         document.getElementById('score-save-container').classList.add('hidden'); 
-        let bgv = document.getElementById('blood-vignette');
-        if (bgv) {
-            bgv.classList.remove('death-fade-active');
-            bgv.style.opacity = '0';
-            bgv.style.background = '';
-            bgv.style.zIndex = '';
+        
+        // Reset completo UI e filtri grafici per evitare sfarfallii
+        if (typeof UI !== 'undefined' && UI.els) {
+            if (UI.els.bloodVignette) {
+                UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
+                UI.els.bloodVignette.style.webkitMaskImage = '';
+                UI.els.bloodVignette.style.maskImage = '';
+                UI.els.bloodVignette.style.opacity = '0';
+                UI.els.bloodVignette.style.background = '';
+                UI.els.bloodVignette.style.zIndex = '';
+            }
+            if (UI.els.damageFlash) {
+                UI.els.damageFlash.style.opacity = '0';
+            }
+            if (UI.els.gameContainer) {
+                UI.els.gameContainer.style.transition = 'none';
+                UI.els.gameContainer.style.filter = 'none';
+            }
+            if (UI.cache) {
+                UI.cache.isLowHp = false;
+                UI.cache.lowHpMask = null;
+                UI.cache.flashActive = false;
+                UI.cache.grayVal = 0;
+            }
         }
         
         document.body.classList.remove('crt-active');
