@@ -696,57 +696,26 @@ body.colorblind-mode #opt-colorblind-text {
 <!-- MAIN MENU (DIORAMA 3D INTERATTIVO A TUTTO SCHERMO) -->
     <div id="mainMenu" class="absolute inset-0 z-[200] pointer-events-auto hidden flex-col justify-between overflow-hidden bg-[#04060e]">
         
-        <!-- SCENA 3D FULLSCREEN INTERATTIVA (Tocca il Cubo o l'Eroe!) -->
+        <!-- SCENA 3D FULLSCREEN (Tocca il Cubo per cambiare bioma) -->
         <div id="title-3d-canvas-container" class="absolute inset-0 w-full h-full z-0"></div>
 
-        <!-- Leggera sfumatura solo in cima e sul fondo per far risaltare Titolo e Pulsanti senza coprire il Diorama 3D -->
-        <div class="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none z-[1]"></div>
-        <div class="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none z-[1]"></div>
+        <!-- Vignettatura cinematografica morbida in alto e in basso -->
+        <div class="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black/85 via-black/35 to-transparent pointer-events-none z-[1]"></div>
+        <div class="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none z-[1]"></div>
 
         <div class="w-full h-full flex flex-col justify-between items-center z-10 px-4 py-4 sm:py-6 pointer-events-none">
             
-            <!-- HEADER COMPATTO IN ALTO: TITOLO 3D E TRIADE DELLE ESSENZE -->
-            <div class="relative w-full flex flex-col items-center justify-start pt-1 sm:pt-2 pointer-events-none">
-                <div class="relative z-10 flex flex-col items-center">
-                    <div class="relative flex flex-col items-center">
-                        <div class="absolute -inset-6 bg-gradient-to-r from-[#FF1838]/30 via-[#00CCFF]/30 to-[#22FF44]/30 blur-2xl rounded-full animate-pulse"></div>
-                        <h1 class="title-3d-text font-black italic tracking-tighter leading-none text-[11vw] sm:text-7xl md:text-8xl whitespace-nowrap select-none m-0">INTO THE BOX</h1>
-                    </div>
-
-                    <!-- BARRA DELLE 3 ESSENZE ARCANE (Comunica subito il cuore del gameplay) -->
-                    <div class="hud-panel tri-element-console mt-3 sm:mt-4 px-3.5 sm:px-5 py-1.5 sm:py-2 flex items-center gap-3 sm:gap-5 border bg-black/80">
-                        <!-- Essenza Rossa: Inferno -->
-                        <div class="essence-badge-red flex items-center gap-1.5 sm:gap-2">
-                            <span class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#FF1838] border border-white shadow-[0_0_12px_#FF1838,inset_0_0_4px_#fff]"></span>
-                            <span class="text-[9px] sm:text-[11px] font-display font-black tracking-widest text-[#ff4d67] uppercase">Inferno</span>
-                        </div>
-
-                        <span class="text-white/20 text-xs font-black">•</span>
-
-                        <!-- Essenza Blu: Tempesta -->
-                        <div class="essence-badge-blue flex items-center gap-1.5 sm:gap-2">
-                            <span class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#00CCFF] border border-white shadow-[0_0_12px_#00CCFF,inset_0_0_4px_#fff]"></span>
-                            <span class="text-[9px] sm:text-[11px] font-display font-black tracking-widest text-[#33d6ff] uppercase">Tempesta</span>
-                        </div>
-
-                        <span class="text-white/20 text-xs font-black">•</span>
-
-                        <!-- Essenza Verde: Pandemia -->
-                        <div class="essence-badge-green flex items-center gap-1.5 sm:gap-2">
-                            <span class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#22FF44] border border-white shadow-[0_0_12px_#22FF44,inset_0_0_4px_#fff]"></span>
-                            <span class="text-[9px] sm:text-[11px] font-display font-black tracking-widest text-[#55ff70] uppercase">Pandemia</span>
-                        </div>
-                    </div>
+            <!-- HEADER MONUMENTALE SU DUE RIGHE: INTO / THE BOX -->
+            <div class="relative w-full flex flex-col items-center justify-start pt-2 sm:pt-4 pointer-events-none select-none">
+                <div class="relative flex flex-col items-center leading-none">
+                    <div class="absolute -inset-8 bg-gradient-to-b from-white/10 via-cyan-500/15 to-transparent blur-2xl rounded-full pointer-events-none"></div>
+                    <span class="title-3d-text font-display font-black italic tracking-[0.28em] text-[12vw] sm:text-6xl md:text-7xl leading-none pl-[0.28em] m-0">INTO</span>
+                    <h1 class="title-3d-text font-display font-black italic tracking-tighter text-[18vw] sm:text-8xl md:text-9xl leading-none -mt-1 sm:-mt-2 whitespace-nowrap m-0">THE BOX</h1>
                 </div>
             </div>
 
-            <!-- ZONA CENTRALE LIBERA PER IL DIORAMA 3D INTERATTIVO -->
-            <div class="flex-1 w-full min-h-[25px] flex items-end justify-center pb-2 pointer-events-none">
-                <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-cyan-200/60 bg-black/40 px-3 py-1 rounded-full border border-white/10">Tocca l'Eroe o il Cubo</span>
-            </div>
-
-            <!-- CONSOLE COMANDI IN BASSO -->
-            <div class="w-full max-w-[440px] flex flex-col gap-2.5 pointer-events-auto shrink-0 relative z-20 mb-1 sm:mb-4">
+            <!-- ZONA CENTRALE LIBERA PER IL CUBO E IL DIORAMA 3D -->
+            <div class="flex-1 w-full min-h-[25px]"></div>
                 
                 <!-- Bagliore Tri-Elementale Sotto la Console -->
                 <div class="absolute -inset-6 bg-gradient-to-r from-[#FF1838]/15 via-[#00CCFF]/15 to-[#22FF44]/15 blur-2xl pointer-events-none"></div>
@@ -2933,21 +2902,84 @@ const SkinSystem = {
 };
   const TitleSystem = {
     scene: null, camera: null, renderer: null, container: null,
-    worldGroup: null, boxGroup: null, heroGroup: null, heroParts: null,
-    waterMesh: null, waterGlowMat: null, runeMesh: null, obeliskMat: null,
-    groundGrassMat: null, groundDirtMat: null, wireMat: null,
-    mainLight: null, heroLight: null, rimLight: null,
+    worldGroup: null, boxGroup: null, cubeHitMesh: null, heroGroup: null, heroParts: null,
+    waterMesh: null, waterMat: null, waterGlowMat: null, runeMesh: null, obeliskMat: null,
+    groundGrassMat: null, groundDirtMat: null, menuGrassMat: null, menuCanopyMat: null,
+    wireMat: null, mainLight: null, heroLight: null, rimLight: null, hemiLight: null,
     monsters: [], flyers: [], rings: [], orbs: [], particles: [],
-    time: 0, camAngle: 0, initialized: false, active: false,
+    uMenuTime: { value: 0 }, uShockwave: { value: 0 },
+    targetColors: null,
+    time: 0, camAngle: 0.6, initialized: false, active: false,
     isExploding: false, explosionTime: 0,
     spinBoost: 0, heroActionTimer: 0, themeCycle: 0,
     raycaster: new THREE.Raycaster(), mouse: new THREE.Vector2(),
+
+    // Shader erba e chiome dedicato al menu: funziona a 360° su tutti gli smartphone senza mai sparire!
+    createMenuFoliageMaterial(baseColorHex, isCanopy = false) {
+        const mat = new THREE.MeshLambertMaterial({ color: baseColorHex, emissive: 0x040902 });
+        mat.onBeforeCompile = (shader) => {
+            shader.uniforms.uTime = this.uMenuTime;
+            shader.uniforms.uShock = this.uShockwave;
+            shader.vertexShader = `
+                uniform float uTime;
+                uniform float uShock;
+                varying float vH;
+                varying float vVar;
+            ` + shader.vertexShader.replace(
+                '#include <project_vertex>',
+                `
+                vec4 wPos = vec4(transformed, 1.0);
+                #ifdef USE_INSTANCING
+                    wPos = instanceMatrix * wPos;
+                #endif
+                wPos = modelMatrix * wPos;
+
+                vec4 bPos4 = vec4(0.0, 0.0, 0.0, 1.0);
+                #ifdef USE_INSTANCING
+                    bPos4 = instanceMatrix * bPos4;
+                #endif
+                vec3 bPos = (modelMatrix * bPos4).xyz;
+
+                float hFactor = clamp(position.y / ${isCanopy ? '32.0' : '15.0'}, 0.0, 1.0);
+                vH = hFactor;
+                vVar = fract(sin(dot(bPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
+
+                // Vento organico incrociato + onda d'urto radiale quando si tocca il Cubo
+                float w1 = sin(uTime * 2.4 + bPos.x * 0.022 + bPos.z * 0.018);
+                float w2 = cos(uTime * 1.8 - bPos.x * 0.016 + bPos.z * 0.024);
+                vec2 breeze = vec2(w1 + w2 * 0.5, w2 - w1 * 0.4) * (${isCanopy ? '2.4' : '4.2'} * hFactor * hFactor);
+
+                float dist = length(bPos.xz) + 0.001;
+                vec2 radDir = bPos.xz / dist;
+                float shockWave = sin(dist * 0.045 - uTime * 12.0) * exp(-dist * 0.004) * uShock * 14.0 * hFactor;
+
+                wPos.xz += breeze + radDir * shockWave;
+                wPos.y -= length(breeze) * 0.08 * hFactor;
+
+                vec4 mvPosition = viewMatrix * wPos;
+                gl_Position = projectionMatrix * mvPosition;
+                `
+            );
+            shader.fragmentShader = `
+                varying float vH;
+                varying float vVar;
+            ` + shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                `
+                #include <color_fragment>
+                vec3 rootCol = diffuseColor.rgb * 0.48;
+                vec3 tipCol = diffuseColor.rgb * mix(1.08, 1.28, vVar);
+                diffuseColor.rgb = mix(rootCol, tipCol, smoothstep(0.0, 1.0, vH));
+                `
+            );
+        };
+        return mat;
+    },
 
     init() {
         this.container = document.getElementById('title-3d-canvas-container');
         if (!this.container || this.initialized) return;
 
-        // Inizializza i sistemi shader dell'erba e degli alberi del gioco
         InteractiveGrassSystem.init();
         TreeCanopySystem.init();
 
@@ -2956,45 +2988,44 @@ const SkinSystem = {
         let aspect = w / h;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x071009, 380, 920);
+        this.scene.fog = new THREE.Fog(0x0b1409, 360, 880);
 
-        // Visuale isometrica alta e distante (stile gameplay), perfetta per smartphone verticali
-        this.camera = new THREE.PerspectiveCamera(45, aspect, 10, 1500);
+        this.camera = new THREE.PerspectiveCamera(44, aspect, 10, 1400);
 
         this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
-        this.renderer.setClearColor(0x071009, 1);
+        this.renderer.setClearColor(0x0b1409, 1);
         this.renderer.setSize(w, h);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.container.appendChild(this.renderer.domElement);
 
-        // --- ILLUMINAZIONE CINEMATOGRAFICA ---
-        this.hemiLight = new THREE.HemisphereLight(0xd8ffbb, 0x1a1c12, 0.85);
+        // --- ILLUMINAZIONE ATMOSFERICA ---
+        this.hemiLight = new THREE.HemisphereLight(0xe8ffbb, 0x1a1812, 0.90);
         this.hemiLight.position.set(0, 400, 0);
         this.scene.add(this.hemiLight);
 
-        this.rimLight = new THREE.DirectionalLight(0xe8ffbb, 1.25);
-        this.rimLight.position.set(-220, 420, -180);
+        this.rimLight = new THREE.DirectionalLight(0xe8ffbb, 1.30);
+        this.rimLight.position.set(-200, 420, -160);
         this.scene.add(this.rimLight);
 
-        this.heroLight = new THREE.PointLight(0xffcc44, 2.8, 360, 1.8);
-        this.heroLight.position.set(0, 38, 0);
+        this.heroLight = new THREE.PointLight(0xffcc44, 3.0, 340, 1.8);
+        this.heroLight.position.set(0, 36, 0);
         this.scene.add(this.heroLight);
 
-        this.mainLight = new THREE.PointLight(0x22FF44, 4.5, 450, 1.8);
-        this.mainLight.position.set(0, 95, 0);
+        this.mainLight = new THREE.PointLight(0x22FF44, 5.2, 460, 1.7);
+        this.mainLight.position.set(0, 74, 0);
         this.scene.add(this.mainLight);
 
         this.worldGroup = new THREE.Group();
         this.scene.add(this.worldGroup);
 
-        // --- 1. TERRENO DELLA RADURA (Terra, Manto Erboso, Rocce Perimetrali) ---
+        // --- 1. TERRENO DELLA RADURA ---
         let tDirt = (typeof Preloader !== 'undefined' && Preloader.textures['dirt']) ? Preloader.textures['dirt'] : CHAR_GRUNGE_TEX;
         let tGrass = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
         this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x383322, map: tDirt, shininess: 0 });
-        let groundBase = new THREE.Mesh(new THREE.CircleGeometry(460, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
+        let groundBase = new THREE.Mesh(new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
         groundBase.position.y = -0.2;
         this.worldGroup.add(groundBase);
 
@@ -3002,8 +3033,8 @@ const SkinSystem = {
             color: 0x3f8f29, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 0
         });
         const patchCoords = [
-            { x: 0, z: 0, s: 260 }, { x: -95, z: -75, s: 210 }, { x: 105, z: -65, s: 200 },
-            { x: -85, z: 95, s: 210 }, { x: 95, z: 85, s: 195 }, { x: 0, z: -135, s: 220 }
+            { x: 0, z: 0, s: 270 }, { x: -95, z: -75, s: 220 }, { x: 105, z: -65, s: 210 },
+            { x: -85, z: 95, s: 220 }, { x: 95, z: 85, s: 205 }, { x: 0, z: -135, s: 230 }
         ];
         let patchGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
         patchCoords.forEach((pc, idx) => {
@@ -3014,48 +3045,47 @@ const SkinSystem = {
             this.worldGroup.add(pm);
         });
 
-        // Runa Arcana sotto i piedi del giocatore
+        // Runa Magica sotto l'Eroe
         this.runeMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(92, 92).rotateX(-Math.PI / 2),
-            new THREE.MeshBasicMaterial({ map: RUNE_TEX, color: 0x22FF44, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false })
+            new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2),
+            new THREE.MeshBasicMaterial({ map: RUNE_TEX, color: 0x22FF44, transparent: true, opacity: 0.48, blending: THREE.AdditiveBlending, depthWrite: false })
         );
         this.runeMesh.position.y = 0.35;
         this.worldGroup.add(this.runeMesh);
 
-        // --- 2. SPECCHIO D'ACQUA / POZZA ELEMENTALE NELLA RADURA ---
+        // --- 2. SPECCHIO D'ACQUA / POZZA ELEMENTALE ---
         let poolGroup = new THREE.Group();
-        poolGroup.position.set(78, 0.25, 48);
+        poolGroup.position.set(76, 0.25, 46);
         let waterTex = (typeof Preloader !== 'undefined' && Preloader.textures.water) ? Preloader.textures.water : CHAR_GRUNGE_TEX;
 
         this.waterMat = new THREE.MeshStandardMaterial({
-            color: 0x1888b8, emissive: 0x0a3d52, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0.1,
+            color: 0x1888b8, emissive: 0x0a3d52, emissiveIntensity: 0.6, roughness: 0.22, metalness: 0.1,
             map: waterTex, transparent: true, opacity: 0.92
         });
-        this.waterMesh = new THREE.Mesh(new THREE.CircleGeometry(46, 24).rotateX(-Math.PI / 2), this.waterMat);
+        this.waterMesh = new THREE.Mesh(new THREE.CircleGeometry(45, 24).rotateX(-Math.PI / 2), this.waterMat);
         this.waterMesh.position.y = 0.1;
 
         this.waterGlowMat = new THREE.MeshBasicMaterial({
             map: GLOW_TEX, color: 0x00ddff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false
         });
-        let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(115, 115).rotateX(-Math.PI / 2), this.waterGlowMat);
+        let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(112, 112).rotateX(-Math.PI / 2), this.waterGlowMat);
         waterGlow.position.y = 0.05;
         poolGroup.add(waterGlow, this.waterMesh);
 
-        // Sassi e ninfee lungo la riva della pozza
         let rimRockMat = new THREE.MeshStandardMaterial({ color: 0x3d4a35, map: tRock, roughness: 0.85, flatShading: true });
         for (let i = 0; i < 14; i++) {
             let a = (Math.PI * 2 / 14) * i + (i % 2) * 0.15;
-            let rad = 43 + Math.sin(i * 2.3) * 4;
+            let rad = 42 + Math.sin(i * 2.3) * 3.5;
             let stone = new THREE.Mesh(SharedGeo.rockDebris, rimRockMat);
-            let sc = 2.6 + (i % 3) * 1.3;
+            let sc = 2.6 + (i % 3) * 1.2;
             stone.scale.set(sc * 1.3, sc * 0.65, sc);
             stone.position.set(Math.cos(a) * rad, 1.2, Math.sin(a) * rad);
             stone.rotation.y = a;
             poolGroup.add(stone);
         }
-        let padGeo = new THREE.CylinderGeometry(5.5, 5.0, 0.5, 8);
+        let padGeo = new THREE.CylinderGeometry(5.2, 4.8, 0.5, 8);
         let padMat = new THREE.MeshStandardMaterial({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
-        [[-14, -8, 1.0], [12, 14, 0.85], [-6, 18, 0.7]].forEach(p => {
+        [[-14, -8, 1.0], [12, 13, 0.85], [-5, 17, 0.7]].forEach(p => {
             let pad = new THREE.Mesh(padGeo, padMat);
             pad.position.set(p[0], 0.4, p[1]);
             pad.scale.setScalar(p[2]);
@@ -3063,27 +3093,26 @@ const SkinSystem = {
         });
         this.worldGroup.add(poolGroup);
 
-        // --- 3. PRATO DI ERBA 3D INTERATTIVA (Si muove col vento dello shader!) ---
-        InteractiveGrassSystem.mat.color.setHex(0x061904);
-        InteractiveGrassSystem.mat.emissive.setHex(0x050b02);
-        const grassCount = isTouchDevice ? 520 : 950;
-        const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, InteractiveGrassSystem.mat, grassCount);
+        // --- 3. PRATO DI ERBA 3D (Con materiale dedicato anti-sparizione su mobile!) ---
+        this.menuGrassMat = this.createMenuFoliageMaterial(0x1f5214, false);
+        const grassCount = isTouchDevice ? 580 : 980;
+        const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, this.menuGrassMat, grassCount);
         grassInst.frustumCulled = false;
+
         let dummy = new THREE.Object3D();
         let gIdx = 0;
         for (let i = 0; i < grassCount; i++) {
             let ang = Math.random() * Math.PI * 2;
-            let dist = 26 + Math.pow(Math.random(), 0.75) * 245;
+            let dist = 24 + Math.pow(Math.random(), 0.78) * 235;
             let gx = Math.cos(ang) * dist;
             let gz = Math.sin(ang) * dist;
-            // Lascia libera la pozza d'acqua e l'obelisco
-            if (Math.hypot(gx - 78, gz - 48) < 52) continue;
-            if (Math.hypot(gx + 88, gz + 55) < 28) continue;
+            if (Math.hypot(gx - 76, gz - 46) < 50) continue;
+            if (Math.hypot(gx + 84, gz + 52) < 28) continue;
 
             dummy.position.set(gx, 0.2, gz);
-            let sc = MathUtils.randomRange(0.85, 1.45);
+            let sc = MathUtils.randomRange(0.9, 1.5);
             dummy.scale.set(sc, sc, sc);
-            dummy.rotation.set(MathUtils.randomRange(-0.18, 0.18), Math.random() * Math.PI * 2, MathUtils.randomRange(-0.18, 0.18));
+            dummy.rotation.set(MathUtils.randomRange(-0.16, 0.16), Math.random() * Math.PI * 2, MathUtils.randomRange(-0.16, 0.16));
             dummy.updateMatrix();
             grassInst.setMatrixAt(gIdx++, dummy.matrix);
         }
@@ -3091,25 +3120,24 @@ const SkinSystem = {
         grassInst.instanceMatrix.needsUpdate = true;
         this.worldGroup.add(grassInst);
 
-        // --- 4. FORESTA DI ALBERI FRATTALI E ROCCE ATTORNO ALLA RADURA ---
+        // --- 4. CORONA DI ALBERI FRATTALI E CHIOME VIVE ---
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
-        if (!window.GLOBAL_TREE_MAT) window.GLOBAL_TREE_MAT = new THREE.MeshStandardMaterial({ color: 0x1a1812, roughness: 0.9 });
-        TreeCanopySystem.mat.color.setHex(0x071c05);
-        TreeCanopySystem.mat.emissive.setHex(0x050b02);
+        let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x1a1812, roughness: 0.9 });
+        this.menuCanopyMat = this.createMenuFoliageMaterial(0x163d0e, true);
 
         const treeCount = 14;
-        const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, window.GLOBAL_TREE_MAT, treeCount);
-        const meshCanopy = new THREE.InstancedMesh(TreeCanopySystem.geo, TreeCanopySystem.mat, treeCount);
+        const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, menuTreeTrunkMat, treeCount);
+        const meshCanopy = new THREE.InstancedMesh(TreeCanopySystem.geo, this.menuCanopyMat, treeCount);
         const meshTreeShadows = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), SharedMat.blobShadow, treeCount);
         meshTrees.frustumCulled = false; meshCanopy.frustumCulled = false; meshTreeShadows.frustumCulled = false;
 
         for (let i = 0; i < treeCount; i++) {
             let a = (Math.PI * 2 / treeCount) * i + (i % 2) * 0.12;
-            let rad = 195 + (i % 3) * 32;
+            let rad = 190 + (i % 3) * 30;
             let tx = Math.cos(a) * rad;
             let tz = Math.sin(a) * rad;
-            let s = MathUtils.randomRange(2.2, 3.2);
-            let sy = s * MathUtils.randomRange(1.15, 1.4);
+            let s = MathUtils.randomRange(2.2, 3.1);
+            let sy = s * MathUtils.randomRange(1.15, 1.38);
 
             dummy.position.set(tx, 0, tz);
             dummy.scale.set(s, sy, s);
@@ -3132,32 +3160,32 @@ const SkinSystem = {
         // --- 5. TORRE OBELISCO CON SFERA ELEMENTALE, CASSA E ANFORA ---
         if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
         this.obeliskMat = new THREE.MeshStandardMaterial({
-            color: 0x24262c, emissive: 0x22FF44, emissiveIntensity: 0.5, roughness: 0.7, metalness: 0.45, map: CHAR_GRUNGE_TEX
+            color: 0x24262c, emissive: 0x22FF44, emissiveIntensity: 0.55, roughness: 0.7, metalness: 0.45, map: CHAR_GRUNGE_TEX
         });
         let obelisk = new THREE.Mesh(window.GLOBAL_OBELISK_GEO, this.obeliskMat);
-        obelisk.position.set(-88, 0, -55);
-        obelisk.scale.setScalar(0.88);
+        obelisk.position.set(-84, 0, -52);
+        obelisk.scale.setScalar(0.86);
         this.obeliskOrbGlow = new THREE.Sprite(SharedMat.spriteGreen);
-        this.obeliskOrbGlow.scale.set(34, 34, 1);
+        this.obeliskOrbGlow.scale.set(36, 36, 1);
         this.obeliskOrbGlow.position.set(0, 66.5, 0);
         obelisk.add(this.obeliskOrbGlow);
 
         let obRing = new THREE.Mesh(SharedGeo.auraRing, SharedMat.auraGreenRing);
         obRing.rotation.x = -Math.PI / 2;
-        obRing.position.set(-88, 1.0, -55);
-        obRing.scale.set(95, 95, 1);
+        obRing.position.set(-84, 1.0, -52);
+        obRing.scale.set(90, 90, 1);
         this.obeliskRing = obRing;
 
         let crate = new THREE.Mesh(SharedGeo.crate, SharedMat.crate);
-        crate.position.set(-48, 11, 68); crate.scale.setScalar(0.9); crate.rotation.y = 0.4;
+        crate.position.set(-46, 11, 66); crate.scale.setScalar(0.9); crate.rotation.y = 0.4;
         let urn = new THREE.Mesh(SharedGeo.urn, SharedMat.urn);
-        urn.position.set(-28, 15, 76); urn.scale.setScalar(0.9);
+        urn.position.set(-26, 15, 74); urn.scale.setScalar(0.9);
         this.worldGroup.add(obelisk, obRing, crate, urn);
 
         // --- 6. IL TUO EROE AL CENTRO DELLA RADURA ---
         this.buildHeroModel();
 
-        // --- 7. ORDA MINACCIOSA DI MOSTRI SULLO SFONDO (Tra gli alberi attorno all'Eroe) ---
+        // --- 7. ACCERCHIAMENTO DI MOSTRI MINACCIOSI TRA GLI ALBERI ---
         this.monsters = [];
         this.flyers = [];
         const spawnGuard = (type, size, colorHex, dist, angleDeg) => {
@@ -3170,49 +3198,52 @@ const SkinSystem = {
             }
             let obj = ModelFactory.buildEnemy(type, size, mat);
             obj.group.position.set(mx, 0, mz);
-            // Guarda dritto verso il giocatore al centro (0,0)
             let lookAng = Math.atan2(-mz, -mx);
             obj.group.rotation.y = -lookAng + Math.PI / 2;
 
-            let sh = new THREE.Mesh(new THREE.PlaneGeometry(size * 3.0, size * 3.0).rotateX(-Math.PI / 2), SharedMat.blobShadow);
+            let sh = new THREE.Mesh(new THREE.PlaneGeometry(size * 2.9, size * 2.9).rotateX(-Math.PI / 2), SharedMat.blobShadow);
             sh.position.set(mx + 2, 0.35, mz + 2);
             this.worldGroup.add(obj.group, sh);
-            this.monsters.push({ type, group: obj.group, parts: obj.parts, baseX: mx, baseZ: mz, size, phase: Math.random() * Math.PI * 2 });
+            this.monsters.push({ type, group: obj.group, parts: obj.parts, shadow: sh, baseX: mx, baseZ: mz, lookAng, size, phase: Math.random() * Math.PI * 2 });
         };
 
-        // Accerchiamento minaccioso a 360° lungo il limite degli alberi
-        spawnGuard('golem', 21, 0x00aaff, 155, 215);
-        spawnGuard('fire_demon', 16, 0xff4400, 150, 325);
-        spawnGuard('ring_walker', 15, 0x181820, 160, 145);
-        spawnGuard('orc', 18, 0x5c4033, 135, 35);
-        spawnGuard('orc', 17, 0x5c4033, 148, 270);
-        spawnGuard('slime', 14, 0xaa00ff, 128, 95);
-        spawnGuard('leaper', 13, 0xaa00ff, 142, 180);
+        spawnGuard('golem', 21, 0x00aaff, 150, 215);
+        spawnGuard('fire_demon', 16, 0xff4400, 145, 325);
+        spawnGuard('ring_walker', 15, 0x181820, 155, 145);
+        spawnGuard('orc', 18, 0x5c4033, 132, 35);
+        spawnGuard('orc', 17, 0x5c4033, 144, 270);
+        spawnGuard('slime', 14, 0xaa00ff, 125, 95);
+        spawnGuard('leaper', 13, 0xaa00ff, 138, 180);
 
-        // 2 Goblin volanti in pattuglia sopra la radura
         for (let g = 0; g < 2; g++) {
             let gobMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, emissive: 0xff2200, emissiveIntensity: 0.75 });
             let gob = ModelFactory.buildEnemy('goblin', 10.5, gobMat);
             this.worldGroup.add(gob.group);
-            this.flyers.push({ group: gob.group, parts: gob.parts, angle: g * Math.PI, radius: 105 + g * 25, speed: 1.15 + g * 0.25 });
+            this.flyers.push({ group: gob.group, parts: gob.parts, angle: g * Math.PI, radius: 100 + g * 24, speed: 1.05 + g * 0.2 });
         }
 
-        // --- 8. IL CUBO ARCANO ("THE BOX") E LE 3 ESSENZE SOSPESI SOPRA IL GIOCATORE ---
+        // --- 8. IL CUBO ARCANO ("THE BOX") E LE 3 ESSENZE ---
         this.boxGroup = new THREE.Group();
-        this.boxGroup.position.set(0, 88, 0);
+        this.boxGroup.position.set(0, 66, 0);
         let wallTex = (typeof Preloader !== 'undefined' && Preloader.textures['wall']) ? Preloader.textures['wall'] : null;
-        let boxMat = new THREE.MeshStandardMaterial({ color: 0x334155, map: wallTex, roughness: 0.4, metalness: 0.55 });
+        let boxMat = new THREE.MeshStandardMaterial({ color: 0x334155, map: wallTex, roughness: 0.38, metalness: 0.6 });
         let boxMesh = new THREE.Mesh(new THREE.BoxGeometry(22, 22, 22), boxMat);
-        this.wireMat = new THREE.MeshBasicMaterial({ color: 0x22FF44, wireframe: true, transparent: true, opacity: 0.8 });
-        let wireMesh = new THREE.Mesh(new THREE.BoxGeometry(24, 24, 24), this.wireMat);
-        this.boxGroup.add(boxMesh, wireMesh);
+        this.wireMat = new THREE.MeshBasicMaterial({ color: 0x22FF44, wireframe: true, transparent: true, opacity: 0.85 });
+        let wireMesh = new THREE.Mesh(new THREE.BoxGeometry(24.2, 24.2, 24.2), this.wireMat);
+
+        // Hitbox invisibile maggiorata per rendere il tocco sul Cubo comodissimo su smartphone
+        this.cubeHitMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(28, 8, 8),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        this.boxGroup.add(boxMesh, wireMesh, this.cubeHitMesh);
 
         const elemColors = [0xFF1838, 0x00CCFF, 0x22FF44];
         this.rings = [];
         for (let i = 0; i < 3; i++) {
-            let rMat = new THREE.MeshBasicMaterial({ color: elemColors[i], wireframe: true, transparent: true, opacity: 0.4 });
+            let rMat = new THREE.MeshBasicMaterial({ color: elemColors[i], wireframe: true, transparent: true, opacity: 0.42 });
             let rMesh = new THREE.Mesh(SharedGeo.torus, rMat);
-            let rScale = 20 + i * 3.5;
+            let rScale = 20 + i * 3.6;
             rMesh.scale.set(rScale, rScale, 1.2);
             rMesh.rotation.set(i * 1.1, i * 0.8, 0);
             this.boxGroup.add(rMesh);
@@ -3230,7 +3261,7 @@ const SkinSystem = {
             halo.scale.set(24, 24, 1);
             orbGroup.add(core, halo);
             this.scene.add(orbGroup);
-            this.orbs.push({ group: orbGroup, angle: (Math.PI * 2 / 3) * i, speed: 1.5, radiusX: 46, radiusY: 10, tilt: (i - 1) * 0.2 });
+            this.orbs.push({ group: orbGroup, angle: (Math.PI * 2 / 3) * i, speed: 1.4, radiusX: 44, radiusY: 9, tilt: (i - 1) * 0.2 });
         }
 
         // --- 9. LUCCIOLE E SCINTILLE NELLA RADURA ---
@@ -3238,32 +3269,41 @@ const SkinSystem = {
         this.particles = [];
         for (let i = 0; i < pCount; i++) {
             let p = new THREE.Sprite(orbMats[i % 3]);
-            let size = MathUtils.randomRange(6, 14);
+            let size = MathUtils.randomRange(6, 13);
             p.scale.set(size, size, 1);
             let angle = Math.random() * Math.PI * 2;
-            let radius = MathUtils.randomRange(20, 230);
-            let y = MathUtils.randomRange(4, 95);
+            let radius = MathUtils.randomRange(20, 220);
+            let y = MathUtils.randomRange(4, 85);
             p.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
             this.scene.add(p);
-            this.particles.push({ mesh: p, angle, radius, speed: MathUtils.randomRange(0.25, 0.75), vy: MathUtils.randomRange(8, 22), y });
+            this.particles.push({ mesh: p, angle, radius, speed: MathUtils.randomRange(0.2, 0.65), vy: MathUtils.randomRange(7, 18), y });
         }
 
-        // --- INTERAZIONE TOUCH / CLICK ---
+        // Target colori per transizione morbida tra i 3 biomi
+        this.targetColors = {
+            fog: new THREE.Color(0x0b1409),
+            dirt: new THREE.Color(0x383322),
+            grass: new THREE.Color(0x3f8f29),
+            foliage: new THREE.Color(0x1f5214),
+            canopy: new THREE.Color(0x163d0e),
+            water: new THREE.Color(0x1888b8),
+            elem: new THREE.Color(0x22FF44)
+        };
+
+        // --- INTERAZIONE TOUCH / CLICK: SOLO SUL CUBO! ---
         this.container.style.pointerEvents = 'auto';
         if (!this._listenersBound) {
             this._listenersBound = true;
             this.container.addEventListener('pointerdown', (e) => {
-                if (!this.active || this.isExploding || !this.camera) return;
+                if (!this.active || this.isExploding || !this.camera || !this.boxGroup) return;
                 let rect = this.container.getBoundingClientRect();
                 this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
                 this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
                 this.raycaster.setFromCamera(this.mouse, this.camera);
-                let hitBox = this.boxGroup ? this.raycaster.intersectObjects(this.boxGroup.children, true) : [];
+                let hitBox = this.raycaster.intersectObjects(this.boxGroup.children, true);
                 if (hitBox.length > 0) {
                     this.cycleBiomeTheme();
-                } else {
-                    this.triggerHeroTaunt();
                 }
             });
             window.addEventListener('resize', () => this.resize());
@@ -3301,54 +3341,44 @@ const SkinSystem = {
     refreshHeroSkin() {
         if (!this.initialized || !this.worldGroup) return;
         this.buildHeroModel();
-        this.triggerHeroTaunt();
-    },
-
-    triggerHeroTaunt() {
-        this.heroActionTimer = 0.50;
-        this.spinBoost = 7.0;
-        if (this.heroLight) this.heroLight.intensity = 7.5;
-        if (typeof AudioEngine !== 'undefined') AudioEngine.playShoot('chain_lightning');
-        if (typeof Haptics !== 'undefined') Haptics.vibrate(15);
     },
 
     cycleBiomeTheme() {
         this.themeCycle = (this.themeCycle + 1) % 3;
-        const theme = MAP_THEMES[this.themeCycle];
-        const elemColors = [0x22FF44, 0xFF1838, 0x00CCFF];
-        const orbSprites = [SharedMat.spriteGreen, SharedMat.spriteRed, SharedMat.spriteBlue];
-        const ringMats = [SharedMat.auraGreenRing, SharedMat.auraRedRing, SharedMat.auraBlueRing];
+        const presets = [
+            // 0: Foresta Incantata (Verde)
+            { fog: 0x0b1409, dirt: 0x383322, grass: 0x3f8f29, foliage: 0x1f5214, canopy: 0x163d0e, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
+            // 1: Fucina Infernale (Rosso)
+            { fog: 0x140506, dirt: 0x54201c, grass: 0xb52b20, foliage: 0x4a120d, canopy: 0x380c08, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
+            // 2: Caverna Cristallina (Azzurro)
+            { fog: 0x060b18, dirt: 0x18304d, grass: 0x287ec4, foliage: 0x184f78, canopy: 0x123e60, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+        ];
+        const p = presets[this.themeCycle];
 
-        let cHex = elemColors[this.themeCycle];
-        this.spinBoost = 15.0;
-        if (this.boxGroup) this.boxGroup.scale.setScalar(0.8);
-        if (this.wireMat) this.wireMat.color.setHex(cHex);
-        if (this.mainLight) { this.mainLight.color.setHex(cHex); this.mainLight.intensity = 10.0; }
-        if (this.rimLight) this.rimLight.color.setHex(theme.dirLight);
-        if (this.scene && this.scene.fog) this.scene.fog.color.setHex(theme.fog);
-        if (this.renderer) this.renderer.setClearColor(theme.fog, 1);
+        this.targetColors.fog.setHex(p.fog);
+        this.targetColors.dirt.setHex(p.dirt);
+        this.targetColors.grass.setHex(p.grass);
+        this.targetColors.foliage.setHex(p.foliage);
+        this.targetColors.canopy.setHex(p.canopy);
+        this.targetColors.water.setHex(p.water);
+        this.targetColors.elem.setHex(p.elem);
 
-        if (this.groundDirtMat) this.groundDirtMat.color.setHex(theme.dirt);
-        if (this.groundGrassMat) this.groundGrassMat.color.setHex(theme.grass);
-        if (InteractiveGrassSystem.mat) {
-            InteractiveGrassSystem.mat.color.setHex(theme.grassShader);
-            InteractiveGrassSystem.mat.emissive.setHex(theme.grassEmissive || 0x000000);
-        }
-        if (TreeCanopySystem.mat) {
-            TreeCanopySystem.mat.color.setHex(theme.canopyShader);
-            TreeCanopySystem.mat.emissive.setHex(theme.canopyEmissive || 0x000000);
-        }
-        if (this.runeMesh) this.runeMesh.material.color.setHex(cHex);
-        if (this.obeliskMat) this.obeliskMat.emissive.setHex(cHex);
-        if (this.obeliskOrbGlow) this.obeliskOrbGlow.material = orbSprites[this.themeCycle];
-        if (this.obeliskRing) this.obeliskRing.material = ringMats[this.themeCycle];
-        if (this.waterMat) {
-            this.waterMat.color.setHex(this.themeCycle === 1 ? 0xff4500 : 0x1888b8);
-            this.waterMat.emissive.setHex(this.themeCycle === 1 ? 0xff2200 : 0x0a3d52);
-        }
-        if (this.waterGlowMat) this.waterGlowMat.color.setHex(cHex);
+        if (this.obeliskOrbGlow) this.obeliskOrbGlow.material = p.sprite;
+        if (this.obeliskRing) this.obeliskRing.material = p.ring;
 
-        this.triggerHeroTaunt();
+        // Impulso di rotazione sul Cubo + Onda d'urto radiale sull'erba + Fendente dell'Eroe
+        this.spinBoost = 16.0;
+        this.uShockwave.value = 1.0;
+        this.heroActionTimer = 0.55;
+        if (this.boxGroup) this.boxGroup.scale.setScalar(0.76);
+        if (this.mainLight) this.mainLight.intensity = 14.0;
+        if (this.heroLight) this.heroLight.intensity = 8.0;
+
+        if (typeof AudioEngine !== 'undefined') {
+            AudioEngine.playCollect();
+            AudioEngine.playShoot('chain_lightning');
+        }
+        if (typeof Haptics !== 'undefined') Haptics.vibrate([20, 30, 20]);
     },
 
     resize() {
@@ -3365,146 +3395,188 @@ const SkinSystem = {
     update(dt) {
         if (!this.active || !this.initialized) return;
 
-        this.time += dt;
+        // Clamp di sicurezza sul delta-time per garantire fluidità burrosa su mobile
+        let safeDt = Math.min(dt, 0.033);
+        this.time += safeDt;
+        this.uMenuTime.value = this.time;
+        if (this.uShockwave.value > 0) {
+            this.uShockwave.value = Math.max(0, this.uShockwave.value - safeDt * 1.8);
+        }
 
-        // Aggiorna gli uniform vento dell'erba 3D e degli alberi in tempo reale!
-        InteractiveGrassSystem.uniforms.uTime.value = this.time;
-        let windArr = InteractiveGrassSystem.uniforms.uWindSources.value;
-        let heroPush = this.heroActionTimer > 0 ? 4.8 : 1.5;
-        windArr[0].set(0, heroPush, 0);
-        InteractiveGrassSystem.uniforms.uWindCount.value = 1;
+        // Transizione cromatica fluida tra i biomi quando si tocca il Cubo
+        if (this.targetColors) {
+            let lerpSpd = safeDt * 4.5;
+            if (this.scene && this.scene.fog) {
+                this.scene.fog.color.lerp(this.targetColors.fog, lerpSpd);
+                if (this.renderer) this.renderer.setClearColor(this.scene.fog.color, 1);
+            }
+            if (this.groundDirtMat) this.groundDirtMat.color.lerp(this.targetColors.dirt, lerpSpd);
+            if (this.groundGrassMat) this.groundGrassMat.color.lerp(this.targetColors.grass, lerpSpd);
+            if (this.menuGrassMat) this.menuGrassMat.color.lerp(this.targetColors.foliage, lerpSpd);
+            if (this.menuCanopyMat) this.menuCanopyMat.color.lerp(this.targetColors.canopy, lerpSpd);
+            if (this.waterMat) {
+                this.waterMat.color.lerp(this.targetColors.water, lerpSpd);
+                this.waterMat.emissive.lerp(this.targetColors.water, lerpSpd * 0.5);
+            }
+            if (this.wireMat) this.wireMat.color.lerp(this.targetColors.elem, lerpSpd);
+            if (this.mainLight) this.mainLight.color.lerp(this.targetColors.elem, lerpSpd);
+            if (this.runeMesh) this.runeMesh.material.color.lerp(this.targetColors.elem, lerpSpd);
+            if (this.obeliskMat) this.obeliskMat.emissive.lerp(this.targetColors.elem, lerpSpd);
+            if (this.waterGlowMat) this.waterGlowMat.color.lerp(this.targetColors.elem, lerpSpd);
+        }
 
         if (this.isExploding) {
-            this.explosionTime += dt;
+            this.explosionTime += safeDt;
             if (this.camera) {
-                this.camera.position.lerp(new THREE.Vector3(0, 45, 65), dt * 6.0);
-                this.camera.lookAt(0, 18, 0);
+                this.camera.position.lerp(new THREE.Vector3(0, 42, 58), safeDt * 6.0);
+                this.camera.lookAt(0, 20, 0);
             }
             if (this.boxGroup) {
-                this.boxGroup.rotation.y += dt * 18;
-                this.boxGroup.scale.addScalar(dt * 3.5);
+                this.boxGroup.rotation.y += safeDt * 18;
+                this.boxGroup.scale.addScalar(safeDt * 3.5);
             }
-            if (this.camera) InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
             this.renderer.render(this.scene, this.camera);
             return;
         }
 
-        if (this.spinBoost > 0) this.spinBoost = Math.max(0, this.spinBoost - dt * 10);
-        if (this.heroLight && this.heroLight.intensity > 2.8) {
-            this.heroLight.intensity = Math.max(2.8, this.heroLight.intensity - dt * 12);
+        if (this.spinBoost > 0) this.spinBoost = Math.max(0, this.spinBoost - safeDt * 9);
+        if (this.mainLight && this.mainLight.intensity > 5.2) {
+            this.mainLight.intensity = Math.max(5.2, this.mainLight.intensity - safeDt * 14);
+        }
+        if (this.heroLight && this.heroLight.intensity > 3.0) {
+            this.heroLight.intensity = Math.max(3.0, this.heroLight.intensity - safeDt * 10);
         }
 
-        // 1. TELECAMERA ISOMETRICA ALTA CHE RUOTA ATTORNO AL GIOCATORE
-        this.camAngle += dt * 0.20;
+        // 1. ORBITA CINEMATOGRAFICA FLUIDA ATTORNO AL GIOCATORE
+        this.camAngle += safeDt * 0.16;
         let aspect = this.camera.aspect || 0.6;
-        let camDist = aspect < 0.75 ? 360 : (aspect < 1.0 ? 320 : 285);
-        let camHeight = aspect < 0.75 ? 255 : (aspect < 1.0 ? 225 : 205);
+        let camDist = aspect < 0.75 ? 350 : (aspect < 1.0 ? 310 : 275);
+        let camHeight = aspect < 0.75 ? 245 : (aspect < 1.0 ? 215 : 195);
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
-            camHeight + Math.sin(this.time * 0.7) * 8,
+            camHeight + Math.sin(this.time * 0.65) * 6,
             Math.sin(this.camAngle) * camDist
         );
-        // Focus centrato sul giocatore
-        this.camera.lookAt(0, 16, 0);
-        InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
+        this.camera.lookAt(0, 22, 0);
 
-        // 2. Animazione Giocatore al centro
+        // 2. ANIMAZIONE NATURALE DELL'EROE AL CENTRO DELLA RUNA
         if (this.heroGroup && this.heroParts) {
-            this.heroGroup.position.y = Math.abs(Math.sin(this.time * 3.5)) * 1.5;
-            this.heroGroup.rotation.y = -this.camAngle + Math.PI / 2 + Math.sin(this.time * 1.4) * 0.35;
+            let breath = Math.sin(this.time * 2.8);
+            this.heroGroup.position.y = (breath + 1.0) * 0.6;
+            // L'eroe scrutando la foresta ruota autonomamente in modo naturale (non incollato alla camera!)
+            this.heroGroup.rotation.y = Math.sin(this.time * 0.7) * 0.85 + Math.cos(this.time * 0.35) * 0.45;
 
-            if (this.heroParts.halo) this.heroParts.halo.rotation.z += dt * 2.5;
-            if (this.heroParts.staffGem) this.heroParts.staffGem.rotation.y += dt * 3.0;
+            if (this.heroParts.body) {
+                this.heroParts.body.rotation.x = 0.06 + breath * 0.03;
+                this.heroParts.body.rotation.z = Math.cos(this.time * 1.4) * 0.04;
+            }
+            if (this.heroParts.head) {
+                this.heroParts.head.position.y = 29 + breath * 0.45;
+                this.heroParts.head.rotation.y = Math.sin(this.time * 1.3) * 0.28;
+            }
+            if (this.heroParts.scarf) {
+                this.heroParts.scarf.rotation.z = Math.sin(this.time * 4.2) * 0.14;
+            }
+            if (this.heroParts.halo) this.heroParts.halo.rotation.z += safeDt * 2.2;
+            if (this.heroParts.staffGem) this.heroParts.staffGem.rotation.y += safeDt * 2.8;
 
             if (this.heroActionTimer > 0) {
-                this.heroActionTimer -= dt;
-                let swing = Math.sin((1.0 - this.heroActionTimer / 0.50) * Math.PI);
-                this.heroParts.weaponGroup.rotation.x = -swing * 1.4;
-                this.heroGroup.position.y += swing * 9.0;
+                this.heroActionTimer -= safeDt;
+                let swing = Math.sin((1.0 - this.heroActionTimer / 0.55) * Math.PI);
+                this.heroParts.weaponGroup.rotation.x = -swing * 1.35;
+                this.heroParts.weaponGroup.position.y = 16 + swing * 4.5;
             } else {
-                this.heroParts.weaponGroup.rotation.x = Math.sin(this.time * 2.8) * 0.14;
+                this.heroParts.weaponGroup.position.y = 16 + Math.cos(this.time * 2.8) * 0.8;
+                this.heroParts.weaponGroup.rotation.x = Math.sin(this.time * 2.1) * 0.12;
+                this.heroParts.weaponGroup.rotation.z = Math.cos(this.time * 1.7) * 0.06;
             }
         }
 
-        if (this.runeMesh) this.runeMesh.rotation.z -= dt * 0.4;
+        if (this.runeMesh) this.runeMesh.rotation.z -= safeDt * 0.35;
+        if (this.waterMesh) {
+            let wScale = 1.0 + Math.sin(this.time * 2.6) * 0.025;
+            this.waterMesh.scale.set(wScale, wScale, 1);
+        }
 
-        // 3. Animazione dei Mostri Minacciosi sullo Sfondo
+        // 3. ANIMAZIONE FLUIDA DEI MOSTRI MINACCIOSI SULLO SFONDO
         for (let i = 0; i < this.monsters.length; i++) {
             let m = this.monsters[i];
-            let t = this.time * 3.8 + m.phase;
+            let t = this.time * 2.8 + m.phase;
             if (m.type === 'slime' && m.parts && m.parts.body) {
-                let jump = Math.abs(Math.sin(t * 1.2));
-                m.group.position.y = jump * 11;
-                let sq = 1.0 + Math.cos(t * 2.4) * 0.2;
+                let jump = Math.max(0, Math.sin(t * 1.3));
+                m.group.position.y = jump * 10;
+                let sq = 1.0 + Math.cos(t * 2.6) * 0.18;
                 m.parts.body.scale.set(m.size * 1.5 / sq, m.size * 0.8 * sq, m.size * 1.5 / sq);
             } else {
-                // Avanzano e indietreggiano minacciosi verso l'eroe
-                let stalk = Math.sin(t * 0.5) * 8;
-                let angToCenter = Math.atan2(-m.baseZ, -m.baseX);
-                m.group.position.x = m.baseX + Math.cos(angToCenter) * stalk;
-                m.group.position.z = m.baseZ + Math.sin(angToCenter) * stalk;
-                m.group.position.y = Math.abs(Math.sin(t)) * 2.8;
+                // Pattugliamento fluido circolare + oscillazione del busto
+                let sway = Math.sin(t * 0.65) * 10;
+                let perpX = -Math.sin(m.lookAng), perpZ = Math.cos(m.lookAng);
+                m.group.position.x = m.baseX + perpX * sway;
+                m.group.position.z = m.baseZ + perpZ * sway;
+                m.group.position.y = (Math.sin(t * 1.6) + 1.0) * 1.1;
+                m.group.rotation.z = Math.cos(t * 0.8) * 0.05;
+                if (m.shadow) m.shadow.position.set(m.group.position.x + 2, 0.35, m.group.position.z + 2);
+
                 if (m.parts && m.parts.armL) {
-                    m.parts.armL.rotation.x = Math.sin(t) * 0.55;
-                    m.parts.armR.rotation.x = -Math.sin(t) * 0.55;
+                    m.parts.armL.rotation.x = Math.sin(t * 1.6) * 0.45;
+                    m.parts.armR.rotation.x = -Math.sin(t * 1.6) * 0.45;
                 }
                 if (m.parts && m.parts.ringPivot) {
-                    m.parts.fireRingDisc.rotation.y -= dt * 3.5;
+                    m.parts.fireRingDisc.rotation.y -= safeDt * 3.2;
                 }
                 if (m.parts && m.parts.core) {
-                    m.parts.core.rotation.x += dt * 4.0;
-                    m.parts.core.rotation.y += dt * 5.0;
+                    m.parts.core.rotation.x += safeDt * 3.5;
+                    m.parts.core.rotation.y += safeDt * 4.5;
                 }
             }
         }
 
-        // Goblin in volo sopra la radura
         for (let i = 0; i < this.flyers.length; i++) {
             let fl = this.flyers[i];
-            fl.angle += fl.speed * dt;
+            fl.angle += fl.speed * safeDt;
             fl.group.position.set(
                 Math.cos(fl.angle) * fl.radius,
-                28 + Math.sin(this.time * 5.0 + i) * 5.0,
+                26 + Math.sin(this.time * 4.2 + i) * 4.5,
                 Math.sin(fl.angle) * fl.radius
             );
             fl.group.rotation.y = -fl.angle;
             if (fl.parts && fl.parts.body) {
-                fl.parts.body.rotation.z += dt * 10.0;
-                fl.parts.wings.rotation.y -= dt * 12.0;
+                fl.parts.body.rotation.z += safeDt * 9.0;
+                fl.parts.wings.rotation.y -= safeDt * 11.0;
             }
         }
 
-        // 4. Animazione Cubo ("The Box") ed Essenze in alto
+        // 4. IL CUBO ARCANO ("THE BOX") E LE 3 ESSENZE SOPRA L'EROE
         if (this.boxGroup) {
-            this.boxGroup.rotation.x += dt * (0.45 + this.spinBoost);
-            this.boxGroup.rotation.y += dt * (0.65 + this.spinBoost * 1.4);
-            this.boxGroup.position.y = 88 + Math.sin(this.time * 2.2) * 3.0;
+            this.boxGroup.rotation.x += safeDt * (0.45 + this.spinBoost);
+            this.boxGroup.rotation.y += safeDt * (0.65 + this.spinBoost * 1.4);
+            this.boxGroup.position.y = 66 + Math.sin(this.time * 2.2) * 2.8;
             for (let r = 0; r < this.rings.length; r++) {
                 let dir = r % 2 === 0 ? 1 : -1;
-                this.rings[r].rotation.z += dt * (1.2 + r * 0.4 + this.spinBoost * 0.5) * dir;
-                this.rings[r].rotation.x += dt * 0.6 * dir;
+                this.rings[r].rotation.z += safeDt * (1.2 + r * 0.4 + this.spinBoost * 0.5) * dir;
+                this.rings[r].rotation.x += safeDt * 0.6 * dir;
             }
             if (this.boxGroup.scale.x < 1.0 && !this.isExploding) {
-                this.boxGroup.scale.addScalar(dt * 1.8);
+                this.boxGroup.scale.addScalar(safeDt * 1.8);
                 if (this.boxGroup.scale.x > 1.0) this.boxGroup.scale.set(1, 1, 1);
             }
         }
 
         for (let i = 0; i < this.orbs.length; i++) {
             let o = this.orbs[i];
-            o.angle += (o.speed + this.spinBoost * 0.25) * dt;
+            o.angle += (o.speed + this.spinBoost * 0.25) * safeDt;
             let x = Math.cos(o.angle) * o.radiusX;
             let z = Math.sin(o.angle) * o.radiusX;
-            let y = 88 + Math.sin(o.angle * 2) * o.radiusY + x * o.tilt;
+            let y = 66 + Math.sin(o.angle * 2) * o.radiusY + x * o.tilt;
             o.group.position.set(x, y, z);
         }
 
         for (let i = 0; i < this.particles.length; i++) {
             let p = this.particles[i];
-            p.angle += p.speed * dt;
-            p.y += p.vy * dt;
-            if (p.y > 95) p.y = 4;
+            p.angle += p.speed * safeDt;
+            p.y += p.vy * safeDt;
+            if (p.y > 85) p.y = 4;
             p.mesh.position.set(Math.cos(p.angle) * p.radius, p.y, Math.sin(p.angle) * p.radius);
         }
 
@@ -3535,7 +3607,6 @@ const SkinSystem = {
         if (!this.initialized) return;
         this.active = false;
 
-        // Protegge tutte le geometrie e materiali condivisi col gioco principale
         const protectedGeos = new Set([
             InteractiveGrassSystem.geo,
             TreeCanopySystem.geo,
@@ -3578,9 +3649,12 @@ const SkinSystem = {
         this.camera = null;
         this.worldGroup = null;
         this.boxGroup = null;
+        this.cubeHitMesh = null;
         this.heroGroup = null;
         this.heroParts = null;
         this.heroShadow = null;
+        this.menuGrassMat = null;
+        this.menuCanopyMat = null;
         this.monsters = [];
         this.flyers = [];
         this.rings = [];
