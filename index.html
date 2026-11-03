@@ -1111,12 +1111,22 @@ body.colorblind-mode #opt-colorblind-text {
             <div class="flex flex-col items-center text-center w-full max-w-[600px] shrink-0 mt-1 sm:mt-2 pointer-events-auto">
                 <h1 id="deathTitle" class="text-[11vw] sm:text-7xl md:text-8xl font-display font-black text-red-600 mb-1 drop-shadow-[0_0_30px_rgba(220,38,38,1)] tracking-tighter uppercase whitespace-nowrap leading-none">R I P</h1>
                 <p id="deathSubtitle" class="text-[9px] sm:text-xs md:text-sm font-display font-bold text-red-200 px-4 py-1.5 bg-black/75 rounded-full border border-red-900/60 drop-shadow-[0_0_12px_rgba(220,38,38,0.5)] tracking-widest mt-1.5"></p>
+                
+                <!-- BADGE COLPO FATALE & UCCISORE -->
+                <div id="deathKillerBadge" class="flex items-center justify-center gap-2 mt-2 px-3.5 py-1.5 bg-red-950/85 border border-red-600/70 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.45)] text-[10px] sm:text-xs font-bold tracking-wider text-red-100 hidden">
+                    <span class="text-red-400 uppercase text-[9px] sm:text-[10px]"><i class="fa-solid fa-skull mr-1 text-red-500"></i>Colpo di grazia:</span>
+                    <span id="deathKillerName" class="font-black text-white drop-shadow-sm"></span>
+                    <span class="text-red-600">|</span>
+                    <span class="text-red-400 uppercase text-[9px] sm:text-[10px]">Danno:</span>
+                    <span id="deathFatalDmg" class="font-black text-amber-300 drop-shadow-sm"></span>
+                </div>
+
                 <p id="deathQuote" class="text-[10px] sm:text-xs text-gray-300 italic mt-1.5 max-w-xs sm:max-w-md hidden px-3 drop-shadow-md font-semibold leading-tight"></p>
                 <div id="deathMatchStats" class="grid grid-cols-3 gap-1.5 mt-2 text-[9px] sm:text-[10px] text-gray-300 font-bold tracking-wider hidden bg-black/80 px-2.5 py-2 rounded-xl border border-red-900/40 w-full max-w-[380px]"></div>
             </div>
 
             <!-- FINESTRA CENTRALE LIBERA PER L'ANIMAZIONE 3D -->
-            <div class="flex-1 w-full min-h-[40px] sm:min-h-[80px] pointer-events-none"></div>
+            <div class="flex-1 w-full min-h-[35px] sm:min-h-[70px] pointer-events-none"></div>
 
             <!-- CONSOLE AZIONI IN BASSO (Pulsanti ad alto contrasto, nitidi e reattivi fin dal primo istante) -->
             <div class="glass-panel flex flex-col gap-2 sm:gap-2.5 items-center w-full max-w-[390px] shrink-0 p-3 sm:p-4 border-2 border-red-800/80 bg-black/85 shadow-[0_0_25px_rgba(220,38,38,0.3)] mb-1 sm:mb-2 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
@@ -1132,8 +1142,9 @@ body.colorblind-mode #opt-colorblind-text {
                     <i class="fa-solid fa-rotate-right group-hover:animate-spin mr-1"></i> RIPROVA
                 </button>
 
-                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber glass-panel box-glow-purple w-full py-3 sm:py-3.5 text-base sm:text-lg font-display font-black text-cyan-200 border-2 border-cyan-500/60 bg-cyan-950/60 hover:bg-cyan-900/80 shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
-                    <i class="fa-solid fa-bolt mr-1"></i> RITORNA IN BATTAGLIA
+                <!-- TASTO RITORNA IN BATTAGLIA ROSSO E PIÙ GRANDE -->
+                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber glass-panel box-glow-red w-full py-4 sm:py-4.5 text-lg sm:text-xl font-display font-black text-white border-2 border-red-500 bg-red-950/85 hover:bg-red-900 shadow-[0_0_28px_rgba(239,68,68,0.6)] group transition-all tracking-wider">
+                    <i class="fa-solid fa-bolt mr-2 text-amber-300 animate-pulse"></i> RITORNA IN BATTAGLIA
                 </button>
 
                 <div class="grid grid-cols-2 gap-2 w-full">
@@ -4413,14 +4424,15 @@ const DeathSceneSystem = {
             this.setButtonsLocked(false);
         }
 
-        // Rotazione orbitale lenta e solenne con vista dall'alto stile gameplay
+        // Rotazione orbitale solenne con inquadratura ravvicinata
         this.camAngle += safeDt * 0.26;
         const aspect = this.camera.aspect || 0.56;
         const isPortrait = aspect < 0.78;
 
-        const camHeight = isPortrait ? 680 : 540;
-        const camDist = isPortrait ? 460 : 365;
-        const lookY = (this.mode === 'fallen') ? 8 : 28;
+        // Telecamera leggermente più ravvicinata per una vista più dettagliata e drammatica
+        const camHeight = isPortrait ? 510 : 395;
+        const camDist = isPortrait ? 340 : 265;
+        const lookY = (this.mode === 'fallen') ? 10 : 20;
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
@@ -10661,7 +10673,9 @@ const InteractiveGrassSystem = {
         uTime: { value: 0 },
         uCamPos: { value: new THREE.Vector3(0, 0, 0) },
         // vec4(playerX, playerZ, moveIntensity, inPitBlend) per onde in acqua e magma fuso
-        uPlayerPit: { value: new THREE.Vector4(0, 0, 0, 0) }
+        uPlayerPit: { value: new THREE.Vector4(0, 0, 0, 0) },
+        // vec4(dirX, dirZ, speedRatio, wakePhase) orientamento e deformazione dinamica delle onde
+        uPlayerPitDir: { value: new THREE.Vector4(1, 0, 0, 0) }
     },
     geo: null,
     mat: null,
@@ -11664,16 +11678,18 @@ class GameMap {
                 depthWrite: false
             });
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v5_' + themeIdx;
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v6_' + themeIdx;
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
+                shader.uniforms.uPlayerPitDir = InteractiveGrassSystem.uniforms.uPlayerPitDir;
                 const hasMapDecode = THREE.ShaderChunk && THREE.ShaderChunk.map_fragment && THREE.ShaderChunk.map_fragment.includes('mapTexelToLinear');
                 const sampleWaterTex = (uvVar) => hasMapDecode ? `mapTexelToLinear(texture2D(map, ${uvVar}))` : `texture2D(map, ${uvVar})`;
 
                 shader.vertexShader = `
                     uniform float uTime;
                     uniform vec4 uPlayerPit;
+                    uniform vec4 uPlayerPitDir;
                     varying vec2 vPitWPos;
                 ` + shader.vertexShader.replace(
                     '#include <begin_vertex>',
@@ -11687,6 +11703,7 @@ class GameMap {
                 shader.fragmentShader = `
                     uniform float uTime;
                     uniform vec4 uPlayerPit;
+                    uniform vec4 uPlayerPitDir;
                     varying vec2 vPitWPos;
                 ` + shader.fragmentShader.replace(
                     '#include <emissivemap_fragment>',
@@ -11758,29 +11775,97 @@ class GameMap {
                         totalEmissiveRadiance = mix(vec3(0.01, 0.05, 0.12), vec3(0.16, 0.56, 0.82), flowMix) * 0.62;
                     `)}
 
-                    // --- INTERAZIONE VIVA GIOCATORE CON ACQUA E LAVA (100% GPU) ---
+                    // --- INTERAZIONE VIVA GIOCATORE: MINIONDE REALISTICHE DEFORMATE LUNGO IL MOTO (100% GPU) ---
                     if (uPlayerPit.w > 0.01) {
-                        float pDist = length(vPitWPos - uPlayerPit.xy);
+                        vec2 relPos = vPitWPos - uPlayerPit.xy;
+                        float pDist = length(relPos);
+                        
+                        // Direzione normalizzata del moto del giocatore
+                        vec2 moveDir = uPlayerPitDir.xy;
+                        float dirLenSq = dot(moveDir, moveDir);
+                        if (dirLenSq < 0.001) {
+                            moveDir = vec2(1.0, 0.0);
+                        } else {
+                            moveDir = moveDir * inversesqrt(dirLenSq);
+                        }
+                        vec2 perpDir = vec2(-moveDir.y, moveDir.x);
+
+                        // Coordinate orientate lungo la scia di avanzamento:
+                        // forward > 0 : davanti (prua / compressione delle onde)
+                        // forward < 0 : dietro (scia allungata di poppa)
+                        // side        : distanza trasversale
+                        float forward = dot(relPos, moveDir);
+                        float side    = dot(relPos, perpDir);
+                        float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
+                        float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
+
+                        // Deformazione asimmetrica: allungamento scia dietro, compressione prua davanti
+                        float stretchBehind = 1.0 - 0.46 * moveInt;
+                        float compressFront = 1.0 + 0.35 * moveInt;
+                        float alongStretch = (forward < 0.0) ? (forward * stretchBehind) : (forward * compressFront);
+
+                        // Curvatura parabolica a V lungo la traiettoria (scia idrodinamica di Kelvin)
+                        float bowCurve = (side * side) * (0.015 * moveInt);
+                        float wakeCoord = alongStretch + (forward < 0.0 ? bowCurve : -bowCurve * 0.45);
+                        float deformedDist = length(vec2(wakeCoord, side * (1.0 + 0.14 * moveInt)));
+
+                        // Cresta d'onda a V laterale (bracci divergenti di poppa)
+                        float vWakeDist = abs(side) - (max(0.0, -forward) * 0.50 + 3.0);
+                        float vRidge = exp(-abs(vWakeDist) * 0.24) * smoothstep(5.0, 20.0, -forward) * exp(forward * 0.022) * moveInt;
+
                         ${themeIdx === 0 ? `
-                            // ACQUA: Minionde concentriche interferenti che partono dal personaggio
-                            if (pDist < 95.0) {
-                                float freq = mix(0.32, 0.48, uPlayerPit.z);
-                                float spd = mix(6.5, 13.5, uPlayerPit.z);
-                                float wave1 = sin(pDist * freq - uTime * spd);
-                                float wave2 = cos(pDist * (freq * 1.35) - uTime * (spd * 1.2));
-                                float ringMask = smoothstep(8.0, 16.0, pDist) * exp(-pDist * 0.032) * uPlayerPit.w;
-                                float foamRing = smoothstep(0.45, 0.92, wave1 * 0.65 + wave2 * 0.35) * ringMask * (0.45 + 0.55 * uPlayerPit.z);
-                                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.68, 0.96, 1.0), foamRing * 0.85);
-                                totalEmissiveRadiance += vec3(0.20, 0.55, 0.65) * foamRing;
+                            // ACQUA: Minionde con scia a V, compressione di prua e spuma azzurro-bianca
+                            if (pDist < 135.0) {
+                                float freq = mix(0.33, 0.45, moveInt);
+                                float waveSpeed = mix(6.5, 12.5, moveInt) * mix(1.0, 1.35, clamp(spdRatio - 1.0, 0.0, 1.0));
+                                
+                                float wavePhase1 = deformedDist * freq - uTime * waveSpeed;
+                                float wavePhase2 = deformedDist * (freq * 1.36) - uTime * (waveSpeed * 1.16) + forward * 0.06;
+                                float wave1 = sin(wavePhase1);
+                                float wave2 = cos(wavePhase2);
+                                float waveComposite = wave1 * 0.64 + wave2 * 0.36;
+
+                                float wakePersist = (forward < 0.0) ? (1.0 + 0.85 * moveInt * exp(forward * 0.020)) : 1.0;
+                                float ringMask = smoothstep(6.0, 15.0, deformedDist) * exp(-deformedDist * 0.027) * wakePersist * uPlayerPit.w;
+
+                                float crest = smoothstep(0.42, 0.90, waveComposite) * ringMask;
+                                float foam = smoothstep(0.68, 0.96, waveComposite) * ringMask * (0.40 + 0.60 * moveInt);
+
+                                float totalCrest = clamp(crest + vRidge * 0.72 * ringMask, 0.0, 1.0);
+                                float totalFoam = clamp(foam + vRidge * 0.55 * ringMask, 0.0, 1.0);
+
+                                float bowShock = smoothstep(5.0, 16.0, forward) * (1.0 - smoothstep(16.0, 30.0, forward)) * exp(-abs(side) * 0.10) * moveInt * uPlayerPit.w;
+
+                                vec3 waveCyan = vec3(0.50, 0.88, 1.0);
+                                vec3 foamWhite = vec3(0.92, 0.98, 1.0);
+                                vec3 rippleCol = mix(waveCyan, foamWhite, clamp(totalFoam * 0.80 + bowShock * 0.50, 0.0, 1.0));
+                                float rippleFactor = clamp(totalCrest * 0.88 + bowShock * 0.75, 0.0, 0.95);
+
+                                diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, rippleFactor);
+                                totalEmissiveRadiance += (vec3(0.18, 0.52, 0.68) * totalCrest + vec3(0.32, 0.70, 0.86) * bowShock) * uPlayerPit.w;
                             }
                         ` : (themeIdx === 1 ? `
-                            // LAVA: Il passo spacca la crosta scura creando un alone di magma fuso incandescente
-                            if (pDist < 72.0) {
-                                float lavaWake = exp(-pDist * 0.042) * uPlayerPit.w * (0.6 + 0.4 * uPlayerPit.z);
-                                float lavaRing = smoothstep(0.55, 0.95, sin(pDist * 0.38 - uTime * 8.5)) * smoothstep(6.0, 15.0, pDist) * lavaWake;
-                                vec3 moltenCore = vec3(1.0, 0.90, 0.38);
-                                diffuseColor.rgb = mix(diffuseColor.rgb, moltenCore, clamp(lavaWake * 0.65 + lavaRing * 0.55, 0.0, 1.0));
-                                totalEmissiveRadiance += moltenCore * (lavaWake * 1.15 + lavaRing * 0.95);
+                            // LAVA: Frattura della crosta lungo la direzione del passo con scia magmatica incandescente
+                            if (pDist < 115.0) {
+                                float wakeBehind = max(0.0, -forward);
+                                float furrowWidth = mix(13.0, 20.0, moveInt);
+                                float furrowMask = exp(-abs(side) / (furrowWidth * 0.5)) * exp(-wakeBehind * 0.032) * moveInt;
+
+                                float lavaPhase = deformedDist * 0.35 - uTime * mix(7.5, 11.0, moveInt) * mix(1.0, 1.35, clamp(spdRatio - 1.0, 0.0, 1.0));
+                                float lavaWave = smoothstep(0.48, 0.94, sin(lavaPhase));
+                                float lavaRing = lavaWave * smoothstep(5.0, 14.0, deformedDist) * exp(-deformedDist * 0.038) * (0.65 + 0.35 * moveInt);
+
+                                float lavaVRidge = vRidge * 0.80;
+                                float staticHeat = exp(-pDist * 0.046) * (0.55 + 0.15 * sin(uTime * 3.0));
+
+                                float moltenHeat = clamp(furrowMask * 0.90 + lavaRing * 0.65 + lavaVRidge + staticHeat, 0.0, 1.0) * uPlayerPit.w;
+
+                                vec3 magmaDark = vec3(0.92, 0.22, 0.01);
+                                vec3 moltenGold = vec3(1.0, 0.92, 0.46);
+                                vec3 magmaCol = mix(magmaDark, moltenGold, smoothstep(0.35, 0.88, moltenHeat));
+
+                                diffuseColor.rgb = mix(diffuseColor.rgb, magmaCol, moltenHeat * 0.95);
+                                totalEmissiveRadiance += magmaCol * (moltenHeat * 1.90);
                             }
                         ` : ``)}
                     }
@@ -14951,9 +15036,46 @@ class Player extends Entity {
         }
     }
 
+    updatePitRipplesUniform(dt, isMoving, dirX, dirY, inPit, isIce) {
+        if (!InteractiveGrassSystem.uniforms.uPlayerPit || !InteractiveGrassSystem.uniforms.uPlayerPitDir) return;
+        let uPP = InteractiveGrassSystem.uniforms.uPlayerPit.value;
+        let uPDir = InteractiveGrassSystem.uniforms.uPlayerPitDir.value;
+
+        uPP.x = this.x;
+        uPP.y = this.y;
+
+        let targetMove = (isMoving || this.isDashing) ? 1.0 : 0.0;
+        uPP.z += (targetMove - uPP.z) * Math.min(1.0, dt * 9.0);
+
+        let targetPit = (inPit && !isIce) ? 1.0 : 0.0;
+        uPP.w += (targetPit - uPP.w) * Math.min(1.0, dt * 10.0);
+
+        let moveLen = Math.hypot(dirX, dirY);
+        if (moveLen > 0.03) {
+            let targetDirX = dirX / moveLen;
+            let targetDirY = dirY / moveLen;
+            let turnLerp = Math.min(1.0, dt * 12.0);
+            uPDir.x += (targetDirX - uPDir.x) * turnLerp;
+            uPDir.y += (targetDirY - uPDir.y) * turnLerp;
+            let normLen = Math.hypot(uPDir.x, uPDir.y);
+            if (normLen > 0.001) {
+                uPDir.x /= normLen;
+                uPDir.y /= normLen;
+            }
+        }
+        let targetSpdRatio = this.isDashing ? 2.0 : (isMoving ? 1.0 : 0.0);
+        uPDir.z += (targetSpdRatio - uPDir.z) * Math.min(1.0, dt * 8.0);
+        if (inPit && !isIce && targetMove > 0.01) {
+            uPDir.w += dt * (this.isDashing ? 18.0 : 9.5);
+        }
+    }
+
     update(dt) {
         // --- NUOVO: Fisica dei pezzi morti (Zero CPU Lag) ---
         if (this.dead) {
+            if (InteractiveGrassSystem.uniforms.uPlayerPit) {
+                InteractiveGrassSystem.uniforms.uPlayerPit.value.w *= 0.92;
+            }
             for (let i = 0; i < this.deadPhysicsParts.length; i++) {
                 let p = this.deadPhysicsParts[i];
                 if (p.vy === 0 && p.vx === 0 && p.vz === 0) continue; 
@@ -14982,6 +15104,7 @@ class Player extends Entity {
         let pitInfo = (Game.map && Game.map.getPitDepthInfo) ? Game.map.getPitDepthInfo(this.x, this.y) : { groundY: 0, inPit: false, sDist: -999 };
         let inPit = isVoidWalker ? false : pitInfo.inPit;
         let pitGroundY = isVoidWalker ? 8.0 : pitInfo.groundY;
+        let isIce = (Game.currentThemeIndex === 2);
 
         // --- HOt: CURA NEL TEMPO CAOS ELEMENTALE ---
         if (this.chaosHoTTimer > 0) {
@@ -15592,16 +15715,8 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
             let isMoving = (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05);
 
-           // Aggiorna l'uniform GPU per le minionde in acqua e la scia magmatica nella lava
-            if (InteractiveGrassSystem.uniforms.uPlayerPit) {
-                let uPP = InteractiveGrassSystem.uniforms.uPlayerPit.value;
-                uPP.x = this.x;
-                uPP.y = this.y;
-                let targetMove = isMoving ? 1.0 : 0.0;
-                uPP.z += (targetMove - uPP.z) * Math.min(1.0, dt * 8.0);
-                let targetPit = (inPit && !isIce) ? 1.0 : 0.0;
-                uPP.w += (targetPit - uPP.w) * Math.min(1.0, dt * 10.0);
-            }
+            // Aggiorna l'uniform GPU per le minionde in acqua e la scia magmatica nella lava deformate realisticamente lungo il movimento
+            this.updatePitRipplesUniform(dt, isMoving, dx, dy, inPit, isIce);
 
             // 3. FISICA E AUDIO AMBIENTALE ACQUA / LAVA / GHIACCIO + ORME RESIDUE
             if (inPit) {
@@ -15812,6 +15927,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             if (this.essence === 'red' && Game.frameCount % 8 === 0) Game.getHazard().spawn(this.x, this.y, 25 * massScale, 3.0, this.stats.maxDmg * 0.5, ESSENCE_COLORS.red, 'fire');
             if (this.modifiers.fireTrail && Game.frameCount % 5 === 0) Game.getHazard().spawn(this.x, this.y, 24 * massScale, 2.0, this.stats.maxDmg * 0.8, 0xffaa00, 'fire');
             this.move(Math.cos(this.dashAngle), Math.sin(this.dashAngle), dt * 4.0);
+            this.updatePitRipplesUniform(dt, true, Math.cos(this.dashAngle), Math.sin(this.dashAngle), inPit, isIce);
             
             if (this.dashTimer <= 0) { 
                 this.isDashing = false; 
@@ -16706,13 +16822,39 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     mage: 0x00aaff, golem: 0x00aaff, ring_walker: 0x141418,
                     dark_prophet: 0xff5500, boss: 0x550000
                 };
+                const enemyNamesIT = {
+                    orc: 'Orco Guerriero',
+                    goblin: 'Goblin',
+                    skeleton_archer: 'Scheletro Arciere',
+                    slime: 'Slime',
+                    slime_mini: 'Mini Slime',
+                    leaper: 'Saltatore',
+                    crystal: 'Cristallo Esplosivo',
+                    pyromancer: 'Piromante',
+                    fire_demon: 'Demone del Fuoco',
+                    mage: 'Mago Arcano',
+                    golem: 'Golem di Pietra',
+                    ring_walker: 'Dominatore degli Anelli',
+                    dark_prophet: 'Profeta Oscuro',
+                    boss: 'Signore del Dungeon'
+                };
+                let killerName = enemyNamesIT[killerEntity.type] || 'Entità Oscura';
+                if (killerEntity.isPursuer) killerName = 'Inseguitore Immortale';
+                else if (killerEntity.isGolden) killerName += ' (Dorato)';
+                else if (killerEntity.isElite) killerName += ' (Elite)';
+                if (source === 'hazard' || source === 'pit') killerName = 'Baratro Infernale';
+
+                let fatalDmg = Math.max(1, Math.round(amount));
+
                 Game.lastKillerInfo = {
                     type: killerEntity.type || 'orc',
                     color: (killerEntity.mat && killerEntity.mat.color) ? killerEntity.mat.color.getHex() : (defaultColors[killerEntity.type] || 0x5c4033),
                     isElite: !!killerEntity.isElite,
                     isGolden: !!killerEntity.isGolden,
                     isPursuer: !!killerEntity.isPursuer,
-                    size: killerEntity.baseModelSize || 16
+                    size: killerEntity.baseModelSize || 16,
+                    name: killerName,
+                    fatalDamage: fatalDmg
                 };
 
                 // Chiude subito il cerchio nero dai bordi verso il centro e mostra la scena 3D senza interrompere il flow
@@ -16724,6 +16866,16 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     let ds = document.getElementById('deathScreen');
                     ds.style.background = '#000000';
                     ds.classList.remove('hidden');
+
+                    // Mostra badge con chi ha inflitto il colpo di grazia e il danno fatale
+                    let kBadge = document.getElementById('deathKillerBadge');
+                    if (kBadge) {
+                        let kNameEl = document.getElementById('deathKillerName');
+                        let kDmgEl = document.getElementById('deathFatalDmg');
+                        if (kNameEl) kNameEl.innerText = Game.lastKillerInfo.name || 'Nemico';
+                        if (kDmgEl) kDmgEl.innerText = `-${Game.lastKillerInfo.fatalDamage || 0} HP`;
+                        kBadge.classList.remove('hidden');
+                    }
 
                     if (Game.lives > 0) {
                         document.getElementById('deathTitle').innerText = "SEI CADUTO";
@@ -20333,6 +20485,8 @@ function respawnPlayer() {
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
         document.getElementById('deathScreen').classList.add('hidden');
+        let kBadgeRespawn = document.getElementById('deathKillerBadge');
+        if (kBadgeRespawn) kBadgeRespawn.classList.add('hidden');
 
         // Reset completo UI e filtri grafici per evitare sfarfallii o glitch di layer
         if (typeof UI !== 'undefined' && UI.els) {
@@ -20430,6 +20584,8 @@ function goToMainMenu() {
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
         document.getElementById('deathScreen').classList.add('hidden');
+        let kBadgeMenu = document.getElementById('deathKillerBadge');
+        if (kBadgeMenu) kBadgeMenu.classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
         document.getElementById('score-save-container').classList.add('hidden'); 
         document.getElementById('pauseModal').classList.add('hidden');
@@ -20516,6 +20672,8 @@ function restartGame() {
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
         document.getElementById('deathScreen').classList.add('hidden');
+        let kBadgeRestart = document.getElementById('deathKillerBadge');
+        if (kBadgeRestart) kBadgeRestart.classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
         document.getElementById('score-save-container').classList.add('hidden'); 
         
