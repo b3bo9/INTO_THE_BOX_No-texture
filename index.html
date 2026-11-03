@@ -2933,11 +2933,12 @@ const SkinSystem = {
 };
   const TitleSystem = {
     scene: null, camera: null, renderer: null, container: null,
-    islandGroup: null, boxGroup: null, heroGroup: null, heroParts: null,
-    orcObj: null, slimeObj: null, goblinObj: null, obeliskMesh: null, runeMesh: null,
-    wireMat: null, mainLight: null, rimLight: null,
-    rings: [], orbs: [], particles: [], floatingRocks: [],
-    time: 0, initialized: false, active: false,
+    worldGroup: null, boxGroup: null, heroGroup: null, heroParts: null,
+    waterMesh: null, waterGlowMat: null, runeMesh: null, obeliskMat: null,
+    groundGrassMat: null, groundDirtMat: null, wireMat: null,
+    mainLight: null, heroLight: null, rimLight: null,
+    monsters: [], flyers: [], rings: [], orbs: [], particles: [],
+    time: 0, camAngle: 0, initialized: false, active: false,
     isExploding: false, explosionTime: 0,
     spinBoost: 0, heroActionTimer: 0, themeCycle: 0,
     raycaster: new THREE.Raycaster(), mouse: new THREE.Vector2(),
@@ -2946,193 +2947,308 @@ const SkinSystem = {
         this.container = document.getElementById('title-3d-canvas-container');
         if (!this.container || this.initialized) return;
 
+        // Inizializza i sistemi shader dell'erba e degli alberi del gioco
+        InteractiveGrassSystem.init();
+        TreeCanopySystem.init();
+
         let w = this.container.clientWidth || window.innerWidth;
         let h = this.container.clientHeight || window.innerHeight;
         let aspect = w / h;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x060913, 0.0022);
+        this.scene.fog = new THREE.Fog(0x071009, 380, 920);
 
-        this.camera = new THREE.PerspectiveCamera(48, aspect, 1, 1200);
-        this.updateCameraFraming(aspect);
+        // Visuale isometrica alta e distante (stile gameplay), perfetta per smartphone verticali
+        this.camera = new THREE.PerspectiveCamera(45, aspect, 10, 1500);
 
         this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
-        this.renderer.setClearColor(0x050811, 1);
+        this.renderer.setClearColor(0x071009, 1);
         this.renderer.setSize(w, h);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.container.appendChild(this.renderer.domElement);
 
-        // --- LUCI DRAMMATICHE DEL DIORAMA ---
-        const hemi = new THREE.HemisphereLight(0x6688cc, 0x110818, 0.95);
-        this.scene.add(hemi);
+        // --- ILLUMINAZIONE CINEMATOGRAFICA ---
+        this.hemiLight = new THREE.HemisphereLight(0xd8ffbb, 0x1a1c12, 0.85);
+        this.hemiLight.position.set(0, 400, 0);
+        this.scene.add(this.hemiLight);
 
-        this.mainLight = new THREE.PointLight(0xFF1838, 6.5, 420, 1.8);
-        this.mainLight.position.set(0, 52, 45);
-        this.scene.add(this.mainLight);
-
-        this.rimLight = new THREE.DirectionalLight(0xffe6aa, 1.35);
-        this.rimLight.position.set(90, 140, 110);
+        this.rimLight = new THREE.DirectionalLight(0xe8ffbb, 1.25);
+        this.rimLight.position.set(-220, 420, -180);
         this.scene.add(this.rimLight);
 
-        // --- 1. IL CUBO ARCANO ("THE BOX") IN ALTO SOPRA L'ISOLA ---
-        this.boxGroup = new THREE.Group();
-        this.boxGroup.position.set(0, 46, -15);
-        let wallTex = (typeof Preloader !== 'undefined' && Preloader.textures['wall']) ? Preloader.textures['wall'] : null;
+        this.heroLight = new THREE.PointLight(0xffcc44, 2.8, 360, 1.8);
+        this.heroLight.position.set(0, 38, 0);
+        this.scene.add(this.heroLight);
 
-        let boxMat = new THREE.MeshStandardMaterial({
-            color: 0x334155, map: wallTex, bumpMap: wallTex, bumpScale: 0.12, roughness: 0.4, metalness: 0.55
+        this.mainLight = new THREE.PointLight(0x22FF44, 4.5, 450, 1.8);
+        this.mainLight.position.set(0, 95, 0);
+        this.scene.add(this.mainLight);
+
+        this.worldGroup = new THREE.Group();
+        this.scene.add(this.worldGroup);
+
+        // --- 1. TERRENO DELLA RADURA (Terra, Manto Erboso, Rocce Perimetrali) ---
+        let tDirt = (typeof Preloader !== 'undefined' && Preloader.textures['dirt']) ? Preloader.textures['dirt'] : CHAR_GRUNGE_TEX;
+        let tGrass = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
+        let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
+
+        this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x383322, map: tDirt, shininess: 0 });
+        let groundBase = new THREE.Mesh(new THREE.CircleGeometry(460, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
+        groundBase.position.y = -0.2;
+        this.worldGroup.add(groundBase);
+
+        this.groundGrassMat = new THREE.MeshPhongMaterial({
+            color: 0x3f8f29, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 0
         });
-        let boxMesh = new THREE.Mesh(new THREE.BoxGeometry(28, 28, 28), boxMat);
-        this.wireMat = new THREE.MeshBasicMaterial({ color: 0xFF1838, wireframe: true, transparent: true, opacity: 0.75 });
-        let wireMesh = new THREE.Mesh(new THREE.BoxGeometry(30.5, 30.5, 30.5), this.wireMat);
+        const patchCoords = [
+            { x: 0, z: 0, s: 260 }, { x: -95, z: -75, s: 210 }, { x: 105, z: -65, s: 200 },
+            { x: -85, z: 95, s: 210 }, { x: 95, z: 85, s: 195 }, { x: 0, z: -135, s: 220 }
+        ];
+        let patchGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+        patchCoords.forEach((pc, idx) => {
+            let pm = new THREE.Mesh(patchGeo, this.groundGrassMat);
+            pm.position.set(pc.x, 0.1 + idx * 0.02, pc.z);
+            pm.scale.set(pc.s, 1, pc.s);
+            pm.rotation.y = idx * 1.1;
+            this.worldGroup.add(pm);
+        });
+
+        // Runa Arcana sotto i piedi del giocatore
+        this.runeMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(92, 92).rotateX(-Math.PI / 2),
+            new THREE.MeshBasicMaterial({ map: RUNE_TEX, color: 0x22FF44, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false })
+        );
+        this.runeMesh.position.y = 0.35;
+        this.worldGroup.add(this.runeMesh);
+
+        // --- 2. SPECCHIO D'ACQUA / POZZA ELEMENTALE NELLA RADURA ---
+        let poolGroup = new THREE.Group();
+        poolGroup.position.set(78, 0.25, 48);
+        let waterTex = (typeof Preloader !== 'undefined' && Preloader.textures.water) ? Preloader.textures.water : CHAR_GRUNGE_TEX;
+
+        this.waterMat = new THREE.MeshStandardMaterial({
+            color: 0x1888b8, emissive: 0x0a3d52, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0.1,
+            map: waterTex, transparent: true, opacity: 0.92
+        });
+        this.waterMesh = new THREE.Mesh(new THREE.CircleGeometry(46, 24).rotateX(-Math.PI / 2), this.waterMat);
+        this.waterMesh.position.y = 0.1;
+
+        this.waterGlowMat = new THREE.MeshBasicMaterial({
+            map: GLOW_TEX, color: 0x00ddff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(115, 115).rotateX(-Math.PI / 2), this.waterGlowMat);
+        waterGlow.position.y = 0.05;
+        poolGroup.add(waterGlow, this.waterMesh);
+
+        // Sassi e ninfee lungo la riva della pozza
+        let rimRockMat = new THREE.MeshStandardMaterial({ color: 0x3d4a35, map: tRock, roughness: 0.85, flatShading: true });
+        for (let i = 0; i < 14; i++) {
+            let a = (Math.PI * 2 / 14) * i + (i % 2) * 0.15;
+            let rad = 43 + Math.sin(i * 2.3) * 4;
+            let stone = new THREE.Mesh(SharedGeo.rockDebris, rimRockMat);
+            let sc = 2.6 + (i % 3) * 1.3;
+            stone.scale.set(sc * 1.3, sc * 0.65, sc);
+            stone.position.set(Math.cos(a) * rad, 1.2, Math.sin(a) * rad);
+            stone.rotation.y = a;
+            poolGroup.add(stone);
+        }
+        let padGeo = new THREE.CylinderGeometry(5.5, 5.0, 0.5, 8);
+        let padMat = new THREE.MeshStandardMaterial({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
+        [[-14, -8, 1.0], [12, 14, 0.85], [-6, 18, 0.7]].forEach(p => {
+            let pad = new THREE.Mesh(padGeo, padMat);
+            pad.position.set(p[0], 0.4, p[1]);
+            pad.scale.setScalar(p[2]);
+            poolGroup.add(pad);
+        });
+        this.worldGroup.add(poolGroup);
+
+        // --- 3. PRATO DI ERBA 3D INTERATTIVA (Si muove col vento dello shader!) ---
+        InteractiveGrassSystem.mat.color.setHex(0x061904);
+        InteractiveGrassSystem.mat.emissive.setHex(0x050b02);
+        const grassCount = isTouchDevice ? 520 : 950;
+        const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, InteractiveGrassSystem.mat, grassCount);
+        grassInst.frustumCulled = false;
+        let dummy = new THREE.Object3D();
+        let gIdx = 0;
+        for (let i = 0; i < grassCount; i++) {
+            let ang = Math.random() * Math.PI * 2;
+            let dist = 26 + Math.pow(Math.random(), 0.75) * 245;
+            let gx = Math.cos(ang) * dist;
+            let gz = Math.sin(ang) * dist;
+            // Lascia libera la pozza d'acqua e l'obelisco
+            if (Math.hypot(gx - 78, gz - 48) < 52) continue;
+            if (Math.hypot(gx + 88, gz + 55) < 28) continue;
+
+            dummy.position.set(gx, 0.2, gz);
+            let sc = MathUtils.randomRange(0.85, 1.45);
+            dummy.scale.set(sc, sc, sc);
+            dummy.rotation.set(MathUtils.randomRange(-0.18, 0.18), Math.random() * Math.PI * 2, MathUtils.randomRange(-0.18, 0.18));
+            dummy.updateMatrix();
+            grassInst.setMatrixAt(gIdx++, dummy.matrix);
+        }
+        grassInst.count = gIdx;
+        grassInst.instanceMatrix.needsUpdate = true;
+        this.worldGroup.add(grassInst);
+
+        // --- 4. FORESTA DI ALBERI FRATTALI E ROCCE ATTORNO ALLA RADURA ---
+        if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
+        if (!window.GLOBAL_TREE_MAT) window.GLOBAL_TREE_MAT = new THREE.MeshStandardMaterial({ color: 0x1a1812, roughness: 0.9 });
+        TreeCanopySystem.mat.color.setHex(0x071c05);
+        TreeCanopySystem.mat.emissive.setHex(0x050b02);
+
+        const treeCount = 14;
+        const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, window.GLOBAL_TREE_MAT, treeCount);
+        const meshCanopy = new THREE.InstancedMesh(TreeCanopySystem.geo, TreeCanopySystem.mat, treeCount);
+        const meshTreeShadows = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), SharedMat.blobShadow, treeCount);
+        meshTrees.frustumCulled = false; meshCanopy.frustumCulled = false; meshTreeShadows.frustumCulled = false;
+
+        for (let i = 0; i < treeCount; i++) {
+            let a = (Math.PI * 2 / treeCount) * i + (i % 2) * 0.12;
+            let rad = 195 + (i % 3) * 32;
+            let tx = Math.cos(a) * rad;
+            let tz = Math.sin(a) * rad;
+            let s = MathUtils.randomRange(2.2, 3.2);
+            let sy = s * MathUtils.randomRange(1.15, 1.4);
+
+            dummy.position.set(tx, 0, tz);
+            dummy.scale.set(s, sy, s);
+            dummy.rotation.set(0, i * 1.7, 0);
+            dummy.updateMatrix();
+            meshTrees.setMatrixAt(i, dummy.matrix);
+            meshCanopy.setMatrixAt(i, dummy.matrix);
+
+            dummy.position.set(tx + 4, 0.35, tz + 4);
+            dummy.scale.set(s * 20, 1, s * 20);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            meshTreeShadows.setMatrixAt(i, dummy.matrix);
+        }
+        meshTrees.instanceMatrix.needsUpdate = true;
+        meshCanopy.instanceMatrix.needsUpdate = true;
+        meshTreeShadows.instanceMatrix.needsUpdate = true;
+        this.worldGroup.add(meshTrees, meshCanopy, meshTreeShadows);
+
+        // --- 5. TORRE OBELISCO CON SFERA ELEMENTALE, CASSA E ANFORA ---
+        if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
+        this.obeliskMat = new THREE.MeshStandardMaterial({
+            color: 0x24262c, emissive: 0x22FF44, emissiveIntensity: 0.5, roughness: 0.7, metalness: 0.45, map: CHAR_GRUNGE_TEX
+        });
+        let obelisk = new THREE.Mesh(window.GLOBAL_OBELISK_GEO, this.obeliskMat);
+        obelisk.position.set(-88, 0, -55);
+        obelisk.scale.setScalar(0.88);
+        this.obeliskOrbGlow = new THREE.Sprite(SharedMat.spriteGreen);
+        this.obeliskOrbGlow.scale.set(34, 34, 1);
+        this.obeliskOrbGlow.position.set(0, 66.5, 0);
+        obelisk.add(this.obeliskOrbGlow);
+
+        let obRing = new THREE.Mesh(SharedGeo.auraRing, SharedMat.auraGreenRing);
+        obRing.rotation.x = -Math.PI / 2;
+        obRing.position.set(-88, 1.0, -55);
+        obRing.scale.set(95, 95, 1);
+        this.obeliskRing = obRing;
+
+        let crate = new THREE.Mesh(SharedGeo.crate, SharedMat.crate);
+        crate.position.set(-48, 11, 68); crate.scale.setScalar(0.9); crate.rotation.y = 0.4;
+        let urn = new THREE.Mesh(SharedGeo.urn, SharedMat.urn);
+        urn.position.set(-28, 15, 76); urn.scale.setScalar(0.9);
+        this.worldGroup.add(obelisk, obRing, crate, urn);
+
+        // --- 6. IL TUO EROE AL CENTRO DELLA RADURA ---
+        this.buildHeroModel();
+
+        // --- 7. ORDA MINACCIOSA DI MOSTRI SULLO SFONDO (Tra gli alberi attorno all'Eroe) ---
+        this.monsters = [];
+        this.flyers = [];
+        const spawnGuard = (type, size, colorHex, dist, angleDeg) => {
+            let radAng = (angleDeg * Math.PI) / 180;
+            let mx = Math.cos(radAng) * dist;
+            let mz = Math.sin(radAng) * dist;
+            let mat = applyCharacterShader(new THREE.MeshLambertMaterial({ color: colorHex, map: CHAR_GRUNGE_TEX }), 0.75);
+            if (type === 'slime') {
+                mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.35, transparent: true, opacity: 0.9 });
+            }
+            let obj = ModelFactory.buildEnemy(type, size, mat);
+            obj.group.position.set(mx, 0, mz);
+            // Guarda dritto verso il giocatore al centro (0,0)
+            let lookAng = Math.atan2(-mz, -mx);
+            obj.group.rotation.y = -lookAng + Math.PI / 2;
+
+            let sh = new THREE.Mesh(new THREE.PlaneGeometry(size * 3.0, size * 3.0).rotateX(-Math.PI / 2), SharedMat.blobShadow);
+            sh.position.set(mx + 2, 0.35, mz + 2);
+            this.worldGroup.add(obj.group, sh);
+            this.monsters.push({ type, group: obj.group, parts: obj.parts, baseX: mx, baseZ: mz, size, phase: Math.random() * Math.PI * 2 });
+        };
+
+        // Accerchiamento minaccioso a 360° lungo il limite degli alberi
+        spawnGuard('golem', 21, 0x00aaff, 155, 215);
+        spawnGuard('fire_demon', 16, 0xff4400, 150, 325);
+        spawnGuard('ring_walker', 15, 0x181820, 160, 145);
+        spawnGuard('orc', 18, 0x5c4033, 135, 35);
+        spawnGuard('orc', 17, 0x5c4033, 148, 270);
+        spawnGuard('slime', 14, 0xaa00ff, 128, 95);
+        spawnGuard('leaper', 13, 0xaa00ff, 142, 180);
+
+        // 2 Goblin volanti in pattuglia sopra la radura
+        for (let g = 0; g < 2; g++) {
+            let gobMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, emissive: 0xff2200, emissiveIntensity: 0.75 });
+            let gob = ModelFactory.buildEnemy('goblin', 10.5, gobMat);
+            this.worldGroup.add(gob.group);
+            this.flyers.push({ group: gob.group, parts: gob.parts, angle: g * Math.PI, radius: 105 + g * 25, speed: 1.15 + g * 0.25 });
+        }
+
+        // --- 8. IL CUBO ARCANO ("THE BOX") E LE 3 ESSENZE SOSPESI SOPRA IL GIOCATORE ---
+        this.boxGroup = new THREE.Group();
+        this.boxGroup.position.set(0, 88, 0);
+        let wallTex = (typeof Preloader !== 'undefined' && Preloader.textures['wall']) ? Preloader.textures['wall'] : null;
+        let boxMat = new THREE.MeshStandardMaterial({ color: 0x334155, map: wallTex, roughness: 0.4, metalness: 0.55 });
+        let boxMesh = new THREE.Mesh(new THREE.BoxGeometry(22, 22, 22), boxMat);
+        this.wireMat = new THREE.MeshBasicMaterial({ color: 0x22FF44, wireframe: true, transparent: true, opacity: 0.8 });
+        let wireMesh = new THREE.Mesh(new THREE.BoxGeometry(24, 24, 24), this.wireMat);
         this.boxGroup.add(boxMesh, wireMesh);
 
         const elemColors = [0xFF1838, 0x00CCFF, 0x22FF44];
         this.rings = [];
         for (let i = 0; i < 3; i++) {
-            let rMat = new THREE.MeshBasicMaterial({ color: elemColors[i], wireframe: true, transparent: true, opacity: 0.42 });
+            let rMat = new THREE.MeshBasicMaterial({ color: elemColors[i], wireframe: true, transparent: true, opacity: 0.4 });
             let rMesh = new THREE.Mesh(SharedGeo.torus, rMat);
-            let rScale = 26 + i * 4.5;
-            rMesh.scale.set(rScale, rScale, 1.4);
+            let rScale = 20 + i * 3.5;
+            rMesh.scale.set(rScale, rScale, 1.2);
             rMesh.rotation.set(i * 1.1, i * 0.8, 0);
             this.boxGroup.add(rMesh);
             this.rings.push(rMesh);
         }
         this.scene.add(this.boxGroup);
 
-        // --- 2. L'ISOLA-ARENA FLUTTUANTE AL CENTRO DELLO SCHERMO ---
-        this.islandGroup = new THREE.Group();
-        this.islandGroup.position.set(0, -22, 0);
-        this.scene.add(this.islandGroup);
-
-        let rockTex = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
-        let grassTex = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
-
-        // Lastra superiore erbosa/rocciosa + sperone inferiore conico nell'abisso
-        let topPlatMat = new THREE.MeshStandardMaterial({ color: 0x3a7d2c, map: grassTex, roughness: 0.8 });
-        let topPlat = new THREE.Mesh(new THREE.CylinderGeometry(58, 54, 8, 8), topPlatMat);
-        topPlat.position.y = -4;
-        this.islandTopMat = topPlatMat;
-
-        let underRockMat = new THREE.MeshStandardMaterial({ color: 0x333c4d, map: rockTex, roughness: 0.85, flatShading: true });
-        let midRock = new THREE.Mesh(new THREE.CylinderGeometry(52, 34, 18, 7), underRockMat);
-        midRock.position.y = -17;
-        let tipRock = new THREE.Mesh(new THREE.ConeGeometry(34, 32, 6), underRockMat);
-        tipRock.rotation.x = Math.PI;
-        tipRock.position.y = -42;
-
-        // Runa magica luminosa sul pavimento dell'isola
-        let runeMat = new THREE.MeshBasicMaterial({
-            map: RUNE_TEX, color: 0xFF1838, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false
-        });
-        this.runeMesh = new THREE.Mesh(new THREE.PlaneGeometry(88, 88).rotateX(-Math.PI / 2), runeMat);
-        this.runeMesh.position.y = 0.3;
-
-        this.islandGroup.add(topPlat, midRock, tipRock, this.runeMesh);
-
-        // Rocce satelliti che levitano attorno all'isola
-        this.floatingRocks = [];
-        for (let i = 0; i < 6; i++) {
-            let rChunk = new THREE.Mesh(SharedGeo.rockDebris, underRockMat);
-            let a = (Math.PI * 2 / 6) * i + 0.3;
-            let dist = MathUtils.randomRange(66, 86);
-            let yOff = MathUtils.randomRange(-28, 12);
-            let sc = MathUtils.randomRange(3.2, 6.0);
-            rChunk.scale.set(sc, sc * 0.7, sc);
-            rChunk.position.set(Math.cos(a) * dist, yOff, Math.sin(a) * dist);
-            this.islandGroup.add(rChunk);
-            this.floatingRocks.push({ mesh: rChunk, baseY: yOff, speed: MathUtils.randomRange(1.5, 2.8), phase: i * 1.1 });
-        }
-
-        // --- 3. ELEMENTI SCENOGRAFICI SULL'ISOLA (Obelisco, Cassa, Anfora) ---
-        if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
-        this.obeliskMat = new THREE.MeshStandardMaterial({
-            color: 0x24262c, emissive: 0xFF1838, emissiveIntensity: 0.45, roughness: 0.7, metalness: 0.4, map: CHAR_GRUNGE_TEX
-        });
-        this.obeliskMesh = new THREE.Mesh(window.GLOBAL_OBELISK_GEO, this.obeliskMat);
-        this.obeliskMesh.scale.setScalar(0.68);
-        this.obeliskMesh.position.set(-34, 0, -18);
-        this.obeliskMesh.rotation.y = 0.4;
-
-        // Bagliore sulla sfera dell'Obelisco
-        this.obeliskOrbGlow = new THREE.Sprite(SharedMat.spriteRed);
-        this.obeliskOrbGlow.scale.set(28, 28, 1);
-        this.obeliskOrbGlow.position.set(0, 66.5, 0);
-        this.obeliskMesh.add(this.obeliskOrbGlow);
-        this.islandGroup.add(this.obeliskMesh);
-
-        // Cassa e Anfora sul lato destro
-        let crate = new THREE.Mesh(SharedGeo.crate, SharedMat.crate);
-        crate.scale.setScalar(0.55);
-        crate.position.set(36, 6.5, -16);
-        crate.rotation.y = -0.35;
-        let urn = new THREE.Mesh(SharedGeo.urn, SharedMat.urn);
-        urn.scale.setScalar(0.55);
-        urn.position.set(26, 9.0, -22);
-        this.islandGroup.add(crate, urn);
-
-        // --- 4. L'EROE IN PRIMO PIANO (Sincronizzato con la Skin in uso) ---
-        this.buildHeroModel();
-
-        // --- 5. I MOSTRI IN AGGUATO SULL'ISOLA (Orco, Slime, Goblin volante) ---
-        let orcMat = applyCharacterShader(new THREE.MeshLambertMaterial({ color: 0x5c4033, map: CHAR_GRUNGE_TEX }), 0.65);
-        this.orcObj = ModelFactory.buildEnemy('orc', 10.5, orcMat);
-        this.orcObj.group.position.set(-25, 0, 12);
-        this.orcObj.group.rotation.y = 0.65;
-        this.islandGroup.add(this.orcObj.group);
-
-        let slimeMat = new THREE.MeshLambertMaterial({ color: 0xaa00ff, emissive: 0xaa00ff, emissiveIntensity: 0.35, transparent: true, opacity: 0.9 });
-        this.slimeObj = ModelFactory.buildEnemy('slime', 9.0, slimeMat);
-        this.slimeObj.group.position.set(27, 0, 14);
-        this.slimeObj.group.rotation.y = -0.55;
-        this.islandGroup.add(this.slimeObj.group);
-
-        let gobMat = new THREE.MeshLambertMaterial({ color: 0xffcc00, emissive: 0xff2200, emissiveIntensity: 0.75 });
-        this.goblinObj = ModelFactory.buildEnemy('goblin', 7.5, gobMat);
-        this.islandGroup.add(this.goblinObj.group);
-
-        // --- 6. LE 3 ESSENZE ELEMENTALI IN ORBITA ---
         const orbMats = [SharedMat.spriteRed, SharedMat.spriteBlue, SharedMat.spriteGreen];
         this.orbs = [];
         for (let i = 0; i < 3; i++) {
             let orbGroup = new THREE.Group();
             let core = new THREE.Mesh(SharedGeo.icosahedron, new THREE.MeshBasicMaterial({ color: 0xffffff }));
-            core.scale.setScalar(3.8);
-            let cage = new THREE.Mesh(SharedGeo.icosahedron, new THREE.MeshBasicMaterial({ color: elemColors[i], wireframe: true, transparent: true, opacity: 0.9 }));
-            cage.scale.setScalar(5.8);
+            core.scale.setScalar(3.2);
             let halo = new THREE.Sprite(orbMats[i]);
-            halo.scale.set(28, 28, 1);
-
-            orbGroup.add(core, cage, halo);
+            halo.scale.set(24, 24, 1);
+            orbGroup.add(core, halo);
             this.scene.add(orbGroup);
-            this.orbs.push({
-                group: orbGroup, cage: cage,
-                angle: (Math.PI * 2 / 3) * i,
-                speed: 1.45, radiusX: 64, radiusY: 16, tilt: (i - 1) * 0.25
-            });
+            this.orbs.push({ group: orbGroup, angle: (Math.PI * 2 / 3) * i, speed: 1.5, radiusX: 46, radiusY: 10, tilt: (i - 1) * 0.2 });
         }
 
-        // --- 7. VORTICE DI SCINTILLE AMBIENTALI ---
-        let pCount = isTouchDevice ? 32 : 70;
+        // --- 9. LUCCIOLE E SCINTILLE NELLA RADURA ---
+        let pCount = isTouchDevice ? 36 : 75;
         this.particles = [];
         for (let i = 0; i < pCount; i++) {
             let p = new THREE.Sprite(orbMats[i % 3]);
-            let size = MathUtils.randomRange(5, 13);
+            let size = MathUtils.randomRange(6, 14);
             p.scale.set(size, size, 1);
             let angle = Math.random() * Math.PI * 2;
-            let radius = MathUtils.randomRange(30, 145);
-            let y = MathUtils.randomRange(-90, 90);
+            let radius = MathUtils.randomRange(20, 230);
+            let y = MathUtils.randomRange(4, 95);
             p.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
             this.scene.add(p);
-            this.particles.push({
-                mesh: p, angle: angle, radius: radius,
-                speed: MathUtils.randomRange(0.4, 1.2),
-                vy: MathUtils.randomRange(10, 26), y: y
-            });
+            this.particles.push({ mesh: p, angle, radius, speed: MathUtils.randomRange(0.25, 0.75), vy: MathUtils.randomRange(8, 22), y });
         }
 
-        // --- INTERAZIONE TOUCH / CLICK SUL DIORAMA ---
+        // --- INTERAZIONE TOUCH / CLICK ---
         this.container.style.pointerEvents = 'auto';
         if (!this._listenersBound) {
             this._listenersBound = true;
@@ -3143,18 +3259,13 @@ const SkinSystem = {
                 this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
                 this.raycaster.setFromCamera(this.mouse, this.camera);
-
-                // Click sul Cubo in alto -> Cambia il Bioma e l'illuminazione della scena!
                 let hitBox = this.boxGroup ? this.raycaster.intersectObjects(this.boxGroup.children, true) : [];
                 if (hitBox.length > 0) {
                     this.cycleBiomeTheme();
-                    return;
+                } else {
+                    this.triggerHeroTaunt();
                 }
-
-                // Click sull'Isola / Eroe / Mostri -> L'Eroe esegue un attacco scenografico!
-                this.triggerHeroTaunt();
             });
-
             window.addEventListener('resize', () => this.resize());
         }
 
@@ -3163,12 +3274,11 @@ const SkinSystem = {
     },
 
     buildHeroModel() {
-        if (!this.islandGroup) return;
-        if (this.heroGroup) {
-            this.islandGroup.remove(this.heroGroup);
-        }
+        if (!this.worldGroup) return;
+        if (this.heroGroup) this.worldGroup.remove(this.heroGroup);
+
         let bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7, metalness: 0.1, map: CHAR_GRUNGE_TEX });
-        let gemMat = new THREE.MeshPhongMaterial({ color: 0x00ddff, emissive: 0x00ddff, emissiveIntensity: 1.5 });
+        let gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.5 });
         this.heroParts = ModelFactory.buildPlayer(bodyMat, gemMat);
         this.heroGroup = this.heroParts.group;
 
@@ -3178,53 +3288,67 @@ const SkinSystem = {
         this.heroParts.scarf.material.color.setHex(skin.colors.scarf);
         if (this.heroParts.staff) this.heroParts.staff.material.color.setHex(skin.colors.staff);
 
-        // Posiziona il protagonista al centro-fronte dell'isola
-        this.heroGroup.scale.setScalar(0.95);
-        this.heroGroup.position.set(0, 0, 20);
-        this.islandGroup.add(this.heroGroup);
+        if (!this.heroShadow) {
+            this.heroShadow = new THREE.Mesh(new THREE.PlaneGeometry(34, 34).rotateX(-Math.PI / 2), SharedMat.blobShadow);
+            this.heroShadow.position.set(2, 0.35, 3);
+            this.worldGroup.add(this.heroShadow);
+        }
+
+        this.heroGroup.position.set(0, 0, 0);
+        this.worldGroup.add(this.heroGroup);
     },
 
     refreshHeroSkin() {
-        if (!this.initialized || !this.islandGroup) return;
+        if (!this.initialized || !this.worldGroup) return;
         this.buildHeroModel();
         this.triggerHeroTaunt();
     },
 
     triggerHeroTaunt() {
-        this.heroActionTimer = 0.45;
-        this.spinBoost = 8.0;
-        if (this.mainLight) this.mainLight.intensity = 12.0;
+        this.heroActionTimer = 0.50;
+        this.spinBoost = 7.0;
+        if (this.heroLight) this.heroLight.intensity = 7.5;
         if (typeof AudioEngine !== 'undefined') AudioEngine.playShoot('chain_lightning');
         if (typeof Haptics !== 'undefined') Haptics.vibrate(15);
     },
 
     cycleBiomeTheme() {
-        const elemColors = [0xFF1838, 0x00CCFF, 0x22FF44];
-        const groundColors = [0xb52b20, 0x287ec4, 0x3a7d2c];
-        const orbSprites = [SharedMat.spriteRed, SharedMat.spriteBlue, SharedMat.spriteGreen];
-
         this.themeCycle = (this.themeCycle + 1) % 3;
-        let cHex = elemColors[this.themeCycle];
+        const theme = MAP_THEMES[this.themeCycle];
+        const elemColors = [0x22FF44, 0xFF1838, 0x00CCFF];
+        const orbSprites = [SharedMat.spriteGreen, SharedMat.spriteRed, SharedMat.spriteBlue];
+        const ringMats = [SharedMat.auraGreenRing, SharedMat.auraRedRing, SharedMat.auraBlueRing];
 
-        this.spinBoost = 16.0;
-        if (this.boxGroup) this.boxGroup.scale.setScalar(0.82);
+        let cHex = elemColors[this.themeCycle];
+        this.spinBoost = 15.0;
+        if (this.boxGroup) this.boxGroup.scale.setScalar(0.8);
         if (this.wireMat) this.wireMat.color.setHex(cHex);
-        if (this.mainLight) { this.mainLight.color.setHex(cHex); this.mainLight.intensity = 14.0; }
+        if (this.mainLight) { this.mainLight.color.setHex(cHex); this.mainLight.intensity = 10.0; }
+        if (this.rimLight) this.rimLight.color.setHex(theme.dirLight);
+        if (this.scene && this.scene.fog) this.scene.fog.color.setHex(theme.fog);
+        if (this.renderer) this.renderer.setClearColor(theme.fog, 1);
+
+        if (this.groundDirtMat) this.groundDirtMat.color.setHex(theme.dirt);
+        if (this.groundGrassMat) this.groundGrassMat.color.setHex(theme.grass);
+        if (InteractiveGrassSystem.mat) {
+            InteractiveGrassSystem.mat.color.setHex(theme.grassShader);
+            InteractiveGrassSystem.mat.emissive.setHex(theme.grassEmissive || 0x000000);
+        }
+        if (TreeCanopySystem.mat) {
+            TreeCanopySystem.mat.color.setHex(theme.canopyShader);
+            TreeCanopySystem.mat.emissive.setHex(theme.canopyEmissive || 0x000000);
+        }
         if (this.runeMesh) this.runeMesh.material.color.setHex(cHex);
         if (this.obeliskMat) this.obeliskMat.emissive.setHex(cHex);
         if (this.obeliskOrbGlow) this.obeliskOrbGlow.material = orbSprites[this.themeCycle];
-        if (this.islandTopMat) this.islandTopMat.color.setHex(groundColors[this.themeCycle]);
+        if (this.obeliskRing) this.obeliskRing.material = ringMats[this.themeCycle];
+        if (this.waterMat) {
+            this.waterMat.color.setHex(this.themeCycle === 1 ? 0xff4500 : 0x1888b8);
+            this.waterMat.emissive.setHex(this.themeCycle === 1 ? 0xff2200 : 0x0a3d52);
+        }
+        if (this.waterGlowMat) this.waterGlowMat.color.setHex(cHex);
 
         this.triggerHeroTaunt();
-    },
-
-    updateCameraFraming(aspect) {
-        if (!this.camera) return;
-        // Su smartphone verticale allontana leggermente la camera così Isola + Cubo stanno perfettamente tra Titolo e Bottoni
-        let camZ = aspect < 0.75 ? 235 : (aspect < 1.0 ? 210 : 180);
-        let camY = aspect < 0.75 ? 12 : 16;
-        this.camera.position.set(0, camY, camZ);
-        this.camera.lookAt(0, 4, 0);
     },
 
     resize() {
@@ -3232,10 +3356,8 @@ const SkinSystem = {
         let w = this.container.clientWidth || window.innerWidth;
         let h = this.container.clientHeight || window.innerHeight;
         if (w && h) {
-            let aspect = w / h;
-            this.camera.aspect = aspect;
+            this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
-            this.updateCameraFraming(aspect);
             this.renderer.setSize(w, h);
         }
     },
@@ -3243,118 +3365,121 @@ const SkinSystem = {
     update(dt) {
         if (!this.active || !this.initialized) return;
 
-        // --- SEQUENZA CINEMATOGRAFICA QUANDO PREMI "GIOCA" ---
+        this.time += dt;
+
+        // Aggiorna gli uniform vento dell'erba 3D e degli alberi in tempo reale!
+        InteractiveGrassSystem.uniforms.uTime.value = this.time;
+        let windArr = InteractiveGrassSystem.uniforms.uWindSources.value;
+        let heroPush = this.heroActionTimer > 0 ? 4.8 : 1.5;
+        windArr[0].set(0, heroPush, 0);
+        InteractiveGrassSystem.uniforms.uWindCount.value = 1;
+
         if (this.isExploding) {
             this.explosionTime += dt;
-            let expForce = this.explosionTime * 16;
-
-            if (this.boxGroup) {
-                this.boxGroup.rotation.x += dt * (3 + expForce);
-                this.boxGroup.rotation.y += dt * (4 + expForce);
-                this.boxGroup.scale.addScalar(dt * 4.0);
-            }
-            if (this.heroGroup) {
-                // L'eroe salta verso il portale
-                this.heroGroup.position.y += dt * 160;
-                this.heroGroup.rotation.y += dt * 18;
-            }
             if (this.camera) {
-                this.camera.position.z -= dt * 220;
-                this.camera.lookAt(0, 20, 0);
+                this.camera.position.lerp(new THREE.Vector3(0, 45, 65), dt * 6.0);
+                this.camera.lookAt(0, 18, 0);
             }
-            for (let i = 0; i < this.particles.length; i++) {
-                let p = this.particles[i];
-                p.radius += dt * 420;
-                p.mesh.position.z += dt * 500;
+            if (this.boxGroup) {
+                this.boxGroup.rotation.y += dt * 18;
+                this.boxGroup.scale.addScalar(dt * 3.5);
             }
+            if (this.camera) InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
             this.renderer.render(this.scene, this.camera);
             return;
         }
 
-        this.time += dt;
         if (this.spinBoost > 0) this.spinBoost = Math.max(0, this.spinBoost - dt * 10);
-        if (this.mainLight && this.mainLight.intensity > 6.5) {
-            this.mainLight.intensity = Math.max(6.5, this.mainLight.intensity - dt * 18);
+        if (this.heroLight && this.heroLight.intensity > 2.8) {
+            this.heroLight.intensity = Math.max(2.8, this.heroLight.intensity - dt * 12);
         }
 
-        // Dolce oscillazione della telecamera (effetto diorama vivo)
-        if (this.camera) {
-            let baseZ = (this.camera.aspect < 0.75) ? 235 : ((this.camera.aspect < 1.0) ? 210 : 180);
-            this.camera.position.x = Math.sin(this.time * 0.55) * 14;
-            this.camera.position.y = 14 + Math.cos(this.time * 0.8) * 4;
-            this.camera.position.z = baseZ + Math.sin(this.time * 0.4) * 6;
-            this.camera.lookAt(0, 4, 0);
-        }
+        // 1. TELECAMERA ISOMETRICA ALTA CHE RUOTA ATTORNO AL GIOCATORE
+        this.camAngle += dt * 0.20;
+        let aspect = this.camera.aspect || 0.6;
+        let camDist = aspect < 0.75 ? 360 : (aspect < 1.0 ? 320 : 285);
+        let camHeight = aspect < 0.75 ? 255 : (aspect < 1.0 ? 225 : 205);
 
-        // 1. Animazione Isola, Runa e Rocce Fluttuanti
-        if (this.islandGroup) {
-            this.islandGroup.position.y = -22 + Math.sin(this.time * 1.6) * 2.2;
-            this.islandGroup.rotation.y = Math.sin(this.time * 0.45) * 0.12;
-        }
-        if (this.runeMesh) {
-            this.runeMesh.rotation.z += dt * 0.35;
-        }
-        for (let i = 0; i < this.floatingRocks.length; i++) {
-            let fr = this.floatingRocks[i];
-            fr.mesh.position.y = fr.baseY + Math.sin(this.time * fr.speed + fr.phase) * 4.5;
-            fr.mesh.rotation.y += dt * 0.5;
-            fr.mesh.rotation.x += dt * 0.3;
-        }
+        this.camera.position.set(
+            Math.cos(this.camAngle) * camDist,
+            camHeight + Math.sin(this.time * 0.7) * 8,
+            Math.sin(this.camAngle) * camDist
+        );
+        // Focus centrato sul giocatore
+        this.camera.lookAt(0, 16, 0);
+        InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
 
-        // 2. Animazione dell'Eroe in Primo Piano (Respiro + Fendente al tocco)
+        // 2. Animazione Giocatore al centro
         if (this.heroGroup && this.heroParts) {
-            let stepBounce = Math.abs(Math.sin(this.time * 3.2)) * 1.4;
-            this.heroGroup.position.y = stepBounce;
-            this.heroGroup.rotation.y = Math.sin(this.time * 1.2) * 0.28;
+            this.heroGroup.position.y = Math.abs(Math.sin(this.time * 3.5)) * 1.5;
+            this.heroGroup.rotation.y = -this.camAngle + Math.PI / 2 + Math.sin(this.time * 1.4) * 0.35;
 
-            if (this.heroParts.head) {
-                this.heroParts.head.position.y = 29 + Math.sin(this.time * 3.2) * 0.6;
-                this.heroParts.head.rotation.y = Math.sin(this.time * 1.8) * 0.22;
-            }
             if (this.heroParts.halo) this.heroParts.halo.rotation.z += dt * 2.5;
             if (this.heroParts.staffGem) this.heroParts.staffGem.rotation.y += dt * 3.0;
 
             if (this.heroActionTimer > 0) {
                 this.heroActionTimer -= dt;
-                let swing = Math.sin((1.0 - this.heroActionTimer / 0.45) * Math.PI);
-                this.heroParts.weaponGroup.rotation.x = -swing * 1.35;
-                this.heroGroup.position.y = stepBounce + swing * 8.0;
+                let swing = Math.sin((1.0 - this.heroActionTimer / 0.50) * Math.PI);
+                this.heroParts.weaponGroup.rotation.x = -swing * 1.4;
+                this.heroGroup.position.y += swing * 9.0;
             } else {
-                this.heroParts.weaponGroup.rotation.x = Math.sin(this.time * 2.5) * 0.12;
+                this.heroParts.weaponGroup.rotation.x = Math.sin(this.time * 2.8) * 0.14;
             }
         }
 
-        // 3. Animazione dei Mostri sullo Sfondo (Orco, Slime, Goblin in orbita)
-        if (this.orcObj && this.orcObj.parts) {
-            this.orcObj.group.position.y = Math.abs(Math.sin(this.time * 4.0)) * 1.8;
-            if (this.orcObj.parts.armR) {
-                this.orcObj.parts.armR.rotation.x = -0.4 + Math.sin(this.time * 4.0) * 0.45;
-                this.orcObj.parts.armL.rotation.x = -Math.sin(this.time * 4.0) * 0.35;
-            }
-        }
-        if (this.slimeObj && this.slimeObj.parts && this.slimeObj.parts.body) {
-            let jump = Math.abs(Math.sin(this.time * 5.2));
-            this.slimeObj.group.position.y = jump * 9.5;
-            let squash = 1.0 + Math.cos(this.time * 10.4) * 0.22;
-            this.slimeObj.parts.body.scale.set(9.0 * 1.5 / squash, 9.0 * 0.8 * squash, 9.0 * 1.5 / squash);
-        }
-        if (this.goblinObj) {
-            let gAng = this.time * 1.65;
-            let gRad = 52;
-            this.goblinObj.group.position.set(Math.cos(gAng) * gRad, 18 + Math.sin(this.time * 5.0) * 4.0, Math.sin(gAng) * gRad);
-            this.goblinObj.group.rotation.y = -gAng;
-            if (this.goblinObj.parts && this.goblinObj.parts.body) {
-                this.goblinObj.parts.body.rotation.z += dt * 10.0;
-                this.goblinObj.parts.wings.rotation.y -= dt * 12.0;
+        if (this.runeMesh) this.runeMesh.rotation.z -= dt * 0.4;
+
+        // 3. Animazione dei Mostri Minacciosi sullo Sfondo
+        for (let i = 0; i < this.monsters.length; i++) {
+            let m = this.monsters[i];
+            let t = this.time * 3.8 + m.phase;
+            if (m.type === 'slime' && m.parts && m.parts.body) {
+                let jump = Math.abs(Math.sin(t * 1.2));
+                m.group.position.y = jump * 11;
+                let sq = 1.0 + Math.cos(t * 2.4) * 0.2;
+                m.parts.body.scale.set(m.size * 1.5 / sq, m.size * 0.8 * sq, m.size * 1.5 / sq);
+            } else {
+                // Avanzano e indietreggiano minacciosi verso l'eroe
+                let stalk = Math.sin(t * 0.5) * 8;
+                let angToCenter = Math.atan2(-m.baseZ, -m.baseX);
+                m.group.position.x = m.baseX + Math.cos(angToCenter) * stalk;
+                m.group.position.z = m.baseZ + Math.sin(angToCenter) * stalk;
+                m.group.position.y = Math.abs(Math.sin(t)) * 2.8;
+                if (m.parts && m.parts.armL) {
+                    m.parts.armL.rotation.x = Math.sin(t) * 0.55;
+                    m.parts.armR.rotation.x = -Math.sin(t) * 0.55;
+                }
+                if (m.parts && m.parts.ringPivot) {
+                    m.parts.fireRingDisc.rotation.y -= dt * 3.5;
+                }
+                if (m.parts && m.parts.core) {
+                    m.parts.core.rotation.x += dt * 4.0;
+                    m.parts.core.rotation.y += dt * 5.0;
+                }
             }
         }
 
-        // 4. Animazione del Cubo ("The Box") e delle 3 Essenze
+        // Goblin in volo sopra la radura
+        for (let i = 0; i < this.flyers.length; i++) {
+            let fl = this.flyers[i];
+            fl.angle += fl.speed * dt;
+            fl.group.position.set(
+                Math.cos(fl.angle) * fl.radius,
+                28 + Math.sin(this.time * 5.0 + i) * 5.0,
+                Math.sin(fl.angle) * fl.radius
+            );
+            fl.group.rotation.y = -fl.angle;
+            if (fl.parts && fl.parts.body) {
+                fl.parts.body.rotation.z += dt * 10.0;
+                fl.parts.wings.rotation.y -= dt * 12.0;
+            }
+        }
+
+        // 4. Animazione Cubo ("The Box") ed Essenze in alto
         if (this.boxGroup) {
             this.boxGroup.rotation.x += dt * (0.45 + this.spinBoost);
             this.boxGroup.rotation.y += dt * (0.65 + this.spinBoost * 1.4);
-            this.boxGroup.position.y = 46 + Math.sin(this.time * 2.2) * 2.5;
-
+            this.boxGroup.position.y = 88 + Math.sin(this.time * 2.2) * 3.0;
             for (let r = 0; r < this.rings.length; r++) {
                 let dir = r % 2 === 0 ? 1 : -1;
                 this.rings[r].rotation.z += dt * (1.2 + r * 0.4 + this.spinBoost * 0.5) * dir;
@@ -3370,20 +3495,16 @@ const SkinSystem = {
             let o = this.orbs[i];
             o.angle += (o.speed + this.spinBoost * 0.25) * dt;
             let x = Math.cos(o.angle) * o.radiusX;
-            let z = Math.sin(o.angle) * o.radiusX - 15;
-            let y = 46 + Math.sin(o.angle * 2) * o.radiusY + x * o.tilt;
+            let z = Math.sin(o.angle) * o.radiusX;
+            let y = 88 + Math.sin(o.angle * 2) * o.radiusY + x * o.tilt;
             o.group.position.set(x, y, z);
-            if (o.cage) {
-                o.cage.rotation.x += dt * 3.0;
-                o.cage.rotation.y -= dt * 4.0;
-            }
         }
 
         for (let i = 0; i < this.particles.length; i++) {
             let p = this.particles[i];
             p.angle += p.speed * dt;
             p.y += p.vy * dt;
-            if (p.y > 95) p.y = -95;
+            if (p.y > 95) p.y = 4;
             p.mesh.position.set(Math.cos(p.angle) * p.radius, p.y, Math.sin(p.angle) * p.radius);
         }
 
@@ -3395,7 +3516,7 @@ const SkinSystem = {
         this.explosionTime = 0;
         if (this.mainLight) {
             this.mainLight.color.setHex(0xffffff);
-            this.mainLight.intensity = 25.0;
+            this.mainLight.intensity = 20.0;
         }
     },
 
@@ -3407,9 +3528,6 @@ const SkinSystem = {
             this.boxGroup.scale.set(1, 1, 1);
             this.boxGroup.rotation.set(0, 0, 0);
         }
-        if (this.heroGroup) {
-            this.heroGroup.position.set(0, 0, 20);
-        }
         this.resize();
     },
 
@@ -3417,25 +3535,35 @@ const SkinSystem = {
         if (!this.initialized) return;
         this.active = false;
 
-        // Protegge le geometrie condivise di PlayerGeometryBuilder e dell'Obelisco durante il cleanup
-        const protectedGeos = new Set();
+        // Protegge tutte le geometrie e materiali condivisi col gioco principale
+        const protectedGeos = new Set([
+            InteractiveGrassSystem.geo,
+            TreeCanopySystem.geo,
+            window.GLOBAL_TREE_GEO,
+            window.GLOBAL_OBELISK_GEO
+        ]);
+        const protectedMats = new Set([
+            InteractiveGrassSystem.mat,
+            TreeCanopySystem.mat,
+            window.GLOBAL_TREE_MAT
+        ]);
         if (typeof PlayerGeometryBuilder !== 'undefined' && PlayerGeometryBuilder.cache) {
             Object.values(PlayerGeometryBuilder.cache).forEach(entry => {
                 if (entry) Object.values(entry).forEach(g => { if (g) protectedGeos.add(g); });
             });
         }
-        if (window.GLOBAL_OBELISK_GEO) protectedGeos.add(window.GLOBAL_OBELISK_GEO);
 
         if (this.scene) {
             this.scene.traverse((child) => {
-                if (child.isMesh) {
-                    if (child.geometry && !protectedGeos.has(child.geometry) && (typeof SharedGeoSet === 'undefined' || !SharedGeoSet.has(child.geometry))) {
+                if (child.isMesh || child.isInstancedMesh) {
+                    if (child.geometry && !child.geometry._isGlobalCached && !protectedGeos.has(child.geometry) && (typeof SharedGeoSet === 'undefined' || !SharedGeoSet.has(child.geometry))) {
                         child.geometry.dispose();
                     }
-                    if (child.material && (typeof SharedMatSet === 'undefined' || !SharedMatSet.has(child.material))) {
+                    if (child.material && !child.material._isGlobalCached && !protectedMats.has(child.material) && (typeof SharedMatSet === 'undefined' || !SharedMatSet.has(child.material))) {
                         if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
                         else child.material.dispose();
                     }
+                    if (child.isInstancedMesh && child.dispose) child.dispose();
                 }
             });
         }
@@ -3448,17 +3576,16 @@ const SkinSystem = {
         }
         this.scene = null;
         this.camera = null;
-        this.islandGroup = null;
+        this.worldGroup = null;
         this.boxGroup = null;
         this.heroGroup = null;
         this.heroParts = null;
-        this.orcObj = null;
-        this.slimeObj = null;
-        this.goblinObj = null;
+        this.heroShadow = null;
+        this.monsters = [];
+        this.flyers = [];
         this.rings = [];
         this.orbs = [];
         this.particles = [];
-        this.floatingRocks = [];
         this.initialized = false;
     }
 };
