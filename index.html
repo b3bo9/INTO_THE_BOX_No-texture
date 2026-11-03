@@ -653,6 +653,38 @@
         50% { opacity: 1; }
     }
 
+    /* Alone Magico Rossastro Animato ai Bordi della Schermata di Morte (Leggero & Ottimizzato GPU) */
+    .death-magical-aura {
+        box-shadow: inset 0 0 65px 15px rgba(220, 20, 60, 0.42), inset 0 0 130px 40px rgba(136, 0, 24, 0.32);
+        background: radial-gradient(circle at center, transparent 46%, rgba(180, 10, 30, 0.08) 72%, rgba(220, 20, 50, 0.38) 100%);
+        pointer-events: none;
+    }
+    .death-magical-aura-pulse {
+        box-shadow: inset 0 0 90px 25px rgba(255, 30, 70, 0.48), inset 0 0 160px 60px rgba(220, 20, 60, 0.28);
+        background: radial-gradient(circle at center, transparent 40%, rgba(255, 20, 60, 0.06) 66%, rgba(255, 30, 80, 0.32) 100%);
+        animation: death-aura-pulse 2.8s ease-in-out infinite;
+        pointer-events: none;
+        will-change: opacity, transform;
+    }
+    .death-magical-aura-pulse::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border: 1.5px solid rgba(255, 60, 80, 0.35);
+        box-shadow: inset 0 0 22px rgba(255, 30, 60, 0.45), 0 0 15px rgba(220, 20, 50, 0.3);
+        pointer-events: none;
+    }
+    @keyframes death-aura-pulse {
+        0%, 100% {
+            opacity: 0.32;
+            transform: scale(1.0);
+        }
+        50% {
+            opacity: 0.92;
+            transform: scale(1.012);
+        }
+    }
+
     /* Carte Reliquia Coerenti (Senza ombre flat) */
     .relic-card { 
         transition: all 0.15s ease-out; cursor: pointer; 
@@ -1069,6 +1101,10 @@ body.colorblind-mode #opt-colorblind-text {
         <!-- Vignettatura superiore e inferiore -->
         <div class="fixed inset-x-0 top-0 h-32 sm:h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-[1]"></div>
         <div class="fixed inset-x-0 bottom-0 h-44 sm:h-56 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none z-[1]"></div>
+
+        <!-- Alone Magico Rossastro Animato ai Bordi (Leggero, 60 FPS GPU) -->
+        <div class="death-magical-aura fixed inset-0 pointer-events-none z-[2]"></div>
+        <div class="death-magical-aura-pulse fixed inset-0 pointer-events-none z-[3]"></div>
 
         <div class="w-full min-h-full flex flex-col justify-between items-center z-10 px-3 sm:px-6 py-3 sm:py-6 relative pointer-events-none">
             <!-- HEADER COMPATTO IN ALTO -->
@@ -3192,12 +3228,22 @@ const SkinSystem = {
             this.worldGroup.add(pm);
         });
 
-        // Runa Magica sotto l'Eroe
+        // Runa Magica sotto l'Eroe (Sempre perfettamente allineata e planare al terreno)
         this.runeMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2),
-            new THREE.MeshBasicMaterial({ map: RUNE_TEX, color: 0x22FF44, transparent: true, opacity: 0.48, blending: THREE.AdditiveBlending, depthWrite: false })
+            new THREE.MeshBasicMaterial({
+                map: RUNE_TEX,
+                color: 0x22FF44,
+                transparent: true,
+                opacity: 0.52,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            })
         );
-        this.runeMesh.position.y = 0.35;
+        this.runeMesh.position.set(0, 0.36, 0);
+        this.runeMesh.rotation.set(0, 0, 0);
+        this.runeMesh.renderOrder = 2;
         this.worldGroup.add(this.runeMesh);
 
         // --- 2. SPECCHIO D'ACQUA / POZZA ELEMENTALE ---
@@ -3632,7 +3678,15 @@ const SkinSystem = {
             }
         }
 
-        if (this.runeMesh) this.runeMesh.rotation.z -= safeDt * 0.35;
+        // Rotazione planare impeccabile sul terreno attorno all'asse verticale Y
+        if (this.runeMesh) {
+            this.runeMesh.rotation.x = 0;
+            this.runeMesh.rotation.z = 0;
+            this.runeMesh.rotation.y -= safeDt * 0.40;
+            this.runeMesh.position.set(0, 0.36, 0);
+            let runePulse = 1.0 + Math.sin(this.time * 2.2) * 0.035;
+            this.runeMesh.scale.set(runePulse, 1, runePulse);
+        }
         if (this.waterMesh) {
             let wScale = 1.0 + Math.sin(this.time * 2.6) * 0.025;
             this.waterMesh.scale.set(wScale, wScale, 1);
@@ -3738,6 +3792,11 @@ const SkinSystem = {
         if (this.boxGroup) {
             this.boxGroup.scale.set(1, 1, 1);
             this.boxGroup.rotation.set(0, 0, 0);
+        }
+        if (this.runeMesh) {
+            this.runeMesh.rotation.set(0, 0, 0);
+            this.runeMesh.position.set(0, 0.36, 0);
+            this.runeMesh.scale.set(1, 1, 1);
         }
         this.resize();
     },
