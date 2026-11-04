@@ -2540,26 +2540,29 @@ const MathUtils = {
 const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; const MAX_TIME_STEP = 0.1;
  
   const MAP_THEMES = [
-    // TEMA 1: FORESTA INCANTATA (Bilanciato su terreno/forest_grass.png: verde sottobosco e muschio oliva-smeraldo)
+    // TEMA 1: FORESTA INCANTATA (Tinte calibrate per preservare nitidezza e contrasto nativo di forest_*.png)
     { 
-        dirt: 0x383322, grass: 0x489136, rock: 0x3d4a35, wall: 0x283322, 
-        grassShader: 0x0e2e09, grassEmissive: 0x040902,
-        canopyShader: 0x10330a, canopyEmissive: 0x040802, tree: 0x1a1812,
-        ambient: 0x2d3b22, dirLight: 0xe8ffbb, fog: 0x0b1409
+        dirt: 0xc6d0bc, grass: 0xd6edc4, rock: 0xbcc8b6, wall: 0x8ea088, 
+        grassShader: 0x1a4a12, grassEmissive: 0x050d03,
+        canopyShader: 0x1c4f14, canopyEmissive: 0x060c03, tree: 0x241f16,
+        debris: 0x2c3628, groundMist: 0x5c8568,
+        ambient: 0x344528, dirLight: 0xeeffcf, fog: 0x0c170a
     },
-    // TEMA 2: FUCINA INFERNALE (Bilanciato su terreno/lava_grass.png: ossidiana scura e venature magmatiche arancio-ambra)
+    // TEMA 2: FUCINA INFERNALE (Tinte calibrate per preservare nitidezza e venature di lava_*.png)
     { 
-        dirt: 0x6e3826, grass: 0xc44d28, rock: 0x6b3526, wall: 0x3d1a12, 
-        grassShader: 0x2e0f08, grassEmissive: 0x140502,
-        canopyShader: 0x280d07, canopyEmissive: 0x120402, tree: 0x240908,
-        ambient: 0x381614, dirLight: 0xff8547, fog: 0x120506
+        dirt: 0xd2b6ac, grass: 0xeec0b0, rock: 0xc0a69e, wall: 0x8c6e66, 
+        grassShader: 0x42160c, grassEmissive: 0x1e0702,
+        canopyShader: 0x3b130a, canopyEmissive: 0x1a0602, tree: 0x2a0d0a,
+        debris: 0x2e1a16, groundMist: 0x993d26,
+        ambient: 0x451c18, dirLight: 0xff945c, fog: 0x160607
     },
-    // TEMA 3: CAVERNA CRISTALLINA (Bilanciato su terreno/ice_grass.png: brina ciano-acquamarina e neve cristallina)
+    // TEMA 3: CAVERNA CRISTALLINA (Tinte calibrate per preservare la brillantezza glaciale di ice_*.png)
     { 
-        dirt: 0x223845, grass: 0x286e82, rock: 0x284e66, wall: 0x162d3d, 
-        grassShader: 0x164a63, grassEmissive: 0x051220,
-        canopyShader: 0x144259, canopyEmissive: 0x04101c, tree: 0x0b1d2e,
-        ambient: 0x241945, dirLight: 0x88f0ff, fog: 0x060b18
+        dirt: 0xb8d4e8, grass: 0xd2eeff, rock: 0xb2d0e6, wall: 0x84aac4, 
+        grassShader: 0x206485, grassEmissive: 0x071a2b,
+        canopyShader: 0x1d5a78, canopyEmissive: 0x061626, tree: 0x10273d,
+        debris: 0x243c4f, groundMist: 0x74b4d9,
+        ambient: 0x2c2454, dirLight: 0x9ef4ff, fog: 0x080f20
     }
 ];
 
@@ -3218,13 +3221,13 @@ const SkinSystem = {
         let tGrass = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
-        this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x383322, map: tDirt, shininess: 0 });
+        this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0xc6d0bc, map: tDirt, shininess: 3 });
         let groundBase = new THREE.Mesh(new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
         groundBase.position.y = -0.2;
         this.worldGroup.add(groundBase);
 
         this.groundGrassMat = new THREE.MeshPhongMaterial({
-            color: 0x489136, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 0
+            color: 0xd6edc4, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 4
         });
         const patchCoords = [
             { x: 0, z: 0, s: 270 }, { x: -95, z: -75, s: 220 }, { x: 105, z: -65, s: 210 },
@@ -3276,7 +3279,7 @@ const SkinSystem = {
         waterGlow.position.y = 0.05;
         poolGroup.add(waterGlow, this.waterMesh);
 
-        let rimRockMat = new THREE.MeshStandardMaterial({ color: 0x3d4a35, map: tRock, roughness: 0.85, flatShading: true });
+        let rimRockMat = new THREE.MeshStandardMaterial({ color: 0xbcc8b6, map: tRock, roughness: 0.85, flatShading: true });
         this.rimRockMat = rimRockMat;
         for (let i = 0; i < 14; i++) {
             let a = (Math.PI * 2 / 14) * i + (i % 2) * 0.15;
@@ -3299,7 +3302,7 @@ const SkinSystem = {
         this.worldGroup.add(poolGroup);
 
         // --- 3. PRATO DI ERBA 3D (Con materiale dedicato anti-sparizione su mobile!) ---
-        this.menuGrassMat = this.createMenuFoliageMaterial(0x14380e, false);
+        this.menuGrassMat = this.createMenuFoliageMaterial(0x1a4a12, false);
         const grassCount = isTouchDevice ? 580 : 980;
         const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, this.menuGrassMat, grassCount);
         grassInst.frustumCulled = false;
@@ -3327,8 +3330,8 @@ const SkinSystem = {
 
         // --- 4. CORONA DI ALBERI FRATTALI E CHIOME VIVE ---
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
-        let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x1a1812, roughness: 0.9 });
-        this.menuCanopyMat = this.createMenuFoliageMaterial(0x12330c, true);
+        let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x241f16, roughness: 0.9 });
+        this.menuCanopyMat = this.createMenuFoliageMaterial(0x1c4f14, true);
 
         const treeCount = 14;
         const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, menuTreeTrunkMat, treeCount);
@@ -3480,11 +3483,11 @@ const SkinSystem = {
 
         // Target colori per transizione morbida tra i 3 biomi
         this.targetColors = {
-            fog: new THREE.Color(0x0b1409),
-            dirt: new THREE.Color(0x383322),
-            grass: new THREE.Color(0x489136),
-            foliage: new THREE.Color(0x14380e),
-            canopy: new THREE.Color(0x12330c),
+            fog: new THREE.Color(0x0c170a),
+            dirt: new THREE.Color(0xc6d0bc),
+            grass: new THREE.Color(0xd6edc4),
+            foliage: new THREE.Color(0x1a4a12),
+            canopy: new THREE.Color(0x1c4f14),
             water: new THREE.Color(0x1888b8),
             elem: new THREE.Color(0x22FF44)
         };
@@ -3546,11 +3549,11 @@ const SkinSystem = {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
             // 0: Foresta Incantata (Verde)
-            { fog: 0x0b1409, dirt: 0x383322, grass: 0x489136, foliage: 0x14380e, canopy: 0x12330c, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
+            { fog: 0x0c170a, dirt: 0xc6d0bc, grass: 0xd6edc4, foliage: 0x1a4a12, canopy: 0x1c4f14, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
             // 1: Fucina Infernale (Rosso)
-            { fog: 0x140506, dirt: 0x6e3826, grass: 0xc44d28, foliage: 0x381209, canopy: 0x2e0e07, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
+            { fog: 0x160607, dirt: 0xd2b6ac, grass: 0xeec0b0, foliage: 0x42160c, canopy: 0x3b130a, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x060b18, dirt: 0x223845, grass: 0x286e82, foliage: 0x1a5570, canopy: 0x164860, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x080f20, dirt: 0xb8d4e8, grass: 0xd2eeff, foliage: 0x206485, canopy: 0x1d5a78, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
         ];
         const p = presets[this.themeCycle];
 
@@ -5696,39 +5699,38 @@ function createOrganicAlphaMap() {
     const canvas = document.createElement('canvas'); 
     canvas.width = 256; canvas.height = 256; 
     const ctx = canvas.getContext('2d');
-    
-    // Sfondo nero trasparente
-    ctx.fillStyle = '#000000'; 
-    ctx.fillRect(0, 0, 256, 256);
-    
-    // Creiamo una sfumatura morbidissima dal centro verso i bordi estremi
-    const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 120);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');      // Centro solidissimo
-    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');  // Metà semi-trasparente
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');      // Bordo invisibile
-    
-    ctx.fillStyle = grad;
-    
-    // Disegniamo una forma organica ondulata invece di un cerchio
-    ctx.beginPath();
-    for (let angle = 0; angle < Math.PI * 2; angle += 0.2) {
-        let radius = 110 + Math.sin(angle * 5) * 15 + Math.cos(angle * 3) * 10;
-        let x = 128 + Math.cos(angle) * radius;
-        let y = 128 + Math.sin(angle) * radius;
-        if (angle === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
-    
-    // Aggiungiamo un leggerissimo rumore per evitare i cerchi concentrici visibili (Banding)
-    let imgData = ctx.getImageData(0, 0, 256, 256);
-    let data = imgData.data;
-    for(let i = 0; i < data.length; i += 4) {
-        let noise = (Math.random() - 0.5) * 20; 
-        data[i] = Math.max(0, Math.min(255, data[i] + noise));
-        data[i+1] = Math.max(0, Math.min(255, data[i+1] + noise));
-        data[i+2] = Math.max(0, Math.min(255, data[i+2] + noise));
+    const imgData = ctx.createImageData(256, 256);
+    const data = imgData.data;
+
+    // Maschera organica multi-armonica fluida (zero scalettature poligonali e zero rumore granuloso)
+    for (let y = 0; y < 256; y++) {
+        let dy = y - 128;
+        for (let x = 0; x < 256; x++) {
+            let dx = x - 128;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            let angle = Math.atan2(dy, dx);
+
+            let lobe = Math.sin(angle * 3.0 + 0.4) * 11.0
+                     + Math.cos(angle * 5.0 - 0.8) * 7.5
+                     + Math.sin(angle * 7.0 + 1.7) * 4.0;
+            let maxRad = 114.0 + lobe;
+            let norm = dist / maxRad;
+
+            let alpha = 0;
+            if (norm < 1.0) {
+                let t = Math.max(0.0, (norm - 0.18) / 0.82);
+                let smooth = 1.0 - (t * t * (3.0 - 2.0 * t));
+                // Micro-dithering impercettibile solo nella zona di transizione per eliminare il banding
+                let dither = (t > 0.02 && t < 0.98) ? ((Math.random() - 0.5) * 3.0) : 0.0;
+                alpha = Math.max(0, Math.min(255, Math.round(smooth * 255.0 + dither)));
+            }
+
+            let idx = (y * 256 + x) * 4;
+            data[idx] = alpha;
+            data[idx + 1] = alpha;
+            data[idx + 2] = alpha;
+            data[idx + 3] = 255;
+        }
     }
     ctx.putImageData(imgData, 0, 0);
     
@@ -7921,16 +7923,19 @@ prewarmShaders() {
                 let tRock = Preloader.textures['rock' + v];
                 let tWall = Preloader.textures['wall' + v];
                 
+                let maxAniso = isTouchDevice ? Math.min(4, this.renderer.capabilities.getMaxAnisotropy()) : this.renderer.capabilities.getMaxAnisotropy();
                 [tDirt, tGrass, tRock, tWall].forEach(t => {
-                    if (t) { t.anisotropy = this.renderer.capabilities.getMaxAnisotropy(); t.encoding = THREE.sRGBEncoding; }
+                    if (t) { t.anisotropy = maxAniso; t.encoding = THREE.sRGBEncoding; }
                 });
                 if (tWall) { tWall.wrapS = THREE.RepeatWrapping; tWall.wrapT = THREE.RepeatWrapping; tWall.repeat.set(1, 1.5); }
 
+                let isIceBiom = (i === 2);
+                let isLavaBiom = (i === 1);
                 let mats = {
-                    dirt: new MapMaterialClass({ map: tDirt, shininess: 0, specular: 0x000000 }),
-                    grass: new MapMaterialClass({ map: tGrass, shininess: 0, specular: 0x000000, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    rock: new MapMaterialClass({ map: tRock, shininess: 15, specular: 0x222222, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    wall: new MapMaterialClass({ map: tRock, shininess: 8, specular: 0x151515, flatShading: true })
+                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 16 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x243848 : 0x080808 }),
+                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 22 : (isLavaBiom ? 10 : 4), specular: isIceBiom ? 0x385870 : (isLavaBiom ? 0x220c04 : 0x0a1208), alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 28 : 14, specular: isIceBiom ? 0x406078 : 0x1e1e1e, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 24 : 10, specular: isIceBiom ? 0x304c62 : 0x161616, flatShading: true })
                 };
                 window.GLOBAL_THEME_MATS.push(mats);
                 
@@ -8485,7 +8490,7 @@ pushDebris(px, pz, radius, force) {
                 Game._colorClearSky = new THREE.Color();
             }
             let currentTheme = MAP_THEMES[this.currentThemeIndex || 0];
-            Game._colorClearSky.setHex(currentTheme.dirt).lerp(Game._colorDawnLight, 0.25);
+            Game._colorClearSky.setHex(currentTheme.ambient || currentTheme.fog).lerp(Game._colorDawnLight, 0.25);
 
             if (this.ambientLight) {
                 this.ambientLight.intensity += (1.30 - this.ambientLight.intensity) * dt * 1.6;
@@ -8985,7 +8990,13 @@ loop(timestamp) {
                 this.mistMat2.opacity = 0.08;
             }
         }
-        if (window.GLOBAL_FOG_MAT) window.GLOBAL_FOG_MAT.opacity = 0.35;
+        if (window.GLOBAL_FOG_MAT) {
+            window.GLOBAL_FOG_MAT.opacity = 0.32;
+            if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
+        }
+        if (window.GLOBAL_DEBRIS_MAT && currentTheme.debris) {
+            window.GLOBAL_DEBRIS_MAT.color.setHex(currentTheme.debris);
+        }
 
         // --- ATMOSFERA E VISIBILITÀ DINAMICA FIABESCA ---
         if (this.currentThemeIndex === 2) {
@@ -9016,10 +9027,10 @@ loop(timestamp) {
             this.dirLight.color.setHex(currentTheme.dirLight); 
         }
         if (this.ambientLight) { 
-            this.ambientLight.intensity = 0.82; 
+            this.ambientLight.intensity = 0.84; 
             this.ambientLight.color.setHex(currentTheme.dirLight);
             if (this.ambientLight.groundColor) {
-                this.ambientLight.groundColor.setHex(currentTheme.dirt);
+                this.ambientLight.groundColor.setHex(currentTheme.ambient || currentTheme.fog);
             }
         }
         if (InteractiveGrassSystem.mat) {
@@ -11411,7 +11422,14 @@ class GameMap {
        // --- 2.5 ALLOCHIAMO I DETRITI ---
         const maxDebris = floorCount * (isTouchDevice ? 8 : 20);
         if (!window.GLOBAL_DEBRIS_GEO) window.GLOBAL_DEBRIS_GEO = new THREE.DodecahedronGeometry(2.5, 0);
-        if (!window.GLOBAL_DEBRIS_MAT) window.GLOBAL_DEBRIS_MAT = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.9, metalness: 0.1 });
+        if (!window.GLOBAL_DEBRIS_MAT) {
+            window.GLOBAL_DEBRIS_MAT = isTouchDevice
+                ? new THREE.MeshLambertMaterial({ color: 0x2c3628 })
+                : new THREE.MeshStandardMaterial({ color: 0x2c3628, roughness: 0.88, metalness: 0.08 });
+        }
+        if (MAP_THEMES[Game.currentThemeIndex] && MAP_THEMES[Game.currentThemeIndex].debris) {
+            window.GLOBAL_DEBRIS_MAT.color.setHex(MAP_THEMES[Game.currentThemeIndex].debris);
+        }
         const meshDebris = new THREE.InstancedMesh(window.GLOBAL_DEBRIS_GEO, window.GLOBAL_DEBRIS_MAT, maxDebris);
         meshDebris.receiveShadow = true;
         meshDebris.castShadow = AppSettings.isUltraPC; 
@@ -11420,7 +11438,11 @@ class GameMap {
        // --- 2.6 ALLOCHIAMO GLI ALBERI E LE CHIOME ANIMATE ---
         const maxTrees = floorCount * (isTouchDevice ? 1 : 2); 
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
-        if (!window.GLOBAL_TREE_MAT) window.GLOBAL_TREE_MAT = new THREE.MeshStandardMaterial({ color: 0x0a0807, emissive: 0x020101, roughness: 0.9 });
+        if (!window.GLOBAL_TREE_MAT) {
+            window.GLOBAL_TREE_MAT = isTouchDevice
+                ? new THREE.MeshLambertMaterial({ color: 0x241f16, emissive: 0x020101 })
+                : new THREE.MeshStandardMaterial({ color: 0x241f16, emissive: 0x020101, roughness: 0.9 });
+        }
         const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, window.GLOBAL_TREE_MAT, maxTrees);
         meshTrees.receiveShadow = true;
         meshTrees.castShadow = true;
@@ -11472,7 +11494,7 @@ class GameMap {
         // --- INIZIO GESTIONE MATERIALI OTTIMIZZATI ---
         const MapMaterialClass = THREE.MeshPhongMaterial;
         const alphaTex = GLOBAL_ALPHA_TEX; 
-        const maxAnisotropy = Game.renderer.capabilities.getMaxAnisotropy();
+        const maxAnisotropy = isTouchDevice ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy()) : Game.renderer.capabilities.getMaxAnisotropy();
 
         // 1. Creiamo i 3 SET DI MATERIALI una sola volta per non intaccare la RAM
         if (!window.GLOBAL_THEME_MATS) {
@@ -11498,11 +11520,13 @@ class GameMap {
                     tWall.repeat.set(1, 1.5);
                 }
 
+                let isIceBiom = (i === 2);
+                let isLavaBiom = (i === 1);
                 window.GLOBAL_THEME_MATS[i] = {
-                    dirt: new MapMaterialClass({ map: tDirt, shininess: 0, specular: 0x000000 }),
-                    grass: new MapMaterialClass({ map: tGrass, shininess: 0, specular: 0x000000, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    rock: new MapMaterialClass({ map: tRock, shininess: 15, specular: 0x222222, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    wall: new MapMaterialClass({ map: tRock, shininess: 8, specular: 0x151515, flatShading: true })
+                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 16 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x243848 : 0x080808 }),
+                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 22 : (isLavaBiom ? 10 : 4), specular: isIceBiom ? 0x385870 : (isLavaBiom ? 0x220c04 : 0x0a1208), alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 28 : 14, specular: isIceBiom ? 0x406078 : 0x1e1e1e, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 24 : 10, specular: isIceBiom ? 0x304c62 : 0x161616, flatShading: true })
                 };
             }
         }
@@ -11518,33 +11542,36 @@ class GameMap {
         let currentTheme = MAP_THEMES[Game.currentThemeIndex];
         let activeMats = window.GLOBAL_THEME_MATS[Game.currentThemeIndex];
 
-        // Manteniamo la tinta base: le rocce di confine usano la palette rocciosa del bioma invece del marrone scuro
+        // Tinte calibrate per far risaltare i dettagli nativi delle texture PNG e scolpire i massi perimetrali
         activeMats.dirt.color.setHex(currentTheme.dirt);
         activeMats.grass.color.setHex(currentTheme.grass);
         activeMats.rock.color.setHex(currentTheme.rock);
-        activeMats.wall.color.setHex(currentTheme.rock);
+        activeMats.wall.color.setHex(currentTheme.wall || currentTheme.rock);
   // --- DIFFERENZIAZIONE FISICA DEI MATERIALI (COSTO ZERO) ---
         if (Game.currentThemeIndex === 2) { 
             // TEMA GHIACCIO: Riflessi cristallini morbidi
-            activeMats.rock.shininess = 35;
-            activeMats.rock.specular.setHex(0x162c42);
-            activeMats.rock.emissive.setHex(0x051020);
-            activeMats.dirt.emissive.setHex(0x040b16);
-            activeMats.grass.emissive.setHex(0x061528);
+            activeMats.rock.shininess = 32;
+            activeMats.rock.specular.setHex(0x284864);
+            activeMats.rock.emissive.setHex(0x040d1a);
+            activeMats.dirt.emissive.setHex(0x030912);
+            activeMats.grass.emissive.setHex(0x051120);
+            activeMats.wall.emissive.setHex(0x030812);
         } else if (Game.currentThemeIndex === 1) {
             // TEMA LAVA: Calore emissivo attenuato e bilanciato
-            activeMats.rock.shininess = 10;
-            activeMats.rock.specular.setHex(0x26100c);
-            activeMats.rock.emissive.setHex(0x160504);
-            activeMats.dirt.emissive.setHex(0x120403);
-            activeMats.grass.emissive.setHex(0x1c0604);
+            activeMats.rock.shininess = 12;
+            activeMats.rock.specular.setHex(0x28120c);
+            activeMats.rock.emissive.setHex(0x120403);
+            activeMats.dirt.emissive.setHex(0x0e0302);
+            activeMats.grass.emissive.setHex(0x160503);
+            activeMats.wall.emissive.setHex(0x0c0202);
         } else {
-            // TEMA FORESTA: Sottobosco caldo con riflessi dorati/muschio (zero dominante blu)
-            activeMats.rock.shininess = 20;
-            activeMats.rock.specular.setHex(0x283318);
-            activeMats.rock.emissive.setHex(0x070d04);
-            activeMats.dirt.emissive.setHex(0x080704);
-            activeMats.grass.emissive.setHex(0x0a1405);
+            // TEMA FORESTA: Sottobosco caldo con riflessi dorati/muschio
+            activeMats.rock.shininess = 18;
+            activeMats.rock.specular.setHex(0x222c16);
+            activeMats.rock.emissive.setHex(0x050a03);
+            activeMats.dirt.emissive.setHex(0x050503);
+            activeMats.grass.emissive.setHex(0x070e04);
+            activeMats.wall.emissive.setHex(0x040702);
         }
         // --- FINE SISTEMA TEMI ---
         
@@ -11698,16 +11725,24 @@ class GameMap {
 
         if (!window.GLOBAL_PIT_MATS) window.GLOBAL_PIT_MATS = {};
         if (!window.GLOBAL_PIT_MATS[themeIdx]) {
-            const cachedPitMat = new THREE.MeshStandardMaterial({
+            const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
+            const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
                 emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.34 : 0.62),
-                roughness: pitRoughness, metalness: pitMetalness,
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
-            });
+            };
+            if (isTouchDevice) {
+                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 28 : 32);
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x184858 : 0x183c58));
+            } else {
+                pitMatParams.roughness = pitRoughness;
+                pitMatParams.metalness = pitMetalness;
+            }
+            const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v6_' + themeIdx;
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v7_' + themeIdx + (isTouchDevice ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -11739,12 +11774,44 @@ class GameMap {
                     `
                     #include <emissivemap_fragment>
                     float texLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+
+                    // --- COORDINATE IDRODINAMICHE C-INFINITO CONTINUE (Zero cuciture o raggi dritti) ---
+                    vec2 relPos = vPitWPos - uPlayerPit.xy;
+                    float pDist = length(relPos);
+                    vec2 moveDir = uPlayerPitDir.xy;
+                    float dirLenSq = dot(moveDir, moveDir);
+                    moveDir = (dirLenSq < 0.001) ? vec2(1.0, 0.0) : (moveDir * inversesqrt(dirLenSq));
+                    vec2 perpDir = vec2(-moveDir.y, moveDir.x);
+
+                    float forward = dot(relPos, moveDir);
+                    float side    = dot(relPos, perpDir);
+                    float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
+                    float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
+
+                    // Transizione morbida C-infinito tra prua (forward > 0) e poppa (forward < 0)
+                    float smoothFront = forward / (14.0 + abs(forward));
+                    float behindSmooth = smoothstep(10.0, -16.0, forward);
+                    float asymScale = 1.0 + moveInt * (0.26 * smoothFront - 0.14);
+                    float kelvinBend = (side * side) * (0.0095 * moveInt) * behindSmooth;
+                    float wakeX = forward * asymScale + kelvinBend;
+                    float wakeY = side * (1.0 + 0.12 * moveInt);
+                    float effDist = sqrt(wakeX * wakeX + wakeY * wakeY + 1.0);
+
+                    // Vettore di rifrazione UV radiale generato dal passo del giocatore
+                    vec2 pitRippleGrad = vec2(0.0);
+                    if (uPlayerPit.w > 0.01 && pDist < 125.0) {
+                        vec2 radDir = relPos / (pDist + 1.5);
+                        float refWave = cos(effDist * 0.34 - uTime * mix(5.5, 9.5, moveInt));
+                        float refEnv = smoothstep(4.0, 14.0, pDist) * exp(-pDist * 0.032) * uPlayerPit.w;
+                        pitRippleGrad = radDir * (refWave * refEnv);
+                    }
+
                     ${themeIdx === 0 ? `
                     #ifdef USE_MAP
                         vec2 wWarp = vec2(
                             sin(vPitWPos.y * 0.058 + uTime * 2.1),
                             cos(vPitWPos.x * 0.058 - uTime * 1.7)
-                        ) * 0.032;
+                        ) * 0.032 + pitRippleGrad * 0.028;
                         vec2 uvWaterA = vPitWPos / 200.0 + vec2(uTime * 0.052, uTime * 0.090) + wWarp;
                         vec2 uvWaterB = vPitWPos / 138.0 + vec2(-uTime * 0.042, uTime * 0.058) - wWarp * 0.90;
                         vec3 wA = ${sampleWaterTex('uvWaterA')}.rgb;
@@ -11758,9 +11825,10 @@ class GameMap {
                         float rippleFactor = smoothstep(0.16, 0.78, pA * 0.65 + pB * 0.35);
                         float crest = smoothstep(0.46, 0.82, pA * pB * 1.35);
 
-                        // Reticolo vivo di caustiche che lega l'azzurro dell'acqua al verde-oro della foresta
-                        float c1 = sin(vPitWPos.x * 0.054 + uTime * 1.65 + sin(vPitWPos.y * 0.044 - uTime * 1.25));
-                        float c2 = cos(vPitWPos.y * 0.058 - uTime * 1.45 + cos(vPitWPos.x * 0.048 + uTime * 1.05));
+                        // Reticolo vivo di caustiche con rifrazione dinamica al passaggio del giocatore
+                        vec2 caustPos = vPitWPos + pitRippleGrad * 18.0;
+                        float c1 = sin(caustPos.x * 0.054 + uTime * 1.65 + sin(caustPos.y * 0.044 - uTime * 1.25));
+                        float c2 = cos(caustPos.y * 0.058 - uTime * 1.45 + cos(caustPos.x * 0.048 + uTime * 1.05));
                         float caustic = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 2.6);
 
                         vec3 rawTex = mix(wA, wB, 0.38);
@@ -11769,28 +11837,109 @@ class GameMap {
                             rawTex.g * 0.46 + rawTex.b * 0.16,
                             max(rawTex.b, rawTex.g * 0.85) * 0.68 + 0.03
                         );
-                        // Dal blu-ottanio profondo del sottobosco all'azzurro-turchese vivo delle increspature
                         vec3 deepLagoon = vec3(0.018, 0.105, 0.195);
                         vec3 midSpring  = vec3(0.095, 0.435, 0.620);
                         vec3 rampCol = mix(deepLagoon, midSpring, rippleFactor);
 
-                        diffuseColor.rgb = mix(rampCol, tintedTex, 0.45)
+                        diffuseColor.rgb = mix(rampCol, tintedTex, 0.46)
                                          + vec3(0.14, 0.44, 0.48) * (crest * 0.48 + caustic * 0.32);
                         totalEmissiveRadiance = mix(
                             vec3(0.012, 0.055, 0.095),
                             vec3(0.065, 0.250, 0.340),
                             clamp(rippleFactor * 0.72 + caustic * 0.48, 0.0, 1.0)
                         ) * 0.38;
+
+                        // ACQUA: Anelli idrodinamici concentrici, menisco d'immersione e scia di Kelvin curva
+                        if (uPlayerPit.w > 0.01 && pDist < 135.0) {
+                            float meniscus = exp(-abs(pDist - (10.8 + c1 * 1.1)) * 0.38) * (0.62 + 0.38 * moveInt);
+
+                            float freq = mix(0.31, 0.41, moveInt);
+                            float waveSpeed = mix(4.6, 10.6, moveInt) * mix(1.0, 1.28, clamp(spdRatio - 1.0, 0.0, 1.0));
+                            float wPhase1 = effDist * freq - uTime * waveSpeed + c1 * 0.45;
+                            float wPhase2 = effDist * (freq * 1.32) - uTime * (waveSpeed * 1.14) - c2 * 0.38;
+                            float waveComp = sin(wPhase1) * 0.64 + cos(wPhase2) * 0.36;
+
+                            float wakeTail = 1.0 + 0.68 * moveInt * behindSmooth * exp(-max(0.0, -forward) * 0.022);
+                            float ringEnv = smoothstep(5.0, 13.0, effDist) * exp(-effDist * 0.029) * wakeTail;
+
+                            float ringCrest = smoothstep(0.34, 0.88, waveComp) * ringEnv;
+                            float ringFoam = smoothstep(0.68, 0.96, waveComp) * ringEnv * (0.35 + 0.65 * moveInt);
+
+                            // Bracci curvi di Kelvin a poppa modulati in onde naturali (mai linee rigide)
+                            float backDist = max(0.0, -forward);
+                            float kelvinArm = abs(side) - (4.0 + pow(backDist + 1.0, 0.82) * 0.65 + c1 * 1.6);
+                            float kelvinGate = smoothstep(2.0, -10.0, forward) * exp(-backDist * 0.028) * moveInt;
+                            float kelvinWave = exp(-(kelvinArm * kelvinArm) * 0.055) * kelvinGate * (0.55 + 0.45 * sin(pDist * 0.36 - uTime * 8.2));
+
+                            // Archetto morbido di prua
+                            float bowArc = pDist - mix(13.0, 16.0, moveInt);
+                            float bowGate = smoothstep(-2.0, 8.0, forward) * exp(-(side * side) * 0.0038) * moveInt;
+                            float bowWave = exp(-(bowArc * bowArc) * 0.055) * bowGate;
+
+                            float totalCrest = clamp(ringCrest + kelvinWave * 0.68 + bowWave * 0.65 + meniscus * 0.55, 0.0, 1.0) * uPlayerPit.w;
+                            float totalFoam = clamp(ringFoam + meniscus * 0.65 + bowWave * 0.45 + kelvinWave * 0.38, 0.0, 1.0) * uPlayerPit.w;
+
+                            vec3 waveCyan = vec3(0.44, 0.86, 0.98);
+                            vec3 foamWhite = vec3(0.90, 0.98, 1.0);
+                            vec3 rippleCol = mix(waveCyan, foamWhite, totalFoam * 0.82);
+
+                            diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, totalCrest * 0.85);
+                            totalEmissiveRadiance += vec3(0.16, 0.48, 0.64) * totalCrest + vec3(0.24, 0.62, 0.78) * (totalFoam * 0.45);
+                        }
                     ` : (themeIdx === 1 ? `
-                        float m1 = sin(vPitWPos.x * 0.044 + uTime * 0.85 + sin(vPitWPos.y * 0.048 - uTime * 0.65) * 1.5);
-                        float m2 = cos(vPitWPos.y * 0.046 - uTime * 0.75 + cos(vPitWPos.x * 0.039 + uTime * 0.55) * 1.5);
+                        // LAVA: Doppio campionamento convettivo di lava_water.png + spostamento viscoso delle placche
+                        float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
+                        float m2 = cos(vPitWPos.y * 0.044 - uTime * 0.70 + cos(vPitWPos.x * 0.038 + uTime * 0.52) * 1.4);
                         float flow = 0.5 + 0.5 * m1 * m2;
-                        float heat = clamp(texLum * 0.65 + flow * 0.55, 0.0, 1.0);
-                        vec3 crustCol = vec3(0.075, 0.016, 0.012);
-                        vec3 magmaCol = mix(vec3(0.86, 0.15, 0.01), vec3(1.0, 0.80, 0.20), smoothstep(0.55, 0.92, heat));
-                        float veinMask = smoothstep(0.33, 0.62, heat);
+
+                    #ifdef USE_MAP
+                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.024;
+                        vec2 uvLavaA = vPitWPos / 220.0 + vec2(uTime * 0.018, uTime * 0.012) + lWarp;
+                        vec2 uvLavaB = vPitWPos / 155.0 + vec2(-uTime * 0.014, uTime * 0.019) - lWarp * 0.85;
+                        vec3 lA = ${sampleWaterTex('uvLavaA')}.rgb;
+                        vec3 lB = ${sampleWaterTex('uvLavaB')}.rgb;
+                        vec3 lavaTexCol = mix(lA, lB, 0.42);
+                        float lLumA = dot(lA, vec3(0.299, 0.587, 0.114));
+                        float lLumB = dot(lB, vec3(0.299, 0.587, 0.114));
+                        texLum = mix(lLumA, lLumB, 0.45);
+                    #else
+                        vec3 lavaTexCol = diffuseColor.rgb;
+                    #endif
+
+                        float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
+                        vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
+                        vec3 magmaCol = mix(vec3(0.88, 0.16, 0.01), vec3(1.0, 0.78, 0.18), smoothstep(0.52, 0.90, heat));
+                        magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
+                        float veinMask = smoothstep(0.32, 0.62, heat);
                         diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
-                        totalEmissiveRadiance = mix(vec3(0.06, 0.01, 0.005), magmaCol * 1.32, veinMask);
+                        totalEmissiveRadiance = mix(vec3(0.05, 0.01, 0.005), magmaCol * 1.28, veinMask);
+
+                        // INTERAZIONE LAVA VISCOSA (Zero effetto laser frontale: anelli magmatici pesanti e scia ribollente corta)
+                        if (uPlayerPit.w > 0.01 && pDist < 102.0) {
+                            // 1. Alone d'immersione e colletto di magma spostato attorno al giocatore
+                            float coreGlow = exp(-pDist * pDist * 0.0046) * (0.78 + 0.22 * sin(uTime * 3.4));
+                            float collarRadius = 12.2 + (flow - 0.5) * 3.4;
+                            float meniscusRing = exp(-abs(pDist - collarRadius) * 0.32) * (0.68 + 0.32 * moveInt);
+
+                            // 2. Onde concentriche viscose a bassa frequenza deformate dal flusso magmatico
+                            float lavaPhase = effDist * 0.27 - uTime * mix(3.6, 6.4, moveInt) + flow * 2.2;
+                            float lavaWave = smoothstep(0.30, 0.92, sin(lavaPhase));
+                            float lavaRings = lavaWave * smoothstep(7.0, 16.0, effDist) * exp(-effDist * 0.044) * (0.52 + 0.48 * moveInt);
+
+                            // 3. Scia magmatica corta e perturbata ESCLUSIVAMENTE dietro al giocatore (zero proiezione in avanti)
+                            float behindGate = smoothstep(1.5, -7.5, forward) * smoothstep(50.0, 9.0, -forward) * moveInt;
+                            float wobbledSide = side + m1 * 3.6 + sin(forward * 0.18 - uTime * 4.0) * 2.8;
+                            float trailWake = exp(-(wobbledSide * wobbledSide) * 0.0068) * behindGate * (0.55 + 0.45 * sin(forward * 0.24 + uTime * 5.0 + flow * 3.0));
+
+                            float moltenHeat = clamp(coreGlow * 0.82 + meniscusRing * 0.76 + lavaRings * 0.70 + trailWake * 0.72, 0.0, 1.0) * uPlayerPit.w;
+
+                            vec3 magmaDark = vec3(0.90, 0.20, 0.01);
+                            vec3 moltenGold = vec3(1.0, 0.86, 0.32);
+                            vec3 stepMagmaCol = mix(magmaDark, moltenGold, smoothstep(0.28, 0.86, moltenHeat));
+
+                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.90);
+                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.55);
+                        }
                     ` : `
                         vec2 dirFlow = vec2(0.4472, -0.8944);
                         vec2 dirCross = vec2(0.8944, 0.4472);
@@ -11803,101 +11952,6 @@ class GameMap {
                         diffuseColor.rgb = mix(vec3(0.015, 0.06, 0.15), vec3(0.09, 0.40, 0.68), flowMix);
                         totalEmissiveRadiance = mix(vec3(0.01, 0.05, 0.12), vec3(0.16, 0.56, 0.82), flowMix) * 0.62;
                     `)}
-
-                    // --- INTERAZIONE VIVA GIOCATORE: MINIONDE REALISTICHE DEFORMATE LUNGO IL MOTO (100% GPU) ---
-                    if (uPlayerPit.w > 0.01) {
-                        vec2 relPos = vPitWPos - uPlayerPit.xy;
-                        float pDist = length(relPos);
-                        
-                        // Direzione normalizzata del moto del giocatore
-                        vec2 moveDir = uPlayerPitDir.xy;
-                        float dirLenSq = dot(moveDir, moveDir);
-                        if (dirLenSq < 0.001) {
-                            moveDir = vec2(1.0, 0.0);
-                        } else {
-                            moveDir = moveDir * inversesqrt(dirLenSq);
-                        }
-                        vec2 perpDir = vec2(-moveDir.y, moveDir.x);
-
-                        // Coordinate orientate lungo la scia di avanzamento:
-                        // forward > 0 : davanti (prua / compressione delle onde)
-                        // forward < 0 : dietro (scia allungata di poppa)
-                        // side        : distanza trasversale
-                        float forward = dot(relPos, moveDir);
-                        float side    = dot(relPos, perpDir);
-                        float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
-                        float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
-
-                        // Deformazione asimmetrica: allungamento scia dietro, compressione prua davanti
-                        float stretchBehind = 1.0 - 0.46 * moveInt;
-                        float compressFront = 1.0 + 0.35 * moveInt;
-                        float alongStretch = (forward < 0.0) ? (forward * stretchBehind) : (forward * compressFront);
-
-                        // Curvatura parabolica a V lungo la traiettoria (scia idrodinamica di Kelvin)
-                        float bowCurve = (side * side) * (0.015 * moveInt);
-                        float wakeCoord = alongStretch + (forward < 0.0 ? bowCurve : -bowCurve * 0.45);
-                        float deformedDist = length(vec2(wakeCoord, side * (1.0 + 0.14 * moveInt)));
-
-                        // Cresta d'onda a V laterale (bracci divergenti di poppa)
-                        float vWakeDist = abs(side) - (max(0.0, -forward) * 0.50 + 3.0);
-                        float vRidge = exp(-abs(vWakeDist) * 0.24) * smoothstep(5.0, 20.0, -forward) * exp(forward * 0.022) * moveInt;
-
-                        ${themeIdx === 0 ? `
-                            // ACQUA: Minionde con scia a V, compressione di prua e spuma azzurro-bianca
-                            if (pDist < 135.0) {
-                                float freq = mix(0.33, 0.45, moveInt);
-                                float waveSpeed = mix(6.5, 12.5, moveInt) * mix(1.0, 1.35, clamp(spdRatio - 1.0, 0.0, 1.0));
-                                
-                                float wavePhase1 = deformedDist * freq - uTime * waveSpeed;
-                                float wavePhase2 = deformedDist * (freq * 1.36) - uTime * (waveSpeed * 1.16) + forward * 0.06;
-                                float wave1 = sin(wavePhase1);
-                                float wave2 = cos(wavePhase2);
-                                float waveComposite = wave1 * 0.64 + wave2 * 0.36;
-
-                                float wakePersist = (forward < 0.0) ? (1.0 + 0.85 * moveInt * exp(forward * 0.020)) : 1.0;
-                                float ringMask = smoothstep(6.0, 15.0, deformedDist) * exp(-deformedDist * 0.027) * wakePersist * uPlayerPit.w;
-
-                                float crest = smoothstep(0.42, 0.90, waveComposite) * ringMask;
-                                float foam = smoothstep(0.68, 0.96, waveComposite) * ringMask * (0.40 + 0.60 * moveInt);
-
-                                float totalCrest = clamp(crest + vRidge * 0.72 * ringMask, 0.0, 1.0);
-                                float totalFoam = clamp(foam + vRidge * 0.55 * ringMask, 0.0, 1.0);
-
-                                float bowShock = smoothstep(5.0, 16.0, forward) * (1.0 - smoothstep(16.0, 30.0, forward)) * exp(-abs(side) * 0.10) * moveInt * uPlayerPit.w;
-
-                                vec3 waveCyan = vec3(0.50, 0.88, 1.0);
-                                vec3 foamWhite = vec3(0.92, 0.98, 1.0);
-                                vec3 rippleCol = mix(waveCyan, foamWhite, clamp(totalFoam * 0.80 + bowShock * 0.50, 0.0, 1.0));
-                                float rippleFactor = clamp(totalCrest * 0.88 + bowShock * 0.75, 0.0, 0.95);
-
-                                diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, rippleFactor);
-                                totalEmissiveRadiance += (vec3(0.18, 0.52, 0.68) * totalCrest + vec3(0.32, 0.70, 0.86) * bowShock) * uPlayerPit.w;
-                            }
-                        ` : (themeIdx === 1 ? `
-                            // LAVA: Frattura della crosta lungo la direzione del passo con scia magmatica incandescente
-                            if (pDist < 115.0) {
-                                float wakeBehind = max(0.0, -forward);
-                                float furrowWidth = mix(13.0, 20.0, moveInt);
-                                float furrowMask = exp(-abs(side) / (furrowWidth * 0.5)) * exp(-wakeBehind * 0.032) * moveInt;
-
-                                float lavaPhase = deformedDist * 0.35 - uTime * mix(7.5, 11.0, moveInt) * mix(1.0, 1.35, clamp(spdRatio - 1.0, 0.0, 1.0));
-                                float lavaWave = smoothstep(0.48, 0.94, sin(lavaPhase));
-                                float lavaRing = lavaWave * smoothstep(5.0, 14.0, deformedDist) * exp(-deformedDist * 0.038) * (0.65 + 0.35 * moveInt);
-
-                                float lavaVRidge = vRidge * 0.80;
-                                float staticHeat = exp(-pDist * 0.046) * (0.55 + 0.15 * sin(uTime * 3.0));
-
-                                float moltenHeat = clamp(furrowMask * 0.90 + lavaRing * 0.65 + lavaVRidge + staticHeat, 0.0, 1.0) * uPlayerPit.w;
-
-                                vec3 magmaDark = vec3(0.92, 0.22, 0.01);
-                                vec3 moltenGold = vec3(1.0, 0.92, 0.46);
-                                vec3 magmaCol = mix(magmaDark, moltenGold, smoothstep(0.35, 0.88, moltenHeat));
-
-                                diffuseColor.rgb = mix(diffuseColor.rgb, magmaCol, moltenHeat * 0.95);
-                                totalEmissiveRadiance += magmaCol * (moltenHeat * 1.90);
-                            }
-                        ` : ``)}
-                    }
                     `
                 ).replace(
                     '#include <dithering_fragment>',
@@ -11976,7 +12030,7 @@ class GameMap {
             this.mapGroup.add(this.meshPitFloor);
 
             if (themeIdx === 2) {
-                let iceTex = Preloader.textures.iceCrust || CHAR_GRUNGE_TEX;
+                let iceTex = Preloader.textures.waterIce || Preloader.textures.iceCrust || CHAR_GRUNGE_TEX;
                 iceTex.wrapS = THREE.RepeatWrapping;
                 iceTex.wrapT = THREE.RepeatWrapping;
                 iceTex.repeat.set(mapRealWidth / 210, mapRealHeight / 210);
@@ -11984,16 +12038,25 @@ class GameMap {
                 iceTex.needsUpdate = true;
 
                 if (!window.GLOBAL_ICE_MAT) {
-                    const cachedIceMat = new THREE.MeshStandardMaterial({
+                    const IceMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
+                    const iceMatParams = {
                         color: 0xdcf2ff, emissive: 0x16446e,
-                        emissiveIntensity: 0.22,
-                        roughness: 0.42, metalness: 0.05,
+                        emissiveIntensity: 0.24,
                         map: iceTex, emissiveMap: iceTex,
                         transparent: true, opacity: 0.92,
                         depthWrite: false
-                    });
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v4';
+                    };
+                    if (isTouchDevice) {
+                        iceMatParams.shininess = 46;
+                        iceMatParams.specular = new THREE.Color(0x4c7c9e);
+                    } else {
+                        iceMatParams.roughness = 0.36;
+                        iceMatParams.metalness = 0.06;
+                    }
+                    const cachedIceMat = new IceMatClass(iceMatParams);
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v5' + (isTouchDevice ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
+                        shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                         shader.vertexShader = `
                             varying vec2 vIceWPos;
                         ` + shader.vertexShader.replace(
@@ -12004,16 +12067,18 @@ class GameMap {
                             `
                         );
                         shader.fragmentShader = `
+                            uniform vec4 uPlayerPit;
                             varying vec2 vIceWPos;
                         ` + shader.fragmentShader.replace(
                             '#include <emissivemap_fragment>',
                             `
                             #include <emissivemap_fragment>
-                            float iceTex = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+                            vec3 rawIceTex = diffuseColor.rgb;
+                            float iceTex = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
 
-                            // Spessore lattiginoso interno e banchi di brina compatta
+                            // Spessore lattiginoso interno e banchi di brina compatta fusi con i dettagli di ice_water.png
                             float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.022 + sin(vIceWPos.y * 0.025) * 1.3) * cos(vIceWPos.y * 0.021 - cos(vIceWPos.x * 0.024) * 1.2);
-                            float frostBody = smoothstep(0.30, 0.80, sheetNoise * 0.52 + iceTex * 0.58);
+                            float frostBody = smoothstep(0.26, 0.82, sheetNoise * 0.44 + iceTex * 0.66);
 
                             // Crepe di tensione incrociate con bisello interno scuro per dare spessore alla lastra
                             vec2 ip = vIceWPos * 0.016;
@@ -12028,25 +12093,37 @@ class GameMap {
                             float crackBevel = (1.0 - smoothstep(0.018, 0.055, f1)) * 0.35;
                             float crackMask = clamp(mainCrack + subCrack, 0.0, 1.0);
 
-                            vec3 deepSlabCol = vec3(0.30, 0.58, 0.80);
-                            vec3 frostedSlabCol = vec3(0.76, 0.90, 0.98);
+                            vec3 deepSlabCol = vec3(0.26, 0.54, 0.78);
+                            vec3 frostedSlabCol = vec3(0.76, 0.91, 0.99);
                             vec3 slabCol = mix(deepSlabCol, frostedSlabCol, frostBody);
+                            slabCol = mix(slabCol, rawIceTex * 1.08, 0.36);
                             slabCol = mix(slabCol, vec3(0.18, 0.42, 0.64), crackBevel * (1.0 - crackMask));
                             slabCol = mix(slabCol, vec3(0.92, 0.98, 1.0), crackMask * 0.85);
 
-                            diffuseColor.rgb = slabCol;
-                            totalEmissiveRadiance = mix(vec3(0.03, 0.11, 0.20), vec3(0.14, 0.38, 0.56), clamp(frostBody * 0.6 + crackMask * 0.7, 0.0, 1.0)) * 0.42;
+                            // Alone cristallino di pressione sotto i passi del giocatore sul ghiaccio
+                            float stepFrost = 0.0;
+                            if (uPlayerPit.w > 0.01) {
+                                float iDist = length(vIceWPos - uPlayerPit.xy);
+                                if (iDist < 65.0) {
+                                    float iRing = exp(-abs(iDist - 12.0) * 0.26) * 0.55 + exp(-iDist * 0.055) * 0.45;
+                                    stepFrost = clamp(iRing * (0.55 + 0.45 * crackMask), 0.0, 1.0) * uPlayerPit.w;
+                                    slabCol = mix(slabCol, vec3(0.88, 0.97, 1.0), stepFrost * 0.65);
+                                }
+                            }
 
-                            // Lastra solida continua (0.72 nelle finestre blu traslucide, fino a 0.93 su brina e fratture)
-                            float slabOpacity = mix(0.72, 0.90, frostBody);
-                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.93), 0.72, 0.93);
+                            diffuseColor.rgb = slabCol;
+                            totalEmissiveRadiance = mix(vec3(0.03, 0.11, 0.20), vec3(0.16, 0.42, 0.62), clamp(frostBody * 0.55 + crackMask * 0.65 + stepFrost * 0.75, 0.0, 1.0)) * 0.44;
+
+                            // Lastra solida continua (0.74 nelle finestre blu traslucide, fino a 0.94 su brina e fratture)
+                            float slabOpacity = mix(0.74, 0.91, frostBody);
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.94), 0.74, 0.94);
                             `
                         ).replace(
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.62) {
-                                float compIce = 0.62 + (maxIceC - 0.62) / (1.0 + (maxIceC - 0.62) * 2.5);
+                            if (maxIceC > 0.64) {
+                                float compIce = 0.64 + (maxIceC - 0.64) / (1.0 + (maxIceC - 0.64) * 2.5);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -12674,7 +12751,15 @@ class GameMap {
                     window.GLOBAL_PIT_BOULDER_GEO.computeVertexNormals();
                     window.GLOBAL_PIT_BOULDER_GEO.boundingSphere = window.GLOBAL_GIANT_SPHERE;
                 }
-                const rimStoneMat = this.wallMat.clone();
+                if (!window.GLOBAL_PIT_RIMSTONE_MATS) window.GLOBAL_PIT_RIMSTONE_MATS = {};
+                if (!window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx]) {
+                    const rMat = this.wallMat.clone();
+                    rMat._isGlobalCached = true;
+                    window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx] = rMat;
+                }
+                const rimStoneMat = window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx];
+                rimStoneMat.color.copy(this.wallMat.color);
+                rimStoneMat.emissive.copy(this.wallMat.emissive);
                 const meshPitRimStones = new THREE.InstancedMesh(window.GLOBAL_PIT_BOULDER_GEO, rimStoneMat, rimStoneSpawns.length);
                 meshPitRimStones.renderOrder = -4;
                 meshPitRimStones.receiveShadow = true;
@@ -12700,19 +12785,20 @@ class GameMap {
             }
 
             const tempObj = new THREE.Object3D();
+            const PropMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
             if (padSpawns.length > 0) {
                 if (!window.GLOBAL_PIT_PAD_ASSETS) window.GLOBAL_PIT_PAD_ASSETS = {};
                 if (!window.GLOBAL_PIT_PAD_ASSETS[themeIdx]) {
                     let padGeo, padMat;
                     if (themeIdx === 0) {
                         padGeo = new THREE.CylinderGeometry(8.5, 8.0, 0.6, 9, 1, false, 0.42, Math.PI * 2 - 0.84);
-                        padMat = new THREE.MeshStandardMaterial({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
+                        padMat = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
                     } else if (themeIdx === 1) {
                         padGeo = new THREE.CylinderGeometry(7.0, 9.2, 1.3, 6);
-                        padMat = new THREE.MeshStandardMaterial({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.6, roughness: 0.9, flatShading: true });
+                        padMat = new PropMatClass({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.6, roughness: 0.9, flatShading: true });
                     } else {
                         padGeo = new THREE.CylinderGeometry(8.0, 8.5, 0.45, 6);
-                        padMat = new THREE.MeshStandardMaterial({ color: 0xdaf2ff, emissive: 0x1b5685, emissiveIntensity: 0.22, roughness: 0.38, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.84, depthWrite: false });
+                        padMat = new PropMatClass({ color: 0xdaf2ff, emissive: 0x1b5685, emissiveIntensity: 0.22, roughness: 0.38, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.84, depthWrite: false });
                     }
                     padGeo._isGlobalCached = true;
                     padMat._isGlobalCached = true;
@@ -12744,20 +12830,20 @@ class GameMap {
                         let bud = new THREE.DodecahedronGeometry(1.7, 0); bud.translate(0, 1.7, 0);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([petals.toNonIndexed(), bud.toNonIndexed()]);
                         petals.dispose(); bud.dispose();
-                        accentMat = new THREE.MeshStandardMaterial({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
+                        accentMat = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
                     } else if (themeIdx === 1) {
                         let s1 = new THREE.ConeGeometry(3.2, 14, 5); s1.translate(0, 6, 0); s1.rotateZ(0.18);
                         let s2 = new THREE.ConeGeometry(2.2, 9.5, 5); s2.translate(-2.2, 4, 1.2); s2.rotateZ(-0.28);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([s1.toNonIndexed(), s2.toNonIndexed()]);
                         s1.dispose(); s2.dispose();
-                        accentMat = new THREE.MeshStandardMaterial({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
+                        accentMat = new PropMatClass({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
                     } else {
                         let c1 = new THREE.CylinderGeometry(0.3, 2.6, 15, 6); c1.translate(0, 6.5, 0); c1.rotateZ(0.16);
                         let c2 = new THREE.CylinderGeometry(0.25, 1.9, 10.5, 6); c2.translate(-2.2, 4.5, 1.4); c2.rotateZ(-0.32); c2.rotateX(0.22);
                         let c3 = new THREE.CylinderGeometry(0.25, 1.7, 9.0, 6); c3.translate(2.0, 3.8, -1.2); c3.rotateZ(0.35); c3.rotateX(-0.20);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([c1.toNonIndexed(), c2.toNonIndexed(), c3.toNonIndexed()]);
                         c1.dispose(); c2.dispose(); c3.dispose();
-                        accentMat = new THREE.MeshStandardMaterial({ color: 0xc4ffff, emissive: 0x1ee0ff, emissiveIntensity: 0.70, roughness: 0.25, metalness: 0.2, flatShading: true });
+                        accentMat = new PropMatClass({ color: 0xc4ffff, emissive: 0x1ee0ff, emissiveIntensity: 0.70, roughness: 0.25, metalness: 0.2, flatShading: true });
                     }
                     accentGeo.computeVertexNormals();
                     accentGeo._isGlobalCached = true;
@@ -13363,8 +13449,11 @@ Game.auras.push({
                 window.GLOBAL_FOG_GEO = new THREE.PlaneGeometry(350, 350); 
                 window.GLOBAL_FOG_GEO.rotateX(-Math.PI / 2);
                 window.GLOBAL_FOG_MAT = new THREE.MeshBasicMaterial({
-                    map: texSmoke, color: 0x667799, transparent: true, opacity: 0.35, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
+                    map: texSmoke, color: 0x5c8568, transparent: true, opacity: 0.32, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
                 });
+            }
+            if (currentTheme && currentTheme.groundMist) {
+                window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
             }
             this.fogMesh = new THREE.InstancedMesh(window.GLOBAL_FOG_GEO, window.GLOBAL_FOG_MAT, fogCount);
 this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (renderOrder alto = disegnato dopo)
@@ -15076,7 +15165,7 @@ class Player extends Entity {
         let targetMove = (isMoving || this.isDashing) ? 1.0 : 0.0;
         uPP.z += (targetMove - uPP.z) * Math.min(1.0, dt * 9.0);
 
-        let targetPit = (inPit && !isIce) ? 1.0 : 0.0;
+        let targetPit = inPit ? 1.0 : 0.0;
         uPP.w += (targetPit - uPP.w) * Math.min(1.0, dt * 10.0);
 
         let moveLen = Math.hypot(dirX, dirY);
@@ -15094,7 +15183,7 @@ class Player extends Entity {
         }
         let targetSpdRatio = this.isDashing ? 2.0 : (isMoving ? 1.0 : 0.0);
         uPDir.z += (targetSpdRatio - uPDir.z) * Math.min(1.0, dt * 8.0);
-        if (inPit && !isIce && targetMove > 0.01) {
+        if (inPit && targetMove > 0.01) {
             uPDir.w += dt * (this.isDashing ? 18.0 : 9.5);
         }
     }
@@ -15784,30 +15873,33 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     if (inPit) {
                         let moveAng = Math.atan2(dy, dx);
                         if (Game.currentThemeIndex === 0) {
-                            // ACQUA: Goccioline cristalline che schizzano a destra e sinistra dei piedi
-                            let side = (Game.frameCount % 2 === 0 ? 1 : -1) * (Math.PI * 0.45);
+                            // ACQUA: Goccioline morbide e spuma che si aprono lateralmente attorno ai piedi
+                            let side = (Game.frameCount % 2 === 0 ? 1 : -1) * (Math.PI * 0.48 + MathUtils.randomRange(-0.18, 0.18));
                             let drop = Game.getParticle();
-                            drop.spawn(this.x, 3, this.y, Math.random() > 0.4 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'spark');
-                            let sp = MathUtils.randomRange(65, 130);
+                            drop.spawn(this.x + MathUtils.randomRange(-5, 5), 2.5, this.y + MathUtils.randomRange(-5, 5), Math.random() > 0.35 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'trail');
+                            let sp = MathUtils.randomRange(38, 78);
                             drop.vx = Math.cos(moveAng + side) * sp;
                             drop.vz = Math.sin(moveAng + side) * sp;
-                            drop.vy = MathUtils.randomRange(95, 170);
-                            drop.baseSize = MathUtils.randomRange(8, 14);
-                            drop.life = 0.28; drop.maxLife = 0.28;
+                            drop.vy = MathUtils.randomRange(55, 95);
+                            drop.baseSize = MathUtils.randomRange(8, 13);
+                            drop.life = 0.26; drop.maxLife = 0.26;
                         } else if (Game.currentThemeIndex === 1) {
-                            // LAVA: Zampilli parabolici di magma fuso che salgono e ricadono
-                            let spoutCount = AppSettings.isLow ? 1 : 2;
-                            for (let s = 0; s < spoutCount; s++) {
-                                let spout = Game.getParticle();
-                                let sAng = moveAng + Math.PI + MathUtils.randomRange(-0.9, 0.9);
-                                let sSpd = MathUtils.randomRange(45, 125);
-                                spout.spawn(this.x + MathUtils.randomRange(-6, 6), 4, this.y + MathUtils.randomRange(-6, 6), s === 0 ? SharedMat.spriteYellow : SharedMat.spriteRed, 'spark');
-                                spout.vx = Math.cos(sAng) * sSpd;
-                                spout.vz = Math.sin(sAng) * sSpd;
-                                spout.vy = MathUtils.randomRange(160, 290); // Arco alto da vero zampillo!
-                                spout.baseSize = MathUtils.randomRange(13, 22);
-                                spout.life = MathUtils.randomRange(0.32, 0.50);
-                                spout.maxLife = spout.life;
+                            // LAVA: Bolle viscose di magma denso e sbuffo caldo (zero strisce/laser ad alta velocità)
+                            let blob = Game.getParticle();
+                            let bAng = moveAng + Math.PI + MathUtils.randomRange(-1.1, 1.1);
+                            let bSpd = MathUtils.randomRange(16, 42);
+                            blob.spawn(this.x + MathUtils.randomRange(-7, 7), 2.5, this.y + MathUtils.randomRange(-7, 7), Math.random() > 0.4 ? SharedMat.spriteRed : SharedMat.spriteYellow, 'trail');
+                            blob.vx = Math.cos(bAng) * bSpd;
+                            blob.vz = Math.sin(bAng) * bSpd;
+                            blob.vy = MathUtils.randomRange(38, 72);
+                            blob.baseSize = MathUtils.randomRange(11, 17);
+                            blob.life = MathUtils.randomRange(0.26, 0.38);
+                            blob.maxLife = blob.life;
+                            if (!AppSettings.isLow && Game.frameCount % 2 === 0) {
+                                let fume = Game.getParticle();
+                                fume.spawn(this.x + MathUtils.randomRange(-6, 6), 3, this.y + MathUtils.randomRange(-6, 6), SharedMat.spriteBlackSmoke, 'dust');
+                                fume.baseSize = MathUtils.randomRange(14, 20);
+                                fume.vy = MathUtils.randomRange(14, 26);
                             }
                         } else {
                             Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteWhite, 'dust');
