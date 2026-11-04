@@ -1673,7 +1673,7 @@ const AppSettings = {
                     Game.map.grassMesh.count = Math.floor(Game.map.totalGrassSpawned * this.grassDensityMult);
                 }
                 if (Game.map.treeCanopyMesh) {
-                    Game.map.treeCanopyMesh.castShadow = this.isUltraPC;
+                    Game.map.treeCanopyMesh.castShadow = this.isUltra;
                 }
                 if (Game.map.debrisStaticMesh && Game.map.totalDebrisStaticSpawned !== undefined) {
                     const debMult = this.isLow ? 0.45 : (this.isUltra ? 1.0 : 0.75);
@@ -11674,7 +11674,7 @@ class GameMap {
 
         const meshTreeCanopy = new THREE.InstancedMesh(TreeCanopySystem.geo, TreeCanopySystem.mat, maxTrees);
         meshTreeCanopy.receiveShadow = true;
-        meshTreeCanopy.castShadow = AppSettings.isUltraPC;
+        meshTreeCanopy.castShadow = AppSettings.isUltra;
         meshTreeCanopy.frustumCulled = false;
         meshTreeCanopy.onBeforeRender = function(renderer, scene, camera) {
             InteractiveGrassSystem.uniforms.uCamPos.value.setFromMatrixPosition(camera.matrixWorld);
