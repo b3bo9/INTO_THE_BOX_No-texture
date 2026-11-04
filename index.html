@@ -1341,7 +1341,7 @@ body.colorblind-mode #opt-colorblind-text {
                 <p class="text-[10px] sm:text-xs text-gray-400 font-bold mt-1 m-0">Tocca la reliquia del tuo inventario che vuoi sostituire:</p>
             </div>
             
-            <div id="reforgeSelectGrid" class="flex flex-wrap gap-3 overflow-y-auto custom-scrollbar p-2 justify-center content-start flex-1 min-h-[120px] relative z-10">
+          <div id="reforgeSelectGrid" class="grid grid-cols-6 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar p-1 justify-items-center content-start shrink-0 relative z-10">
             </div>
 
             <!-- BOX DETTAGLI RELIQUIA SELEZIONATA -->
@@ -1360,20 +1360,32 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
     </div>
 <!-- MODALE RELIQUIE COLLEZIONATE -->
-    <div id="collectedRelicsModal" class="absolute inset-0 bg-black/95 z-[260] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-4">
-      <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-4 sm:p-5 w-full max-w-[450px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[85vh] relative overflow-hidden">
-            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Collezione Attiva</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Arsenale Reliquie</h2></div><div class="w-10 h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300 shrink-0"><i class="fa-solid fa-gem text-lg"></i></div></div>
+    <div id="collectedRelicsModal" class="absolute inset-0 bg-black/95 z-[260] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-2.5 sm:p-4">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-3 sm:p-5 w-full max-w-[420px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[92vh] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-2 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-3 py-2 mb-2.5 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0">
+                <div class="flex flex-col text-left">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+                        <span class="text-[8px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Collezione Attiva</span>
+                    </div>
+                    <h2 class="text-base sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Arsenale Reliquie</h2>
+                </div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300 shrink-0">
+                    <i class="fa-solid fa-gem text-sm sm:text-lg"></i>
+                </div>
+            </div>
             
-            <div id="collectedRelicsGrid" class="flex flex-wrap gap-3 overflow-y-auto custom-scrollbar p-2 justify-center content-start flex-1 min-h-[120px]">
+            <!-- Griglia 6 colonne: ospita tutte le 27 reliquie su 5 righe compatte senza scroll su smartphone -->
+            <div id="collectedRelicsGrid" class="grid grid-cols-6 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar p-1 justify-items-center content-start shrink-0">
                 <!-- Popolato da JS -->
             </div>
 
-            <div class="mt-3 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-3 min-h-[85px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0">
-                <h3 id="relic-detail-name" class="text-sm font-black text-gray-300 uppercase tracking-widest mb-1">IL TUO ARSENALE</h3>
-                <p id="relic-detail-desc" class="text-xs text-gray-400 font-bold">Tocca o passa il cursore sopra un'icona per i dettagli.</p>
+            <div class="mt-2.5 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-2.5 min-h-[72px] sm:min-h-[82px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0">
+                <h3 id="relic-detail-name" class="text-xs sm:text-sm font-black text-gray-300 uppercase tracking-widest mb-0.5">IL TUO ARSENALE</h3>
+                <p id="relic-detail-desc" class="text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0">Tocca un'icona per leggerne i dettagli.</p>
             </div>
 
-           <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">Chiudi</button>
+            <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-2.5 w-full py-2.5 sm:py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">Chiudi</button>
         </div>
     </div>
     <!-- CONTAINER 3D -->
@@ -4698,20 +4710,19 @@ const UIManager = {
         // Ripristina istantaneamente lo stato e torna al menu principale
         goToMainMenu();
     },
-   showCollectedRelics() {
+  showCollectedRelics() {
         AudioEngine.playClick();
         
         // 1. Aggiorna il contatore e rimuovi la notifica visiva
-        Game.lastRelicCount = Game.player.relics.length;
+        if (Game.player && Game.player.relics) {
+            Game.lastRelicCount = Game.player.relics.length;
+        }
         
-        // Rimuove l'animazione dorata dal bottone
         const btnRelics = document.querySelector('#floorScreen button[onclick="UIManager.showCollectedRelics()"]');
         if (btnRelics) btnRelics.classList.remove('btn-relic-pulse');
 
         const notif = document.getElementById('relic-notif');
-        if (notif) {
-            notif.remove();
-        }
+        if (notif) notif.remove();
 
         // 2. Definisci gli elementi UI
         const grid = document.getElementById('collectedRelicsGrid');
@@ -4720,19 +4731,23 @@ const UIManager = {
         
         // 3. Pulisci la griglia e imposta il titolo
         grid.innerHTML = '';
-        detailName.innerText = "IL TUO ARSENALE";
-        detailName.className = "text-sm font-black text-gray-300 uppercase tracking-widest mb-1";
+        detailName.innerText = `IL TUO ARSENALE (${Game.player && Game.player.relics ? Game.player.relics.length : 0}/${RelicSystem.allRelics.length})`;
+        detailName.className = "text-xs sm:text-sm font-black text-gray-300 uppercase tracking-widest mb-0.5";
         
         if (!Game.player || !Game.player.relics || Game.player.relics.length === 0) {
+            grid.className = "flex items-center justify-center py-6 text-gray-500 text-xs font-bold";
             detailDesc.innerText = "Non hai ancora raccolto nessuna reliquia.";
+            detailDesc.className = "text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0";
         } else {
-            detailDesc.innerText = "Tocca o passa il cursore sopra un'icona per leggerne il potere.";
+            grid.className = "grid grid-cols-6 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar p-1 justify-items-center content-start shrink-0";
+            detailDesc.innerText = "Tocca un'icona per leggerne il potere.";
+            detailDesc.className = "text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0";
             
             Game.player.relics.forEach(relic => {
-                let colorClass = relic.rarity === 'legendary' ? 'border-amber-400 shadow-[4px_4px_0px_rgba(251,191,36,1)]' : 
-                                 relic.rarity === 'epic' ? 'border-purple-400 shadow-[4px_4px_0px_rgba(168,85,247,1)]' : 
-                                 relic.rarity === 'rare' ? 'border-blue-400 shadow-[4px_4px_0px_rgba(59,130,246,1)]' : 
-                                 'border-green-400 shadow-[4px_4px_0px_rgba(34,197,94,1)]';
+                let colorClass = relic.rarity === 'legendary' ? 'border-amber-400' : 
+                                 relic.rarity === 'epic' ? 'border-purple-400' : 
+                                 relic.rarity === 'rare' ? 'border-blue-400' : 
+                                 'border-green-400';
                 
                 let textColor = relic.rarity === 'legendary' ? 'text-amber-400' : 
                                 relic.rarity === 'epic' ? 'text-purple-400' : 
@@ -4740,19 +4755,21 @@ const UIManager = {
                                 'text-green-400';
                                  
                 let imgBox = document.createElement('div');
-                imgBox.className = `w-15 h-15 sm:w-16 sm:h-16 rounded-xl border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-white flex items-center justify-center`;
-                imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
+                imgBox.className = `w-11 h-11 sm:w-13 sm:h-13 aspect-square rounded-lg border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-white flex items-center justify-center relative`;
+                imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover pointer-events-none" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-base sm:text-xl ${textColor} pointer-events-none" style="display:none;"></i>`;
                 
                 const updateDetails = () => {
                     AudioEngine.playHover();
+                    Array.from(grid.children).forEach(el => el.classList.remove('ring-2', 'ring-white', 'scale-105'));
+                    imgBox.classList.add('ring-2', 'ring-white', 'scale-105');
                     detailName.innerText = relic.name;
-                    detailName.className = `text-sm font-black uppercase tracking-widest mb-1 ${textColor}`;
+                    detailName.className = `text-xs sm:text-sm font-black uppercase tracking-widest mb-0.5 ${textColor}`;
                     detailDesc.innerText = relic.desc;
-                    detailDesc.className = "text-xs text-white font-bold leading-snug";
+                    detailDesc.className = "text-[10px] sm:text-xs text-white font-bold leading-snug m-0";
                 };
                 
-                // Supporto nativo sia per PC (Hover) che Mobile (Touch)
                 imgBox.onmouseenter = updateDetails;
+                imgBox.onclick = updateDetails;
                 imgBox.ontouchstart = (e) => { e.preventDefault(); updateDetails(); };
                 
                 grid.appendChild(imgBox);
@@ -5211,7 +5228,7 @@ const RelicSystem = {
 
             let imgBox = document.createElement('div');
             imgBox.id = `reforge-choice-${index}`;
-            imgBox.className = `w-15 h-15 sm:w-16 sm:h-16 rounded-xl border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all relative flex items-center justify-center shrink-0`;
+           imgBox.className = `w-11 h-11 sm:w-13 sm:h-13 aspect-square rounded-lg border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all relative flex items-center justify-center shrink-0`;
             imgBox.innerHTML = `<img src="${relic.image}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
             
             const showDetails = () => {
