@@ -1267,7 +1267,7 @@ body.colorblind-mode #opt-colorblind-text {
                     <!-- Icona Reliquia / Slot -->
                     <button id="btn-select-reforge" onclick="RelicSystem.openReforgeModal()" class="w-14 h-14 sm:w-16 sm:h-16 border-2 border-dashed border-purple-500/60 hover:border-purple-400 flex items-center justify-center bg-black transition-all active:scale-95 group relative overflow-hidden shrink-0">
                         <i id="reforge-icon-default" class="fa-solid fa-wand-magic-sparkles text-purple-400/80 group-hover:text-purple-300 text-xl sm:text-2xl transition-colors"></i>
-                        <img id="reforge-icon-img" src="" class="absolute inset-0 w-full h-full object-cover hidden" onerror="if(!this.dataset.fb&&this.src.indexOf('reliquie/')!==-1){this.dataset.fb='1';this.src=this.src.replace('reliquie/','Icone/');return;}this.classList.add('hidden'); document.getElementById('reforge-icon-default').classList.remove('hidden');">
+                        <img id="reforge-icon-img" src="" class="absolute inset-0 w-full h-full object-cover hidden" onerror="window.handleRelicImgError(this, true)">
                         <div id="reforge-overlay" class="absolute inset-0 bg-black/80 hidden items-center justify-center text-white font-black text-[8px] uppercase text-center leading-none">Cambia</div>
                     </button>
 
@@ -4677,7 +4677,7 @@ const UIManager = {
                                  
                 let imgBox = document.createElement('div');
                 imgBox.className = `w-14 h-14 sm:w-16 sm:h-16 border-2 bg-black ${colorClass} overflow-hidden cursor-pointer transition-transform hover:-translate-x-1 hover:-translate-y-1 flex items-center justify-center`;
-                imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover" onerror="if(!this.dataset.fb&&this.src.indexOf('reliquie/')!==-1){this.dataset.fb='1';this.src=this.src.replace('reliquie/','Icone/');return;}this.style.display='none'; this.nextElementSibling.style.display='block';"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
+                imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
                 
                 const updateDetails = () => {
                     AudioEngine.playHover();
@@ -4759,41 +4759,59 @@ const UIManager = {
         }
     }
 };
+window.handleRelicImgError = function(img, isReforgeSlot) {
+    const base = (img.getAttribute('src') || '').split('/').pop();
+    const step = parseInt(img.dataset.fb || '0', 10);
+    if (base && base !== 'fa_shieldx.png') {
+        if (step === 0) { img.dataset.fb = '1'; img.src = 'reliquie/' + base; return; }
+        if (step === 1) { img.dataset.fb = '2'; img.src = 'Icone/' + base; return; }
+        if (step === 2) { img.dataset.fb = '3'; img.src = 'Reliquie/' + base; return; }
+    }
+    if (isReforgeSlot) {
+        img.classList.add('hidden');
+        const def = document.getElementById('reforge-icon-default');
+        if (def) def.classList.remove('hidden');
+    } else {
+        img.style.display = 'none';
+        if (img.nextElementSibling) img.nextElementSibling.style.display = 'block';
+    }
+};
+
 const RelicSystem = {
     allRelics: [
         // 🟢 COMUNI (4 Reliquie - Drop 45% - Utility di base)
-        { id: 'c1', name: "Prisma dell'Avarizia", desc: "I tuoi colpi critici hanno il 30% di probabilità di generare 1 Moneta (cooldown 1s).", rarity: "common", image: "reliquie/icona_prisma.png", icon: "fa-gem", apply: (p) => { p.modifiers.critGold = true; } },
-        { id: 'c2', name: "Siero Adrenalinico", desc: "Se i tuoi HP scendono sotto il 30%, la Velocità d'Attacco aumenta del +30%.", rarity: "common", image: "reliquie/icona_adrenalina.png", icon: "fa-bolt", apply: (p) => { p.modifiers.lowHpAtkSpeed = true; } },
-        { id: 'c4', name: "Cristallo Rigenerante", desc: "Se non subisci danni per 5 secondi, rigeneri l'1% di Salute massima al secondo.", rarity: "common", image: "reliquie/icona_cristallo_vitale.png", icon: "fa-heart", apply: (p) => { p.modifiers.outOfCombatRegen = true; } },
-        { id: 'r5', name: "Magnete Elementale", desc: "Attrae magneticamente le monete. Raccogliere un'essenza dona +3% Velocità di movimento per 3s (max 5 stack).", rarity: "common", image: "reliquie/icona_magnete_delle_anime.png", icon: "fa-magnet", apply: (p) => { p.modifiers.pickupRadiusMult += 1.0; p.modifiers.essenceSpeedStacks = true; p.modifiers.coinMagnet = true; } },
+        { id: 'c1', name: "Prisma dell'Avarizia", desc: "I tuoi colpi critici hanno il 30% di probabilità di generare 1 Moneta (cooldown 1s).", rarity: "common", image: "icona_prisma.png", icon: "fa-gem", apply: (p) => { p.modifiers.critGold = true; } },
+        { id: 'c2', name: "Siero Adrenalinico", desc: "Se i tuoi HP scendono sotto il 30%, la Velocità d'Attacco aumenta del +30%.", rarity: "common", image: "icona_adrenalina.png", icon: "fa-bolt", apply: (p) => { p.modifiers.lowHpAtkSpeed = true; } },
+        { id: 'c4', name: "Cristallo Rigenerante", desc: "Se non subisci danni per 5 secondi, rigeneri l'1% di Salute massima al secondo.", rarity: "common", image: "icona_cristallo_vitale.png", icon: "fa-heart", apply: (p) => { p.modifiers.outOfCombatRegen = true; } },
+        { id: 'r5', name: "Magnete Elementale", desc: "Attrae magneticamente le monete. Raccogliere un'essenza dona +3% Velocità di movimento per 3s (max 5 stack).", rarity: "common", image: "icona_magnete_delle_anime.png", icon: "fa-magnet", apply: (p) => { p.modifiers.pickupRadiusMult += 1.0; p.modifiers.essenceSpeedStacks = true; p.modifiers.coinMagnet = true; } },
 // 🔵 RARE (5 Reliquie - Drop 30% - Meccaniche di combattimento)
-        { id: 'c5', name: "Runa dell'Agguato", desc: "Infliggi +30% danni ai nemici che hanno più dell'80% di Salute.", rarity: "rare", image: "reliquie/icona_runa_minore.png", icon: "fa-fire", apply: (p) => { p.modifiers.openerDmg = true; } },
-        { id: 'r1', name: "Bussola Dimensionale", desc: "Tutte le Essenze raccolte e l'Overdrive durano il +40% in più.", rarity: "rare", image: "reliquie/icona_bussola_dimensionale.png", icon: "fa-compass", apply: (p) => { p.modifiers.essenceDurationMult += 0.40; } },
-        { id: 'r4', name: "Apprendimento Rapido", desc: "+20% XP guadagnata. Salire di livello scatena un'esplosione d'urto (200% Danno).", rarity: "rare", image: "reliquie/icona_spirito_avaro.png", icon: "fa-coins", apply: (p) => { p.modifiers.xpMult += 0.20; p.modifiers.levelUpNova = true; } }, 
-        { id: 'r6', name: "Sovraccarico Cinetico", desc: "Mentre lo Scudo Cinetico è attivo, la tua Velocità d'Attacco aumenta del +30%.", rarity: "rare", image: "reliquie/icona_sovraccarico_cinetico.png", icon: "fa-bolt", apply: (p) => { p.modifiers.shieldAtkSpeedBonus = 0.30; } },
-        { id: 'c3', name: "Piuma Spettrale", desc: "Dopo uno Scatto ottieni 0.4s di invulnerabilità e +15% Velocità di movimento per 2s.", rarity: "rare", image: "reliquie/icona_piuma.png", icon: "fa-feather", apply: (p) => { p.modifiers.dashInvul = true; p.modifiers.dashSpeedBuff = true; } },
+        { id: 'c5', name: "Runa dell'Agguato", desc: "Infliggi +30% danni ai nemici che hanno più dell'80% di Salute.", rarity: "rare", image: "icona_runa_minore.png", icon: "fa-fire", apply: (p) => { p.modifiers.openerDmg = true; } },
+        { id: 'r1', name: "Bussola Dimensionale", desc: "Tutte le Essenze raccolte e l'Overdrive durano il +40% in più.", rarity: "rare", image: "icona_bussola_dimensionale.png", icon: "fa-compass", apply: (p) => { p.modifiers.essenceDurationMult += 0.40; } },
+        { id: 'r4', name: "Apprendimento Rapido", desc: "+20% XP guadagnata. Salire di livello scatena un'esplosione d'urto (200% Danno).", rarity: "rare", image: "icona_spirito_avaro.png", icon: "fa-coins", apply: (p) => { p.modifiers.xpMult += 0.20; p.modifiers.levelUpNova = true; } }, 
+        { id: 'r6', name: "Sovraccarico Cinetico", desc: "Mentre lo Scudo Cinetico è attivo, la tua Velocità d'Attacco aumenta del +30%.", rarity: "rare", image: "icona_sovraccarico_cinetico.png", icon: "fa-bolt", apply: (p) => { p.modifiers.shieldAtkSpeedBonus = 0.30; } },
+        { id: 'c3', name: "Piuma Spettrale", desc: "Dopo uno Scatto ottieni 0.4s di invulnerabilità e +15% Velocità di movimento per 2s.", rarity: "rare", image: "icona_piuma.png", icon: "fa-feather", apply: (p) => { p.modifiers.dashInvul = true; p.modifiers.dashSpeedBuff = true; } },
 
         // 🟣 EPICHE (8 Reliquie - Drop 17% - Sinergie forti)
-        { id: 'r2', name: "Calzari di Mercurio", desc: "Cooldown dello Scatto ridotto del -20%. Per 3s dopo lo scatto subisci -15% danni.", rarity: "epic", image: "reliquie/icona_mercurio.png", icon: "fa-shoe-prints", apply: (p) => { p.modifiers.dashCooldownMult -= 0.20; p.modifiers.dashResist = true; } },
-        { id: 'e1', name: "Ritmo di Battaglia", desc: "La Combo sale di +2 a colpo e dura +1.5s prima di decadere.", rarity: "epic", image: "reliquie/icona_ritmo_di_battaglia.png", icon: "fa-drum", apply: (p) => { p.modifiers.comboStep += 1; p.modifiers.comboDecayAdd += 1.5; } },
-        { id: 'e4', name: "Sovraccarico Etereo", desc: "Durante l'Ascensione (Ultimate), ogni 12 nemici uccisi estende la durata dell'Ultimate di +0.5s.", rarity: "epic", image: "reliquie/icona_sovraccarico.png", icon: "fa-bolt-lightning", apply: (p) => { p.modifiers.ultDurationPerKill = true; } },
-        { id: 'e5', name: "Sovraccarico Sismico", desc: "Attivare lo Scudo Cinetico genera un'onda d'urto immediata che respinge i nemici e li stordisce per 1s.", rarity: "epic", image: "reliquie/icona_zanna_del_vampiro.png", icon: "fa-wifi", apply: (p) => { p.modifiers.seismicShield = true; } },
-        { id: 'e9', name: "Gemelli Cinetici", desc: "Mentre lo Scudo Cinetico è attivo, spari 2 proiettili paralleli (ciascuno infligge il 65% del danno).", rarity: "epic", image: "reliquie/icona_gemelli_cinetici.png", icon: "fa-clone", apply: (p) => { p.modifiers.twinKinetic = true; } },
-        { id: 'e7', name: "Lama del Vento", desc: "Subito dopo uno Scatto, i tuoi prossimi 2 attacchi sono Colpi Critici garantiti.", rarity: "epic", image: "reliquie/icona_lama_vento.png", icon: "fa-wind", apply: (p) => { p.modifiers.dashCritsEnabled = true; } },
-        { id: 'l3', name: "Patto Ascetico", desc: "La Ultimate si ricarica passivamente da sola (+2% al sec), ma la sua durata è ridotta del -30%.", rarity: "epic", image: "reliquie/icona_patto_ascetico.png", icon: "fa-link", apply: (p) => { p.modifiers.passiveUltCharge = true; p.modifiers.ultDurationPenalty = 0.70; } },
-        { id: 'r3', name: "Scudo dell'Egidio", desc: "Lo Scudo Cinetico si attiva automaticamente gratis ogni 15 secondi.", rarity: "epic", image: "reliquie/icona_scudo_dell_egidio.png", icon: "fa-shield-halved", apply: (p) => { p.modifiers.shieldActive = true; } },
+        { id: 'r2', name: "Calzari di Mercurio", desc: "Cooldown dello Scatto ridotto del -20%. Per 3s dopo lo scatto subisci -15% danni.", rarity: "epic", image: "icona_mercurio.png", icon: "fa-shoe-prints", apply: (p) => { p.modifiers.dashCooldownMult -= 0.20; p.modifiers.dashResist = true; } },
+        { id: 'e1', name: "Ritmo di Battaglia", desc: "La Combo sale di +2 a colpo e dura +1.5s prima di decadere.", rarity: "epic", image: "icona_ritmo_di_battaglia.png", icon: "fa-drum", apply: (p) => { p.modifiers.comboStep += 1; p.modifiers.comboDecayAdd += 1.5; } },
+        { id: 'e4', name: "Sovraccarico Etereo", desc: "Durante l'Ascensione (Ultimate), ogni 12 nemici uccisi estende la durata dell'Ultimate di +0.5s.", rarity: "epic", image: "icona_sovraccarico.png", icon: "fa-bolt-lightning", apply: (p) => { p.modifiers.ultDurationPerKill = true; } },
+        { id: 'e5', name: "Sovraccarico Sismico", desc: "Attivare lo Scudo Cinetico genera un'onda d'urto immediata che respinge i nemici e li stordisce per 1s.", rarity: "epic", image: "icona_zanna_del_vampiro.png", icon: "fa-wifi", apply: (p) => { p.modifiers.seismicShield = true; } },
+        { id: 'e9', name: "Gemelli Cinetici", desc: "Mentre lo Scudo Cinetico è attivo, spari 2 proiettili paralleli (ciascuno infligge il 65% del danno).", rarity: "epic", image: "icona_gemelli_cinetici.png", icon: "fa-clone", apply: (p) => { p.modifiers.twinKinetic = true; } },
+        { id: 'e7', name: "Lama del Vento", desc: "Subito dopo uno Scatto, i tuoi prossimi 2 attacchi sono Colpi Critici garantiti.", rarity: "epic", image: "icona_lama_vento.png", icon: "fa-wind", apply: (p) => { p.modifiers.dashCritsEnabled = true; } },
+        { id: 'l3', name: "Patto Ascetico", desc: "La Ultimate si ricarica passivamente da sola (+2% al sec), ma la sua durata è ridotta del -30%.", rarity: "epic", image: "icona_patto_ascetico.png", icon: "fa-link", apply: (p) => { p.modifiers.passiveUltCharge = true; p.modifiers.ultDurationPenalty = 0.70; } },
+        { id: 'r3', name: "Scudo dell'Egidio", desc: "Lo Scudo Cinetico si attiva automaticamente gratis ogni 15 secondi.", rarity: "epic", image: "icona_scudo_dell_egidio.png", icon: "fa-shield-halved", apply: (p) => { p.modifiers.shieldActive = true; } },
 
         // 🟡 LEGGENDARIE (10 Reliquie - Drop 8% - Con Mutazioni 3D, Kill FX, Scie e Arrivi)
-        { id: 'e2', name: "Riciclo Magico", desc: "Conbi/Overdrive non consumano l'ultima essenza e lanciano 2 dardi a ricerca (75% Danno).", rarity: "legendary", image: "reliquie/icona_riciclo_magico.png", icon: "fa-recycle", apply: (p) => { p.modifiers.keepEssenceOnCombo = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-       { id: 'l1', name: "Follia Omicida", desc: "Danni Critici 2.25x e +15% Prob. Critico, ma Velocità d'Attacco ridotta del -12%.", rarity: "legendary", image: "reliquie/icona_follia_omicida.png", icon: "fa-skull", apply: (p) => { p.modifiers.critDmgMult = 2.25; p.modifiers.bonusCritChance += 0.15; p.modifiers.atkSpeedPenalty = 0.88; p.modifiers.homicidalFrenzy = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'l5', name: "Maestria del Flow", desc: "Cap Combo 200. Se >=50: +25% danni, perforazione +1 e +12% danni subiti. Se <50: -12% danni subiti.", rarity: "legendary", image: "reliquie/icona_maestria_del_flow.png", icon: "fa-infinity", apply: (p) => { p.modifiers.flowMastery = true; p.modifiers.comboDecayRate *= 0.5; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'e6', name: "Batteria a Ioni", desc: "Lo Scudo dura +1s, riduce i danni del 65% e folgora i nemici vicini.", rarity: "legendary", image: "reliquie/icona_batteria_ioni.png", icon: "fa-battery-full", apply: (p) => { p.modifiers.shieldDurationAdd += 1.0; p.modifiers.ionBattery = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'e8', name: "Patto dell'Avaro", desc: "Le monete non spariscono e donano +4% Vel. Mov/Atk e +3% Danno per 3s (max 5 stack).", rarity: "legendary", image: "reliquie/icona_patto_avaro.png", icon: "fa-sack-dollar", apply: (p) => { p.modifiers.miserPact = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-       { id: 'l2', name: "Lama del Giudizio", desc: "[Mietitore d'Anime] +75% danni ai nemici sotto il 30% HP (+25% ai Boss <20% HP) e penetra il 50% degli scudi.", rarity: "legendary", image: "reliquie/icona_lama_del_giudizio.png", icon: "fa-gavel", apply: (p) => { p.modifiers.executioner = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'l4', name: "Sete di Sangue Eterna", desc: "[Esplosione Cremisi] Ogni kill cura 1% HP (cd 0,5s, fino a +8% Scudo Sangue a vita piena), ma -15% HP Massimi.", rarity: "legendary", image: "reliquie/icona_sete_di_sangue_eterna.png", icon: "fa-droplet", apply: (p) => { p.modifiers.bloodthirst = true; p.stats.maxHp = Math.floor(p.stats.maxHp * 0.85); if (p.stats.hp > p.stats.maxHp) p.stats.hp = p.stats.maxHp; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'e3', name: "Passo Infernale", desc: "Lo scatto lascia fuoco che brucia i nemici (+20% danni subiti). Atterraggio meteorico a inizio piano.", rarity: "legendary", image: "reliquie/icona_passo_infernale.png", icon: "fa-fire-flame-curved", apply: (p) => { p.modifiers.fireTrail = true; p.modifiers.fireTrailDebuff = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'l7', name: "Impatto Tonante", desc: "Lo scatto scatena 3 fulmini che danneggiato e stordiscono i nemici. Atterraggio elettrico a inizio piano.", rarity: "legendary", image: "reliquie/icona_impatto_tonante.png", icon: "fa-bolt", apply: (p) => { p.modifiers.dashLightning = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'l6', name: "Aegis del Guardiano", desc: "Lo Scudo esplode al termine in una Nova Arcana (max 12 stack, fino a 2.5x Danno Base).", rarity: "legendary", image: "reliquie/fa_shieldx.png", icon: "fa-shield", apply: (p) => { p.modifiers.explosiveShield = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } }
+        { id: 'e2', name: "Riciclo Magico", desc: "Conbi/Overdrive non consumano l'ultima essenza e lanciano 2 dardi a ricerca (75% Danno).", rarity: "legendary", image: "icona_riciclo_magico.png", icon: "fa-recycle", apply: (p) => { p.modifiers.keepEssenceOnCombo = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+       { id: 'l1', name: "Follia Omicida", desc: "Danni Critici 2.25x e +15% Prob. Critico, ma Velocità d'Attacco ridotta del -12%.", rarity: "legendary", image: "icona_follia_omicida.png", icon: "fa-skull", apply: (p) => { p.modifiers.critDmgMult = 2.25; p.modifiers.bonusCritChance += 0.15; p.modifiers.atkSpeedPenalty = 0.88; p.modifiers.homicidalFrenzy = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'l5', name: "Maestria del Flow", desc: "Cap Combo 200. Se >=50: +25% danni, perforazione +1 e +12% danni subiti. Se <50: -12% danni subiti.", rarity: "legendary", image: "icona_maestria_del_flow.png", icon: "fa-infinity", apply: (p) => { p.modifiers.flowMastery = true; p.modifiers.comboDecayRate *= 0.5; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'e6', name: "Batteria a Ioni", desc: "Lo Scudo dura +1s, riduce i danni del 65% e folgora i nemici vicini.", rarity: "legendary", image: "icona_batteria_ioni.png", icon: "fa-battery-full", apply: (p) => { p.modifiers.shieldDurationAdd += 1.0; p.modifiers.ionBattery = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'e8', name: "Patto dell'Avaro", desc: "Le monete non spariscono e donano +4% Vel. Mov/Atk e +3% Danno per 3s (max 5 stack).", rarity: "legendary", image: "icona_patto_avaro.png", icon: "fa-sack-dollar", apply: (p) => { p.modifiers.miserPact = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+       { id: 'l2', name: "Lama del Giudizio", desc: "[Mietitore d'Anime] +75% danni ai nemici sotto il 30% HP (+25% ai Boss <20% HP) e penetra il 50% degli scudi.", rarity: "legendary", image: "icona_lama_del_giudizio.png", icon: "fa-gavel", apply: (p) => { p.modifiers.executioner = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'l4', name: "Sete di Sangue Eterna", desc: "[Esplosione Cremisi] Ogni kill cura 1% HP (cd 0,5s, fino a +8% Scudo Sangue a vita piena), ma -15% HP Massimi.", rarity: "legendary", image: "icona_sete_di_sangue_eterna.png", icon: "fa-droplet", apply: (p) => { p.modifiers.bloodthirst = true; p.stats.maxHp = Math.floor(p.stats.maxHp * 0.85); if (p.stats.hp > p.stats.maxHp) p.stats.hp = p.stats.maxHp; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'e3', name: "Passo Infernale", desc: "Lo scatto lascia fuoco che brucia i nemici (+20% danni subiti). Atterraggio meteorico a inizio piano.", rarity: "legendary", image: "icona_passo_infernale.png", icon: "fa-fire-flame-curved", apply: (p) => { p.modifiers.fireTrail = true; p.modifiers.fireTrailDebuff = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'l7', name: "Impatto Tonante", desc: "Lo scatto scatena 3 fulmini che danneggiato e stordiscono i nemici. Atterraggio elettrico a inizio piano.", rarity: "legendary", image: "icona_impatto_tonante.png", icon: "fa-bolt", apply: (p) => { p.modifiers.dashLightning = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'l6', name: "Aegis del Guardiano", desc: "Lo Scudo esplode al termine in una Nova Arcana (max 12 stack, fino a 2.5x Danno Base).", rarity: "legendary", image: "fa_shieldx.png", icon: "fa-shield", apply: (p) => { p.modifiers.explosiveShield = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } }
     ],
     getRandomRarity() { 
         let r = Math.random() * 100; 
@@ -4919,7 +4937,7 @@ const RelicSystem = {
                 <div class="w-full flex flex-col items-center pointer-events-none">
                     <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border ${badgeClass}">${rarityLabel}</span>
                     <div class="relative flex justify-center items-center my-2.5 w-14 h-14 sm:w-20 sm:h-20 shrink-0 bg-black border-2 border-gray-800">
-                        <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="if(!this.dataset.fb&&this.src.indexOf('reliquie/')!==-1){this.dataset.fb='1';this.src=this.src.replace('reliquie/','Icone/');return;}this.style.display='none'; this.nextElementSibling.style.display='block';" class="w-full h-full object-cover">
+                        <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover">
                         <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-90" style="display:none;"></i>
                     </div>
                     <h3 class="text-[11px] sm:text-sm font-black text-white text-center uppercase tracking-wide leading-tight m-0">${relic.name}</h3>
@@ -4990,7 +5008,7 @@ const RelicSystem = {
             let imgBox = document.createElement('div');
             imgBox.id = `reforge-choice-${index}`;
             imgBox.className = `w-14 h-14 sm:w-16 sm:h-16 border-2 bg-black ${colorClass} overflow-hidden cursor-pointer transition-all relative flex items-center justify-center shrink-0`;
-            imgBox.innerHTML = `<img src="${relic.image}" class="w-full h-full object-cover" onerror="if(!this.dataset.fb&&this.src.indexOf('reliquie/')!==-1){this.dataset.fb='1';this.src=this.src.replace('reliquie/','Icone/');return;}this.style.display='none'; this.nextElementSibling.style.display='block';"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
+            imgBox.innerHTML = `<img src="${relic.image}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
             
             const showDetails = () => {
                 modalName.innerText = relic.name;
@@ -20866,19 +20884,22 @@ const Preloader = {
         tex.encoding = THREE.sRGBEncoding;
         return tex;
     },
-    init() {
+    init(onComplete) {
         const loadingText = document.getElementById('loadingText');
         const loadingProgress = document.getElementById('loadingProgress');
         const startText = document.getElementById('startText');
         const initScreen = document.getElementById('initScreen');
 
+        let totalToLoad = 0;
+        let loadedCount = 0;
         let loadFinished = false;
+
         const finishLoading = () => {
             if (loadFinished) return;
             loadFinished = true;
             if (loadingProgress) loadingProgress.innerText = "100";
-            if (typeof Game !== 'undefined' && Game.renderer && Game.prewarmShaders) {
-                Game.prewarmShaders();
+            if (typeof onComplete === 'function') {
+                onComplete();
             }
             setTimeout(() => {
                 if (loadingText) loadingText.classList.add('hidden');
@@ -20887,43 +20908,19 @@ const Preloader = {
             }, 50);
         };
 
-        const manager = new THREE.LoadingManager();
-        manager.onProgress = (url, itemsLoaded, itemsTotal) => {
-            if (loadingProgress && itemsTotal > 0) {
-                loadingProgress.innerText = Math.min(100, Math.round((itemsLoaded / itemsTotal) * 100));
+        const markOneDone = () => {
+            loadedCount++;
+            if (loadingProgress && totalToLoad > 0) {
+                loadingProgress.innerText = Math.min(100, Math.round((loadedCount / totalToLoad) * 100));
+            }
+            if (loadedCount >= totalToLoad) {
+                finishLoading();
             }
         };
-        manager.onLoad = () => finishLoading();
-        manager.onError = () => {};
 
-        const loader = new THREE.TextureLoader(manager);
-        const loadTerrainTex = (path, fallbackFn) => {
-            const tex = loader.load(
-                path,
-                (loadedTex) => {
-                    loadedTex.needsUpdate = true;
-                    if (loadedTex._clones) {
-                        for (let i = 0; i < loadedTex._clones.length; i++) {
-                            loadedTex._clones[i].image = loadedTex.image;
-                            loadedTex._clones[i].needsUpdate = true;
-                        }
-                    }
-                },
-                undefined,
-                () => {
-                    if (fallbackFn) {
-                        const fb = fallbackFn();
-                        tex.image = fb.image;
-                        tex.needsUpdate = true;
-                        if (tex._clones) {
-                            for (let i = 0; i < tex._clones.length; i++) {
-                                tex._clones[i].image = fb.image;
-                                tex._clones[i].needsUpdate = true;
-                            }
-                        }
-                    }
-                }
-            );
+        const loadTerrainTex = (fileName, fallbackFn) => {
+            totalToLoad++;
+            const tex = new THREE.Texture();
             tex.wrapS = THREE.RepeatWrapping;
             tex.wrapT = THREE.RepeatWrapping;
             tex.encoding = THREE.sRGBEncoding;
@@ -20936,15 +20933,55 @@ const Preloader = {
                 tex._clones.push(c);
                 return c;
             };
+
+            const applyImage = (imgSource) => {
+                tex.image = imgSource;
+                tex.needsUpdate = true;
+                for (let i = 0; i < tex._clones.length; i++) {
+                    tex._clones[i].image = imgSource;
+                    tex._clones[i].needsUpdate = true;
+                }
+            };
+
+            // Cerca prima nella stessa cartella del codice (GitHub), poi in 'terreno/' o 'Terreno/'
+            const candidates = [
+                fileName,
+                `terreno/${fileName}`,
+                `Terreno/${fileName}`
+            ];
+            let attempt = 0;
+
+            const tryNext = () => {
+                if (attempt >= candidates.length) {
+                    if (fallbackFn) {
+                        const fb = fallbackFn();
+                        applyImage(fb.image);
+                    }
+                    markOneDone();
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    applyImage(img);
+                    markOneDone();
+                };
+                img.onerror = () => {
+                    attempt++;
+                    tryNext();
+                };
+                img.src = candidates[attempt];
+            };
+
+            tryNext();
             return tex;
         };
 
-        // Fumo procedurale per la nebbia 3D + Texture terreno dalla cartella 'terreno'
+        // Fumo procedurale per la nebbia 3D + Texture terreno (stessa cartella su GitHub o sottocartella 'terreno')
         this.textures.smoke = this.createSmokeTexture();
-        this.textures.water = loadTerrainTex('terreno/forest_water.png', () => this.createLiquidTexture('water'));
-        this.textures.waterLava = loadTerrainTex('terreno/lava_water.png', () => this.createLiquidTexture('lava'));
-        this.textures.waterIce = loadTerrainTex('terreno/ice_water.png', () => this.createCanvasNoise('#0c4a6e', '#7dd3fc', 300));
-        this.textures.iceCrust = loadTerrainTex('terreno/ice_water.png', () => this.createCanvasNoise('#0c4a6e', '#7dd3fc', 300));
+        this.textures.water = loadTerrainTex('forest_water.png', () => this.createLiquidTexture('water'));
+        this.textures.waterLava = loadTerrainTex('lava_water.png', () => this.createLiquidTexture('lava'));
+        this.textures.waterIce = loadTerrainTex('ice_water.png', () => this.createCanvasNoise('#0c4a6e', '#7dd3fc', 300));
+        this.textures.iceCrust = loadTerrainTex('ice_water.png', () => this.createCanvasNoise('#0c4a6e', '#7dd3fc', 300));
 
         const variants = ['', '_lava', '_ice'];
         const prefixMap = { '': 'forest', '_lava': 'lava', '_ice': 'ice' };
@@ -20957,13 +20994,13 @@ const Preloader = {
         variants.forEach(v => {
             const p = palette[v];
             const pref = prefixMap[v];
-            this.textures['dirt' + v] = loadTerrainTex(`terreno/${pref}_dirt.png`, () => this.createCanvasNoise(p.dirt, 'rgba(0,0,0,0.4)', 350));
-            this.textures['grass' + v] = loadTerrainTex(`terreno/${pref}_grass.png`, () => this.createGrassTexture(v));
-            this.textures['rock' + v] = loadTerrainTex(`terreno/${pref}_rock.png`, () => this.createCanvasNoise(p.rock, 'rgba(0,0,0,0.5)', 350));
-            this.textures['wall' + v] = loadTerrainTex(`terreno/${pref}_rock.png`, () => this.createCanvasNoise(p.wall, 'rgba(255,255,255,0.15)', 350));
+            this.textures['dirt' + v] = loadTerrainTex(`${pref}_dirt.png`, () => this.createCanvasNoise(p.dirt, 'rgba(0,0,0,0.4)', 350));
+            this.textures['grass' + v] = loadTerrainTex(`${pref}_grass.png`, () => this.createGrassTexture(v));
+            this.textures['rock' + v] = loadTerrainTex(`${pref}_rock.png`, () => this.createCanvasNoise(p.rock, 'rgba(0,0,0,0.5)', 350));
+            this.textures['wall' + v] = loadTerrainTex(`${pref}_rock.png`, () => this.createCanvasNoise(p.wall, 'rgba(255,255,255,0.15)', 350));
         });
 
-        setTimeout(() => finishLoading(), 2500);
+        setTimeout(() => finishLoading(), 6000);
     }
 };
 
@@ -21572,8 +21609,9 @@ history.pushState(null, null, document.URL);
 // ---------------------------------------------------------------
     window.onload = () => {
     AppSettings.loadAndDetect(); AppSettings.init(); UIManager.updateOptionsUI();
-    Preloader.init(); // Avvia il LoadingManager globale
-    ScoreManager.init(); SkinSystem.init(); Game.init(); TitleSystem.init(); DeathSceneSystem.init();
+    Preloader.init(() => {
+        ScoreManager.init(); SkinSystem.init(); Game.init(); TitleSystem.init(); DeathSceneSystem.init();
+    }); // Avvia il caricamento texture prima di compilare i materiali 3D
     const initScreen = document.getElementById('initScreen'); const mainMenu = document.getElementById('mainMenu');
     
     let mobileControls = document.getElementById('mobile-controls-desc');
