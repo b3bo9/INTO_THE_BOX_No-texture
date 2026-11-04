@@ -2540,29 +2540,29 @@ const MathUtils = {
 const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; const MAX_TIME_STEP = 0.1;
  
   const MAP_THEMES = [
-    // TEMA 1: FORESTA INCANTATA (Tinte calibrate per preservare nitidezza e contrasto nativo di forest_*.png)
+    // TEMA 1: FORESTA INCANTATA (Contrasto ricco e bilanciato su forest_*.png)
     { 
-        dirt: 0xc6d0bc, grass: 0xd6edc4, rock: 0xbcc8b6, wall: 0x8ea088, 
-        grassShader: 0x1a4a12, grassEmissive: 0x050d03,
-        canopyShader: 0x1c4f14, canopyEmissive: 0x060c03, tree: 0x241f16,
-        debris: 0x2c3628, groundMist: 0x5c8568,
-        ambient: 0x344528, dirLight: 0xeeffcf, fog: 0x0c170a
+        dirt: 0x828c78, grass: 0x8eb07c, rock: 0x7a8774, wall: 0x5c6b56, 
+        grassShader: 0x13380d, grassEmissive: 0x030802,
+        canopyShader: 0x153b0f, canopyEmissive: 0x040802, tree: 0x1c1812,
+        debris: 0x232b20, groundMist: 0x4a6e54,
+        ambient: 0x24301c, dirLight: 0xe8f8c8, fog: 0x091208
     },
-    // TEMA 2: FUCINA INFERNALE (Tinte calibrate per preservare nitidezza e venature di lava_*.png)
+    // TEMA 2: FUCINA INFERNALE (Contrasto vulcanico profondo su lava_*.png)
     { 
-        dirt: 0xd2b6ac, grass: 0xeec0b0, rock: 0xc0a69e, wall: 0x8c6e66, 
-        grassShader: 0x42160c, grassEmissive: 0x1e0702,
-        canopyShader: 0x3b130a, canopyEmissive: 0x1a0602, tree: 0x2a0d0a,
-        debris: 0x2e1a16, groundMist: 0x993d26,
-        ambient: 0x451c18, dirLight: 0xff945c, fog: 0x160607
+        dirt: 0x94746a, grass: 0xb87864, rock: 0x876a62, wall: 0x5e443e, 
+        grassShader: 0x361108, grassEmissive: 0x160502,
+        canopyShader: 0x2e0f07, canopyEmissive: 0x140402, tree: 0x220a08,
+        debris: 0x261512, groundMist: 0x80301c,
+        ambient: 0x361512, dirLight: 0xff8c52, fog: 0x120405
     },
-    // TEMA 3: CAVERNA CRISTALLINA (Tinte calibrate per preservare la brillantezza glaciale di ice_*.png)
+    // TEMA 3: CAVERNA CRISTALLINA (Esposizione glaciale calibrata con alto contrasto su ice_*.png)
     { 
-        dirt: 0xb8d4e8, grass: 0xd2eeff, rock: 0xb2d0e6, wall: 0x84aac4, 
-        grassShader: 0x206485, grassEmissive: 0x071a2b,
-        canopyShader: 0x1d5a78, canopyEmissive: 0x061626, tree: 0x10273d,
-        debris: 0x243c4f, groundMist: 0x74b4d9,
-        ambient: 0x2c2454, dirLight: 0x9ef4ff, fog: 0x080f20
+        dirt: 0x6a8ca8, grass: 0x7aa6c4, rock: 0x688ba6, wall: 0x4d6b82, 
+        grassShader: 0x184e68, grassEmissive: 0x051320,
+        canopyShader: 0x16465e, canopyEmissive: 0x04101c, tree: 0x0c1f30,
+        debris: 0x1c3040, groundMist: 0x5288ab,
+        ambient: 0x1c2242, dirLight: 0x8ce8ff, fog: 0x060b18
     }
 ];
 
@@ -3221,13 +3221,13 @@ const SkinSystem = {
         let tGrass = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
-        this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0xc6d0bc, map: tDirt, shininess: 3 });
+        this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x828c78, map: tDirt, shininess: 2 });
         let groundBase = new THREE.Mesh(new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
         groundBase.position.y = -0.2;
         this.worldGroup.add(groundBase);
 
         this.groundGrassMat = new THREE.MeshPhongMaterial({
-            color: 0xd6edc4, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 4
+            color: 0x8eb07c, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 3
         });
         const patchCoords = [
             { x: 0, z: 0, s: 270 }, { x: -95, z: -75, s: 220 }, { x: 105, z: -65, s: 210 },
@@ -3279,7 +3279,7 @@ const SkinSystem = {
         waterGlow.position.y = 0.05;
         poolGroup.add(waterGlow, this.waterMesh);
 
-        let rimRockMat = new THREE.MeshStandardMaterial({ color: 0xbcc8b6, map: tRock, roughness: 0.85, flatShading: true });
+        let rimRockMat = new THREE.MeshStandardMaterial({ color: 0x7a8774, map: tRock, roughness: 0.85, flatShading: true });
         this.rimRockMat = rimRockMat;
         for (let i = 0; i < 14; i++) {
             let a = (Math.PI * 2 / 14) * i + (i % 2) * 0.15;
@@ -3302,7 +3302,7 @@ const SkinSystem = {
         this.worldGroup.add(poolGroup);
 
         // --- 3. PRATO DI ERBA 3D (Con materiale dedicato anti-sparizione su mobile!) ---
-        this.menuGrassMat = this.createMenuFoliageMaterial(0x1a4a12, false);
+        this.menuGrassMat = this.createMenuFoliageMaterial(0x13380d, false);
         const grassCount = isTouchDevice ? 580 : 980;
         const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, this.menuGrassMat, grassCount);
         grassInst.frustumCulled = false;
@@ -3330,8 +3330,8 @@ const SkinSystem = {
 
         // --- 4. CORONA DI ALBERI FRATTALI E CHIOME VIVE ---
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
-        let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x241f16, roughness: 0.9 });
-        this.menuCanopyMat = this.createMenuFoliageMaterial(0x1c4f14, true);
+        let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x1c1812, roughness: 0.9 });
+        this.menuCanopyMat = this.createMenuFoliageMaterial(0x153b0f, true);
 
         const treeCount = 14;
         const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, menuTreeTrunkMat, treeCount);
@@ -3483,11 +3483,11 @@ const SkinSystem = {
 
         // Target colori per transizione morbida tra i 3 biomi
         this.targetColors = {
-            fog: new THREE.Color(0x0c170a),
-            dirt: new THREE.Color(0xc6d0bc),
-            grass: new THREE.Color(0xd6edc4),
-            foliage: new THREE.Color(0x1a4a12),
-            canopy: new THREE.Color(0x1c4f14),
+            fog: new THREE.Color(0x091208),
+            dirt: new THREE.Color(0x828c78),
+            grass: new THREE.Color(0x8eb07c),
+            foliage: new THREE.Color(0x13380d),
+            canopy: new THREE.Color(0x153b0f),
             water: new THREE.Color(0x1888b8),
             elem: new THREE.Color(0x22FF44)
         };
@@ -3549,11 +3549,11 @@ const SkinSystem = {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
             // 0: Foresta Incantata (Verde)
-            { fog: 0x0c170a, dirt: 0xc6d0bc, grass: 0xd6edc4, foliage: 0x1a4a12, canopy: 0x1c4f14, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
+            { fog: 0x091208, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
             // 1: Fucina Infernale (Rosso)
-            { fog: 0x160607, dirt: 0xd2b6ac, grass: 0xeec0b0, foliage: 0x42160c, canopy: 0x3b130a, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
+            { fog: 0x120405, dirt: 0x94746a, grass: 0xb87864, foliage: 0x361108, canopy: 0x2e0f07, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x080f20, dirt: 0xb8d4e8, grass: 0xd2eeff, foliage: 0x206485, canopy: 0x1d5a78, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x060b18, dirt: 0x6a8ca8, grass: 0x7aa6c4, foliage: 0x184e68, canopy: 0x16465e, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
         ];
         const p = presets[this.themeCycle];
 
@@ -7932,10 +7932,10 @@ prewarmShaders() {
                 let isIceBiom = (i === 2);
                 let isLavaBiom = (i === 1);
                 let mats = {
-                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 16 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x243848 : 0x080808 }),
-                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 22 : (isLavaBiom ? 10 : 4), specular: isIceBiom ? 0x385870 : (isLavaBiom ? 0x220c04 : 0x0a1208), alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 28 : 14, specular: isIceBiom ? 0x406078 : 0x1e1e1e, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 24 : 10, specular: isIceBiom ? 0x304c62 : 0x161616, flatShading: true })
+                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 8 : (isLavaBiom ? 4 : 2), specular: isIceBiom ? 0x101c26 : 0x050505 }),
+                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 12 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x162634 : (isLavaBiom ? 0x140703 : 0x060b05), alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 18 : 12, specular: isIceBiom ? 0x1e3448 : 0x161616, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 14 : 8, specular: isIceBiom ? 0x182a3a : 0x121212, flatShading: true })
                 };
                 window.GLOBAL_THEME_MATS.push(mats);
                 
@@ -8991,7 +8991,7 @@ loop(timestamp) {
             }
         }
         if (window.GLOBAL_FOG_MAT) {
-            window.GLOBAL_FOG_MAT.opacity = 0.32;
+            window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.24 : 0.28;
             if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
         }
         if (window.GLOBAL_DEBRIS_MAT && currentTheme.debris) {
@@ -9002,32 +9002,34 @@ loop(timestamp) {
         if (this.currentThemeIndex === 2) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 70, camDist + 470);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.25 : 0.17;
-                this.bloomPass.threshold = 0.74;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.22 : 0.15;
+                this.bloomPass.threshold = 0.78;
             }
         } else if (this.currentThemeIndex === 1) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 90, camDist + 460);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.28 : 0.20;
-                this.bloomPass.threshold = 0.70;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.26 : 0.18;
+                this.bloomPass.threshold = 0.72;
             }
         } else {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 100, camDist + 480);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.28 : 0.20;
-                this.bloomPass.threshold = 0.70;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.25 : 0.18;
+                this.bloomPass.threshold = 0.72;
             }
         }
         Game.arenaEvolution = false;
         Game.bossLightClear = false;
         
-        // Illuminazione uniforme e bilanciata su tutti e 3 i biomi
+        // Illuminazione calibrata con contrasto profondo e anti-sovraesposizione (specialmente sul Ghiaccio)
+        let targetDirInt = (this.currentThemeIndex === 2) ? 1.05 : (this.currentThemeIndex === 1 ? 1.14 : 1.16);
+        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.60 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
         if (this.dirLight) { 
-            this.dirLight.intensity = 1.38; 
+            this.dirLight.intensity = targetDirInt; 
             this.dirLight.color.setHex(currentTheme.dirLight); 
         }
         if (this.ambientLight) { 
-            this.ambientLight.intensity = 0.84; 
+            this.ambientLight.intensity = targetAmbInt; 
             this.ambientLight.color.setHex(currentTheme.dirLight);
             if (this.ambientLight.groundColor) {
                 this.ambientLight.groundColor.setHex(currentTheme.ambient || currentTheme.fog);
@@ -11523,10 +11525,10 @@ class GameMap {
                 let isIceBiom = (i === 2);
                 let isLavaBiom = (i === 1);
                 window.GLOBAL_THEME_MATS[i] = {
-                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 16 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x243848 : 0x080808 }),
-                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 22 : (isLavaBiom ? 10 : 4), specular: isIceBiom ? 0x385870 : (isLavaBiom ? 0x220c04 : 0x0a1208), alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 28 : 14, specular: isIceBiom ? 0x406078 : 0x1e1e1e, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
-                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 24 : 10, specular: isIceBiom ? 0x304c62 : 0x161616, flatShading: true })
+                    dirt: new MapMaterialClass({ map: tDirt, shininess: isIceBiom ? 8 : (isLavaBiom ? 4 : 2), specular: isIceBiom ? 0x101c26 : 0x050505 }),
+                    grass: new MapMaterialClass({ map: tGrass, shininess: isIceBiom ? 12 : (isLavaBiom ? 6 : 3), specular: isIceBiom ? 0x162634 : (isLavaBiom ? 0x140703 : 0x060b05), alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 18 : 12, specular: isIceBiom ? 0x1e3448 : 0x161616, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
+                    wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 14 : 8, specular: isIceBiom ? 0x182a3a : 0x121212, flatShading: true })
                 };
             }
         }
@@ -11542,36 +11544,36 @@ class GameMap {
         let currentTheme = MAP_THEMES[Game.currentThemeIndex];
         let activeMats = window.GLOBAL_THEME_MATS[Game.currentThemeIndex];
 
-        // Tinte calibrate per far risaltare i dettagli nativi delle texture PNG e scolpire i massi perimetrali
+        // Tinte calibrate per far risaltare i dettagli nativi delle texture PNG con ottimo contrasto
         activeMats.dirt.color.setHex(currentTheme.dirt);
         activeMats.grass.color.setHex(currentTheme.grass);
         activeMats.rock.color.setHex(currentTheme.rock);
         activeMats.wall.color.setHex(currentTheme.wall || currentTheme.rock);
   // --- DIFFERENZIAZIONE FISICA DEI MATERIALI (COSTO ZERO) ---
         if (Game.currentThemeIndex === 2) { 
-            // TEMA GHIACCIO: Riflessi cristallini morbidi
-            activeMats.rock.shininess = 32;
-            activeMats.rock.specular.setHex(0x284864);
-            activeMats.rock.emissive.setHex(0x040d1a);
-            activeMats.dirt.emissive.setHex(0x030912);
-            activeMats.grass.emissive.setHex(0x051120);
-            activeMats.wall.emissive.setHex(0x030812);
+            // TEMA GHIACCIO: Riflessi cristallini controllati senza abbagliamento
+            activeMats.rock.shininess = 22;
+            activeMats.rock.specular.setHex(0x182e42);
+            activeMats.rock.emissive.setHex(0x02070e);
+            activeMats.dirt.emissive.setHex(0x01050a);
+            activeMats.grass.emissive.setHex(0x020812);
+            activeMats.wall.emissive.setHex(0x010409);
         } else if (Game.currentThemeIndex === 1) {
-            // TEMA LAVA: Calore emissivo attenuato e bilanciato
-            activeMats.rock.shininess = 12;
-            activeMats.rock.specular.setHex(0x28120c);
-            activeMats.rock.emissive.setHex(0x120403);
-            activeMats.dirt.emissive.setHex(0x0e0302);
-            activeMats.grass.emissive.setHex(0x160503);
-            activeMats.wall.emissive.setHex(0x0c0202);
+            // TEMA LAVA: Contrasto vulcanico profondo
+            activeMats.rock.shininess = 10;
+            activeMats.rock.specular.setHex(0x1e0d08);
+            activeMats.rock.emissive.setHex(0x0c0202);
+            activeMats.dirt.emissive.setHex(0x090201);
+            activeMats.grass.emissive.setHex(0x110302);
+            activeMats.wall.emissive.setHex(0x080101);
         } else {
-            // TEMA FORESTA: Sottobosco caldo con riflessi dorati/muschio
-            activeMats.rock.shininess = 18;
-            activeMats.rock.specular.setHex(0x222c16);
-            activeMats.rock.emissive.setHex(0x050a03);
-            activeMats.dirt.emissive.setHex(0x050503);
-            activeMats.grass.emissive.setHex(0x070e04);
-            activeMats.wall.emissive.setHex(0x040702);
+            // TEMA FORESTA: Sottobosco naturale ad alto contrasto
+            activeMats.rock.shininess = 14;
+            activeMats.rock.specular.setHex(0x182010);
+            activeMats.rock.emissive.setHex(0x030602);
+            activeMats.dirt.emissive.setHex(0x030302);
+            activeMats.grass.emissive.setHex(0x040902);
+            activeMats.wall.emissive.setHex(0x020401);
         }
         // --- FINE SISTEMA TEMI ---
         
@@ -12040,21 +12042,21 @@ class GameMap {
                 if (!window.GLOBAL_ICE_MAT) {
                     const IceMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
                     const iceMatParams = {
-                        color: 0xdcf2ff, emissive: 0x16446e,
-                        emissiveIntensity: 0.24,
+                        color: 0xa8d4f0, emissive: 0x0d2d4a,
+                        emissiveIntensity: 0.16,
                         map: iceTex, emissiveMap: iceTex,
-                        transparent: true, opacity: 0.92,
+                        transparent: true, opacity: 0.90,
                         depthWrite: false
                     };
                     if (isTouchDevice) {
-                        iceMatParams.shininess = 46;
-                        iceMatParams.specular = new THREE.Color(0x4c7c9e);
+                        iceMatParams.shininess = 32;
+                        iceMatParams.specular = new THREE.Color(0x2a4b66);
                     } else {
-                        iceMatParams.roughness = 0.36;
-                        iceMatParams.metalness = 0.06;
+                        iceMatParams.roughness = 0.44;
+                        iceMatParams.metalness = 0.05;
                     }
                     const cachedIceMat = new IceMatClass(iceMatParams);
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v5' + (isTouchDevice ? '_m' : '_d');
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v6' + (isTouchDevice ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                         shader.vertexShader = `
@@ -12076,9 +12078,9 @@ class GameMap {
                             vec3 rawIceTex = diffuseColor.rgb;
                             float iceTex = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
 
-                            // Spessore lattiginoso interno e banchi di brina compatta fusi con i dettagli di ice_water.png
+                            // Spessore glaciale profondo e banchi di brina compatta fusi con i dettagli di ice_water.png
                             float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.022 + sin(vIceWPos.y * 0.025) * 1.3) * cos(vIceWPos.y * 0.021 - cos(vIceWPos.x * 0.024) * 1.2);
-                            float frostBody = smoothstep(0.26, 0.82, sheetNoise * 0.44 + iceTex * 0.66);
+                            float frostBody = smoothstep(0.28, 0.84, sheetNoise * 0.44 + iceTex * 0.62);
 
                             // Crepe di tensione incrociate con bisello interno scuro per dare spessore alla lastra
                             vec2 ip = vIceWPos * 0.016;
@@ -12090,15 +12092,15 @@ class GameMap {
                             float f2 = abs(fract((ip.x * 0.46 - ip.y * 0.89 + warp.y) * 0.40 + 0.27) - 0.5);
                             float mainCrack = 1.0 - smoothstep(0.0, 0.018, f1);
                             float subCrack = (1.0 - smoothstep(0.0, 0.013, f2)) * 0.60;
-                            float crackBevel = (1.0 - smoothstep(0.018, 0.055, f1)) * 0.35;
+                            float crackBevel = (1.0 - smoothstep(0.018, 0.055, f1)) * 0.42;
                             float crackMask = clamp(mainCrack + subCrack, 0.0, 1.0);
 
-                            vec3 deepSlabCol = vec3(0.26, 0.54, 0.78);
-                            vec3 frostedSlabCol = vec3(0.76, 0.91, 0.99);
+                            vec3 deepSlabCol = vec3(0.15, 0.36, 0.58);
+                            vec3 frostedSlabCol = vec3(0.54, 0.74, 0.88);
                             vec3 slabCol = mix(deepSlabCol, frostedSlabCol, frostBody);
-                            slabCol = mix(slabCol, rawIceTex * 1.08, 0.36);
-                            slabCol = mix(slabCol, vec3(0.18, 0.42, 0.64), crackBevel * (1.0 - crackMask));
-                            slabCol = mix(slabCol, vec3(0.92, 0.98, 1.0), crackMask * 0.85);
+                            slabCol = mix(slabCol, rawIceTex * 0.84, 0.34);
+                            slabCol = mix(slabCol, vec3(0.10, 0.26, 0.44), crackBevel * (1.0 - crackMask));
+                            slabCol = mix(slabCol, vec3(0.80, 0.92, 0.99), crackMask * 0.80);
 
                             // Alone cristallino di pressione sotto i passi del giocatore sul ghiaccio
                             float stepFrost = 0.0;
@@ -12107,23 +12109,23 @@ class GameMap {
                                 if (iDist < 65.0) {
                                     float iRing = exp(-abs(iDist - 12.0) * 0.26) * 0.55 + exp(-iDist * 0.055) * 0.45;
                                     stepFrost = clamp(iRing * (0.55 + 0.45 * crackMask), 0.0, 1.0) * uPlayerPit.w;
-                                    slabCol = mix(slabCol, vec3(0.88, 0.97, 1.0), stepFrost * 0.65);
+                                    slabCol = mix(slabCol, vec3(0.76, 0.90, 0.98), stepFrost * 0.55);
                                 }
                             }
 
                             diffuseColor.rgb = slabCol;
-                            totalEmissiveRadiance = mix(vec3(0.03, 0.11, 0.20), vec3(0.16, 0.42, 0.62), clamp(frostBody * 0.55 + crackMask * 0.65 + stepFrost * 0.75, 0.0, 1.0)) * 0.44;
+                            totalEmissiveRadiance = mix(vec3(0.02, 0.07, 0.14), vec3(0.10, 0.28, 0.44), clamp(frostBody * 0.55 + crackMask * 0.65 + stepFrost * 0.70, 0.0, 1.0)) * 0.26;
 
-                            // Lastra solida continua (0.74 nelle finestre blu traslucide, fino a 0.94 su brina e fratture)
-                            float slabOpacity = mix(0.74, 0.91, frostBody);
-                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.94), 0.74, 0.94);
+                            // Lastra solida continua con ottimo contrasto sulle venature
+                            float slabOpacity = mix(0.74, 0.90, frostBody);
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.93), 0.74, 0.93);
                             `
                         ).replace(
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.64) {
-                                float compIce = 0.64 + (maxIceC - 0.64) / (1.0 + (maxIceC - 0.64) * 2.5);
+                            if (maxIceC > 0.52) {
+                                float compIce = 0.52 + (maxIceC - 0.52) / (1.0 + (maxIceC - 0.52) * 3.0);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -12394,9 +12396,9 @@ class GameMap {
                         const blend = sr / (S_ROWS - 1);
                         if (themeIdx === 2) {
                             skirtCols.push(
-                                p.r * (1.0 - blend) + (cRock.r * 0.75 + 0.25) * blend,
-                                p.g * (1.0 - blend) + (cRock.g * 0.75 + 0.30) * blend,
-                                p.b * (1.0 - blend) + (cRock.b * 0.75 + 0.35) * blend
+                                p.r * (1.0 - blend) + (cRock.r * 0.90) * blend,
+                                p.g * (1.0 - blend) + (cRock.g * 0.94) * blend,
+                                p.b * (1.0 - blend) + (cRock.b * 0.98) * blend
                             );
                         } else if (themeIdx === 1) {
                             skirtCols.push(
