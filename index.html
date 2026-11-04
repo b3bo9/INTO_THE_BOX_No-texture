@@ -911,7 +911,7 @@ body.colorblind-mode #opt-colorblind-text {
                 <div class="flex items-stretch gap-2.5 w-full relative z-10">
                     
                     <!-- Box Skin Selezionata -->
-                    <button id="btn-menu-skins" onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="hud-panel flex-1 px-3 py-2.5 flex items-center justify-between gap-3 cursor-pointer group hover:border-purple-400/60 transition-all text-left relative">
+                    <button id="btn-menu-skins" onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/88 border-2 border-purple-400/55 shadow-[0_0_20px_rgba(168,85,247,0.28)] flex items-center justify-between gap-3 cursor-pointer group hover:border-purple-300 transition-all text-left relative">
                         <span id="skin-new-badge" class="hidden absolute -top-1.5 -right-1.5 w-3 h-3 bg-amber-400 rounded-full animate-ping"></span>
                         
                         <div class="flex items-center gap-3 min-w-0">
@@ -933,7 +933,7 @@ body.colorblind-mode #opt-colorblind-text {
                     </button>
 
                     <!-- Box Cristalli (Modulo separato a parte) -->
-                    <div onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="hud-panel px-4 py-2.5 flex items-center justify-center gap-2.5 shrink-0 cursor-pointer hover:border-purple-400/60 transition-all" title="Cristalli Viola">
+                    <div onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="px-4 py-2.5 rounded-xl bg-purple-950/80 border-2 border-purple-400/75 shadow-[0_0_18px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2.5 shrink-0 cursor-pointer hover:border-white transition-all" title="Cristalli Viola">
                         <i class="fa-solid fa-gem text-purple-400 text-sm sm:text-base drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]"></i>
                         <span id="menu-crystals-count" class="text-sm sm:text-base font-black text-purple-100 tracking-wider">0</span>
                     </div>
@@ -951,15 +951,15 @@ body.colorblind-mode #opt-colorblind-text {
 
                 <!-- BARRA TATTICA SECONDARIA: OPZIONI, CLASSIFICA, INFO -->
                 <div class="grid grid-cols-3 gap-2 sm:gap-2.5 w-full relative z-10">
-                    <button onclick="UIManager.showModal('optionsModal')" onmouseenter="AudioEngine.playHover()" class="btn-cyber glass-panel box-glow-gray w-full h-12 sm:h-13 text-[10px] sm:text-xs font-bold text-gray-300">
+                    <button onclick="UIManager.showModal('optionsModal')" onmouseenter="AudioEngine.playHover()" class="btn-cyber bg-slate-950/90 border-2 border-cyan-400/45 shadow-[0_0_15px_rgba(34,211,238,0.2)] box-glow-blue w-full h-12 sm:h-13 text-[10px] sm:text-xs font-display font-black text-cyan-100 rounded-xl">
                         <i class="fa-solid fa-gear text-gray-400"></i> OPZIONI
                     </button>
 
-                    <button onmouseenter="AudioEngine.playHover()" onclick="AudioEngine.playClick(); showHighScores()" class="btn-cyber glass-panel box-glow-amber w-full h-12 sm:h-13 text-[10px] sm:text-xs font-bold text-amber-300 border-amber-500/30">
+                    <button onmouseenter="AudioEngine.playHover()" onclick="AudioEngine.playClick(); showHighScores()" class="btn-cyber bg-slate-950/90 border-2 border-amber-400/55 shadow-[0_0_16px_rgba(251,191,36,0.24)] box-glow-amber w-full h-12 sm:h-13 text-[10px] sm:text-xs font-display font-black text-amber-200 rounded-xl">
                         <i class="fa-solid fa-trophy text-amber-400"></i> CLASSIFICA
                     </button>
 
-                    <button onclick="UIManager.showModal('infoModal')" onmouseenter="AudioEngine.playHover()" class="btn-cyber glass-panel box-glow-blue w-full h-12 sm:h-13 text-[10px] sm:text-xs font-bold text-blue-300 border-blue-500/30">
+                    <button onclick="UIManager.showModal('infoModal')" onmouseenter="AudioEngine.playHover()" class="btn-cyber bg-slate-950/90 border-2 border-purple-400/50 shadow-[0_0_16px_rgba(168,85,247,0.24)] box-glow-purple w-full h-12 sm:h-13 text-[10px] sm:text-xs font-display font-black text-purple-200 rounded-xl">
                         <i class="fa-solid fa-book text-blue-400"></i> INFO
                     </button>
                 </div>
@@ -974,13 +974,13 @@ body.colorblind-mode #opt-colorblind-text {
 
   <!-- MODALE INFO -->
     <div id="infoModal" class="absolute inset-0 bg-black/90 z-[250] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-       <div class="glass-panel modal-enter border-blue-500/50 p-4 sm:p-5 w-full max-w-[420px] flex flex-col shadow-[0_0_40px_rgba(59,130,246,0.3)] relative overflow-hidden">
+       <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[440px] flex flex-col shadow-[0_0_45px_rgba(34,211,238,0.3)] relative overflow-hidden">
             
             <!-- Decorazione sfondo -->
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none"></div>
 
             <!-- TITOLO -->
-            <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-3 border-b border-gray-700/80 pb-2 uppercase tracking-widest flex items-center gap-2 shrink-0 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(34,211,238,0.25)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Codex Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Manuale di Gioco</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-book-open text-lg"></i></div></div><h2 class="hidden">
                 <i class="fa-solid fa-book text-blue-400"></i> Manuale
             </h2>
             
@@ -1025,45 +1025,45 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
             
             <!-- TASTO CHIUSURA -->
-            <button onclick="UIManager.hideModal('infoModal')" class="mt-4 btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0 z-10">
+            <button onclick="UIManager.hideModal('infoModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.6)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
     </div>
 <div id="optionsModal" class="absolute inset-0 bg-black/90 z-[280] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="glass-panel modal-enter border-gray-500/50 p-4 sm:p-5 w-full max-w-[420px] flex flex-col shadow-[0_0_40px_rgba(156,163,175,0.2)] relative overflow-hidden">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/55 rounded-2xl p-4 sm:p-5 w-full max-w-[440px] flex flex-col shadow-[0_0_45px_rgba(34,211,238,0.25)] relative overflow-hidden">
             
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-gray-700/20 to-transparent pointer-events-none"></div>
 
-            <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 mb-4 border-b border-gray-700/80 pb-3 uppercase tracking-widest flex items-center gap-2 shrink-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] relative z-10">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/50 rounded-xl px-4 py-2.5 mb-3.5 shadow-[0_0_22px_rgba(34,211,238,0.22)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Sistema & Prestazioni</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Impostazioni</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-sliders text-lg"></i></div></div><h2 class="hidden">
                 <i class="fa-solid fa-gear text-gray-400"></i> Opzioni
             </h2>
             
            <div class="space-y-2.5 relative z-10">
-                <button id="btn-opt-gfx" onclick="AppSettings.toggleGraphics(); UIManager.updateOptionsUI();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-gfx" onclick="AppSettings.toggleGraphics(); UIManager.updateOptionsUI();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Grafica</span> <span id="opt-gfx-text"><i class="fa-solid fa-scale-balanced"></i> BILANCIATA</span>
                 </button>
-                <button id="btn-opt-fps" onclick="AppSettings.toggleFPS(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-fps" onclick="AppSettings.toggleFPS(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Frame Rate</span> <span id="opt-fps-text" class="text-green-400">60 FPS</span>
                 </button>
-                <button id="btn-opt-music" onclick="AudioEngine.toggleMusic(); UIManager.updateOptionsUI();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-music" onclick="AudioEngine.toggleMusic(); UIManager.updateOptionsUI();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Musica</span> <span id="opt-music-text" class="text-green-400">ON</span>
                 </button>
-                <button id="btn-opt-sfx" onclick="AudioEngine.toggleSFX(); UIManager.updateOptionsUI();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-sfx" onclick="AudioEngine.toggleSFX(); UIManager.updateOptionsUI();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Effetti (SFX)</span> <span id="opt-sfx-text" class="text-green-400">ON</span>
                 </button>
-                <button id="btn-opt-vibration" onclick="Haptics.toggle(); UIManager.updateOptionsUI();" class="hidden btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-vibration" onclick="Haptics.toggle(); UIManager.updateOptionsUI();" class="hidden btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Vibrazione</span> <span id="opt-vibration-text" class="text-green-400">ON</span>
                 </button>
-                <button id="btn-opt-shake" onclick="AppSettings.toggleScreenShake(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-shake" onclick="AppSettings.toggleScreenShake(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Tremolio Schermo</span> <span id="opt-shake-text" class="text-green-400">ON</span>
                 </button>
-                <button id="btn-opt-dmgnum" onclick="AppSettings.toggleDamageNumbers(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber glass-panel box-glow-gray w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4">
+                <button id="btn-opt-dmgnum" onclick="AppSettings.toggleDamageNumbers(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Numeri Danno</span> <span id="opt-dmgnum-text" class="text-green-400">ON</span>
                 </button>
             </div>
             
-           <button onclick="UIManager.hideModal('optionsModal')" class="mt-4 btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0 z-10">
+           <button onclick="UIManager.hideModal('optionsModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.6)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
@@ -1071,16 +1071,16 @@ body.colorblind-mode #opt-colorblind-text {
 
     <!-- MODALE PERSONALIZZAZIONE SKIN -->
     <div id="skinModal" class="absolute inset-0 bg-black/90 z-[280] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="glass-panel modal-enter border-purple-500/50 p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_40px_rgba(168,85,247,0.3)] relative overflow-hidden">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_45px_rgba(168,85,247,0.32)] relative overflow-hidden"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Guardaroba Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Shop Skin</h2></div><div class="flex items-center gap-2 bg-purple-950/80 px-3.5 py-1.5 rounded-lg border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.45)]"><i class="fa-solid fa-gem text-purple-300 text-sm sm:text-lg drop-shadow-[0_0_8px_rgba(192,132,252,1)]"></i><span id="skin-crystals-count" class="text-sm sm:text-xl font-display font-black text-white tracking-wider leading-none">0</span></div></div>
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
 
-            <div class="flex items-center justify-between border-b border-gray-700/80 pb-3 mb-3 shrink-0 relative z-10">
+            <div class="hidden">
                 <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-300 uppercase tracking-widest flex items-center gap-2 m-0">
                     <i class="fa-solid fa-shop text-purple-400"></i> Shop Skin
                 </h2>
-                <div class="flex items-center gap-2 bg-purple-950/60 px-3 py-1.5 border border-purple-500/60 shadow-[0_0_12px_rgba(168,85,247,0.4)]">
+                <div class="hidden"><span id="skin-crystals-count-legacy" class="hidden">0</span>
                     <i class="fa-solid fa-gem text-purple-400 text-xs sm:text-sm drop-shadow-[0_0_6px_rgba(192,132,252,0.9)]"></i>
-                    <span id="skin-crystals-count" class="text-xs sm:text-sm font-black text-purple-200 tracking-wider">0</span>
+                    <span class="hidden">0</span>
                 </div>
             </div>
 
@@ -1088,24 +1088,24 @@ body.colorblind-mode #opt-colorblind-text {
                 <!-- Popolato dinamicamente da SkinSystem -->
             </div>
 
-            <button onclick="UIManager.hideModal('skinModal')" class="mt-4 btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0 z-10">
+            <button onclick="UIManager.hideModal('skinModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
     </div>
 
    <div id="pauseModal" class="absolute inset-0 bg-black/80 z-[270] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="glass-panel modal-enter border-gray-600/50 p-6 w-full max-w-[350px] flex flex-col items-center shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
-            <h2 class="text-3xl font-display font-black text-white mb-6 uppercase tracking-[0.3em] drop-shadow-lg">PAUSA</h2>
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/55 rounded-2xl p-5 sm:p-6 w-full max-w-[370px] flex flex-col items-center shadow-[0_0_45px_rgba(34,211,238,0.28)] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-5 shadow-[0_0_22px_rgba(34,211,238,0.25)]"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Stasi Temporale</span></div><h2 class="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">In Pausa</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300"><i class="fa-solid fa-pause text-base"></i></div></div>
             
           <div class="w-full flex flex-col gap-3">
-                <button onclick="UIManager.togglePause()" class="btn-cyber glass-panel box-glow-gray w-full py-4 text-sm font-bold text-gray-300">
+                <button onclick="UIManager.togglePause()" class="w-full py-3.5 sm:py-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_24px_rgba(56,189,248,0.65)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95">
                     <i class="fa-solid fa-play"></i> Riprendi
                 </button>
-                <button onclick="UIManager.showModal('optionsModal')" class="btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs font-bold text-gray-400">
+                <button onclick="UIManager.showModal('optionsModal')" class="btn-cyber bg-slate-950/90 border-2 border-cyan-400/45 rounded-xl box-glow-blue w-full py-3.5 text-xs font-display font-black text-cyan-100">
                     <i class="fa-solid fa-gear"></i> Opzioni
                 </button>
-                <button onclick="UIManager.quitFromPause()" class="btn-cyber glass-panel box-glow-red w-full py-3.5 text-xs font-bold text-red-400 mt-4 border-red-900/30">
+                <button onclick="UIManager.quitFromPause()" class="btn-cyber bg-red-950/60 border-2 border-red-500/60 rounded-xl box-glow-red w-full py-3.5 text-xs font-display font-black text-red-300 mt-2">
                     <i class="fa-solid fa-right-from-bracket"></i> Abbandona
                 </button>
             </div>
@@ -1147,7 +1147,7 @@ body.colorblind-mode #opt-colorblind-text {
             <div class="flex-1 w-full min-h-[35px] sm:min-h-[70px] pointer-events-none"></div>
 
             <!-- CONSOLE AZIONI IN BASSO (Pulsanti ad alto contrasto, nitidi e reattivi fin dal primo istante) -->
-            <div class="glass-panel flex flex-col gap-2 sm:gap-2.5 items-center w-full max-w-[390px] shrink-0 p-3 sm:p-4 border-2 border-red-800/80 bg-black/85 shadow-[0_0_25px_rgba(220,38,38,0.3)] mb-1 sm:mb-2 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
+            <div class="flex flex-col gap-2.5 items-center w-full max-w-[420px] shrink-0 p-3.5 sm:p-4 rounded-2xl border-2 border-red-500/65 bg-slate-950/92 shadow-[0_0_32px_rgba(239,68,68,0.38)] mb-1 sm:mb-2 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
                 <div id="score-save-container" class="w-full flex flex-col gap-1.5 mb-1 hidden">
                     <p class="text-[9px] sm:text-[10px] text-red-400 font-bold uppercase tracking-widest text-center m-0"><i class="fa-solid fa-pen-fancy"></i> Registra la tua fine</p>
                     <div class="flex gap-2 w-full">
@@ -1241,10 +1241,10 @@ body.colorblind-mode #opt-colorblind-text {
     </div>
     <!-- PUNTEGGI -->
     <div id="highScoreScreen" class="absolute inset-0 bg-black/90 z-[250] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="glass-panel modal-enter border-amber-500/50 p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_40px_rgba(251,191,36,0.25)] relative overflow-hidden">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-amber-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_45px_rgba(251,191,36,0.3)] relative overflow-hidden"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-amber-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(251,191,36,0.28)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-amber-300 font-black tracking-[0.22em] uppercase leading-none">Panteon degli Eroi</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Onore ai Caduti</h2></div><span class="text-[10px] sm:text-xs font-display font-black text-amber-200 bg-amber-950/80 px-3 py-1.5 rounded-lg border-2 border-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.4)] uppercase tracking-widest">Top 5</span></div>
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-amber-900/20 to-transparent pointer-events-none"></div>
 
-            <div class="flex items-center justify-between border-b border-gray-700/80 pb-3 mb-3 shrink-0 relative z-10">
+            <div class="hidden">
                 <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500 uppercase tracking-widest flex items-center gap-2.5 m-0 drop-shadow-[0_0_10px_rgba(251,191,36,0.4)]">
                     <i class="fa-solid fa-trophy text-amber-400"></i> Onore ai Caduti
                 </h2>
@@ -1253,7 +1253,7 @@ body.colorblind-mode #opt-colorblind-text {
 
             <div id="highScoresList" class="flex flex-col gap-2.5 min-h-[200px] overflow-y-auto custom-scrollbar pr-1 flex-1 relative z-10"></div>
 
-            <button onclick="hideHighScores()" class="mt-4 btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0 z-10">
+            <button onclick="hideHighScores()" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_24px_rgba(251,191,36,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
@@ -1290,21 +1290,21 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
             
             <!-- 3 CARTE RELIQUIA -->
-            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full flex-1 min-h-[268px] max-h-[55vh] my-1.5 items-stretch select-none z-10"></div>
+            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full my-1 items-stretch select-none z-10"></div>
             
             <!-- BARRA COMPATTE FORGIA COSMICA (REROLL) -->
-            <div id="reforgeSection" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/88 border-2 border-purple-400/55 shadow-[0_0_22px_rgba(168,85,247,0.28)] flex flex-col gap-1.5 shrink-0 z-10 relative my-1">
-                <div class="flex items-center justify-between border-b border-gray-800 pb-1.5">
-                    <span class="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+            <div id="reforgeSection" class="w-full px-4 py-3.5 sm:py-4 rounded-xl bg-gradient-to-b from-purple-950/70 via-slate-950/92 to-slate-950/96 border-2 border-purple-400/65 shadow-[0_0_26px_rgba(168,85,247,0.32)] flex flex-col justify-between gap-2.5 shrink-0 z-10 relative my-1 min-h-[126px] sm:min-h-[142px]">
+                <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
+                    <span class="text-[11px] sm:text-xs font-display font-black text-purple-300 uppercase tracking-widest flex items-center gap-2 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
                         <i class="fa-solid fa-rotate"></i> Forgia Cosmica
                     </span>
                     <span id="reforge-status-badge" class="text-[9px] sm:text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 border border-purple-500/40 uppercase tracking-wider">1 Uso Disponibile</span>
                 </div>
 
-                <div class="flex items-center justify-between gap-3 pt-1">
+                <div class="flex items-center justify-between gap-3.5 pt-1 flex-1">
                     <!-- Icona Reliquia / Slot -->
-                    <button id="btn-select-reforge" onclick="RelicSystem.openReforgeModal()" class="w-14 h-14 sm:w-16 sm:h-16 border-2 border-dashed border-purple-500/60 hover:border-purple-400 flex items-center justify-center bg-black transition-all active:scale-95 group relative overflow-hidden shrink-0">
-                        <i id="reforge-icon-default" class="fa-solid fa-wand-magic-sparkles text-purple-400/80 group-hover:text-purple-300 text-xl sm:text-2xl transition-colors"></i>
+                    <button id="btn-select-reforge" onclick="RelicSystem.openReforgeModal()" class="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/75 hover:border-white flex items-center justify-center bg-slate-950 transition-all active:scale-95 group relative overflow-hidden shrink-0">
+                        <i id="reforge-icon-default" class="fa-solid fa-wand-magic-sparkles text-purple-300 group-hover:text-white text-2xl sm:text-3xl transition-colors drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]"></i>
                         <img id="reforge-icon-img" src="" class="absolute inset-0 w-full h-full object-cover hidden" onerror="window.handleRelicImgError(this, true)">
                         <div id="reforge-overlay" class="absolute inset-0 bg-black/80 hidden items-center justify-center text-white font-black text-[8px] uppercase text-center leading-none">Cambia</div>
                     </button>
@@ -1331,10 +1331,10 @@ body.colorblind-mode #opt-colorblind-text {
 
     <!-- MODALE SELEZIONE SACRIFICIO (FORGIA COSMICA) -->
     <div id="reforgeSelectModal" class="absolute inset-0 bg-black/90 z-[260] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="glass-panel modal-enter border-purple-500/50 p-4 sm:p-5 w-full max-w-[440px] shadow-[0_0_40px_rgba(168,85,247,0.3)] flex flex-col max-h-[88vh] relative overflow-hidden">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-4 sm:p-5 w-full max-w-[450px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[88vh] relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
 
-            <div class="border-b border-gray-700/80 pb-3 mb-3 shrink-0 relative z-10">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Trasmutazione Arcana</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Forgia Cosmica</h2><p class="text-[10px] text-purple-200/80 font-bold mt-1 m-0">Tocca la reliquia da sacrificare per riforgiarla:</p></div><div class="w-10 h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300 shrink-0"><i class="fa-solid fa-rotate text-lg"></i></div></div><div class="hidden">
                 <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-300 uppercase tracking-widest flex items-center gap-2 m-0">
                     <i class="fa-solid fa-rotate text-purple-400"></i> Forgia Cosmica
                 </h2>
@@ -1345,14 +1345,14 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
 
             <!-- BOX DETTAGLI RELIQUIA SELEZIONATA -->
-            <div class="mt-3 bg-black/80 border-2 border-gray-800 p-3 min-h-[88px] flex flex-col justify-center items-center text-center shrink-0 relative z-10">
+            <div class="mt-3 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-3 min-h-[88px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0 relative z-10">
                 <h3 id="reforge-modal-name" class="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest mb-1">NESSUNA SELEZIONE</h3>
                 <p id="reforge-modal-desc" class="text-[11px] sm:text-xs text-gray-500 font-bold leading-snug m-0">Tocca un'icona qui sopra per visualizzarne l'effetto.</p>
             </div>
 
             <!-- PULSANTI ANNULLA / RIFORGIA ORA -->
             <div class="flex gap-3 mt-4 w-full shrink-0 relative z-10">
-                <button onclick="UIManager.hideModal('reforgeSelectModal')" class="btn-cyber glass-panel box-glow-gray flex-1 py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest">Annulla</button>
+                <button onclick="UIManager.hideModal('reforgeSelectModal')" class="btn-cyber bg-slate-950/90 border-2 border-gray-600/80 rounded-xl box-glow-gray flex-1 py-3.5 text-xs sm:text-sm font-display font-black text-gray-300 uppercase tracking-widest">Annulla</button>
                 <button id="btn-confirm-sacrifice" onclick="RelicSystem.confirmSacrificeSelection()" class="btn-cyber glass-panel flex-1 py-3.5 text-xs sm:text-sm font-bold text-purple-300 uppercase tracking-widest opacity-50 cursor-not-allowed grayscale" disabled>
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Riforgia Ora
                 </button>
@@ -1361,19 +1361,19 @@ body.colorblind-mode #opt-colorblind-text {
     </div>
 <!-- MODALE RELIQUIE COLLEZIONATE -->
     <div id="collectedRelicsModal" class="absolute inset-0 bg-black/95 z-[260] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-4">
-      <div class="glass-panel modal-enter border-purple-500/50 p-5 w-full max-w-[450px] shadow-[0_0_40px_rgba(168,85,247,0.3)] flex flex-col max-h-[85vh]">
-            <h2 class="text-xl sm:text-2xl font-black text-purple-400 mb-4 border-b border-gray-700 pb-2 uppercase tracking-widest flex items-center gap-2 shrink-0"><i class="fa-solid fa-gem"></i> Inventario Reliquie</h2>
+      <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-4 sm:p-5 w-full max-w-[450px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[85vh] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Collezione Attiva</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Arsenale Reliquie</h2></div><div class="w-10 h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300 shrink-0"><i class="fa-solid fa-gem text-lg"></i></div></div>
             
             <div id="collectedRelicsGrid" class="flex flex-wrap gap-3 overflow-y-auto custom-scrollbar p-2 justify-center content-start flex-1 min-h-[120px]">
                 <!-- Popolato da JS -->
             </div>
 
-            <div class="mt-4 bg-black/60 border border-gray-700 rounded-xl p-3 min-h-[85px] flex flex-col justify-center items-center text-center shrink-0">
+            <div class="mt-3 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-3 min-h-[85px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0">
                 <h3 id="relic-detail-name" class="text-sm font-black text-gray-300 uppercase tracking-widest mb-1">IL TUO ARSENALE</h3>
                 <p id="relic-detail-desc" class="text-xs text-gray-400 font-bold">Tocca o passa il cursore sopra un'icona per i dettagli.</p>
             </div>
 
-           <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-5 btn-cyber glass-panel box-glow-gray w-full py-3.5 text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest shrink-0 z-10">Chiudi</button>
+           <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">Chiudi</button>
         </div>
     </div>
     <!-- CONTAINER 3D -->
@@ -3076,10 +3076,10 @@ const SkinSystem = {
 
             let card = document.createElement('div');
             card.className = `p-3 border-2 transition-all flex items-center justify-between gap-3 ${
-                isSelected ? 'bg-purple-950/40 border-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' :
-                isUnlocked ? `bg-black/70 ${rarityBorder} hover:brightness-125 cursor-pointer` :
-                canAfford ? `bg-black/80 ${rarityBorder} hover:brightness-125 cursor-pointer` :
-                'bg-black/40 border-gray-800 opacity-65'
+                isSelected ? 'rounded-xl bg-gradient-to-r from-purple-950/85 via-slate-900/95 to-purple-950/75 border-white shadow-[0_0_24px_rgba(168,85,247,0.5)]' :
+                isUnlocked ? `rounded-xl bg-slate-950/90 ${rarityBorder} hover:brightness-125 cursor-pointer` :
+                canAfford ? `rounded-xl bg-slate-950/90 ${rarityBorder} hover:brightness-125 cursor-pointer` :
+                'rounded-xl bg-slate-950/55 border-gray-800 opacity-65'
             }`;
 
             if (isUnlocked && !isSelected) {
@@ -3090,9 +3090,9 @@ const SkinSystem = {
 
             let statusHtml = '';
             if (isSelected) {
-                statusHtml = `<div class="px-3 py-1.5 bg-purple-600 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest border border-white shrink-0">IN USO</div>`;
+                statusHtml = `<div class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-slate-950 font-display font-black text-[10px] sm:text-xs uppercase tracking-widest border border-white shadow-[0_0_12px_rgba(251,191,36,0.7)] shrink-0">IN USO</div>`;
             } else if (isUnlocked) {
-                statusHtml = `<button class="px-3 py-1.5 bg-gray-900 hover:bg-purple-900 text-gray-200 font-bold text-[10px] sm:text-xs uppercase tracking-widest border border-gray-600 shrink-0">SCEGLI</button>`;
+                statusHtml = `<button class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-purple-900 text-purple-200 font-display font-black text-[10px] sm:text-xs uppercase tracking-widest border border-purple-400/60 shrink-0">SCEGLI</button>`;
             } else if (canAfford) {
                 statusHtml = `<button class="px-3 py-1.5 bg-purple-900/80 hover:bg-purple-700 text-purple-100 font-black text-[10px] sm:text-xs uppercase tracking-wider border border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.5)] flex items-center gap-1.5 shrink-0">COMPRA <i class="fa-solid fa-gem text-purple-300"></i> ${skin.cost}</button>`;
             } else {
@@ -3223,7 +3223,7 @@ const SkinSystem = {
         let aspect = w / h;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x0b1409, 360, 880);
+        this.scene.fog = new THREE.Fog(0x0b1409, 440, 1080);
 
         this.camera = new THREE.PerspectiveCamera(44, aspect, 10, 1400);
 
@@ -3260,7 +3260,7 @@ const SkinSystem = {
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
         this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x828c78, map: tDirt, shininess: 2 });
-        let groundGeo = new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2);
+        let groundGeo = new THREE.CircleGeometry(580, 32).rotateX(-Math.PI / 2);
         let gUv = groundGeo.attributes.uv;
         for (let i = 0; i < gUv.count; i++) {
             gUv.setXY(i, (gUv.getX(i) - 0.5) * 14.0 + 0.5, (gUv.getY(i) - 0.5) * 14.0 + 0.5);
@@ -3402,7 +3402,7 @@ const SkinSystem = {
 
         for (let i = 0; i < treeCount; i++) {
             let a = (Math.PI * 2 / treeCount) * i + (i % 2) * 0.12;
-            let rad = 190 + (i % 3) * 30;
+            let rad = 395 + (i % 3) * 35;
             let tx = Math.cos(a) * rad;
             let tz = Math.sin(a) * rad;
             let s = MathUtils.randomRange(2.2, 3.1);
@@ -3720,8 +3720,8 @@ const SkinSystem = {
         // 1. ORBITA CINEMATOGRAFICA FLUIDA ATTORNO AL GIOCATORE (Visuale più alta e panoramica)
         this.camAngle += safeDt * 0.16;
         let aspect = this.camera.aspect || 0.6;
-        let camDist = aspect < 0.75 ? 355 : (aspect < 1.0 ? 315 : 280);
-        let camHeight = aspect < 0.75 ? 300 : (aspect < 1.0 ? 265 : 240);
+        let camDist = aspect < 0.75 ? 290 : (aspect < 1.0 ? 260 : 235);
+        let camHeight = aspect < 0.75 ? 250 : (aspect < 1.0 ? 225 : 205);
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
@@ -4740,7 +4740,7 @@ const UIManager = {
                                 'text-green-400';
                                  
                 let imgBox = document.createElement('div');
-                imgBox.className = `w-14 h-14 sm:w-16 sm:h-16 border-2 bg-black ${colorClass} overflow-hidden cursor-pointer transition-transform hover:-translate-x-1 hover:-translate-y-1 flex items-center justify-center`;
+                imgBox.className = `w-15 h-15 sm:w-16 sm:h-16 rounded-xl border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-white flex items-center justify-center`;
                 imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
                 
                 const updateDetails = () => {
@@ -4958,8 +4958,30 @@ const RelicSystem = {
             btnSel.style.boxShadow = "none";
             btnSel.onclick = () => RelicSystem.openReforgeModal();
         } else {
-            reforgeSection.classList.add('hidden');
-            reforgeSection.style.display = 'none';
+            reforgeSection.classList.remove('hidden');
+            reforgeSection.style.display = 'flex';
+            document.getElementById('reforge-icon-default').classList.remove('hidden');
+            document.getElementById('reforge-icon-img').classList.add('hidden');
+            document.getElementById('reforge-overlay').classList.add('hidden');
+            if (statusBadge) {
+                statusBadge.innerText = "Richiede 1 Reliquia";
+                statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-gray-400 bg-slate-900/90 px-2.5 py-0.5 rounded-md border border-gray-700 uppercase tracking-wider";
+            }
+            let btnDo = document.getElementById('btn-do-reforge');
+            btnDo.disabled = true;
+            btnDo.className = "btn-cyber px-3.5 py-3 text-[10px] sm:text-xs text-gray-500 border-gray-700/80 bg-slate-900/60 opacity-60 cursor-not-allowed shrink-0";
+            btnDo.innerHTML = '<i class="fa-solid fa-lock"></i> Bloccata';
+            btnDo.onclick = null;
+            let descTitle = document.getElementById('reforge-desc-title');
+            let descText = document.getElementById('reforge-desc-text');
+            descTitle.innerText = "Inventario Reliquie Vuoto";
+            descTitle.className = "text-xs sm:text-sm text-gray-300 font-black uppercase tracking-wide truncate m-0";
+            descText.innerText = "Scegli la tua prima reliquia qui sopra per attivare la Forgia nei prossimi piani.";
+            descText.className = "text-[10px] sm:text-xs text-gray-400 mt-1 leading-snug font-bold";
+            let btnSel = document.getElementById('btn-select-reforge');
+            btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center bg-slate-950/70 opacity-60 cursor-not-allowed shrink-0 relative overflow-hidden";
+            btnSel.onclick = null;
+            reforgeSection.style.display = 'flex';
         }
 
         // STATO INIZIALE PULSANTE PROCEDI
@@ -5044,7 +5066,7 @@ const RelicSystem = {
         if (Game.player.relics.length > 0) {
             let btnSel = document.getElementById('btn-select-reforge');
             if (btnSel) {
-                btnSel.className = "w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-purple-400/75 hover:border-white flex items-center justify-center bg-slate-950 shadow-[0_0_15px_rgba(168,85,247,0.35)] transition-all active:scale-95 group relative overflow-hidden shrink-0";
+                btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/80 hover:border-white flex items-center justify-center bg-slate-950 shadow-[0_0_18px_rgba(168,85,247,0.38)] transition-all active:scale-95 group relative overflow-hidden shrink-0";
             }
         }
 
@@ -5098,7 +5120,7 @@ const RelicSystem = {
             let iconClass = relic.icon || rPal.fallbackIcon;
             let card = document.createElement('div');
             card.id = `main-relic-card-${i}`;
-            card.className = `relic-card stagger-enter flex flex-col items-center justify-between p-2 sm:p-3 h-full cursor-pointer relative overflow-hidden`;
+            card.className = `relic-card stagger-enter flex flex-col items-center justify-between p-2.5 sm:p-3 cursor-pointer relative overflow-hidden`;
             card.style.animationDelay = `${i * 90}ms`;
             card.style.setProperty('--r-bg-top', rPal.bgTop);
             card.style.setProperty('--r-bg-bot', rPal.bgBot);
@@ -5109,14 +5131,14 @@ const RelicSystem = {
             card.innerHTML = `
                 <div class="w-full flex flex-col items-center pointer-events-none shrink-0 z-10">
                     <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${rPal.badgeClass}">${rPal.rarityLabel}</span>
-                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-[78px] h-[78px] sm:w-[96px] sm:h-[96px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
+                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
                         <div class="absolute inset-0 opacity-45 pointer-events-none" style="background: radial-gradient(circle at center, ${rPal.main} 0%, transparent 72%);"></div>
                         <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover relative z-10">
                         <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-95 relative z-10" style="display:none; color:${rPal.main};"></i>
                     </div>
                     <h3 class="text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">${relic.name}</h3>
                 </div>
-                <div class="relic-desc-box w-full flex-1 bg-slate-950/85 border border-white/15 rounded-lg px-2 py-1.5 my-1.5 flex items-center justify-center pointer-events-none z-10">
+                <div class="relic-desc-box w-full bg-slate-950/90 border border-white/15 rounded-lg px-2 py-2 my-1.5 min-h-[64px] sm:min-h-[72px] flex items-center justify-center pointer-events-none z-10">
                     <p class="text-[9.5px] sm:text-xs font-bold text-center leading-snug text-gray-100 m-0">${relic.desc}</p>
                 </div>
                 <div id="relic-pick-pill-${i}" class="w-full py-1.5 rounded-lg bg-slate-900/90 border border-white/20 text-[8.5px] sm:text-[10px] font-black uppercase tracking-widest text-center text-gray-200 transition-all shrink-0 pointer-events-none z-10">
@@ -5189,7 +5211,7 @@ const RelicSystem = {
 
             let imgBox = document.createElement('div');
             imgBox.id = `reforge-choice-${index}`;
-            imgBox.className = `w-14 h-14 sm:w-16 sm:h-16 border-2 bg-black ${colorClass} overflow-hidden cursor-pointer transition-all relative flex items-center justify-center shrink-0`;
+            imgBox.className = `w-15 h-15 sm:w-16 sm:h-16 rounded-xl border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all relative flex items-center justify-center shrink-0`;
             imgBox.innerHTML = `<img src="${relic.image}" class="w-full h-full object-cover" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-2xl ${textColor}" style="display:none;"></i>`;
             
             const showDetails = () => {
@@ -5220,7 +5242,7 @@ const RelicSystem = {
                 });
                 
                 btnConfirm.disabled = false;
-                btnConfirm.className = "btn-cyber glass-panel box-glow-purple flex-1 py-3.5 text-xs sm:text-sm font-bold text-purple-300 border-purple-500/60 uppercase tracking-widest";
+                btnConfirm.className = "flex-1 py-3.5 rounded-xl font-display font-black text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_22px_rgba(168,85,247,0.75)] uppercase tracking-widest cursor-pointer transition-all active:scale-95";
             };
             
             grid.appendChild(imgBox);
@@ -5297,7 +5319,7 @@ const RelicSystem = {
                                   newRelic.rarity === 'epic' ? 'border-purple-400' : 
                                   newRelic.rarity === 'rare' ? 'border-blue-400' : 'border-green-400';
                                   
-                btnSel.className = `w-14 h-14 sm:w-16 sm:h-16 border-2 border-solid ${borderColor} flex items-center justify-center bg-black shrink-0 relative overflow-hidden`;
+                btnSel.className = `w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-solid ${borderColor} flex items-center justify-center bg-slate-950 shrink-0 relative overflow-hidden`;
                 btnSel.style.boxShadow = `4px 4px 0px ${colorGlow}`;
                 
                 let descTitle = document.getElementById('reforge-desc-title');
@@ -16417,7 +16439,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             // 3. FISICA E AUDIO AMBIENTALE ACQUA / LAVA / GHIACCIO + ORME RESIDUE
             if (inPit) {
                 if (!isIce) {
-                    currentSpeed *= (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 1)) ? 0.675 : 0.35;
+                    currentSpeed *= 0.35;
                     this.wetFootprintTimer = 2.4; // Resti bagnato/incandescente per 2.4s quando esci dalla fossa!
                     this.wetFootprintTheme = Game.currentThemeIndex;
                 }
@@ -16979,7 +17001,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
         // Innesco Rapido (Ritmo Lv.5) e Doppia Canna (Ritmo Lv.10)
         this.rhythmShotCount = (this.rhythmShotCount || 0) + 1;
-        let isRapidTrigger = (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('atkSpeed', 1)) && (this.rhythmShotCount % 6 === 0);
+        let isRapidTrigger = (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('atkSpeed', 1)) && (this.rhythmShotCount % 5 === 0);
         let isDoubleBarrel = (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('atkSpeed', 2)) && (this.rhythmShotCount % 5 === 0);
 
         AudioEngine.playShoot(projType, isCrit);
@@ -16996,7 +17018,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         
         let projSpeed = (projType === 'explosive_arrow') ? 400 : 800;
         if (isRapidTrigger) {
-            projSpeed *= 1.25;
+            projSpeed *= 1.40;
             Game.addCombo(1); // Scala automaticamente con Ritmo di Battaglia!
         }
         
@@ -17006,11 +17028,14 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             let p1 = Game.getProjectile(); p1.spawn(this.x, this.y, this.angle - 0.15, projSpeed, twinDmg, 'player', projType, piercing, isCrit); p1.canInfect = true; p1.pierceCount = bonusPierce;
             let p2 = Game.getProjectile(); p2.spawn(this.x, this.y, this.angle + 0.15, projSpeed, twinDmg, 'player', projType, piercing, isCrit); p2.canInfect = true; p2.pierceCount = bonusPierce;
             if (isDoubleBarrel) {
-                let p3 = Game.getProjectile(); p3.spawn(this.x, this.y, this.angle, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p3.canInfect = true; p3.pierceCount = bonusPierce;
+                let p3 = Game.getProjectile(); p3.spawn(this.x, this.y, this.angle - 0.08, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p3.canInfect = true; p3.pierceCount = bonusPierce;
+                let p4 = Game.getProjectile(); p4.spawn(this.x, this.y, this.angle + 0.08, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p4.canInfect = true; p4.pierceCount = bonusPierce;
             }
         } else if (isDoubleBarrel) {
-            let p1 = Game.getProjectile(); p1.spawn(this.x, this.y, this.angle - 0.06, projSpeed, baseDmg, 'player', projType, piercing, isCrit); p1.canInfect = true; p1.pierceCount = bonusPierce;
-            let p2 = Game.getProjectile(); p2.spawn(this.x, this.y, this.angle + 0.06, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p2.canInfect = true; p2.pierceCount = bonusPierce;
+            let p1 = Game.getProjectile(); p1.spawn(this.x, this.y, this.angle, projSpeed, baseDmg, 'player', projType, piercing, isCrit); p1.canInfect = true; p1.pierceCount = bonusPierce;
+            let p2 = Game.getProjectile(); p2.spawn(this.x, this.y, this.angle - 0.14, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p2.canInfect = true; p2.pierceCount = bonusPierce;
+            let p3 = Game.getProjectile(); p3.spawn(this.x, this.y, this.angle + 0.14, projSpeed, baseDmg * 0.50, 'player', projType, piercing, isCrit); p3.canInfect = true; p3.pierceCount = bonusPierce;
+            // Tripla Canna completata sopra (centrale 100% + 2 laterali al 50% ciascuno)
         } else {
             let p1 = Game.getProjectile(); p1.spawn(this.x, this.y, this.angle, projSpeed, baseDmg, 'player', projType, piercing, isCrit); p1.canInfect = true; p1.pierceCount = bonusPierce;
         }
@@ -17224,8 +17249,47 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
        if (this.essence === 'green') { Game.getDecoy().spawn(this.x, this.y); Game.getHazard().spawn(this.x, this.y, 40, 3.0, this.stats.maxDmg * 0.5 * this.modifiers.dmgMult, ESSENCE_COLORS.green, 'poison'); }
         if (this.overdrive && this.essence === 'red') { Game.getHazard().spawn(this.x, this.y, 80, 1.0, this.stats.maxDmg * 3 * this.modifiers.dmgMult, ESSENCE_COLORS.red, 'fire'); }
 
-        // Scia Cinetica (Movimento Lv.10): -0.5s ricarica Scudo e raccolta istantanea a raggio +50% (scala con Magnete Elementale)
-        if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 2)) {
+        // Ritorno Cinetico (Movimento Lv.5): ogni Scatto riduce istantaneamente di 0.5s la ricarica dello Scudo Cinetico
+        if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 1)) {
+            if (this.activeShieldCooldown > 0) {
+                this.activeShieldCooldown = Math.max(0, this.activeShieldCooldown - 0.5);
+            }
+        }
+        // Permafrost (Movimento Lv.10): ogni 3° scatto emetti una Nova Gelida che danneggia e rallenta i nemici vicini
+        this.permafrostDashCount = (this.permafrostDashCount || 0) + 1;
+        if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 2) && (this.permafrostDashCount % 3 === 0)) {
+            let novaRad = 195;
+            let novaRadSq = novaRad * novaRad;
+            let novaDmg = this.stats.maxDmg * 1.35 * this.modifiers.dmgMult;
+            Game.getHazard().spawn(this.x, this.y, novaRad, 0.45, 0, 0x00ddff, 'nova_ring');
+            Game.spawnLightFlash(this.x, this.y, 0x00eeff, 3.8, 420, 0.32);
+            AudioEngine.playShoot('chain_lightning');
+            Game.addTrauma(0.45);
+            Game.getFloatingText().spawn(this.x, this.y + 24, "NOVA GELIDA!", '#38bdf8', 24, true);
+            let pCount = AppSettings.isLow ? 10 : (isTouchDevice ? 16 : 26);
+            for (let i = 0; i < pCount; i++) {
+                let a = (Math.PI * 2 / pCount) * i + MathUtils.randomRange(-0.1, 0.1);
+                let sp = MathUtils.randomRange(240, 520);
+                let p = Game.getParticle();
+                p.spawn(this.x, 12, this.y, (i % 2 === 0 ? SharedMat.spriteBlue : SharedMat.spriteWhite), 'spark', a);
+                p.vx = Math.cos(a) * sp;
+                p.vz = Math.sin(a) * sp;
+                p.vy = MathUtils.randomRange(15, 55);
+                p.baseSize = MathUtils.randomRange(14, 24);
+                p.life = MathUtils.randomRange(0.24, 0.42); p.maxLife = p.life;
+            }
+            let nearby = Game.enemyGrid.findNearby(this, novaRad);
+            for (let i = 0; i < nearby.length; i++) {
+                let e = nearby[i];
+                if (!e.dead && e.type !== 'crystal' && MathUtils.distanceSq(this, e) <= novaRadSq) {
+                    e.takeDamage(novaDmg, this, false, false);
+                    e.permafrostTimer = 4.0;
+                    e.slowedTimer = Math.max(e.slowedTimer || 0, 3.0);
+                    e.slowType = 'blue';
+                }
+            }
+        }
+        if (false) {
             if (this.activeShieldCooldown > 0) {
                 this.activeShieldCooldown = Math.max(0, this.activeShieldCooldown - 0.5);
             }
@@ -17712,6 +17776,7 @@ class Enemy extends Entity {
         this.obeliskBurnTimer = 0;
         this.obeliskBurnDps = 0;
         this.slowedTimer = 0;
+        this.permafrostTimer = 0;
         this.infected = false;
         this.isBerserk = false;
         this._lastAuraType = null;
@@ -17970,6 +18035,8 @@ class Enemy extends Entity {
         if (this.isPursuer) {
             this.frozenTimer = 0;
             this.slowedTimer = 0;
+            this.permafrostTimer = 0;
+        this.permafrostTimer = 0;
             this.fireDebuffTimer = 0;
             this.infected = false;
             if (!this.snakeTrailTimer) this.snakeTrailTimer = 0;
@@ -18285,6 +18352,29 @@ class Enemy extends Entity {
                 }
             }
             this.slowType = null;
+        }
+        if (this.permafrostTimer > 0) {
+            this.permafrostTimer -= dt;
+            if (this.slowedTimer <= 0) {
+                this.speed *= 0.80;
+                this._wasPermafrost = true;
+                if (!this.isProphetBuffed && this.flashTimer <= 0) {
+                    for (let i = 0; i < this.flashMats.length; i++) this.flashMats[i].emissive.setHex(0x003366);
+                }
+            }
+            if (Game.frameCount % 8 === 0 && !isTouchDevice) {
+                Game.getParticle().spawn(this.x, 4, this.y, SharedMat.spriteBlue, 'dust');
+            }
+        } else if (this._wasPermafrost) {
+            this._wasPermafrost = false;
+            if (this.slowedTimer <= 0 && !this.isProphetBuffed && this.flashTimer <= 0) {
+                for (let i = 0; i < this.flashMats.length; i++) {
+                    this.flashMats[i].emissive.setHex(defaultEmissive);
+                    this.flashMats[i].emissiveIntensity = defaultIntensity;
+                }
+            }
+        }
+        if (false) {
         }
 
         let aura = Game.getAuraAt(this.x, this.y);
@@ -19337,6 +19427,9 @@ class Enemy extends Entity {
             if (Game.player.obeliskSlowTimer > 0) {
                 this.slowedTimer = Math.max(this.slowedTimer || 0, 2.5);
                 this.slowType = 'blue';
+            }
+            if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 2)) {
+                this.permafrostTimer = Math.max(this.permafrostTimer || 0, 2.5);
             }
             // Impatto Frantumante (Danno Lv.5): spinge indietro i nemici con più forza
             if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('dmg', 1) && !this.isBoss) {
@@ -21434,7 +21527,7 @@ function showHighScores() {
         ScoreManager.scores.forEach((score, index) => {
             let isFirst = index === 0;
             let rankColor = isFirst ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]' : (index === 1 ? 'text-gray-200' : (index === 2 ? 'text-amber-600' : 'text-gray-500'));
-            let rowBorder = isFirst ? 'border-amber-500/70 bg-amber-950/20 shadow-[3px_3px_0px_#78350f]' : 'border-gray-800 bg-black/70 shadow-[3px_3px_0px_rgba(0,0,0,0.6)]';
+            let rowBorder = isFirst ? 'border-amber-400/80 bg-gradient-to-r from-amber-950/60 via-slate-950/95 to-amber-950/40 shadow-[0_0_20px_rgba(251,191,36,0.28)]' : 'border-cyan-500/35 bg-slate-950/90 shadow-[0_0_14px_rgba(15,23,42,0.8)]';
 
             let skinObj = (typeof SkinSystem !== 'undefined' && SkinSystem.skins)
                 ? (SkinSystem.skins.find(s => s.id === score.skinId) || SkinSystem.skins[0])
@@ -21706,15 +21799,15 @@ const ShopSystem = {
             name: 'Movimento', short: 'VELOCITÀ', icon: 'fa-shoe-prints',
             color: '#3b82f6', dark: '#1d4ed8', border: 'rgba(59, 130, 246, 0.55)', glow: 'rgba(59, 130, 246, 0.25)',
             bgTop: 'rgba(30, 58, 138, 0.55)', bgBot: 'rgba(23, 37, 84, 0.85)', btnTop: 'rgba(29, 78, 216, 0.85)', tailwind: 'blue',
-            tier1: { name: 'Passo Anfibio', icon: 'fa-water', desc: 'Lo Scudo Cinetico dura +1s e dimezzi il rallentamento in acqua e lava.' },
-            tier2: { name: 'Scia Cinetica', icon: 'fa-magnet', desc: 'Ogni Scatto riduce di 0.5s la ricarica Scudo e aspira monete/essenze (+50% raggio).' }
+            tier1: { name: 'Ritorno Cinetico', icon: 'fa-bolt', desc: 'Effettuare uno Scatto riduce istantaneamente di 0.5s la ricarica dello Scudo Cinetico.' },
+            tier2: { name: 'Permafrost', icon: 'fa-snowflake', desc: 'Attacchi rallentano la velocità di movimento dei nemici del 20%, ogni terzo scatto emetti una nova gelida che danneggia i nemici vicini e li rallenta.' }
         },
         atkSpeed: {
             name: 'Ritmo', short: 'RITMO', icon: 'fa-bolt',
             color: '#f59e0b', dark: '#b45309', border: 'rgba(245, 158, 11, 0.55)', glow: 'rgba(245, 158, 11, 0.25)',
             bgTop: 'rgba(120, 53, 15, 0.55)', bgBot: 'rgba(69, 26, 3, 0.85)', btnTop: 'rgba(180, 83, 9, 0.85)', tailwind: 'amber',
-            tier1: { name: 'Innesco Rapido', icon: 'fa-forward-fast', desc: 'Ogni 6 attacchi ottieni +1 Punto Combo extra e il colpo viaggia +25% più veloce.' },
-            tier2: { name: 'Doppia Canna', icon: 'fa-clone', desc: 'Ogni 5 attacchi spari gratuitamente un secondo dardo parallelo (50% danno).' }
+            tier1: { name: 'Innesco Rapido', icon: 'fa-forward-fast', desc: 'Ogni 5 attacchi, il colpo successivo genera +1 Punto Combo extra e viaggia al +40% di velocità.' },
+            tier2: { name: 'Tripla Canna', icon: 'fa-burst', desc: 'Ogni 5 attacchi, spari gratuitamente due proiettili addizionali che infliggono il 50% del danno ciascuno.' }
         },
         crit: {
             name: 'Precisione', short: 'CRITICO', icon: 'fa-crosshairs',
@@ -21746,7 +21839,7 @@ const ShopSystem = {
     applyMasteriesToPlayer(p) {
         if (!p) return;
         if (this.hasMastery('hp', 1)) p.modifiers.healDropMult += 0.15;
-        if (this.hasMastery('speed', 1)) p.modifiers.shieldDurationAdd += 1.0;
+        // Movimento Grado 5 (Ritorno Cinetico) gestito direttamente in Player.dash()
     },
 
     inspectMastery(key, tier, evt) {
@@ -22053,7 +22146,7 @@ const ShopSystem = {
             if (type === 'speed') {
                 p.modifiers.speedMult += 0.04;
                 this.bonus.speed += 0.04;
-                if (newLvl === 5) p.modifiers.shieldDurationAdd += 1.0;
+                // Grado 5 (Ritorno Cinetico) e Grado 10 (Permafrost) attivi su scatto e attacco
             }
             if (type === 'atkSpeed') {
                 p.modifiers.bonusAtkSpeed += 0.05;
