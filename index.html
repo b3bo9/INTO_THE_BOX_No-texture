@@ -699,6 +699,24 @@
     .rarity-epic { border-color: #a855f7 !important; } 
     .rarity-legendary { border-color: #fbbf24 !important; }
 
+    /* Carte Reliquia stile Forgia dell'Ascesa (Totem Luminosi verticali) */
+    #relicScreen .relic-card {
+        background: linear-gradient(180deg, var(--r-bg-top, rgba(30, 41, 59, 0.92)) 0%, rgba(12, 16, 30, 0.92) 52%, var(--r-bg-bot, rgba(15, 23, 42, 0.96)) 100%) !important;
+        border: 2px solid var(--r-border, rgba(255, 255, 255, 0.25)) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 0 20px var(--r-glow, rgba(0, 0, 0, 0.5)), inset 0 0 16px var(--r-glow, rgba(255, 255, 255, 0.06)) !important;
+        transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+    }
+    #relicScreen .relic-card.selected-relic {
+        border-color: #ffffff !important;
+        box-shadow: 0 0 28px var(--r-main, #fbbf24), 0 0 12px #ffffff, inset 0 0 22px var(--r-glow, rgba(251, 191, 36, 0.35)) !important;
+        transform: translateY(-5px) scale(1.02);
+    }
+    #relicScreen .relic-icon-frame {
+        border-radius: 14px !important;
+        box-shadow: 0 0 22px var(--r-glow, rgba(0, 0, 0, 0.6)), inset 0 0 12px rgba(255, 255, 255, 0.18) !important;
+    }
+
     /* Unificazione globale di tutti i sotto-elementi nei Menu (Skin, Shop, Classifica, Reliquie, Forgia) */
     .glass-panel div[class*="border"],
     .glass-panel span[class*="border"],
@@ -709,7 +727,7 @@
     #highScoresList > div,
     #collectedRelicsGrid > div,
     #reforgeSelectGrid > div,
-    #relicCardsContainer .relic-card div[class*="border"] {
+    #relicCardsContainer .relic-card div.relic-desc-box {
         border-radius: 10px !important;
         box-shadow: none !important;
     }
@@ -1242,20 +1260,40 @@ body.colorblind-mode #opt-colorblind-text {
     </div>
 
    <!-- RELIQUIE -->
-   <div id="relicScreen" class="absolute inset-0 bg-black/95 z-[250] flex flex-col items-center justify-center backdrop-blur-xl pointer-events-auto hidden overflow-y-auto p-3 sm:p-5">
-        <div class="w-full max-w-[640px] flex flex-col items-center justify-center my-auto py-2 gap-3 sm:gap-4">
+   <div id="relicScreen" class="absolute inset-0 z-[250] pointer-events-auto hidden bg-cover bg-center bg-no-repeat overflow-hidden" style="background-image: url('bg_piano.png');">
+        <div class="absolute inset-0 bg-gradient-to-b from-amber-950/55 via-slate-950/48 to-black/88 pointer-events-none"></div>
+        <div class="absolute -top-10 left-1/4 w-80 h-56 bg-amber-500/25 blur-3xl pointer-events-none animate-pulse"></div>
+        <div class="absolute top-1/3 -left-12 w-64 h-64 bg-purple-500/25 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.7s;"></div>
+        <div class="absolute top-1/3 -right-12 w-64 h-64 bg-cyan-500/22 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 1.3s;"></div>
+        <div class="absolute bottom-16 left-1/3 w-72 h-44 bg-amber-500/20 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.4s;"></div>
+        <div id="relic-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-3.5 sm:py-6 relative max-w-[470px] mx-auto">
             
             <!-- HEADER -->
-            <div class="text-center shrink-0">
-                <h2 class="text-2xl sm:text-4xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-600 drop-shadow-[0_0_12px_rgba(251,191,36,0.5)] uppercase tracking-widest m-0">Scegli una Reliquia</h2>
-                <p class="text-[10px] sm:text-xs text-gray-400 mt-1 font-bold uppercase tracking-widest">Seleziona un potere da aggiungere al tuo arsenale</p>
+            <div class="w-full shrink-0">
+                <div class="w-full"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/88 border-2 border-amber-400/55 rounded-xl px-4 py-2.5 shadow-[0_0_25px_rgba(251,191,36,0.28)]">
+                    <div class="flex flex-col text-left">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span class="text-[9px] sm:text-[10px] text-amber-300 font-black tracking-[0.22em] uppercase leading-none">Santuario dell'Ascesa</span>
+                        </div>
+                        <h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Scegli una Reliquia</h2>
+                    </div>
+                    <button onclick="UIManager.showCollectedRelics()" class="flex items-center gap-2 bg-purple-950/80 hover:bg-purple-900/80 border-2 border-purple-400 px-3 py-1.5 rounded-lg shadow-[0_0_18px_rgba(168,85,247,0.45)] transition-all active:scale-95 cursor-pointer shrink-0">
+                        <i class="fa-solid fa-gem text-purple-300 text-base sm:text-xl drop-shadow-[0_0_10px_rgba(168,85,247,1)]"></i>
+                        <div class="flex flex-col items-start leading-none">
+                            <span class="text-[8px] font-black text-purple-200 uppercase tracking-wider">Arsenale</span>
+                            <span id="relic-screen-count" class="text-white font-display font-black text-sm sm:text-lg tracking-wider leading-none mt-0.5">0</span>
+                        </div>
+                    </button>
+                </div>
+                </div>
             </div>
             
             <!-- 3 CARTE RELIQUIA -->
-            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2.5 sm:gap-4 w-full items-stretch shrink-0 z-10"></div>
+            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full flex-1 min-h-[268px] max-h-[55vh] my-1.5 items-stretch select-none z-10"></div>
             
             <!-- BARRA COMPATTE FORGIA COSMICA (REROLL) -->
-            <div id="reforgeSection" class="glass-panel w-full p-3 sm:p-4 border-2 border-purple-500/40 flex flex-col gap-2 shrink-0 z-10 relative">
+            <div id="reforgeSection" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/88 border-2 border-purple-400/55 shadow-[0_0_22px_rgba(168,85,247,0.28)] flex flex-col gap-1.5 shrink-0 z-10 relative my-1">
                 <div class="flex items-center justify-between border-b border-gray-800 pb-1.5">
                     <span class="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Forgia Cosmica
@@ -3222,13 +3260,30 @@ const SkinSystem = {
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
         this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x828c78, map: tDirt, shininess: 2 });
-        let groundBase = new THREE.Mesh(new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2), this.groundDirtMat);
+        let groundGeo = new THREE.CircleGeometry(480, 32).rotateX(-Math.PI / 2);
+        let gUv = groundGeo.attributes.uv;
+        for (let i = 0; i < gUv.count; i++) {
+            gUv.setXY(i, (gUv.getX(i) - 0.5) * 14.0 + 0.5, (gUv.getY(i) - 0.5) * 14.0 + 0.5);
+        }
+        gUv.needsUpdate = true;
+        let groundBase = new THREE.Mesh(groundGeo, this.groundDirtMat);
         groundBase.position.y = -0.2;
         this.worldGroup.add(groundBase);
 
         this.groundGrassMat = new THREE.MeshPhongMaterial({
             color: 0x8eb07c, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 3
         });
+        this.groundGrassMat.customProgramCacheKey = () => 'title_grass_uv_v1';
+        this.groundGrassMat.onBeforeCompile = (shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <map_fragment>',
+                `#ifdef USE_MAP
+                    vec4 texelColor = texture2D( map, vUv * 4.5 );
+                    texelColor = mapTexelToLinear( texelColor );
+                    diffuseColor *= texelColor;
+                #endif`
+            );
+        };
         const patchCoords = [
             { x: 0, z: 0, s: 270 }, { x: -95, z: -75, s: 220 }, { x: 105, z: -65, s: 210 },
             { x: -85, z: 95, s: 220 }, { x: 95, z: 85, s: 205 }, { x: 0, z: -135, s: 230 }
@@ -3269,7 +3324,13 @@ const SkinSystem = {
             color: 0x1888b8, emissive: 0x0a3d52, emissiveIntensity: 0.6, roughness: 0.22, metalness: 0.1,
             map: waterTex, transparent: true, opacity: 0.92
         });
-        this.waterMesh = new THREE.Mesh(new THREE.CircleGeometry(45, 24).rotateX(-Math.PI / 2), this.waterMat);
+        let poolGeo = new THREE.CircleGeometry(45, 24).rotateX(-Math.PI / 2);
+        let pUv = poolGeo.attributes.uv;
+        for (let i = 0; i < pUv.count; i++) {
+            pUv.setXY(i, (pUv.getX(i) - 0.5) * 2.6 + 0.5, (pUv.getY(i) - 0.5) * 2.6 + 0.5);
+        }
+        pUv.needsUpdate = true;
+        this.waterMesh = new THREE.Mesh(poolGeo, this.waterMat);
         this.waterMesh.position.y = 0.1;
 
         this.waterGlowMat = new THREE.MeshBasicMaterial({
@@ -4977,6 +5038,124 @@ const RelicSystem = {
             container.appendChild(card);
         }
 
+        const relicCountEl = document.getElementById('relic-screen-count');
+        if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
+
+        if (Game.player.relics.length > 0) {
+            let btnSel = document.getElementById('btn-select-reforge');
+            if (btnSel) {
+                btnSel.className = "w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 border-dashed border-purple-400/75 hover:border-white flex items-center justify-center bg-slate-950 shadow-[0_0_15px_rgba(168,85,247,0.35)] transition-all active:scale-95 group relative overflow-hidden shrink-0";
+            }
+        }
+
+        if (this.currentChoices.length === 0) {
+            btnProceed.disabled = false;
+            btnProceed.innerHTML = '<span>PROCEDI AL PROSSIMO PIANO</span> <i class="fa-solid fa-bolt"></i>';
+            btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_25px_rgba(56,189,248,0.7)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
+        } else {
+            btnProceed.disabled = true;
+            btnProceed.innerHTML = '<i class="fa-solid fa-hand-pointer opacity-70"></i> <span>SELEZIONA UNA RELIQUIA</span>';
+            btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-gray-400 bg-slate-950/90 border-2 border-gray-700/80 flex items-center justify-center gap-2 shrink-0 cursor-not-allowed";
+        }
+
+        container.innerHTML = '';
+        for (let i = 0; i < this.currentChoices.length; i++) {
+            let relic = this.currentChoices[i];
+
+            let rPal = {
+                bgTop: 'rgba(20, 83, 45, 0.76)', bgBot: 'rgba(6, 46, 22, 0.94)',
+                border: 'rgba(74, 222, 128, 0.72)', glow: 'rgba(34, 197, 94, 0.32)', main: '#22c55e',
+                badgeClass: 'bg-green-950/90 text-green-300 border-green-400/65 shadow-[0_0_10px_rgba(34,197,94,0.35)]',
+                iconBorder: 'border-green-400/80', titleCol: 'text-green-200',
+                fallbackIcon: 'fa-gem', rarityLabel: 'COMUNE'
+            };
+            if (relic.rarity === 'rare') {
+                rPal = {
+                    bgTop: 'rgba(30, 58, 138, 0.80)', bgBot: 'rgba(12, 28, 78, 0.95)',
+                    border: 'rgba(96, 165, 250, 0.76)', glow: 'rgba(59, 130, 246, 0.36)', main: '#3b82f6',
+                    badgeClass: 'bg-blue-950/90 text-blue-200 border-blue-400/70 shadow-[0_0_10px_rgba(59,130,246,0.4)]',
+                    iconBorder: 'border-blue-400/85', titleCol: 'text-blue-200',
+                    fallbackIcon: 'fa-shield-halved', rarityLabel: 'RARA'
+                };
+            } else if (relic.rarity === 'epic') {
+                rPal = {
+                    bgTop: 'rgba(88, 28, 135, 0.82)', bgBot: 'rgba(42, 10, 74, 0.95)',
+                    border: 'rgba(192, 132, 252, 0.80)', glow: 'rgba(168, 85, 247, 0.40)', main: '#a855f7',
+                    badgeClass: 'bg-purple-950/90 text-purple-200 border-purple-400/75 shadow-[0_0_12px_rgba(168,85,247,0.45)]',
+                    iconBorder: 'border-purple-400/85', titleCol: 'text-purple-200',
+                    fallbackIcon: 'fa-eye', rarityLabel: 'EPICA'
+                };
+            } else if (relic.rarity === 'legendary') {
+                rPal = {
+                    bgTop: 'rgba(120, 53, 15, 0.85)', bgBot: 'rgba(62, 22, 6, 0.96)',
+                    border: 'rgba(251, 191, 36, 0.88)', glow: 'rgba(245, 158, 11, 0.46)', main: '#fbbf24',
+                    badgeClass: 'bg-amber-950/90 text-amber-200 border-amber-400/80 shadow-[0_0_14px_rgba(251,191,36,0.5)]',
+                    iconBorder: 'border-amber-400/90', titleCol: 'text-amber-200',
+                    fallbackIcon: 'fa-crown', rarityLabel: 'LEGGENDARIA'
+                };
+            }
+
+            let iconClass = relic.icon || rPal.fallbackIcon;
+            let card = document.createElement('div');
+            card.id = `main-relic-card-${i}`;
+            card.className = `relic-card stagger-enter flex flex-col items-center justify-between p-2 sm:p-3 h-full cursor-pointer relative overflow-hidden`;
+            card.style.animationDelay = `${i * 90}ms`;
+            card.style.setProperty('--r-bg-top', rPal.bgTop);
+            card.style.setProperty('--r-bg-bot', rPal.bgBot);
+            card.style.setProperty('--r-border', rPal.border);
+            card.style.setProperty('--r-glow', rPal.glow);
+            card.style.setProperty('--r-main', rPal.main);
+
+            card.innerHTML = `
+                <div class="w-full flex flex-col items-center pointer-events-none shrink-0 z-10">
+                    <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${rPal.badgeClass}">${rPal.rarityLabel}</span>
+                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-[78px] h-[78px] sm:w-[96px] sm:h-[96px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
+                        <div class="absolute inset-0 opacity-45 pointer-events-none" style="background: radial-gradient(circle at center, ${rPal.main} 0%, transparent 72%);"></div>
+                        <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover relative z-10">
+                        <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-95 relative z-10" style="display:none; color:${rPal.main};"></i>
+                    </div>
+                    <h3 class="text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">${relic.name}</h3>
+                </div>
+                <div class="relic-desc-box w-full flex-1 bg-slate-950/85 border border-white/15 rounded-lg px-2 py-1.5 my-1.5 flex items-center justify-center pointer-events-none z-10">
+                    <p class="text-[9.5px] sm:text-xs font-bold text-center leading-snug text-gray-100 m-0">${relic.desc}</p>
+                </div>
+                <div id="relic-pick-pill-${i}" class="w-full py-1.5 rounded-lg bg-slate-900/90 border border-white/20 text-[8.5px] sm:text-[10px] font-black uppercase tracking-widest text-center text-gray-200 transition-all shrink-0 pointer-events-none z-10">
+                    Scegli
+                </div>
+            `;
+
+            card.onclick = () => {
+                AudioEngine.playHover();
+                this.selectedMainRelic = relic;
+
+                for (let j = 0; j < this.currentChoices.length; j++) {
+                    let c = document.getElementById(`main-relic-card-${j}`);
+                    let pill = document.getElementById(`relic-pick-pill-${j}`);
+                    if (c) {
+                        c.classList.remove('selected-relic');
+                        c.classList.add('opacity-55');
+                    }
+                    if (pill) {
+                        pill.className = "w-full py-1.5 rounded-lg bg-slate-900/90 border border-white/20 text-[8.5px] sm:text-[10px] font-black uppercase tracking-widest text-center text-gray-300 transition-all shrink-0 pointer-events-none z-10";
+                        pill.innerHTML = "Scegli";
+                    }
+                }
+
+                card.classList.remove('opacity-55');
+                card.classList.add('selected-relic');
+                let activePill = document.getElementById(`relic-pick-pill-${i}`);
+                if (activePill) {
+                    activePill.className = "w-full py-1.5 rounded-lg bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-white text-[8.5px] sm:text-[10px] font-black uppercase tracking-widest text-center text-slate-950 shadow-[0_0_12px_rgba(251,191,36,0.8)] transition-all shrink-0 pointer-events-none z-10";
+                    activePill.innerHTML = '<i class="fa-solid fa-check"></i> Scelta';
+                }
+
+                btnProceed.disabled = false;
+                btnProceed.innerHTML = '<span>CONFERMA E PROCEDI</span> <i class="fa-solid fa-angles-right"></i>';
+                btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_28px_rgba(251,191,36,0.75)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
+            };
+            container.appendChild(card);
+        }
+
         document.getElementById('relicScreen').classList.remove('hidden');
     },
 
@@ -5133,6 +5312,8 @@ const RelicSystem = {
                 descText.innerText = newRelic.desc;
                 descText.className = "text-[10px] sm:text-xs text-gray-200 mt-0.5 leading-snug font-bold";
                 
+                const relicCountEl = document.getElementById('relic-screen-count');
+                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
                 AudioEngine.playRelicDrop();
                 for(let i=0; i<20; i++) Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteLevel, 'spark');
             }, 250);
@@ -9522,7 +9703,9 @@ startGame(diffMult) {
                                         let dropRelic = choices[0]; 
                                         dropRelic.apply(Game.player);
                                         Game.player.relics.push(dropRelic);
-                                        AudioEngine.playRelicDrop();
+                                        const relicCountEl = document.getElementById('relic-screen-count');
+                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
+                AudioEngine.playRelicDrop();
                                         Game.getFloatingText().spawn(a.x, a.y + 60, "RELIQUIA: " + dropRelic.name.toUpperCase(), '#cc33ff', 45, true);
                                     } else {
                                         for(let c=0; c<15; c++) this.queueDrop('coin', a.x, a.y, 40, true);
@@ -11970,6 +12153,278 @@ class GameMap {
                     `
                 );
             };
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v8_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.onBeforeCompile = (shader) => {
+                shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
+                shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
+                shader.uniforms.uPlayerPitDir = InteractiveGrassSystem.uniforms.uPlayerPitDir;
+                const hasMapDecode = THREE.ShaderChunk && THREE.ShaderChunk.map_fragment && THREE.ShaderChunk.map_fragment.includes('mapTexelToLinear');
+                const sampleWaterTex = (uvVar) => hasMapDecode ? `mapTexelToLinear(texture2D(map, ${uvVar}))` : `texture2D(map, ${uvVar})`;
+
+                shader.vertexShader = `
+                    uniform float uTime;
+                    uniform vec4 uPlayerPit;
+                    uniform vec4 uPlayerPitDir;
+                    varying vec2 vPitWPos;
+                ` + shader.vertexShader.replace(
+                    '#include <begin_vertex>',
+                    `
+                    #include <begin_vertex>
+                    vec4 wpPit = modelMatrix * vec4(transformed, 1.0);
+                    vPitWPos = wpPit.xz;
+                    ${themeIdx === 0 ? `
+                    float wSw1 = sin(wpPit.x * 0.068 + wpPit.z * 0.042 + uTime * 2.45);
+                    float wSw2 = cos(wpPit.z * 0.074 - wpPit.x * 0.038 - uTime * 2.05);
+                    transformed.y += (wSw1 * 0.58 + wSw2 * 0.42) * 0.78;
+                    ` : `
+                    transformed.y += sin(wpPit.x * 0.058 + uTime * 2.0) * cos(wpPit.z * 0.058 - uTime * 1.6) * 0.36;
+                    `}
+                    `
+                );
+                shader.fragmentShader = `
+                    uniform float uTime;
+                    uniform vec4 uPlayerPit;
+                    uniform vec4 uPlayerPitDir;
+                    varying vec2 vPitWPos;
+                ` + shader.fragmentShader.replace(
+                    '#include <emissivemap_fragment>',
+                    `
+                    #include <emissivemap_fragment>
+                    float texLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+
+                    // --- COORDINATE IDRODINAMICHE C-INFINITO CONTINUE (Zero cuciture o raggi dritti) ---
+                    vec2 relPos = vPitWPos - uPlayerPit.xy;
+                    float pDist = length(relPos);
+                    vec2 moveDir = uPlayerPitDir.xy;
+                    float dirLenSq = dot(moveDir, moveDir);
+                    moveDir = (dirLenSq < 0.001) ? vec2(1.0, 0.0) : (moveDir * inversesqrt(dirLenSq));
+                    vec2 perpDir = vec2(-moveDir.y, moveDir.x);
+
+                    float forward = dot(relPos, moveDir);
+                    float side    = dot(relPos, perpDir);
+                    float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
+                    float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
+
+                    // Transizione morbida C-infinito tra prua (forward > 0) e poppa (forward < 0)
+                    float smoothFront = forward / (14.0 + abs(forward));
+                    float behindSmooth = smoothstep(10.0, -16.0, forward);
+                    float asymScale = 1.0 + moveInt * (0.26 * smoothFront - 0.14);
+                    float kelvinBend = (side * side) * (0.0095 * moveInt) * behindSmooth;
+                    float wakeX = forward * asymScale + kelvinBend;
+                    float wakeY = side * (1.0 + 0.12 * moveInt);
+                    float effDist = sqrt(wakeX * wakeX + wakeY * wakeY + 1.0);
+
+                    // Vettore di rifrazione UV radiale generato dal passo del giocatore
+                    vec2 pitRippleGrad = vec2(0.0);
+                    if (uPlayerPit.w > 0.01 && pDist < 125.0) {
+                        vec2 radDir = relPos / (pDist + 1.5);
+                        float refWave = cos(effDist * 0.34 - uTime * mix(5.5, 9.5, moveInt));
+                        float refEnv = smoothstep(4.0, 14.0, pDist) * exp(-pDist * 0.032) * uPlayerPit.w;
+                        pitRippleGrad = radDir * (refWave * refEnv);
+                    }
+
+                    ${themeIdx === 0 ? `
+                        // ONDE 3D SCOLPITE E ACCENTUATE (Profilo trocoidale Gerstner: creste vive e ventri profondi)
+                        float ph1 = vPitWPos.x * 0.072 + vPitWPos.y * 0.048 + uTime * 2.35 + sin(vPitWPos.y * 0.032 - uTime * 1.15) * 0.85;
+                        float ph2 = vPitWPos.y * 0.082 - vPitWPos.x * 0.044 - uTime * 1.95 + cos(vPitWPos.x * 0.036 + uTime * 1.05) * 0.75;
+                        float ph3 = (vPitWPos.x - vPitWPos.y) * 0.095 + uTime * 2.85;
+
+                        // Onde asimmetriche con creste appuntite e avvallamenti ampi
+                        float sw1 = sin(ph1 + 0.42 * sin(ph1));
+                        float sw2 = sin(ph2 + 0.38 * sin(ph2));
+                        float sw3 = cos(ph3 + 0.30 * cos(ph3));
+                        float swellHeight = sw1 * 0.46 + sw2 * 0.36 + sw3 * 0.18;
+                        float swellNorm = clamp(0.5 + 0.5 * swellHeight, 0.0, 1.0);
+
+                        // Gradiente direzionale delle onde per chiaroscuro 3D e riflessi solari sulle creste
+                        float dSwX = cos(ph1) * 0.072 * 0.46 - cos(ph2) * 0.044 * 0.36 - sin(ph3) * 0.095 * 0.18;
+                        float dSwY = cos(ph1) * 0.048 * 0.46 + cos(ph2) * 0.082 * 0.36 + sin(ph3) * 0.095 * 0.18;
+
+                    #ifdef USE_MAP
+                        vec2 wWarp = vec2(sw1, sw2) * 0.046 + pitRippleGrad * 0.036;
+                        vec2 uvWaterA = vPitWPos / 170.0 + vec2(uTime * 0.062, uTime * 0.105) + wWarp;
+                        vec2 uvWaterB = vPitWPos / 118.0 + vec2(-uTime * 0.052, uTime * 0.072) - wWarp * 0.92;
+                        vec3 wA = ${sampleWaterTex('uvWaterA')}.rgb;
+                        vec3 wB = ${sampleWaterTex('uvWaterB')}.rgb;
+                    #else
+                        vec3 wA = diffuseColor.rgb;
+                        vec3 wB = diffuseColor.rgb;
+                    #endif
+                        float pA = sqrt(clamp(dot(wA, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
+                        float pB = sqrt(clamp(dot(wB, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
+                        float texWave = pA * 0.58 + pB * 0.42;
+                        float texDiff = (pA - pB);
+
+                        // Altezza complessiva dell'onda (combinazione di onde lunghe 3D e increspature texture)
+                        float waveH = clamp(swellNorm * 0.62 + texWave * 0.38 + texDiff * 0.18, 0.0, 1.0);
+                        float waveTrough = smoothstep(0.46, 0.10, waveH);
+                        float waveBody   = smoothstep(0.18, 0.76, waveH);
+                        float waveCrest  = smoothstep(0.56, 0.86, waveH) * (0.45 + 0.55 * smoothstep(0.35, 0.82, pA * pB * 1.65));
+                        float foamRidge  = smoothstep(0.74, 0.93, waveH + pA * pB * 0.28);
+
+                        // Illuminazione direzionale 3D sulla pendenza dell'onda (lato illuminato vs lato in ombra)
+                        float slopeLit = clamp(0.5 + (dSwX * 7.5 + dSwY * 6.5) + texDiff * 0.65, 0.0, 1.0);
+                        float sunGlint = pow(clamp(slopeLit * waveH, 0.0, 1.0), 3.6);
+
+                        // Reticolo vivo di caustiche con rifrazione dinamica
+                        vec2 caustPos = vPitWPos + vec2(sw1, sw2) * 9.5 + pitRippleGrad * 20.0;
+                        float c1 = sin(caustPos.x * 0.062 + uTime * 1.95 + sin(caustPos.y * 0.052 - uTime * 1.45));
+                        float c2 = cos(caustPos.y * 0.066 - uTime * 1.70 + cos(caustPos.x * 0.056 + uTime * 1.25));
+                        float caustic = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 2.3);
+
+                        vec3 rawTex = mix(wA, wB, 0.42);
+                        vec3 tintedTex = vec3(
+                            rawTex.r * 0.10 + rawTex.b * 0.06,
+                            rawTex.g * 0.52 + rawTex.b * 0.20,
+                            max(rawTex.b, rawTex.g * 0.88) * 0.78 + 0.04
+                        );
+
+                        // Palette ad alto contrasto idrodinamico: ventri blu-smeraldo scuri, fianchi turchesi e creste spumeggianti
+                        vec3 deepTroughCol = vec3(0.008, 0.052, 0.115);
+                        vec3 midLagoonCol  = vec3(0.042, 0.305, 0.485);
+                        vec3 brightAquaCol = vec3(0.135, 0.595, 0.760);
+
+                        vec3 waterCol = mix(deepTroughCol, midLagoonCol, smoothstep(0.12, 0.56, waveH));
+                        waterCol = mix(waterCol, brightAquaCol, smoothstep(0.46, 0.84, waveH * (0.65 + 0.35 * slopeLit)));
+                        waterCol = mix(waterCol, tintedTex, 0.36);
+
+                        // Chiaroscuro nei ventri d'onda + caustiche + creste d'onda bianche/acquamarina scolpite
+                        waterCol *= mix(0.68, 1.14, slopeLit);
+                        waterCol += vec3(0.16, 0.52, 0.60) * (caustic * (0.42 - 0.18 * waveTrough));
+                        waterCol = mix(waterCol, vec3(0.48, 0.90, 0.98), waveCrest * 0.78);
+                        waterCol = mix(waterCol, vec3(0.88, 0.98, 1.00), clamp(foamRidge * 0.75 + sunGlint * 0.55, 0.0, 0.90));
+
+                        diffuseColor.rgb = waterCol;
+                        totalEmissiveRadiance = mix(
+                            vec3(0.006, 0.032, 0.068),
+                            vec3(0.085, 0.320, 0.430),
+                            clamp(waveBody * 0.65 + caustic * 0.45 + waveCrest * 0.55, 0.0, 1.0)
+                        ) * 0.44 + vec3(0.18, 0.46, 0.56) * (foamRidge * 0.32 + sunGlint * 0.25);
+
+                        // ACQUA: Anelli idrodinamici 3D (ventre scuro + cresta spumeggiante), menisco e scia di Kelvin
+                        if (uPlayerPit.w > 0.01 && pDist < 135.0) {
+                            float meniscus = exp(-abs(pDist - (10.8 + c1 * 1.1)) * 0.38) * (0.65 + 0.35 * moveInt);
+
+                            float freq = mix(0.32, 0.42, moveInt);
+                            float waveSpeed = mix(4.8, 10.8, moveInt) * mix(1.0, 1.28, clamp(spdRatio - 1.0, 0.0, 1.0));
+                            float wPhase1 = effDist * freq - uTime * waveSpeed + c1 * 0.45;
+                            float wPhase2 = effDist * (freq * 1.32) - uTime * (waveSpeed * 1.14) - c2 * 0.38;
+                            float waveComp = sin(wPhase1) * 0.64 + cos(wPhase2) * 0.36;
+
+                            float wakeTail = 1.0 + 0.68 * moveInt * behindSmooth * exp(-max(0.0, -forward) * 0.022);
+                            float ringEnv = smoothstep(5.0, 13.0, effDist) * exp(-effDist * 0.028) * wakeTail;
+
+                            float ringCrest  = smoothstep(0.28, 0.86, waveComp) * ringEnv;
+                            float ringTrough = smoothstep(0.25, 0.85, -waveComp) * ringEnv * uPlayerPit.w;
+                            float ringFoam   = smoothstep(0.64, 0.95, waveComp) * ringEnv * (0.40 + 0.60 * moveInt);
+
+                            // Bracci curvi di Kelvin a poppa modulati in onde naturali
+                            float backDist = max(0.0, -forward);
+                            float kelvinArm = abs(side) - (4.0 + pow(backDist + 1.0, 0.82) * 0.65 + c1 * 1.6);
+                            float kelvinGate = smoothstep(2.0, -10.0, forward) * exp(-backDist * 0.028) * moveInt;
+                            float kelvinWave = exp(-(kelvinArm * kelvinArm) * 0.055) * kelvinGate * (0.55 + 0.45 * sin(pDist * 0.36 - uTime * 8.2));
+
+                            // Archetto morbido di prua
+                            float bowArc = pDist - mix(13.0, 16.0, moveInt);
+                            float bowGate = smoothstep(-2.0, 8.0, forward) * exp(-(side * side) * 0.0038) * moveInt;
+                            float bowWave = exp(-(bowArc * bowArc) * 0.055) * bowGate;
+
+                            float totalCrest = clamp(ringCrest + kelvinWave * 0.72 + bowWave * 0.68 + meniscus * 0.58, 0.0, 1.0) * uPlayerPit.w;
+                            float totalFoam = clamp(ringFoam + meniscus * 0.68 + bowWave * 0.48 + kelvinWave * 0.42, 0.0, 1.0) * uPlayerPit.w;
+
+                            // Ventre d'onda scuro tra gli anelli per dare vero rilievo 3D alle onde dei passi
+                            diffuseColor.rgb *= (1.0 - ringTrough * 0.42);
+
+                            vec3 waveCyan = vec3(0.46, 0.88, 0.99);
+                            vec3 foamWhite = vec3(0.92, 0.99, 1.0);
+                            vec3 rippleCol = mix(waveCyan, foamWhite, totalFoam * 0.85);
+
+                            diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, totalCrest * 0.88);
+                            totalEmissiveRadiance += vec3(0.18, 0.52, 0.68) * totalCrest + vec3(0.28, 0.68, 0.82) * (totalFoam * 0.48);
+                        }
+                    ` : (themeIdx === 1 ? `
+                        // LAVA: Doppio campionamento convettivo di lava_water.png + spostamento viscoso delle placche
+                        float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
+                        float m2 = cos(vPitWPos.y * 0.044 - uTime * 0.70 + cos(vPitWPos.x * 0.038 + uTime * 0.52) * 1.4);
+                        float flow = 0.5 + 0.5 * m1 * m2;
+
+                    #ifdef USE_MAP
+                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.024;
+                        vec2 uvLavaA = vPitWPos / 220.0 + vec2(uTime * 0.018, uTime * 0.012) + lWarp;
+                        vec2 uvLavaB = vPitWPos / 155.0 + vec2(-uTime * 0.014, uTime * 0.019) - lWarp * 0.85;
+                        vec3 lA = ${sampleWaterTex('uvLavaA')}.rgb;
+                        vec3 lB = ${sampleWaterTex('uvLavaB')}.rgb;
+                        vec3 lavaTexCol = mix(lA, lB, 0.42);
+                        float lLumA = dot(lA, vec3(0.299, 0.587, 0.114));
+                        float lLumB = dot(lB, vec3(0.299, 0.587, 0.114));
+                        texLum = mix(lLumA, lLumB, 0.45);
+                    #else
+                        vec3 lavaTexCol = diffuseColor.rgb;
+                    #endif
+
+                        float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
+                        vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
+                        vec3 magmaCol = mix(vec3(0.88, 0.16, 0.01), vec3(1.0, 0.78, 0.18), smoothstep(0.52, 0.90, heat));
+                        magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
+                        float veinMask = smoothstep(0.32, 0.62, heat);
+                        diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
+                        totalEmissiveRadiance = mix(vec3(0.05, 0.01, 0.005), magmaCol * 1.28, veinMask);
+
+                        // INTERAZIONE LAVA VISCOSA (Zero effetto laser frontale: anelli magmatici pesanti e scia ribollente corta)
+                        if (uPlayerPit.w > 0.01 && pDist < 102.0) {
+                            // 1. Alone d'immersione e colletto di magma spostato attorno al giocatore
+                            float coreGlow = exp(-pDist * pDist * 0.0046) * (0.78 + 0.22 * sin(uTime * 3.4));
+                            float collarRadius = 12.2 + (flow - 0.5) * 3.4;
+                            float meniscusRing = exp(-abs(pDist - collarRadius) * 0.32) * (0.68 + 0.32 * moveInt);
+
+                            // 2. Onde concentriche viscose a bassa frequenza deformate dal flusso magmatico
+                            float lavaPhase = effDist * 0.27 - uTime * mix(3.6, 6.4, moveInt) + flow * 2.2;
+                            float lavaWave = smoothstep(0.30, 0.92, sin(lavaPhase));
+                            float lavaRings = lavaWave * smoothstep(7.0, 16.0, effDist) * exp(-effDist * 0.044) * (0.52 + 0.48 * moveInt);
+
+                            // 3. Scia magmatica corta e perturbata ESCLUSIVAMENTE dietro al giocatore (zero proiezione in avanti)
+                            float behindGate = smoothstep(1.5, -7.5, forward) * smoothstep(50.0, 9.0, -forward) * moveInt;
+                            float wobbledSide = side + m1 * 3.6 + sin(forward * 0.18 - uTime * 4.0) * 2.8;
+                            float trailWake = exp(-(wobbledSide * wobbledSide) * 0.0068) * behindGate * (0.55 + 0.45 * sin(forward * 0.24 + uTime * 5.0 + flow * 3.0));
+
+                            float moltenHeat = clamp(coreGlow * 0.82 + meniscusRing * 0.76 + lavaRings * 0.70 + trailWake * 0.72, 0.0, 1.0) * uPlayerPit.w;
+
+                            vec3 magmaDark = vec3(0.90, 0.20, 0.01);
+                            vec3 moltenGold = vec3(1.0, 0.86, 0.32);
+                            vec3 stepMagmaCol = mix(magmaDark, moltenGold, smoothstep(0.28, 0.86, moltenHeat));
+
+                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.90);
+                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.55);
+                        }
+                    ` : `
+                        // GHIACCIO (Fondale abissale scuro sotto la lastra: evita la dominante azzurrina e dà profondità)
+                        vec2 dirFlow = vec2(0.4472, -0.8944);
+                        vec2 dirCross = vec2(0.8944, 0.4472);
+                        float along = dot(vPitWPos, dirFlow);
+                        float across = dot(vPitWPos, dirCross);
+                        float waveA = sin(across * 0.085 + sin(along * 0.030 - uTime * 0.8) * 1.4 - uTime * 0.25);
+                        float waveB = cos(along * 0.052 - uTime * 0.9 + sin(across * 0.065) * 1.1);
+                        float stream = pow(clamp(0.5 + 0.5 * waveA * waveB, 0.0, 1.0), 2.1);
+                        float flowMix = clamp(texLum * 0.45 + stream * 0.42, 0.0, 1.0);
+                        diffuseColor.rgb = mix(vec3(0.012, 0.024, 0.044), vec3(0.045, 0.088, 0.135), flowMix);
+                        totalEmissiveRadiance = mix(vec3(0.005, 0.012, 0.025), vec3(0.035, 0.075, 0.115), flowMix) * 0.18;
+                    `)}
+                    `
+                ).replace(
+                    '#include <dithering_fragment>',
+                    `
+                    ${themeIdx !== 1 ? `
+                        float capLim = ${themeIdx === 0 ? '0.86' : '0.68'};
+                        float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
+                        if (maxC > capLim) {
+                            float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
+                            gl_FragColor.rgb *= (compressed / maxC);
+                        }
+                    ` : ''}
+                    #include <dithering_fragment>
+                    `
+                );
+            };
             cachedPitMat._isGlobalCached = true;
             window.GLOBAL_PIT_MATS[themeIdx] = cachedPitMat;
         }
@@ -12126,6 +12581,125 @@ class GameMap {
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                             if (maxIceC > 0.52) {
                                 float compIce = 0.52 + (maxIceC - 0.52) / (1.0 + (maxIceC - 0.52) * 3.0);
+                                gl_FragColor.rgb *= (compIce / maxIceC);
+                            }
+                            #include <dithering_fragment>
+                            `
+                        );
+                    };
+                    cachedIceMat.color.setHex(0xdce6ee);
+                    cachedIceMat.emissive.setHex(0x071018);
+                    cachedIceMat.emissiveIntensity = 0.10;
+                    cachedIceMat.opacity = 0.94;
+                    if (isTouchDevice) {
+                        cachedIceMat.shininess = 68;
+                        cachedIceMat.specular.setHex(0x6c8294);
+                    } else {
+                        cachedIceMat.roughness = 0.18;
+                        cachedIceMat.metalness = 0.08;
+                    }
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v8' + (isTouchDevice ? '_m' : '_d');
+                    cachedIceMat.onBeforeCompile = (shader) => {
+                        shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
+                        shader.vertexShader = `
+                            varying vec2 vIceWPos;
+                        ` + shader.vertexShader.replace(
+                            '#include <begin_vertex>',
+                            `
+                            #include <begin_vertex>
+                            vIceWPos = (modelMatrix * vec4(transformed, 1.0)).xz;
+                            `
+                        );
+                        shader.fragmentShader = `
+                            uniform vec4 uPlayerPit;
+                            varying vec2 vIceWPos;
+                        ` + shader.fragmentShader.replace(
+                            '#include <emissivemap_fragment>',
+                            `
+                            #include <emissivemap_fragment>
+                            vec3 rawIceTex = diffuseColor.rgb;
+                            float iceTex = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
+                            // Desatura la texture di base verso il ghiaccio minerale/argenteo evitando la dominante azzurra
+                            vec3 coldIceTex = mix(vec3(iceTex), rawIceTex, 0.30);
+
+                            // Banchi di brina compatta, bolle d'aria intrappolate e finestre di ghiaccio scuro profondo
+                            float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.022 + sin(vIceWPos.y * 0.025) * 1.3) * cos(vIceWPos.y * 0.021 - cos(vIceWPos.x * 0.024) * 1.2);
+                            float bubbleGrain = 0.5 + 0.5 * sin(vIceWPos.x * 0.11 + cos(vIceWPos.y * 0.09) * 2.2) * cos(vIceWPos.y * 0.12 - sin(vIceWPos.x * 0.10) * 2.2);
+                            float frostBody = smoothstep(0.20, 0.82, sheetNoise * 0.38 + iceTex * 0.52 + bubbleGrain * 0.18);
+                            float snowRime  = smoothstep(0.58, 0.92, frostBody * 0.72 + iceTex * 0.38);
+
+                            // Reticolo di fratture di tensione multi-scala con ombra di parallasse interna (spessore 3D della lastra)
+                            vec2 ip = vIceWPos * 0.017;
+                            vec2 warp = vec2(
+                                sin(ip.y * 2.4 + iceTex * 2.1) * 0.42,
+                                cos(ip.x * 2.2 - iceTex * 2.1) * 0.42
+                            );
+                            float f1 = abs(fract((ip.x * 0.86 + ip.y * 0.50 + warp.x) * 0.54) - 0.5);
+                            float f2 = abs(fract((ip.x * 0.46 - ip.y * 0.89 + warp.y) * 0.42 + 0.27) - 0.5);
+                            float f3 = abs(fract((ip.x * 0.92 - ip.y * 0.38 - warp.x * 0.7) * 0.85 + 0.13) - 0.5);
+
+                            // Frattura spostata per simulare la parete verticale interna del ghiaccio spesso
+                            float f1Depth = abs(fract(((ip.x + 0.032) * 0.86 + (ip.y + 0.038) * 0.50 + warp.x) * 0.54) - 0.5);
+                            float f2Depth = abs(fract(((ip.x + 0.028) * 0.46 - (ip.y + 0.032) * 0.89 + warp.y) * 0.42 + 0.27) - 0.5);
+
+                            float mainCrack  = 1.0 - smoothstep(0.0, 0.016, f1);
+                            float subCrack   = (1.0 - smoothstep(0.0, 0.012, f2)) * 0.72;
+                            float microCrack = (1.0 - smoothstep(0.0, 0.010, f3)) * 0.42 * smoothstep(0.35, 0.75, frostBody);
+                            float crackMask  = clamp(mainCrack + subCrack + microCrack, 0.0, 1.0);
+
+                            float depthWall = clamp((1.0 - smoothstep(0.0, 0.036, f1Depth)) * 0.75 + (1.0 - smoothstep(0.0, 0.028, f2Depth)) * 0.50, 0.0, 1.0);
+                            float crackBevel = (1.0 - smoothstep(0.016, 0.062, f1)) * 0.52;
+
+                            // Graffi superficiali del vento/ghiacciaio e riflesso speculare cristallino sulla lastra piatta
+                            float scratchCoord = (vIceWPos.x * 0.82 + vIceWPos.y * 0.57) * 0.28 + sin(vIceWPos.x * 0.03) * 1.6;
+                            float scratchCoord2 = (vIceWPos.x * 0.35 - vIceWPos.y * 0.93) * 0.22 + cos(vIceWPos.y * 0.03) * 1.4;
+                            float scratches = pow(clamp(0.5 + 0.5 * sin(scratchCoord), 0.0, 1.0), 14.0) * 0.38
+                                            + pow(clamp(0.5 + 0.5 * cos(scratchCoord2), 0.0, 1.0), 16.0) * 0.28;
+                            scratches *= smoothstep(0.25, 0.75, sheetNoise);
+
+                            // Palette Lastra di Ghiaccio: ardesia glaciale scura nelle trasparenze, grigio-argento nel corpo, bianco brina in superficie
+                            vec3 deepSlabCol    = vec3(0.11, 0.16, 0.22);
+                            vec3 midGlacierCol  = vec3(0.45, 0.52, 0.58);
+                            vec3 frostedSlabCol = vec3(0.70, 0.76, 0.81);
+                            vec3 snowRimeCol    = vec3(0.84, 0.88, 0.92);
+
+                            vec3 slabCol = mix(deepSlabCol, midGlacierCol, smoothstep(0.08, 0.52, frostBody));
+                            slabCol = mix(slabCol, frostedSlabCol, smoothstep(0.45, 0.85, frostBody));
+                            slabCol = mix(slabCol, coldIceTex * 0.92, 0.36);
+                            slabCol = mix(slabCol, snowRimeCol, snowRime * 0.52);
+
+                            // Ombra interna 3D della crepa (spessore lastra) + bordo fratturato bianco-cristallo + graffi
+                            slabCol = mix(slabCol, vec3(0.05, 0.09, 0.14), clamp(depthWall * 0.65 + crackBevel * 0.55, 0.0, 0.78) * (1.0 - crackMask));
+                            slabCol = mix(slabCol, vec3(0.90, 0.95, 0.98), clamp(crackMask * 0.88 + scratches * 0.65, 0.0, 0.94));
+
+                            // Alone cristallino e micro-fratture di pressione sotto i passi del giocatore sul ghiaccio
+                            float stepFrost = 0.0;
+                            if (uPlayerPit.w > 0.01) {
+                                float iDist = length(vIceWPos - uPlayerPit.xy);
+                                if (iDist < 65.0) {
+                                    float iRing = exp(-abs(iDist - 12.0) * 0.26) * 0.58 + exp(-iDist * 0.055) * 0.48;
+                                    stepFrost = clamp(iRing * (0.58 + 0.42 * crackMask), 0.0, 1.0) * uPlayerPit.w;
+                                    slabCol = mix(slabCol, vec3(0.88, 0.93, 0.97), stepFrost * 0.62);
+                                }
+                            }
+
+                            diffuseColor.rgb = slabCol;
+                            totalEmissiveRadiance = mix(
+                                vec3(0.015, 0.025, 0.038),
+                                vec3(0.11, 0.14, 0.18),
+                                clamp(snowRime * 0.45 + crackMask * 0.75 + scratches * 0.50 + stepFrost * 0.70, 0.0, 1.0)
+                            ) * 0.22;
+
+                            // Lastra solida e spessa: più opaca sulle zone di brina/crepe e traslucida sulle finestre scure
+                            float slabOpacity = mix(0.80, 0.95, frostBody);
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.97), 0.80, 0.97);
+                            `
+                        ).replace(
+                            '#include <dithering_fragment>',
+                            `
+                            float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
+                            if (maxIceC > 0.72) {
+                                float compIce = 0.72 + (maxIceC - 0.72) / (1.0 + (maxIceC - 0.72) * 3.0);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -12722,7 +13296,7 @@ class GameMap {
                                 float frostNoise = sin(uArc * 3.0) * 0.08 + cos(uArc * 7.0 + 1.2) * 0.05 + sin(uArc * 11.0) * 0.03;
                                 float rimeEdge = 1.0 - smoothstep(0.18 + frostNoise, 0.60 + frostNoise, d);
                                 float crystalGlint = smoothstep(0.05, 0.16, d) * (1.0 - smoothstep(0.16, 0.32, d));
-                                vec3 rimeCol = mix(vec3(0.46, 0.74, 0.90), vec3(0.84, 0.94, 1.0), clamp(rimeEdge * 0.65 + crystalGlint * 0.35, 0.0, 1.0));
+                                vec3 rimeCol = mix(vec3(0.56, 0.64, 0.72), vec3(0.88, 0.93, 0.97), clamp(rimeEdge * 0.65 + crystalGlint * 0.35, 0.0, 1.0));
                                 float rimeAlpha = clamp(rimeEdge * 0.76, 0.0, 0.80) * deepFade;
                                 diffuseColor = vec4(rimeCol, rimeAlpha);
                             `)}
@@ -13968,6 +14542,8 @@ this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (
                 Game.floorBonusRelics = (Game.floorBonusRelics || 0) + 1;
                 let dropRelic = choices[0];
                 dropRelic.apply(Game.player); Game.player.relics.push(dropRelic);
+                const relicCountEl = document.getElementById('relic-screen-count');
+                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
                 AudioEngine.playRelicDrop();
                 Game.getFloatingText().spawn(this.x, this.y + 40, "RELIQUIA SEGRETA!", '#fbbf24', 35, true);
             } else {
@@ -19051,7 +19627,9 @@ class Enemy extends Entity {
                     dropRelic.apply(Game.player);
                     Game.player.relics.push(dropRelic);
                     Game.getFloatingText().spawn(this.x, this.y + 30, "RELIQUIA TROVATA: " + dropRelic.name.toUpperCase(), '#fbbf24', 45, true);
-                    AudioEngine.playRelicDrop();
+                    const relicCountEl = document.getElementById('relic-screen-count');
+                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
+                AudioEngine.playRelicDrop();
                     let bonusP = AppSettings.isLow ? 10 : 40;
                     for (let i = 0; i < bonusP; i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteLevel, 'spark');
                 }
@@ -19643,7 +20221,9 @@ class BossEnemy extends Enemy {
                         extraRelic.apply(Game.player);
                         Game.player.relics.push(extraRelic);
                         Game.getFloatingText().spawn(this.x, this.y + 40, "DROP BONUS: " + extraRelic.name.toUpperCase(), '#fbbf24', 45, true);
-                        AudioEngine.playRelicDrop();
+                        const relicCountEl = document.getElementById('relic-screen-count');
+                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
+                AudioEngine.playRelicDrop();
                         let bonusParticles = AppSettings.isLow ? 10 : 40;
                         for (let i = 0; i < bonusParticles; i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteLevel, 'spark');
                     }
