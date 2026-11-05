@@ -1635,7 +1635,7 @@ const AppSettings = {
         if (typeof Game !== 'undefined' && Game.mistSystem) {
             Game.mistSystem.visible = !this.isLow;
             if (Game.mistMat1 && isTouchDevice) {
-                Game.mistMat1.opacity = this.isUltra ? 0.095 : 0.065;
+                Game.mistMat1.opacity = this.isUltra ? 0.22 : 0.18;
             }
         }
 
@@ -4088,26 +4088,28 @@ const DeathSceneSystem = {
 
         // Raggio massimo per coprire completamente tutti e quattro gli angoli
         const maxRadius = Math.hypot(Math.max(cx, w - cx), Math.max(cy, h - cy)) * 1.05;
-        const duration = 850; // ms
+        const duration = 1350; // ms: chiusura piÃ¹ dolce, gentile, fluida e cinematografica
         const startTime = performance.now();
 
         const renderFrame = (now) => {
             const elapsed = now - startTime;
             const p = Math.min(1.0, elapsed / duration);
-            // Easing cubico per una chiusura morbida ed elegante
-            const ease = 1 - Math.pow(1 - p, 3);
+            // Easing morbido a curva ad S (avvio gentile senza scatti, contrazione fluida e decelerazione delicata sul giocatore)
+            const ease = p < 0.5 
+                ? 4 * p * p * p 
+                : 1 - Math.pow(-2 * p + 2, 3) / 2;
             const radius = Math.max(0, maxRadius * (1 - ease));
 
-            // Disegna nero solido su TUTTO lo schermo: matematicamente impossibile che si intraveda il campo sotto
+            // Disegna nero solido su TUTTO lo schermo
             ctx.clearRect(0, 0, w, h);
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
 
             if (radius > 0.5) {
-                // Svuota il cerchio sul giocatore con morbida sfumatura radiale
+                // Svuota il cerchio sul giocatore con sfumatura radiale vellutata (feather esteso per eliminare bordi duri)
                 ctx.globalCompositeOperation = 'destination-out';
-                const feather = Math.min(32, radius * 0.35);
+                const feather = Math.min(68, Math.max(22, radius * 0.42));
                 const grad = ctx.createRadialGradient(cx, cy, Math.max(0, radius - feather), cx, cy, radius);
                 grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
                 grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -4131,12 +4133,12 @@ const DeathSceneSystem = {
                 if (this.active) this.update(0.016);
 
                 // Dissolvenza morbida del velo nero per rivelare la scena 3D
-                canvas.style.transition = 'opacity 0.38s ease-out';
+                canvas.style.transition = 'opacity 0.48s ease-out';
                 canvas.style.opacity = '0';
                 this._transitionTimeout = setTimeout(() => {
                     canvas.style.display = 'none';
                     ctx.clearRect(0, 0, w, h);
-                }, 380);
+                }, 480);
             }
         };
 
@@ -8067,7 +8069,7 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             texMist.repeat.set(8, 8);
 
             this.mistMat1 = new THREE.MeshBasicMaterial({
-                map: texMist, transparent: true, opacity: isTouchDevice ? (AppSettings.isUltra ? 0.095 : 0.065) : 0.12, depthWrite: false, blending: THREE.AdditiveBlending
+                map: texMist, transparent: true, opacity: isTouchDevice ? (AppSettings.isUltra ? 0.22 : 0.18) : 0.22, depthWrite: false, blending: THREE.AdditiveBlending
             });
 
             let plane1 = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000), this.mistMat1);
@@ -8775,12 +8777,12 @@ pushDebris(px, pz, radius, force) {
             this.mistWindTime = (this.mistWindTime || 0) + dt;
             
             if (this.mistMat1 && this.mistMat1.map) {
-                this.mistMat1.map.offset.x = (this.player.x / 6000) * 8 + (this.mistWindTime * 0.015);
-                this.mistMat1.map.offset.y = -(this.player.y / 6000) * 8 + (this.mistWindTime * 0.010);
+                this.mistMat1.map.offset.x = (this.player.x / 5000) * 5 + (this.mistWindTime * 0.042);
+                this.mistMat1.map.offset.y = -(this.player.y / 5000) * 5 + (this.mistWindTime * 0.026) + Math.sin(this.mistWindTime * 0.35) * 0.018;
             }
             if (this.mistMat2 && this.mistMat2.map) {
-                this.mistMat2.map.offset.x = (this.player.x / 6000) * 12 - (this.mistWindTime * 0.008);
-                this.mistMat2.map.offset.y = -(this.player.y / 6000) * 12 + (this.mistWindTime * 0.018);
+                this.mistMat2.map.offset.x = (this.player.x / 5000) * 7 - (this.mistWindTime * 0.028);
+                this.mistMat2.map.offset.y = -(this.player.y / 5000) * 7 + (this.mistWindTime * 0.045);
             }
             this.mistSystem.visible = !AppSettings.isLow; 
         }
@@ -9201,15 +9203,15 @@ loop(timestamp) {
         this.scene.background = new THREE.Color(currentTheme.fog); 
         // Tinge e ripristina l'opacità della nebbia 3D per il nuovo piano
         if (this.mistSystem) {
-            let baseColor = new THREE.Color(currentTheme.fog);
-            baseColor.lerp(new THREE.Color(0xffffff), 0.25);
+            let mistTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
+            mistTint.lerp(new THREE.Color(0xffffff), 0.70); // Vapore luminoso e arioso (evita fango scuro slavato)
             if (this.mistMat1) {
-                this.mistMat1.color.copy(baseColor);
-                this.mistMat1.opacity = isTouchDevice ? 0.08 : 0.12;
+                this.mistMat1.color.copy(mistTint);
+                this.mistMat1.opacity = isTouchDevice ? 0.20 : 0.24;
             }
             if (this.mistMat2) {
-                this.mistMat2.color.copy(baseColor);
-                this.mistMat2.opacity = 0.08;
+                this.mistMat2.color.copy(mistTint);
+                this.mistMat2.opacity = 0.14;
             }
         }
        if (window.GLOBAL_FOG_MAT) {
@@ -21638,7 +21640,7 @@ const Preloader = {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
 
-        // Disegna sbuffi di vapore con wrap toroidale per un tiling seamless perfetto sui bordi
+        // Disegna sbuffi di vapore ad alto contrasto con wrap toroidale per un tiling seamless perfetto
         function drawPuff(cx, cy, radius, alpha) {
             for (let ox of [-size, 0, size]) {
                 for (let oy of [-size, 0, size]) {
@@ -21646,10 +21648,11 @@ const Preloader = {
                     const y = cy + oy;
                     if (x + radius < 0 || x - radius > size || y + radius < 0 || y - radius > size) continue;
                     const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                    // Nucleo bianco e brillante, caduta rapida dell'alpha per evitare l'effetto velo slavato
                     grad.addColorStop(0, "rgba(255,255,255," + alpha.toFixed(3) + ")");
-                    grad.addColorStop(0.35, "rgba(240,245,255," + (alpha * 0.65).toFixed(3) + ")");
-                    grad.addColorStop(0.70, "rgba(220,230,245," + (alpha * 0.22).toFixed(3) + ")");
-                    grad.addColorStop(1, "rgba(200,215,235,0)");
+                    grad.addColorStop(0.32, "rgba(255,255,255," + (alpha * 0.72).toFixed(3) + ")");
+                    grad.addColorStop(0.68, "rgba(240,248,255," + (alpha * 0.16).toFixed(3) + ")");
+                    grad.addColorStop(1, "rgba(215,230,250,0)");
                     ctx.fillStyle = grad;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -21658,40 +21661,42 @@ const Preloader = {
             }
         }
 
-        // 1. Grandi banchi di vapore principali (creano isole di nebbia distinte con varchi intermedi dove il terreno risalta)
-        const clusters = [
-            { x: 50,  y: 65,  r: 68, a: 0.38 },
-            { x: 95,  y: 90,  r: 54, a: 0.32 },
-            { x: 195, y: 175, r: 76, a: 0.42 },
-            { x: 225, y: 130, r: 58, a: 0.30 },
-            { x: 145, y: 220, r: 50, a: 0.28 },
-            { x: 60,  y: 200, r: 46, a: 0.24 }
-        ];
-        clusters.forEach(c => drawPuff(c.x, c.y, c.r, c.a));
+        // BANCHI DI NEBBIA AD ALTO CONTRASTO:
+        // Formiamo due soli grandi cumuli di vapore compatti e scolpiti (occupano solo il 35-40% del canvas)
+        // lasciando oltre il 60% del canvas a trasparenza PURA (zero velo continuo, zero slavatura)
+        
+        // Cumulo 1: Banco vaporoso nord-ovest
+        drawPuff(68, 72, 62, 0.58);
+        drawPuff(98, 92, 48, 0.48);
+        drawPuff(44, 88, 42, 0.44);
+        drawPuff(84, 52, 38, 0.38);
+        drawPuff(112, 68, 30, 0.32);
 
-        // 2. Micro-volute e filamenti interni (arricchiscono il dettaglio e la silhouette della nebbia)
-        const subPuffs = [
-            { x: 40,  y: 50,  r: 32, a: 0.28 },
-            { x: 75,  y: 75,  r: 28, a: 0.26 },
-            { x: 110, y: 105, r: 35, a: 0.22 },
-            { x: 180, y: 155, r: 42, a: 0.30 },
-            { x: 215, y: 195, r: 38, a: 0.27 },
-            { x: 165, y: 205, r: 34, a: 0.24 },
-            { x: 130, y: 55,  r: 26, a: 0.18 },
-            { x: 235, y: 70,  r: 30, a: 0.20 },
-            { x: 25,  y: 160, r: 28, a: 0.19 },
-            { x: 100, y: 180, r: 30, a: 0.18 }
-        ];
-        subPuffs.forEach(p => drawPuff(p.x, p.y, p.r, p.a));
+        // Cumulo 2: Banco vaporoso sud-est
+        drawPuff(188, 178, 68, 0.62);
+        drawPuff(154, 196, 46, 0.46);
+        drawPuff(222, 162, 48, 0.48);
+        drawPuff(204, 214, 40, 0.36);
+        drawPuff(168, 150, 32, 0.32);
 
-        // 3. Striature di turbolenza orizzontale e diagonale (evitano la piattezza e danno movimento)
-        for (let i = 0; i < 22; i++) {
-            const bx = (i * 37 + 19) % size;
-            const by = (i * 53 + 41) % size;
-            const br = 14 + (i % 5) * 4;
-            const ba = 0.08 + (i % 4) * 0.04;
-            drawPuff(bx, by, br, ba);
+        // Micro-sbuffo di raccordo volante
+        drawPuff(138, 118, 26, 0.22);
+
+        // Pulizia ad alto contrasto dei pixel:
+        // Taglia a ZERO assoluto ogni alone debole che causa desaturazione/slavatura
+        // ed esalta il contrasto del corpo vaporoso dei banchi
+        const imgData = ctx.getImageData(0, 0, size, size);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+            let a = d[i + 3] / 255.0;
+            if (a < 0.05) {
+                d[i + 3] = 0; // Trasparenza assoluta: il terreno sotto resta brillante e coi neri intatti
+            } else {
+                // Curva di contrasto: elimina il grigiore piatto e rende i banchi corposi e scolpiti
+                d[i + 3] = Math.min(255, Math.floor(Math.pow(a, 1.25) * 255 * 1.12));
+            }
         }
+        ctx.putImageData(imgData, 0, 0);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
