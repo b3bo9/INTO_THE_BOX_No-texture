@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -3216,9 +3216,9 @@ const SkinSystem = {
                 '#include <color_fragment>',
                 `
                 #include <color_fragment>
-                vec3 rootCol = ${isCanopy ? 'diffuseColor.rgb * 0.48' : 'diffuseColor.rgb * 0.35'};
-                vec3 tipCol = diffuseColor.rgb * mix(1.08, 1.28, vVar);
-                diffuseColor.rgb = mix(rootCol, tipCol, ${isCanopy ? 'smoothstep(0.0, 1.0, vH)' : 'smoothstep(0.06, 0.90, vH)'});
+                vec3 rootCol = ${isCanopy ? 'diffuseColor.rgb * 0.48' : 'diffuseColor.rgb * 0.28'};
+                vec3 tipCol = diffuseColor.rgb * mix(1.22, 1.45, vVar);
+                diffuseColor.rgb = mix(rootCol, tipCol, ${isCanopy ? 'smoothstep(0.0, 1.0, vH)' : 'pow(smoothstep(0.12, 0.88, vH), 1.5)'});
                 `
             );
         };
@@ -10993,7 +10993,7 @@ const InteractiveGrassSystem = {
             emissive: 0x040902    // Usa la normale morbida (0,1,0) evitando sfaccettature nere e calcoli dFdx/dFdy nel Fragment Shader
         });
 
-        this.mat.customProgramCacheKey = () => 'interactive_grass_v3';
+        this.mat.customProgramCacheKey = () => 'interactive_grass_v5';
         this.mat.onBeforeCompile = (shader) => {
             shader.uniforms.uWindSources = this.uniforms.uWindSources;
             shader.uniforms.uWindCount = this.uniforms.uWindCount;
@@ -11113,18 +11113,18 @@ const InteractiveGrassSystem = {
                 #include <color_fragment>
                 
                 // Colore punta viva del ciuffo d'erba (colorazione attuale Three.js)
-                vec3 bladeTipCol = diffuseColor.rgb * 1.12; 
-                vec3 dryTipColor = diffuseColor.rgb * vec3(1.06, 1.00, 0.90);
-                vec3 finalTipColor = mix(bladeTipCol, dryTipColor, vColorRandom * 0.28);
+                vec3 bladeTipCol = diffuseColor.rgb * 1.50; 
+                vec3 dryTipColor = diffuseColor.rgb * vec3(1.22, 1.15, 0.90) * 1.42;
+                vec3 finalTipColor = mix(bladeTipCol, dryTipColor, vColorRandom * 0.35);
                 
                 // Base del ciuffo: perfettamente calibrata sulla tonalitÃ  della texture del terreno sottostante (piÃ¹ scura)
                 // con micro-occlusione ambientale (AO) alla radice e leggera variazione organica per zero stacco
-                vec3 groundRootCol = uGroundGrassColor * mix(0.78, 1.05, vColorRandom);
+                vec3 groundRootCol = uGroundGrassColor * mix(0.52, 0.78, vColorRandom);
                 
                 // Sfumatura morbida radice-punta:
                 // Ancoraggio solido nei primi centimetri a terra (zero stacco col terreno),
                 // poi transizione fluida verso la punta che conserva l'attuale colorazione viva
-                float hCurve = smoothstep(0.05, 0.88, vHeight);
+                float hCurve = pow(smoothstep(0.15, 0.85, vHeight), 1.6);
                 vec3 finalGrassColor = mix(groundRootCol, finalTipColor, hCurve);
                 
                 diffuseColor.rgb = finalGrassColor;
