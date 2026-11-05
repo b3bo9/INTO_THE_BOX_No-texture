@@ -11029,8 +11029,8 @@ const InteractiveGrassSystem = {
                 // Genera un valore pseudo-casuale (da 0.0 a 1.0) basato sulle coordinate nel mondo
                 vColorRandom = fract(sin(dot(basePos.xz, vec2(12.9898, 78.233))) * 43758.5453);
 
-         // Scarta istantaneamente i fili d'erba fuori dall'inquadratura prima di vento, trigonometria e luci Lambert
-                if (abs(basePos.x - uCamPos.x) > 1300.0 || basePos.z > uCamPos.z + 120.0 || basePos.z < uCamPos.z - 1600.0) {
+        // Scarta i fili d'erba fuori dall'inquadratura mantenendo ampio margine attorno alla camera
+                if (abs(basePos.x - uCamPos.x) > 1400.0 || basePos.z > uCamPos.z + 250.0 || basePos.z < uCamPos.z - 1700.0) {
                     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
                     return;
                 }
@@ -11050,19 +11050,13 @@ const InteractiveGrassSystem = {
                         vec2 dir = basePos.xz - vec2(windData.x, windData.z);
                         float distSq = dot(dir, dir);
                         
-                        // Raggio d'azione ridotto a 150 unità (distSq < 22500)
+                        // Raggio d'azione 150 unità (distSq < 22500)
                         if(distSq < 22500.0 && distSq > 0.1) {
                             float invDist = inversesqrt(distSq);
                             float dist = distSq * invDist;
                             float falloff = 1.0 - (dist * 0.0066667);
                             float pushForce = falloff * falloff;
                             interactDir += (dir * invDist) * (pushForce * 40.0 * windData.y);
-                        }
-                    
-                            float dist = sqrt(distSq);
-                            float falloff = 1.0 - (dist / 150.0);
-                            float pushForce = falloff * falloff;
-                            interactDir += (dir / dist) * (pushForce * 40.0 * windData.y);
                         }
                     }
                 }
