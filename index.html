@@ -1156,20 +1156,20 @@ body.colorblind-mode #opt-colorblind-text {
                     </div>
                 </div>
 
-                <button id="btn-restart" onclick="restartGame()" class="btn-cyber glass-panel box-glow-purple w-full py-3 sm:py-3.5 text-base sm:text-lg font-display font-black text-purple-200 border-2 border-purple-500/60 bg-purple-950/60 hover:bg-purple-900/80 shadow-[0_0_20px_rgba(168,85,247,0.4)] group transition-all">
+                <button id="btn-restart" onclick="restartGame()" class="btn-cyber w-full min-h-[54px] sm:min-h-[58px] py-3.5 sm:py-4 rounded-xl text-base sm:text-lg font-display font-black text-white border-2 border-purple-400 bg-gradient-to-r from-purple-800 via-indigo-700 to-purple-800 hover:from-purple-700 hover:to-indigo-600 shadow-[0_0_24px_rgba(168,85,247,0.5)] group transition-all active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-rotate-right group-hover:animate-spin mr-1"></i> RIPROVA
                 </button>
 
                 <!-- TASTO RITORNA IN BATTAGLIA ROSSO E PIÙ GRANDE -->
-                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber glass-panel box-glow-red w-full py-4 sm:py-4.5 text-lg sm:text-xl font-display font-black text-white border-2 border-red-500 bg-red-950/85 hover:bg-red-900 shadow-[0_0_28px_rgba(239,68,68,0.6)] group transition-all tracking-wider">
+                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber w-full min-h-[58px] sm:min-h-[64px] py-4 rounded-xl text-lg sm:text-xl font-display font-black text-white border-2 border-red-400 bg-gradient-to-r from-red-800 via-rose-700 to-red-800 hover:from-red-700 hover:to-rose-600 shadow-[0_0_28px_rgba(239,68,68,0.7)] group transition-all tracking-wider active:scale-95 cursor-pointer">
                     <i class="fa-solid fa-bolt mr-2 text-amber-300 animate-pulse"></i> RITORNA IN BATTAGLIA
                 </button>
 
                 <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2 text-[10px] sm:text-xs font-bold text-purple-200 border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60">
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber bg-slate-950/85 border-2 border-purple-400/60 hover:border-purple-300 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-purple-200 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.25)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-gem mr-1"></i> RELIQUIE
                     </button>
-                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2 text-[10px] sm:text-xs font-bold text-gray-200 border border-gray-600/50 bg-black/60 hover:bg-white/10">
+                    <button onclick="goToMainMenu()" class="btn-cyber bg-slate-950/85 border-2 border-gray-600/70 hover:border-gray-400 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-gray-200 uppercase tracking-widest rounded-xl shadow-[0_0_12px_rgba(156,163,175,0.18)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-bars mr-1"></i> MENU
                     </button>
                 </div>
@@ -1228,10 +1228,10 @@ body.colorblind-mode #opt-colorblind-text {
             <!-- 4. BOTTONI AZIONE IN BASSO -->
             <div class="w-full flex flex-col gap-2 shrink-0 z-20 mt-1">
                 <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber glass-panel box-glow-purple w-full py-2.5 text-[10px] sm:text-xs font-bold text-purple-200 border-purple-400/50">
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber bg-slate-950/85 border-2 border-purple-400/60 hover:border-purple-300 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-purple-200 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.25)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-gem text-purple-400"></i> Le Tue Reliquie
                     </button>
-                    <button onclick="goToMainMenu()" class="btn-cyber glass-panel box-glow-gray w-full py-2.5 text-[10px] sm:text-xs font-bold text-gray-300 uppercase tracking-widest">
+                    <button onclick="goToMainMenu()" class="btn-cyber bg-slate-950/85 border-2 border-gray-600/70 hover:border-gray-400 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-gray-200 uppercase tracking-widest rounded-xl shadow-[0_0_12px_rgba(156,163,175,0.18)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-bars"></i> Menu
                     </button>
                 </div>
@@ -1253,7 +1253,7 @@ body.colorblind-mode #opt-colorblind-text {
 
             <div id="highScoresList" class="flex flex-col gap-2.5 min-h-[200px] overflow-y-auto custom-scrollbar pr-1 flex-1 relative z-10"></div>
 
-            <button onclick="hideHighScores()" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_24px_rgba(251,191,36,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
+            <button onclick="hideHighScores()" class="mt-4 w-full min-h-[50px] sm:min-h-[54px] py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_24px_rgba(251,191,36,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
@@ -1323,7 +1323,7 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
 
             <!-- TASTO PROCEDI -->
-            <button id="btn-proceed-relic" onclick="RelicSystem.proceedToNextFloor()" class="btn-cyber glass-panel box-glow-gray w-full py-3.5 sm:py-4 px-6 text-xs sm:text-sm text-gray-500 shrink-0 cursor-not-allowed" disabled>
+            <button id="btn-proceed-relic" onclick="RelicSystem.proceedToNextFloor()" class="btn-cyber w-full min-h-[56px] sm:min-h-[60px] py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-gray-500 bg-slate-900/90 border-2 border-gray-700/60 shrink-0 cursor-not-allowed flex items-center justify-center" disabled>
                 Seleziona una Reliquia
             </button>
         </div>
@@ -1352,8 +1352,8 @@ body.colorblind-mode #opt-colorblind-text {
 
             <!-- PULSANTI ANNULLA / RIFORGIA ORA -->
             <div class="flex gap-3 mt-4 w-full shrink-0 relative z-10">
-                <button onclick="UIManager.hideModal('reforgeSelectModal')" class="btn-cyber bg-slate-950/90 border-2 border-gray-600/80 rounded-xl box-glow-gray flex-1 py-3.5 text-xs sm:text-sm font-display font-black text-gray-300 uppercase tracking-widest">Annulla</button>
-                <button id="btn-confirm-sacrifice" onclick="RelicSystem.confirmSacrificeSelection()" class="btn-cyber glass-panel flex-1 py-3.5 text-xs sm:text-sm font-bold text-purple-300 uppercase tracking-widest opacity-50 cursor-not-allowed grayscale" disabled>
+                <button onclick="UIManager.hideModal('reforgeSelectModal')" class="btn-cyber bg-slate-950/90 border-2 border-gray-600/80 rounded-xl box-glow-gray flex-1 min-h-[48px] sm:min-h-[52px] py-3 text-xs sm:text-sm font-display font-black text-gray-300 uppercase tracking-widest active:scale-95 cursor-pointer">Annulla</button>
+                <button id="btn-confirm-sacrifice" onclick="RelicSystem.confirmSacrificeSelection()" class="btn-cyber glass-panel flex-1 min-h-[48px] sm:min-h-[52px] py-3 text-xs sm:text-sm font-bold text-purple-300 uppercase tracking-widest opacity-50 cursor-not-allowed grayscale rounded-xl" disabled>
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Riforgia Ora
                 </button>
             </div>
@@ -1705,6 +1705,7 @@ const AppSettings = {
                     Game.flashLights[i].light.intensity = 0;
                 }
             }
+        
             if (false) {
                 [].forEach(c => {
                 });
@@ -2608,11 +2609,11 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     },
     // TEMA 3: CAVERNA CRISTALLINA (Esposizione glaciale calibrata con alto contrasto su ice_*.png)
     { 
-        dirt: 0x55738c, grass: 0x6288a4, rock: 0x53718a, wall: 0x3e586b, 
-        grassShader: 0x144157, grassEmissive: 0x030d17,
-        canopyShader: 0x123a4f, canopyEmissive: 0x030b14, tree: 0x0a1a29,
-        debris: 0x162634, groundMist: 0x3e6a87,
-        ambient: 0x151b36, dirLight: 0x76cae6, fog: 0x050914
+        dirt: 0x5e7e9a, grass: 0x6e96b4, rock: 0x5c7c98, wall: 0x456277, 
+        grassShader: 0x184d67, grassEmissive: 0x04111d,
+        canopyShader: 0x16445c, canopyEmissive: 0x040e1a, tree: 0x0d2033,
+        debris: 0x1a2e3f, groundMist: 0x477899,
+        ambient: 0x192244, dirLight: 0x82d4f0, fog: 0x060b18
     }
 ];
 
@@ -3626,7 +3627,7 @@ const SkinSystem = {
             // 1: Fucina Infernale (Rosso)
             { fog: 0x120405, dirt: 0x94746a, grass: 0xb87864, foliage: 0x361108, canopy: 0x2e0f07, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x050914, dirt: 0x55738c, grass: 0x6288a4, foliage: 0x144157, canopy: 0x123a4f, water: 0x2ea3db, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x060b18, dirt: 0x5e7e9a, grass: 0x6e96b4, foliage: 0x184d67, canopy: 0x16445c, water: 0x32a8e0, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
         ];
         const p = presets[this.themeCycle];
 
@@ -5190,7 +5191,7 @@ const RelicSystem = {
 
                 btnProceed.disabled = false;
                 btnProceed.innerHTML = '<span>CONFERMA E PROCEDI</span> <i class="fa-solid fa-angles-right"></i>';
-                btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_28px_rgba(251,191,36,0.75)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
+                btnProceed.className = "w-full min-h-[56px] sm:min-h-[60px] py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border-2 border-white shadow-[0_0_28px_rgba(251,191,36,0.75)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
             };
             container.appendChild(card);
         }
@@ -9222,8 +9223,8 @@ loop(timestamp) {
         if (this.currentThemeIndex === 2) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 70, camDist + 470);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.18 : 0.12;
-                this.bloomPass.threshold = 0.82;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.20 : 0.14;
+                this.bloomPass.threshold = 0.80;
             }
         } else if (this.currentThemeIndex === 1) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 90, camDist + 460);
@@ -9242,8 +9243,8 @@ loop(timestamp) {
         Game.bossLightClear = false;
         
         // Illuminazione calibrata con contrasto profondo e anti-sovraesposizione (specialmente sul Ghiaccio)
-        let targetDirInt = (this.currentThemeIndex === 2) ? 0.88 : (this.currentThemeIndex === 1 ? 1.14 : 1.16);
-        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.50 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
+        let targetDirInt = (this.currentThemeIndex === 2) ? 0.96 : (this.currentThemeIndex === 1 ? 1.14 : 1.16);
+        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.55 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
         if (this.dirLight) { 
             this.dirLight.intensity = targetDirInt; 
             this.dirLight.color.setHex(currentTheme.dirLight); 
@@ -10053,7 +10054,7 @@ startGame(diffMult) {
                     if (this.dirLight) {
                         // FIX: Legge il colore del tema attuale invece di resettare al blu foresta
                         let currentTheme = MAP_THEMES[this.currentThemeIndex];
-                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 0.88 : (this.currentThemeIndex === 1 ? 1.14 : 1.16)); 
+                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 0.96 : (this.currentThemeIndex === 1 ? 1.14 : 1.16)); 
                         this.dirLight.color.setHex(currentTheme.dirLight); 
                     }
                 }, 180); 
@@ -11057,7 +11058,7 @@ const InteractiveGrassSystem = {
                             float pushForce = falloff * falloff;
                             interactDir += (dir * invDist) * (pushForce * 40.0 * windData.y);
                         }
-                        if (false) {
+                    
                             float dist = sqrt(distSq);
                             float falloff = 1.0 - (dist / 150.0);
                             float pushForce = falloff * falloff;
@@ -12626,9 +12627,9 @@ class GameMap {
                             `
                         );
                     };
-                    cachedIceMat.color.setHex(0xb8cad8);
+                    cachedIceMat.color.setHex(0xc2d4e2);
                     cachedIceMat.emissive.setHex(0x040a10);
-                    cachedIceMat.emissiveIntensity = 0.07;
+                    cachedIceMat.emissiveIntensity = 0.08;
                     cachedIceMat.opacity = 0.94;
                     if (isTouchDevice) {
                         cachedIceMat.shininess = 52;
@@ -12737,8 +12738,8 @@ class GameMap {
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.56) {
-                                float compIce = 0.56 + (maxIceC - 0.56) / (1.0 + (maxIceC - 0.56) * 3.5);
+                            if (maxIceC > 0.62) {
+                                float compIce = 0.62 + (maxIceC - 0.62) / (1.0 + (maxIceC - 0.62) * 3.5);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -17306,7 +17307,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 }
             }
         }
-        if (false) {
+    
             if (this.activeShieldCooldown > 0) {
                 this.activeShieldCooldown = Math.max(0, this.activeShieldCooldown - 0.5);
             }
@@ -18391,7 +18392,7 @@ class Enemy extends Entity {
                 }
             }
         }
-        if (false) {
+    
         }
 
         let aura = Game.getAuraAt(this.x, this.y);
@@ -22254,13 +22255,16 @@ window.prepareFloorScreen = function() {
     let corruptedChance = Math.min(0.45, 0.15 + (Game.floor * 0.015));
     window.nextIsCorrupted = !nextIsBoss && Game.floor >= 3 && Math.random() < corruptedChance;
 
-   let baseBtnClass = "btn-cyber glass-panel box-glow-purple w-full py-4 sm:py-5 text-xl sm:text-2xl font-display text-purple-400 border-purple-500/30 flex-col leading-none";
+    let baseFloorBtnClass = "w-full min-h-[58px] sm:min-h-[64px] py-3.5 sm:py-4 px-5 rounded-xl flex flex-col items-center justify-center font-display font-black text-lg sm:text-xl text-white tracking-wider leading-none transition-all active:scale-95 cursor-pointer select-none";
 
     if (nextIsBoss) {
-        btnNext.className = baseBtnClass;
-        btnNext.innerHTML = `<span>SCENDI PIÙ A FONDO</span>`;
+        btnNext.className = baseFloorBtnClass + " bg-gradient-to-r from-red-800 via-rose-700 to-amber-700 hover:from-red-700 hover:to-amber-600 border-2 border-amber-300 shadow-[0_0_30px_rgba(239,68,68,0.75)]";
+        btnNext.innerHTML = `<div class="flex items-center gap-2"><span>SCENDI PIÙ A FONDO</span><i class="fa-solid fa-skull text-amber-200 animate-pulse text-sm sm:text-base"></i></div><span class="text-[10px] sm:text-xs text-amber-200 tracking-widest block mt-1 font-bold font-sans uppercase">SFIDA IL BOSS DEL PIANO</span>`;
+
+
+
     } else if (window.nextIsCorrupted) {
-        btnNext.className = baseBtnClass + " animate-pulse";
+        btnNext.className = baseFloorBtnClass + " bg-gradient-to-r from-purple-800 via-fuchsia-700 to-purple-900 hover:from-purple-700 hover:to-fuchsia-600 border-2 border-fuchsia-300 shadow-[0_0_28px_rgba(217,70,239,0.7)] animate-pulse";
         
         // Shuffle Bag: garantisce che tutti i livelli corrotti abbiano esattamente la stessa probabilità senza ripetizioni
         if (!window.corruptedBag || window.corruptedBag.length === 0) {
@@ -22282,12 +22286,11 @@ window.prepareFloorScreen = function() {
 
         let rewardText = window.nextCorruptedReward === 'coins' ? "+ DOPPIE MONETE" : "+ RELIQUIA GARANTITA";
         
-        btnNext.innerHTML = `<span>SCENDI PIÙ A FONDO</span><span class="text-[10px] sm:text-xs text-purple-300 tracking-widest block mt-2 font-bold font-sans">${rewardText}</span>`;
+        btnNext.innerHTML = `<div class="flex items-center gap-2"><span>SCENDI PIÙ A FONDO</span><i class="fa-solid fa-biohazard text-fuchsia-200 text-sm sm:text-base"></i></div><span class="text-[10px] sm:text-xs text-fuchsia-200 tracking-widest block mt-1 font-bold font-sans uppercase">${rewardText}</span>`;
     } else {
-        btnNext.className = baseBtnClass;
-        btnNext.innerHTML = `<span>SCENDI PIÙ A FONDO</span>`;
+        btnNext.className = baseFloorBtnClass + " bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 hover:from-cyan-500 hover:to-indigo-600 border-2 border-cyan-300 shadow-[0_0_24px_rgba(34,211,238,0.55)]";
+        btnNext.innerHTML = `<div class="flex items-center gap-2"><span>SCENDI PIÙ A FONDO</span><i class="fa-solid fa-angles-down text-cyan-200 animate-bounce text-sm sm:text-base"></i></div>`;
     }
-    
  // --- NOTIFICA RELIQUIE (Mostra il numero esatto) ---
     const btnRelics = document.querySelector('#floorScreen button[onclick="UIManager.showCollectedRelics()"]');
     const existingNotif = document.getElementById('relic-notif');
