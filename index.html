@@ -1635,7 +1635,7 @@ const AppSettings = {
         if (typeof Game !== 'undefined' && Game.mistSystem) {
             Game.mistSystem.visible = !this.isLow;
             if (Game.mistMat1 && isTouchDevice) {
-                Game.mistMat1.opacity = this.isUltra ? 0.42 : 0.36;
+                Game.mistMat1.opacity = this.isUltra ? 0.68 : 0.62;
             }
         }
 
@@ -6873,7 +6873,7 @@ class Hazard {
         this.fireWallMesh.renderOrder = 6;
         this.fireWallGlow.renderOrder = 5;
 
-        this.group.matrixAutoUpdate = false; this.plane.matrixAutoUpdate = false; this.ring.matrixAutoUpdate = false;
+        this.group.matrixAutoUpdate = false; this.plane.matrixAutoUpdate = false; this.ring.matrixAutoUpdate = false; this.plane.renderOrder = 5; this.ring.renderOrder = 5;
         this.group.add(this.plane, this.ring, this.fireWallMesh, this.fireWallGlow);
         this.group.visible = false;
         Game.scene.add(this.group);
@@ -8064,46 +8064,70 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
 // --- SISTEMA BANCHI DI NEBBIA (shader leggero: 1 piano, 2 campionamenti texture per pixel) ---
         this.mistSystem = new THREE.Group();
         {
-            // Rumore FBM tileable generato una sola volta (128x128): banchi organici senza cuciture
+            // Texture 128x128 tileable a 2 canali indipendenti:
+            // R = Macro-isole dei banchi (definisce i singoli banchi separati da ampie zone pulite)
+            // G = Volute e filamenti interni (scolpisce i dettagli che ribollono dentro ogni banco)
             const NS = 128;
             const mc = document.createElement('canvas'); mc.width = NS; mc.height = NS;
             const mctx = mc.getContext('2d');
             const img = mctx.createImageData(NS, NS);
-            const octaves = [ { p: 4, a: 0.52 }, { p: 8, a: 0.27 }, { p: 16, a: 0.14 }, { p: 32, a: 0.07 } ];
-            const grids = octaves.map(o => { const g = new Float32Array(o.p * o.p); for (let i = 0; i < g.length; i++) g[i] = Math.random(); return g; });
-            const field = new Float32Array(NS * NS);
-            let fMin = 1e9, fMax = -1e9;
-            for (let y = 0; y < NS; y++) {
-                for (let x = 0; x < NS; x++) {
-                    let v = 0;
-                    for (let o = 0; o < octaves.length; o++) {
-                        const P = octaves[o].p, g = grids[o];
-                        const fx = x / NS * P, fy = y / NS * P;
-                        const x0 = Math.floor(fx), y0 = Math.floor(fy);
-                        const tx = fx - x0, ty = fy - y0;
-                        const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
-                        const x1 = (x0 + 1) % P, y1 = (y0 + 1) % P;
-                        const a = g[y0 * P + x0], b = g[y0 * P + x1], c2 = g[y1 * P + x0], d = g[y1 * P + x1];
-                        v += ((a + (b - a) * sx) * (1 - sy) + (c2 + (d - c2) * sx) * sy) * octaves[o].a;
+
+            function buildFbmChannel(octaves) {
+                const grids = octaves.map(o => {
+                    const g = new Float32Array(o.p * o.p);
+                    for (let i = 0; i < g.length; i++) g[i] = Math.random();
+                    return g;
+                });
+                const field = new Float32Array(NS * NS);
+                let fMin = 1e9, fMax = -1e9;
+                for (let y = 0; y < NS; y++) {
+                    for (let x = 0; x < NS; x++) {
+                        let v = 0;
+                        for (let o = 0; o < octaves.length; o++) {
+                            const P = octaves[o].p, g = grids[o];
+                            const fx = (x / NS) * P, fy = (y / NS) * P;
+                            const x0 = Math.floor(fx), y0 = Math.floor(fy);
+                            const tx = fx - x0, ty = fy - y0;
+                            const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+                            const x1 = (x0 + 1) % P, y1 = (y0 + 1) % P;
+                            const a = g[y0 * P + x0], b = g[y0 * P + x1], c2 = g[y1 * P + x0], d = g[y1 * P + x1];
+                            v += ((a + (b - a) * sx) * (1 - sy) + (c2 + (d - c2) * sx) * sy) * octaves[o].a;
+                        }
+                        field[y * NS + x] = v;
+                        if (v < fMin) fMin = v; if (v > fMax) fMax = v;
                     }
-                    field[y * NS + x] = v;
-                    if (v < fMin) fMin = v; if (v > fMax) fMax = v;
                 }
+                const span = (fMax - fMin) || 1;
+                for (let i = 0; i < field.length; i++) {
+                    field[i] = (field[i] - fMin) / span;
+                }
+                return field;
             }
-            for (let i = 0; i < field.length; i++) {
-                const n = Math.round(((field[i] - fMin) / (fMax - fMin)) * 255);
-                img.data[i * 4] = n; img.data[i * 4 + 1] = n; img.data[i * 4 + 2] = n; img.data[i * 4 + 3] = 255;
+
+            // Canale R: macro-banchi ben distanziati; Canale G: increspature e volute interne più fini
+            const chBanks = buildFbmChannel([ { p: 3, a: 0.62 }, { p: 6, a: 0.26 }, { p: 12, a: 0.12 } ]);
+            const chWisps = buildFbmChannel([ { p: 5, a: 0.50 }, { p: 10, a: 0.32 }, { p: 20, a: 0.18 } ]);
+
+            for (let i = 0; i < NS * NS; i++) {
+                // Espansione del contrasto sui macro-banchi per separare nettamente i pieni dai vuoti
+                let b = chBanks[i];
+                b = b * b * (3 - 2 * b);
+                img.data[i * 4]     = Math.round(b * 255);
+                img.data[i * 4 + 1] = Math.round(chWisps[i] * 255);
+                img.data[i * 4 + 2] = 0;
+                img.data[i * 4 + 3] = 255;
             }
             mctx.putImageData(img, 0, 0);
             const mistNoise = new THREE.CanvasTexture(mc);
             mistNoise.wrapS = THREE.RepeatWrapping; mistNoise.wrapT = THREE.RepeatWrapping;
 
-            this.mistScale = 0.00055; // dimensione dei banchi (circa 450-600 unita' di mondo)
+            this.mistScale = 0.00072; // Scala calibrata: 2-3 banchi ben distinti visibili sullo schermo dello smartphone
             this.mistMat1 = new THREE.ShaderMaterial({
                 uniforms: {
                     uNoise: { value: mistNoise },
                     uColor: { value: new THREE.Color(0xdde8f0) },
-                    uOpacity: { value: 0.36 },
+                    uEdgeColor: { value: new THREE.Color(0x223828) },
+                    uOpacity: { value: 0.68 },
                     uScale: { value: this.mistScale },
                     uOff1: { value: new THREE.Vector2() },
                     uOff2: { value: new THREE.Vector2() }
@@ -8118,6 +8142,7 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                 fragmentShader: `
                     uniform sampler2D uNoise;
                     uniform vec3 uColor;
+                    uniform vec3 uEdgeColor;
                     uniform float uOpacity;
                     uniform float uScale;
                     uniform vec2 uOff1;
@@ -8125,33 +8150,41 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                     varying vec2 vLocal;
                     void main() {
                         vec2 p = vLocal * uScale;
-                        float n1 = texture2D(uNoise, p + uOff1).r;
-                        // Secondo strato piu' fine, deformato dal primo: volute che cambiano forma nel tempo
-                        float n2 = texture2D(uNoise, p * 2.1 + uOff2 + (n1 - 0.5) * 0.35).r;
-                        float d = n1 * 0.62 + n2 * 0.38;
-                        // Soglia: banchi definiti separati da varchi limpidi (niente velo piatto)
-                        float bank = smoothstep(0.44, 0.70, d);
-                        float core = smoothstep(0.62, 0.86, d);
+                        // 1. Sagoma principale del banco in movimento
+                        vec2 s1 = texture2D(uNoise, p + uOff1).rg;
+                        // 2. Volute interne deformate dal flusso (effetto fumo vivo che cambia forma)
+                        vec2 warp = (s1 - 0.5) * 0.26;
+                        vec2 s2 = texture2D(uNoise, p * 1.75 + uOff2 + warp).rg;
+
+                        // Maschera ad alto contrasto: oltre il 65% della mappa resta a 0.0 (terreno 100% pulito, zero patina!)
+                        float island = smoothstep(0.50, 0.72, s1.r + (s2.r - 0.5) * 0.22);
+                        float wisps  = smoothstep(0.28, 0.82, s2.g);
+                        float d = island * (0.58 + 0.42 * wisps);
+
+                        float bank = smoothstep(0.12, 0.65, d);
+                        float core = smoothstep(0.45, 0.88, d);
+
                         float r = length(vLocal);
-                        // Zona piu' limpida attorno al giocatore per la leggibilita' del combattimento
-                        float clearZone = mix(0.35, 1.0, smoothstep(80.0, 320.0, r));
                         float edge = 1.0 - smoothstep(1600.0, 2400.0, r);
-                        float a = bank * clearZone * edge * uOpacity;
-                        vec3 col = uColor * (0.80 + 0.32 * core);
+                        float a = bank * edge * uOpacity;
+
+                        // Chiaroscuro volumetrico: bordo atmosferico che stacca sul terreno + cuore di vapore chiaro e scolpito
+                        vec3 col = mix(uEdgeColor, uColor, smoothstep(0.0, 0.55, d));
+                        col = mix(col, vec3(0.96, 0.98, 1.0), core * 0.50 + wisps * core * 0.25);
                         gl_FragColor = vec4(col, a);
                     }
                 `,
                 transparent: true, depthWrite: false, depthTest: true, fog: false,
                 blending: THREE.NormalBlending
             });
-            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.42 : 0.36) : 0.44;
+            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.68 : 0.62) : 0.68;
             this.mistMat1.color = this.mistMat1.uniforms.uColor.value; // alias compatibile col resto del codice
             this.mistMat2 = null;
 
             const mistPlane = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000, 1, 1), this.mistMat1);
             mistPlane.rotation.x = -Math.PI / 2;
             mistPlane.position.y = 14; // nebbia radente: i personaggi emergono dal vapore
-            mistPlane.renderOrder = -5; // disegnata prima degli altri trasparenti: telegraph e VFX restano sopra
+            mistPlane.renderOrder = 3; // disegnata SOPRA terreno (-10..-8), ombre alberi (-4) e fosse (1..2), ma sotto telegraph (5+)
             mistPlane.frustumCulled = false;
             this.mistSystem.add(mistPlane);
 
@@ -8843,14 +8876,13 @@ pushDebris(px, pz, radius, force) {
             
             if (this.mistMat1 && this.mistMat1.uniforms) {
                 const u = this.mistMat1.uniforms;
-                const sc = this.mistScale || 0.00055;
+                const sc = this.mistScale || 0.00072;
                 const t = this.mistWindTime;
-                // Offset calcolati in JS (alta precisione) e riportati in [0,1): nessun tremolio su GPU mobile
+                // Offset calcolati in JS (alta precisione) e riportati in [0,1): banchi ancorati al mondo che scorrono col vento
                 const bx = this.player.x * sc, bz = this.player.y * sc;
-                u.uOff1.value.set((bx + t * 0.0105) % 1, (bz + t * 0.0065 + Math.sin(t * 0.21) * 0.012) % 1);
-                u.uOff2.value.set((bx * 2.1 - t * 0.0170) % 1, (bz * 2.1 + t * 0.0120) % 1);
-                // Respiro lento della densita'
-                u.uOpacity.value = this.mistMat1.opacity * (0.88 + 0.12 * Math.sin(t * 0.33));
+                u.uOff1.value.set((bx + t * 0.024) % 1, (bz + t * 0.015 + Math.sin(t * 0.28) * 0.016) % 1);
+                u.uOff2.value.set((bx * 1.75 - t * 0.038) % 1, (bz * 1.75 + t * 0.029) % 1);
+                u.uOpacity.value = this.mistMat1.opacity * (0.92 + 0.08 * Math.sin(t * 0.40));
             }
             this.mistSystem.visible = !AppSettings.isLow; 
         }
@@ -9272,10 +9304,15 @@ loop(timestamp) {
         // Tinge e ripristina l'opacità della nebbia 3D per il nuovo piano
         if (this.mistSystem) {
             let mistTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
-            mistTint.lerp(new THREE.Color(0xffffff), this.currentThemeIndex === 1 ? 0.42 : 0.55); // vapore tinto dal bioma
+            mistTint.lerp(new THREE.Color(0xffffff), this.currentThemeIndex === 1 ? 0.58 : 0.72); // cuore del banco luminoso e ben visibile
+            let edgeTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
+            edgeTint.lerp(new THREE.Color(currentTheme.fog), 0.35); // bordo atmosferico per staccare anche sui terreni chiari
             if (this.mistMat1) {
                 this.mistMat1.color.copy(mistTint);
-                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.42 : 0.36) : 0.44;
+                if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
+                    this.mistMat1.uniforms.uEdgeColor.value.copy(edgeTint);
+                }
+                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.68 : 0.62) : 0.68;
             }
         }
        if (window.GLOBAL_FOG_MAT) {
@@ -14111,7 +14148,7 @@ Game.auras.push({
         
         // FIX PRESTAZIONI E VISIBILITÀ: La nebbia si adatta al menu Opzioni!
         // 0 (Performance) = Niente nebbia. 1 (Bilanciata) = Media. 2 (Ultra) = Densa.
-        let fogCount = isTouchDevice ? 28 : 50; this.maxFogAllocated = fogCount;
+        let fogCount = 0; this.maxFogAllocated = 0; // Disattivato: sostituito dallo shader a banchi distinti (elimina la patina piatta interna)
         // Allocata alla capienza massima del dispositivo per permettere il cambio live da Opzioni!
         // La visibilità e il .count effettivo sono regolati da AppSettings.targetFogCount
 
