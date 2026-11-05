@@ -2609,11 +2609,11 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     },
     // TEMA 3: CAVERNA CRISTALLINA (Esposizione glaciale calibrata con alto contrasto su ice_*.png)
     { 
-        dirt: 0x5e7e9a, grass: 0x6e96b4, rock: 0x5c7c98, wall: 0x456277, 
-        grassShader: 0x184d67, grassEmissive: 0x04111d,
-        canopyShader: 0x16445c, canopyEmissive: 0x040e1a, tree: 0x0d2033,
-        debris: 0x1a2e3f, groundMist: 0x477899,
-        ambient: 0x192244, dirLight: 0x82d4f0, fog: 0x060b18
+        dirt: 0x6486a2, grass: 0x749ebc, rock: 0x6384a0, wall: 0x4b6a7f, 
+        grassShader: 0x1a5370, grassEmissive: 0x051422,
+        canopyShader: 0x184a65, canopyEmissive: 0x05101f, tree: 0x0f243a,
+        debris: 0x1d3346, groundMist: 0x4f84a8,
+        ambient: 0x1d274e, dirLight: 0x8edaff, fog: 0x070d1c
     }
 ];
 
@@ -3627,7 +3627,7 @@ const SkinSystem = {
             // 1: Fucina Infernale (Rosso)
             { fog: 0x120405, dirt: 0x94746a, grass: 0xb87864, foliage: 0x361108, canopy: 0x2e0f07, water: 0xff3b00, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x060b18, dirt: 0x5e7e9a, grass: 0x6e96b4, foliage: 0x184d67, canopy: 0x16445c, water: 0x32a8e0, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x070d1c, dirt: 0x6486a2, grass: 0x749ebc, foliage: 0x1a5370, canopy: 0x184a65, water: 0x3bb0e8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
         ];
         const p = presets[this.themeCycle];
 
@@ -9223,8 +9223,8 @@ loop(timestamp) {
         if (this.currentThemeIndex === 2) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 70, camDist + 470);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.20 : 0.14;
-                this.bloomPass.threshold = 0.80;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.22 : 0.15;
+                this.bloomPass.threshold = 0.78;
             }
         } else if (this.currentThemeIndex === 1) {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 90, camDist + 460);
@@ -9243,8 +9243,8 @@ loop(timestamp) {
         Game.bossLightClear = false;
         
         // Illuminazione calibrata con contrasto profondo e anti-sovraesposizione (specialmente sul Ghiaccio)
-        let targetDirInt = (this.currentThemeIndex === 2) ? 0.96 : (this.currentThemeIndex === 1 ? 1.14 : 1.16);
-        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.55 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
+        let targetDirInt = (this.currentThemeIndex === 2) ? 1.02 : (this.currentThemeIndex === 1 ? 1.14 : 1.16);
+        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.58 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
         if (this.dirLight) { 
             this.dirLight.intensity = targetDirInt; 
             this.dirLight.color.setHex(currentTheme.dirLight); 
@@ -10054,7 +10054,7 @@ startGame(diffMult) {
                     if (this.dirLight) {
                         // FIX: Legge il colore del tema attuale invece di resettare al blu foresta
                         let currentTheme = MAP_THEMES[this.currentThemeIndex];
-                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 0.96 : (this.currentThemeIndex === 1 ? 1.14 : 1.16)); 
+                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 1.02 : (this.currentThemeIndex === 1 ? 1.14 : 1.16)); 
                         this.dirLight.color.setHex(currentTheme.dirLight); 
                     }
                 }, 180); 
@@ -12627,16 +12627,16 @@ class GameMap {
                             `
                         );
                     };
-                    cachedIceMat.color.setHex(0xc2d4e2);
-                    cachedIceMat.emissive.setHex(0x040a10);
-                    cachedIceMat.emissiveIntensity = 0.08;
+                    cachedIceMat.color.setHex(0xd6e8f6);
+                    cachedIceMat.emissive.setHex(0x061424);
+                    cachedIceMat.emissiveIntensity = 0.12;
                     cachedIceMat.opacity = 0.94;
                     if (isTouchDevice) {
-                        cachedIceMat.shininess = 52;
-                        cachedIceMat.specular.setHex(0x425666);
+                        cachedIceMat.shininess = 70;
+                        cachedIceMat.specular.setHex(0x75bfe0);
                     } else {
-                        cachedIceMat.roughness = 0.26;
-                        cachedIceMat.metalness = 0.08;
+                        cachedIceMat.roughness = 0.16;
+                        cachedIceMat.metalness = 0.04;
                     }
                     cachedIceMat.customProgramCacheKey = () => 'pit_ice_v9' + (isTouchDevice ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
@@ -12660,7 +12660,7 @@ class GameMap {
                             vec3 rawIceTex = diffuseColor.rgb;
                             float iceTex = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
                             // Desatura la texture di base verso il ghiaccio minerale/argenteo evitando la dominante azzurra
-                            vec3 coldIceTex = mix(vec3(iceTex), rawIceTex, 0.30);
+                            vec3 coldIceTex = mix(vec3(iceTex), rawIceTex, 0.70);
 
                             // Banchi di brina compatta, bolle d'aria intrappolate e finestre di ghiaccio scuro profondo
                             float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.022 + sin(vIceWPos.y * 0.025) * 1.3) * cos(vIceWPos.y * 0.021 - cos(vIceWPos.x * 0.024) * 1.2);
@@ -12698,10 +12698,10 @@ class GameMap {
                             scratches *= smoothstep(0.25, 0.75, sheetNoise);
 
                             // Palette Lastra di Ghiaccio: ardesia glaciale scura nelle trasparenze, grigio-argento nel corpo, bianco brina in superficie
-                            vec3 deepSlabCol    = vec3(0.08, 0.13, 0.19);
-                            vec3 midGlacierCol  = vec3(0.34, 0.41, 0.48);
-                            vec3 frostedSlabCol = vec3(0.54, 0.61, 0.67);
-                            vec3 snowRimeCol    = vec3(0.66, 0.72, 0.78);
+                            vec3 deepSlabCol    = vec3(0.12, 0.22, 0.32);
+                            vec3 midGlacierCol  = vec3(0.42, 0.54, 0.65);
+                            vec3 frostedSlabCol = vec3(0.64, 0.76, 0.86);
+                            vec3 snowRimeCol    = vec3(0.78, 0.88, 0.95);
 
                             vec3 slabCol = mix(deepSlabCol, midGlacierCol, smoothstep(0.08, 0.52, frostBody));
                             slabCol = mix(slabCol, frostedSlabCol, smoothstep(0.45, 0.85, frostBody));
@@ -12710,7 +12710,7 @@ class GameMap {
 
                             // Ombra interna 3D della crepa (spessore lastra) + bordo fratturato bianco-cristallo + graffi
                             slabCol = mix(slabCol, vec3(0.05, 0.09, 0.14), clamp(depthWall * 0.65 + crackBevel * 0.55, 0.0, 0.78) * (1.0 - crackMask));
-                            slabCol = mix(slabCol, vec3(0.75, 0.82, 0.88), clamp(crackMask * 0.82 + scratches * 0.55, 0.0, 0.88));
+                            slabCol = mix(slabCol, vec3(0.86, 0.94, 1.00), clamp(crackMask * 0.85 + scratches * 0.60, 0.0, 0.92));
 
                             // Alone cristallino e micro-fratture di pressione sotto i passi del giocatore sul ghiaccio
                             float stepFrost = 0.0;
@@ -12725,10 +12725,10 @@ class GameMap {
 
                             diffuseColor.rgb = slabCol;
                             totalEmissiveRadiance = mix(
-                                vec3(0.015, 0.025, 0.038),
-                                vec3(0.11, 0.14, 0.18),
+                                vec3(0.02, 0.04, 0.07),
+                                vec3(0.14, 0.22, 0.30),
                                 clamp(snowRime * 0.45 + crackMask * 0.75 + scratches * 0.50 + stepFrost * 0.70, 0.0, 1.0)
-                            ) * 0.15;
+                            ) * 0.22;
 
                             // Lastra solida e spessa: più opaca sulle zone di brina/crepe e traslucida sulle finestre scure
                             float slabOpacity = mix(0.80, 0.95, frostBody);
@@ -12738,8 +12738,8 @@ class GameMap {
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.62) {
-                                float compIce = 0.62 + (maxIceC - 0.62) / (1.0 + (maxIceC - 0.62) * 3.5);
+                            if (maxIceC > 0.68) {
+                                float compIce = 0.68 + (maxIceC - 0.68) / (1.0 + (maxIceC - 0.68) * 3.0);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
