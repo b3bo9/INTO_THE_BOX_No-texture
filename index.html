@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -2611,7 +2611,7 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     // TEMA 3: CAVERNA CRISTALLINA (Luce artica cristallina ad ampio spettro + ombre indaco profondo per far risaltare ghiaccio, ciano e avvisi rossi)
     { 
         dirt: 0x6a9ec8, grass: 0x8cc4ea, rock: 0x6696c2, wall: 0x48749c, 
-        grassShader: 0x1272a8, grassEmissive: 0x062842, grassRoot: 0x0b3156,
+        grassShader: 0x0f6096, grassEmissive: 0x021626, grassRoot: 0x0b3156,
         canopyShader: 0x186898, canopyEmissive: 0x08243c, tree: 0x142844,
         debris: 0x244868, groundMist: 0x5cb5e8,
         ambient: 0x224268, dirLight: 0xe0f4ff, fog: 0x09162e
@@ -11113,9 +11113,9 @@ const InteractiveGrassSystem = {
                 #include <color_fragment>
                 
                 // Colore punta viva del ciuffo d'erba (colorazione attuale Three.js)
-                vec3 bladeTipCol = diffuseColor.rgb * 1.50; 
-                vec3 dryTipColor = diffuseColor.rgb * vec3(1.22, 1.15, 0.90) * 1.42;
-                vec3 finalTipColor = mix(bladeTipCol, dryTipColor, vColorRandom * 0.35);
+                vec3 bladeTipCol = diffuseColor.rgb * 1.35; 
+                vec3 dryTipColor = diffuseColor.rgb * vec3(1.16, 1.10, 0.92) * 1.28;
+                vec3 finalTipColor = mix(bladeTipCol, dryTipColor, vColorRandom * 0.35); float maxTipLuma = max(finalTipColor.r, max(finalTipColor.g, finalTipColor.b)); if (maxTipLuma > 0.82) { finalTipColor *= (0.82 + 0.18 * smoothstep(0.82, 1.25, maxTipLuma)) / maxTipLuma; }
                 
                 // Base del ciuffo: perfettamente calibrata sulla tonalitÃ  della texture del terreno sottostante (piÃ¹ scura)
                 // con micro-occlusione ambientale (AO) alla radice e leggera variazione organica per zero stacco
@@ -11925,7 +11925,7 @@ class GameMap {
 
        if (themeIdx === 0) {
             // Sorgente boschiva: bianco neutro per leggere water.jpg, ruvidità alta anti-abbagliamento ai bordi schermo
-            pitColor = 0xffffff; pitEmissive = 0x082a38; pitOpacity = 0.92; pitRoughness = 0.84; pitMetalness = 0.02;
+            pitColor = 0xffffff; pitEmissive = 0x02121c; pitOpacity = 0.92; pitRoughness = 0.84; pitMetalness = 0.02;
             baseTexImage = Preloader.textures.water;
         } else if (themeIdx === 1) {
             pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
@@ -11950,14 +11950,14 @@ class GameMap {
             const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.34 : 0.62),
+                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.15 : 0.62),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (isTouchDevice) {
                 pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 28 : 32);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x184858 : 0x183c58));
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x103444 : 0x183c58));
             } else {
                 pitMatParams.roughness = pitRoughness;
                 pitMatParams.metalness = pitMetalness;
@@ -12311,15 +12311,15 @@ class GameMap {
 
                         vec3 rawTex = mix(wA, wB, 0.42);
                         vec3 tintedTex = vec3(
-                            rawTex.r * 0.10 + rawTex.b * 0.06,
-                            rawTex.g * 0.52 + rawTex.b * 0.20,
-                            max(rawTex.b, rawTex.g * 0.88) * 0.78 + 0.04
+                            rawTex.r * 0.08 + rawTex.b * 0.08,
+                            rawTex.g * 0.24 + rawTex.b * 0.34,
+                            max(rawTex.b * 0.85, rawTex.g * 0.45) * 0.72 + 0.05
                         );
 
                         // Palette ad alto contrasto idrodinamico: ventri blu-smeraldo scuri, fianchi turchesi e creste spumeggianti
-                        vec3 deepTroughCol = vec3(0.008, 0.052, 0.115);
-                        vec3 midLagoonCol  = vec3(0.042, 0.305, 0.485);
-                        vec3 brightAquaCol = vec3(0.135, 0.595, 0.760);
+                        vec3 deepTroughCol = vec3(0.008, 0.042, 0.130);
+                        vec3 midLagoonCol  = vec3(0.028, 0.170, 0.365);
+                        vec3 brightAquaCol = vec3(0.060, 0.290, 0.520);
 
                         vec3 waterCol = mix(deepTroughCol, midLagoonCol, smoothstep(0.12, 0.56, waveH));
                         waterCol = mix(waterCol, brightAquaCol, smoothstep(0.46, 0.84, waveH * (0.65 + 0.35 * slopeLit)));
@@ -12327,16 +12327,16 @@ class GameMap {
 
                         // Chiaroscuro nei ventri d'onda + caustiche + creste d'onda bianche/acquamarina scolpite
                         waterCol *= mix(0.68, 1.14, slopeLit);
-                        waterCol += vec3(0.16, 0.52, 0.60) * (caustic * (0.42 - 0.18 * waveTrough));
-                        waterCol = mix(waterCol, vec3(0.48, 0.90, 0.98), waveCrest * 0.78);
-                        waterCol = mix(waterCol, vec3(0.88, 0.98, 1.00), clamp(foamRidge * 0.75 + sunGlint * 0.55, 0.0, 0.90));
+                        waterCol += vec3(0.10, 0.32, 0.55) * (caustic * (0.32 - 0.12 * waveTrough));
+                        waterCol = mix(waterCol, vec3(0.32, 0.62, 0.85), waveCrest * 0.65);
+                        waterCol = mix(waterCol, vec3(0.72, 0.88, 0.98), clamp(foamRidge * 0.60 + sunGlint * 0.45, 0.0, 0.78));
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.006, 0.032, 0.068),
-                            vec3(0.085, 0.320, 0.430),
-                            clamp(waveBody * 0.65 + caustic * 0.45 + waveCrest * 0.55, 0.0, 1.0)
-                        ) * 0.44 + vec3(0.18, 0.46, 0.56) * (foamRidge * 0.32 + sunGlint * 0.25);
+                            vec3(0.003, 0.014, 0.038),
+                            vec3(0.024, 0.105, 0.210),
+                            clamp(waveBody * 0.60 + caustic * 0.35 + waveCrest * 0.45, 0.0, 1.0)
+                        ) * 0.18 + vec3(0.08, 0.22, 0.36) * (foamRidge * 0.20 + sunGlint * 0.15);
 
                         // ACQUA: Anelli idrodinamici 3D (ventre scuro + cresta spumeggiante), menisco e scia di Kelvin
                         if (uPlayerPit.w > 0.01 && pDist < 135.0) {
@@ -12451,7 +12451,7 @@ class GameMap {
                     '#include <dithering_fragment>',
                     `
                     ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.86' : '0.68'};
+                        float capLim = ${themeIdx === 0 ? '0.74' : '0.68'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
                             float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
@@ -21606,7 +21606,7 @@ const Preloader = {
         const ctx = canvas.getContext('2d');
         let baseColor, darkColor, lightColor;
         if (type === '_lava') {
-            baseColor = '#6b1812'; darkColor = 'rgba(35,8,6,0.6)'; lightColor = 'rgba(180,50,25,0.3)';
+            baseColor = '#56100a'; darkColor = 'rgba(14,2,2,0.85)'; lightColor = 'rgba(215,62,18,0.52)';
         } else if (type === '_ice') {
             baseColor = '#1c557d'; darkColor = 'rgba(12,30,50,0.55)'; lightColor = 'rgba(70,155,215,0.30)';
         } else {
@@ -21615,13 +21615,17 @@ const Preloader = {
         }
         ctx.fillStyle = baseColor;
         ctx.fillRect(0, 0, size, size);
-        for(let i = 0; i < 280; i++) {
+        const darkDots = type === '_lava' ? 340 : 280;
+        for(let i = 0; i < darkDots; i++) {
             ctx.fillStyle = darkColor;
-            ctx.fillRect(Math.random() * size, Math.random() * size, Math.random() * 3 + 1, Math.random() * 3 + 1);
+            const sz = type === '_lava' ? (Math.random() * 3.8 + 1) : (Math.random() * 3 + 1);
+            ctx.fillRect(Math.random() * size, Math.random() * size, sz, sz);
         }
-        for(let i = 0; i < 240; i++) {
+        const lightDots = type === '_lava' ? 280 : 240;
+        for(let i = 0; i < lightDots; i++) {
             ctx.fillStyle = lightColor;
-            ctx.fillRect(Math.random() * size, Math.random() * size, Math.random() * 3 + 1, Math.random() * 3 + 1);
+            const sz = type === '_lava' ? (Math.random() * 3.4 + 1) : (Math.random() * 3 + 1);
+            ctx.fillRect(Math.random() * size, Math.random() * size, sz, sz);
         }
         const tex = new THREE.CanvasTexture(canvas);
         tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
@@ -21629,15 +21633,68 @@ const Preloader = {
         return tex;
     },
     createSmokeTexture() {
-        const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+        const size = 256;
+        const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
-        let grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-        grad.addColorStop(0, 'rgba(255,255,255,0.85)');
-        grad.addColorStop(0.35, 'rgba(200,200,200,0.35)');
-        grad.addColorStop(0.7, 'rgba(150,150,150,0.1)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 128);
+        ctx.clearRect(0, 0, size, size);
+
+        // Disegna sbuffi di vapore con wrap toroidale per un tiling seamless perfetto sui bordi
+        function drawPuff(cx, cy, radius, alpha) {
+            for (let ox of [-size, 0, size]) {
+                for (let oy of [-size, 0, size]) {
+                    const x = cx + ox;
+                    const y = cy + oy;
+                    if (x + radius < 0 || x - radius > size || y + radius < 0 || y - radius > size) continue;
+                    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                    grad.addColorStop(0, "rgba(255,255,255," + alpha.toFixed(3) + ")");
+                    grad.addColorStop(0.35, "rgba(240,245,255," + (alpha * 0.65).toFixed(3) + ")");
+                    grad.addColorStop(0.70, "rgba(220,230,245," + (alpha * 0.22).toFixed(3) + ")");
+                    grad.addColorStop(1, "rgba(200,215,235,0)");
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 1. Grandi banchi di vapore principali (creano isole di nebbia distinte con varchi intermedi dove il terreno risalta)
+        const clusters = [
+            { x: 50,  y: 65,  r: 68, a: 0.38 },
+            { x: 95,  y: 90,  r: 54, a: 0.32 },
+            { x: 195, y: 175, r: 76, a: 0.42 },
+            { x: 225, y: 130, r: 58, a: 0.30 },
+            { x: 145, y: 220, r: 50, a: 0.28 },
+            { x: 60,  y: 200, r: 46, a: 0.24 }
+        ];
+        clusters.forEach(c => drawPuff(c.x, c.y, c.r, c.a));
+
+        // 2. Micro-volute e filamenti interni (arricchiscono il dettaglio e la silhouette della nebbia)
+        const subPuffs = [
+            { x: 40,  y: 50,  r: 32, a: 0.28 },
+            { x: 75,  y: 75,  r: 28, a: 0.26 },
+            { x: 110, y: 105, r: 35, a: 0.22 },
+            { x: 180, y: 155, r: 42, a: 0.30 },
+            { x: 215, y: 195, r: 38, a: 0.27 },
+            { x: 165, y: 205, r: 34, a: 0.24 },
+            { x: 130, y: 55,  r: 26, a: 0.18 },
+            { x: 235, y: 70,  r: 30, a: 0.20 },
+            { x: 25,  y: 160, r: 28, a: 0.19 },
+            { x: 100, y: 180, r: 30, a: 0.18 }
+        ];
+        subPuffs.forEach(p => drawPuff(p.x, p.y, p.r, p.a));
+
+        // 3. Striature di turbolenza orizzontale e diagonale (evitano la piattezza e danno movimento)
+        for (let i = 0; i < 22; i++) {
+            const bx = (i * 37 + 19) % size;
+            const by = (i * 53 + 41) % size;
+            const br = 14 + (i % 5) * 4;
+            const ba = 0.08 + (i % 4) * 0.04;
+            drawPuff(bx, by, br, ba);
+        }
+
         const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
         tex.encoding = THREE.sRGBEncoding;
         return tex;
     },
@@ -21765,7 +21822,7 @@ const Preloader = {
         const prefixMap = { '': 'forest', '_lava': 'lava', '_ice': 'ice' };
         const palette = {
             '': { dirt: '#2e2518', rock: '#4b5563', wall: '#374151' },
-            '_lava': { dirt: '#3b0d0c', rock: '#7f1d1d', wall: '#450a0a' },
+            '_lava': { dirt: '#280605', rock: '#8f1a1a', wall: '#400606' },
             '_ice': { dirt: '#0f172a', rock: '#1e293b', wall: '#334155' }
         };
 
