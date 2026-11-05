@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -2595,7 +2595,7 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     // TEMA 1: FORESTA INCANTATA (Intatto)
     { 
         dirt: 0x828c78, grass: 0x8eb07c, rock: 0x7a8774, wall: 0x5c6b56, 
-        grassShader: 0x13380d, grassEmissive: 0x030802,
+        grassShader: 0x13380d, grassEmissive: 0x030802, grassRoot: 0x194310,
         canopyShader: 0x153b0f, canopyEmissive: 0x040802, tree: 0x1c1812,
         debris: 0x232b20, groundMist: 0x4a6e54,
         ambient: 0x24301c, dirLight: 0xe8f8c8, fog: 0x091208
@@ -2603,7 +2603,7 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     // TEMA 2: FUCINA INFERNALE (Basalto scuro ad alto contrasto + luce ambra dorata che preserva i blu/verdi e stacca i telegraphs rossi)
     { 
         dirt: 0x8c5e52, grass: 0xa85c4a, rock: 0x764e46, wall: 0x523028, 
-        grassShader: 0x52140a, grassEmissive: 0x240602,
+        grassShader: 0x52140a, grassEmissive: 0x240602, grassRoot: 0x350704,
         canopyShader: 0x441006, canopyEmissive: 0x1c0401, tree: 0x220b08,
         debris: 0x321612, groundMist: 0x9e3820,
         ambient: 0x3e1814, dirLight: 0xffa870, fog: 0x150506
@@ -2611,7 +2611,7 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     // TEMA 3: CAVERNA CRISTALLINA (Luce artica cristallina ad ampio spettro + ombre indaco profondo per far risaltare ghiaccio, ciano e avvisi rossi)
     { 
         dirt: 0x6a9ec8, grass: 0x8cc4ea, rock: 0x6696c2, wall: 0x48749c, 
-        grassShader: 0x1272a8, grassEmissive: 0x062842,
+        grassShader: 0x1272a8, grassEmissive: 0x062842, grassRoot: 0x0b3156,
         canopyShader: 0x186898, canopyEmissive: 0x08243c, tree: 0x142844,
         debris: 0x244868, groundMist: 0x5cb5e8,
         ambient: 0x224268, dirLight: 0xe0f4ff, fog: 0x09162e
@@ -3216,9 +3216,9 @@ const SkinSystem = {
                 '#include <color_fragment>',
                 `
                 #include <color_fragment>
-                vec3 rootCol = diffuseColor.rgb * 0.48;
+                vec3 rootCol = ${isCanopy ? 'diffuseColor.rgb * 0.48' : 'diffuseColor.rgb * 0.35'};
                 vec3 tipCol = diffuseColor.rgb * mix(1.08, 1.28, vVar);
-                diffuseColor.rgb = mix(rootCol, tipCol, smoothstep(0.0, 1.0, vH));
+                diffuseColor.rgb = mix(rootCol, tipCol, ${isCanopy ? 'smoothstep(0.0, 1.0, vH)' : 'smoothstep(0.06, 0.90, vH)'});
                 `
             );
         };
@@ -3624,11 +3624,11 @@ const SkinSystem = {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
             // 0: Foresta Incantata (Verde)
-            { fog: 0x091208, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
+            { fog: 0x091208, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
             // 1: Fucina Infernale (Rosso)
-            { fog: 0x150506, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
+            { fog: 0x150506, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing, grassRoot: 0x350704 },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x09162e, dirt: 0x6a9ec8, grass: 0x8cc4ea, foliage: 0x1272a8, canopy: 0x186898, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x09162e, dirt: 0x6a9ec8, grass: 0x8cc4ea, foliage: 0x1272a8, canopy: 0x186898, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing, grassRoot: 0x0b3156 }
         ];
         const p = presets[this.themeCycle];
 
@@ -9260,6 +9260,9 @@ loop(timestamp) {
         if (InteractiveGrassSystem.mat) {
             InteractiveGrassSystem.mat.color.setHex(currentTheme.grassShader);
             InteractiveGrassSystem.mat.emissive.setHex(currentTheme.grassEmissive || 0x000000);
+            if (InteractiveGrassSystem.uniforms.uGroundGrassColor) {
+                InteractiveGrassSystem.uniforms.uGroundGrassColor.value.setHex(currentTheme.grassRoot || currentTheme.grass);
+            }
         }
         if (TreeCanopySystem.mat) {
             TreeCanopySystem.mat.color.setHex(currentTheme.canopyShader || currentTheme.grassShader);
@@ -10941,7 +10944,8 @@ const InteractiveGrassSystem = {
         // vec4(playerX, playerZ, moveIntensity, inPitBlend) per onde in acqua e magma fuso
         uPlayerPit: { value: new THREE.Vector4(0, 0, 0, 0) },
         // vec4(dirX, dirZ, speedRatio, wakePhase) orientamento e deformazione dinamica delle onde
-        uPlayerPitDir: { value: new THREE.Vector4(1, 0, 0, 0) }
+        uPlayerPitDir: { value: new THREE.Vector4(1, 0, 0, 0) },
+        uGroundGrassColor: { value: new THREE.Color(0x194310) }
     },
     geo: null,
     mat: null,
@@ -10989,11 +10993,13 @@ const InteractiveGrassSystem = {
             emissive: 0x040902    // Usa la normale morbida (0,1,0) evitando sfaccettature nere e calcoli dFdx/dFdy nel Fragment Shader
         });
 
+        this.mat.customProgramCacheKey = () => 'interactive_grass_v3';
         this.mat.onBeforeCompile = (shader) => {
             shader.uniforms.uWindSources = this.uniforms.uWindSources;
             shader.uniforms.uWindCount = this.uniforms.uWindCount;
             shader.uniforms.uTime = this.uniforms.uTime;
             shader.uniforms.uCamPos = this.uniforms.uCamPos;
+            shader.uniforms.uGroundGrassColor = this.uniforms.uGroundGrassColor;
 
             // --- 1. VERTEX SHADER (Movimento e Dati Colore) ---
             shader.vertexShader = `
@@ -11094,8 +11100,9 @@ const InteractiveGrassSystem = {
                 `
             );
 
-            // --- 2. FRAGMENT SHADER (Pittura Radice-Punta e Variazione) ---
+            // --- 2. FRAGMENT SHADER (Integrazione Terreno Seamless e Pittura Radice-Punta) ---
             shader.fragmentShader = `
+                uniform vec3 uGroundGrassColor;
                 varying float vHeight;
                 varying float vColorRandom;
             ` + shader.fragmentShader;
@@ -11105,27 +11112,21 @@ const InteractiveGrassSystem = {
                 `
                 #include <color_fragment>
                 
-                // Colore base prelevato da Three.js
-                vec3 baseAlbedo = diffuseColor.rgb;
+                // Colore punta viva del ciuffo d'erba (colorazione attuale Three.js)
+                vec3 bladeTipCol = diffuseColor.rgb * 1.12; 
+                vec3 dryTipColor = diffuseColor.rgb * vec3(1.06, 1.00, 0.90);
+                vec3 finalTipColor = mix(bladeTipCol, dryTipColor, vColorRandom * 0.28);
                 
-                // Radici morbide calibrate per fondersi con la texture dell'erba sottostante
-                vec3 rootColor = baseAlbedo * 0.72;
+                // Base del ciuffo: perfettamente calibrata sulla tonalitÃ  della texture del terreno sottostante (piÃ¹ scura)
+                // con micro-occlusione ambientale (AO) alla radice e leggera variazione organica per zero stacco
+                vec3 groundRootCol = uGroundGrassColor * mix(0.78, 1.05, vColorRandom);
                 
-                // Punte naturali dello stesso tono della texture sottostante (zero effetto neon/fluorescente)
-                vec3 tipColor = baseAlbedo * 1.12; 
+                // Sfumatura morbida radice-punta:
+                // Ancoraggio solido nei primi centimetri a terra (zero stacco col terreno),
+                // poi transizione fluida verso la punta che conserva l'attuale colorazione viva
+                float hCurve = smoothstep(0.05, 0.88, vHeight);
+                vec3 finalGrassColor = mix(groundRootCol, finalTipColor, hCurve);
                 
-                // Leggera variazione organica proporzionale al colore base (senza offset luminosi additivi)
-                vec3 dryTipColor = baseAlbedo * vec3(1.06, 1.00, 0.90);
-                
-                // Mischiamo la punta principale con la sfumatura naturale
-                vec3 finalTipColor = mix(tipColor, dryTipColor, vColorRandom * 0.30);
-                
-                // Gradiente finale dalla radice alla punta
-                // Gradiente morbido radice-punta con ambient occlusion alla base per dare volume 3D alle chiazze
-                float hCurve = smoothstep(0.0, 1.0, vHeight);
-                vec3 finalGrassColor = mix(rootColor, finalTipColor, hCurve);
-                
-                // Sovrascriviamo il colore finale che andrà a subire le luci e le ombre di Three.js
                 diffuseColor.rgb = finalGrassColor;
                 `
             );
@@ -11354,6 +11355,7 @@ const TreeCanopySystem = {
             emissive: 0x040802
         });
         this.mat._isGlobalCached = true;
+        this.mat.customProgramCacheKey = () => 'interactive_tree_canopy_v1';
 
         this.mat.onBeforeCompile = (shader) => {
             // Condivide gli stessi identici uniform di InteractiveGrassSystem (0 overhead CPU!)
