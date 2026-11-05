@@ -1305,7 +1305,7 @@ body.colorblind-mode #opt-colorblind-text {
                     <!-- Icona Reliquia / Slot -->
                     <button id="btn-select-reforge" onclick="RelicSystem.openReforgeModal()" class="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/75 hover:border-white flex items-center justify-center bg-slate-950 transition-all active:scale-95 group relative overflow-hidden shrink-0">
                         <i id="reforge-icon-default" class="fa-solid fa-wand-magic-sparkles text-purple-300 group-hover:text-white text-2xl sm:text-3xl transition-colors drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]"></i>
-                        <img id="reforge-icon-img" src="" class="absolute inset-0 w-full h-full object-cover hidden" onerror="window.handleRelicImgError(this, true)">
+                        <img id="reforge-icon-img" src="" class="absolute inset-0 w-full h-full object-cover hidden" onerror="if(window.handleRelicImgError)window.handleRelicImgError(this, true)">
                         <div id="reforge-overlay" class="absolute inset-0 bg-black/80 hidden items-center justify-center text-white font-black text-[8px] uppercase text-center leading-none">Cambia</div>
                     </button>
 
@@ -1527,6 +1527,7 @@ body.colorblind-mode #opt-colorblind-text {
         </button>
     </div> 
 <script>
+window.handleRelicImgError = window.handleRelicImgError || function(img){ if(img) img.style.display='none'; };
 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let ESSENCE_COLORS = { 'red': 0xFF1838, 'blue': 0x00CCFF, 'green': 0x22FF44 };
 const ESSENCE_NAMES = { 'red': 'INFERNO', 'blue': 'TEMPESTA', 'green': 'PANDEMIA' };
@@ -2601,19 +2602,19 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
     },
     // TEMA 2: FUCINA INFERNALE (Basalto scuro ad alto contrasto + luce ambra dorata che preserva i blu/verdi e stacca i telegraphs rossi)
     { 
-        dirt: 0x886c64, grass: 0xa66a58, rock: 0x7c625c, wall: 0x523b36, 
-        grassShader: 0x3d1409, grassEmissive: 0x140401,
-        canopyShader: 0x331107, canopyEmissive: 0x120301, tree: 0x1f0a08,
-        debris: 0x241411, groundMist: 0x8a341e,
-        ambient: 0x381612, dirLight: 0xffcfa3, fog: 0x110405
+        dirt: 0x8c5e52, grass: 0xa85c4a, rock: 0x764e46, wall: 0x523028, 
+        grassShader: 0x52140a, grassEmissive: 0x240602,
+        canopyShader: 0x441006, canopyEmissive: 0x1c0401, tree: 0x220b08,
+        debris: 0x321612, groundMist: 0x9e3820,
+        ambient: 0x3e1814, dirLight: 0xffa870, fog: 0x150506
     },
     // TEMA 3: CAVERNA CRISTALLINA (Luce artica cristallina ad ampio spettro + ombre indaco profondo per far risaltare ghiaccio, ciano e avvisi rossi)
     { 
-        dirt: 0x7a9bb5, grass: 0x8ab3d1, rock: 0x7496b2, wall: 0x567791, 
-        grassShader: 0x1d6282, grassEmissive: 0x061a2b,
-        canopyShader: 0x185573, canopyEmissive: 0x051524, tree: 0x122238,
-        debris: 0x213a50, groundMist: 0x5a99c2,
-        ambient: 0x24345c, dirLight: 0xdcf3ff, fog: 0x081124
+        dirt: 0x6a9ec8, grass: 0x8cc4ea, rock: 0x6696c2, wall: 0x48749c, 
+        grassShader: 0x1272a8, grassEmissive: 0x062842,
+        canopyShader: 0x186898, canopyEmissive: 0x08243c, tree: 0x142844,
+        debris: 0x244868, groundMist: 0x5cb5e8,
+        ambient: 0x224268, dirLight: 0xe0f4ff, fog: 0x09162e
     }
 ];
 
@@ -3625,9 +3626,9 @@ const SkinSystem = {
             // 0: Foresta Incantata (Verde)
             { fog: 0x091208, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing },
             // 1: Fucina Infernale (Rosso)
-            { fog: 0x110405, dirt: 0x886c64, grass: 0xa66a58, foliage: 0x3d1409, canopy: 0x331107, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
+            { fog: 0x150506, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing },
             // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x081124, dirt: 0x7a9bb5, grass: 0x8ab3d1, foliage: 0x1d6282, canopy: 0x185573, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
+            { fog: 0x09162e, dirt: 0x6a9ec8, grass: 0x8cc4ea, foliage: 0x1272a8, canopy: 0x186898, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing }
         ];
         const p = presets[this.themeCycle];
 
@@ -9221,16 +9222,16 @@ loop(timestamp) {
 
         // --- ATMOSFERA E VISIBILITÀ DINAMICA FIABESCA ---
         if (this.currentThemeIndex === 2) {
-            this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 85, camDist + 490);
+            this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 80, camDist + 500);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.24 : 0.17;
-                this.bloomPass.threshold = 0.75;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.25 : 0.18;
+                this.bloomPass.threshold = 0.76;
             }
         } else if (this.currentThemeIndex === 1) {
-            this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 90, camDist + 475);
+            this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 90, camDist + 480);
             if (this.bloomPass) {
-                this.bloomPass.strength = AppSettings.isUltraPC ? 0.24 : 0.17;
-                this.bloomPass.threshold = 0.74;
+                this.bloomPass.strength = AppSettings.isUltraPC ? 0.25 : 0.18;
+                this.bloomPass.threshold = 0.72;
             }
         } else {
             this.scene.fog = new THREE.Fog(currentTheme.fog, camDist - 100, camDist + 480);
@@ -9243,8 +9244,8 @@ loop(timestamp) {
         Game.bossLightClear = false;
         
         // Illuminazione bilanciata: dà al Ghiaccio e alla Lava la stessa dinamica 3D vibrante della Foresta
-        let targetDirInt = (this.currentThemeIndex === 2) ? 1.12 : (this.currentThemeIndex === 1 ? 1.15 : 1.16);
-        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.65 : (this.currentThemeIndex === 1 ? 0.66 : 0.68);
+        let targetDirInt = (this.currentThemeIndex === 2) ? 1.14 : (this.currentThemeIndex === 1 ? 1.16 : 1.16);
+        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.66 : (this.currentThemeIndex === 1 ? 0.68 : 0.68);
         if (this.dirLight) { 
             this.dirLight.intensity = targetDirInt; 
             this.dirLight.color.setHex(currentTheme.dirLight); 
@@ -10054,7 +10055,7 @@ startGame(diffMult) {
                     if (this.dirLight) {
                         // FIX: Legge il colore del tema attuale invece di resettare al blu foresta
                         let currentTheme = MAP_THEMES[this.currentThemeIndex];
-                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 1.12 : (this.currentThemeIndex === 1 ? 1.15 : 1.16)); 
+                        this.dirLight.intensity = (this.isCorrupted && this.corruptedType === 'darkness') ? 0.05 : ((this.currentThemeIndex === 2) ? 1.14 : (this.currentThemeIndex === 1 ? 1.16 : 1.16)); 
                         this.dirLight.color.setHex(currentTheme.dirLight);
                     }
                 }, 180); 
@@ -12127,7 +12128,7 @@ class GameMap {
 
                         float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
                         vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
-                        vec3 magmaCol = mix(vec3(0.88, 0.16, 0.01), vec3(1.0, 0.78, 0.18), smoothstep(0.52, 0.90, heat));
+                        vec3 magmaCol = mix(vec3(0.95, 0.22, 0.02), vec3(1.0, 0.85, 0.24), smoothstep(0.48, 0.88, heat));
                         magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
                         float veinMask = smoothstep(0.32, 0.62, heat);
                         diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
@@ -12398,7 +12399,7 @@ class GameMap {
 
                         float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
                         vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
-                        vec3 magmaCol = mix(vec3(0.88, 0.16, 0.01), vec3(1.0, 0.78, 0.18), smoothstep(0.52, 0.90, heat));
+                        vec3 magmaCol = mix(vec3(0.95, 0.22, 0.02), vec3(1.0, 0.85, 0.24), smoothstep(0.48, 0.88, heat));
                         magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
                         float veinMask = smoothstep(0.32, 0.62, heat);
                         diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
@@ -12440,8 +12441,8 @@ class GameMap {
                         float waveB = cos(along * 0.052 - uTime * 0.9 + sin(across * 0.065) * 1.1);
                         float stream = pow(clamp(0.5 + 0.5 * waveA * waveB, 0.0, 1.0), 2.1);
                         float flowMix = clamp(texLum * 0.45 + stream * 0.42, 0.0, 1.0);
-                        diffuseColor.rgb = mix(vec3(0.012, 0.024, 0.044), vec3(0.045, 0.088, 0.135), flowMix);
-                        totalEmissiveRadiance = mix(vec3(0.005, 0.012, 0.025), vec3(0.035, 0.075, 0.115), flowMix) * 0.18;
+                        diffuseColor.rgb = mix(vec3(0.02, 0.06, 0.14), vec3(0.08, 0.22, 0.38), flowMix);
+                        totalEmissiveRadiance = mix(vec3(0.01, 0.03, 0.07), vec3(0.06, 0.18, 0.32), flowMix) * 0.28;
                     `)}
                     `
                 ).replace(
@@ -12507,7 +12508,7 @@ class GameMap {
         }
 
         if (pitAreaGeo) {
-            const bedHex = (themeIdx === 0) ? 0x031022 : ((themeIdx === 1) ? 0x1e0402 : 0x030c1c);
+            const bedHex = (themeIdx === 0) ? 0x031022 : ((themeIdx === 1) ? 0x240602 : 0x081830);
             const pitBedMat = new THREE.MeshBasicMaterial({ color: bedHex });
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
@@ -12621,18 +12622,18 @@ class GameMap {
                             `
                         );
                     };
-                    cachedIceMat.color.setHex(0xc8ecff);
-                    cachedIceMat.emissive.setHex(0x0a2540);
-                    cachedIceMat.emissiveIntensity = 0.18;
+                    cachedIceMat.color.setHex(0xdcf2ff);
+                    cachedIceMat.emissive.setHex(0x0c3258);
+                    cachedIceMat.emissiveIntensity = 0.22;
                     cachedIceMat.opacity = 0.92;
                     if (isTouchDevice) {
-                        cachedIceMat.shininess = 65;
-                        cachedIceMat.specular.setHex(0x66c2eb);
+                        cachedIceMat.shininess = 75;
+                        cachedIceMat.specular.setHex(0x7ed4ff);
                     } else {
-                        cachedIceMat.roughness = 0.18;
-                        cachedIceMat.metalness = 0.05;
+                        cachedIceMat.roughness = 0.15;
+                        cachedIceMat.metalness = 0.04;
                     }
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v10' + (isTouchDevice ? '_m' : '_d');
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v11' + (isTouchDevice ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                         shader.vertexShader = `
@@ -12653,7 +12654,7 @@ class GameMap {
                             #include <emissivemap_fragment>
                             vec3 rawIceTex = diffuseColor.rgb;
                             float iceTex = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
-                            vec3 coldIceTex = mix(vec3(iceTex * 0.85, iceTex * 0.95, iceTex * 1.05), rawIceTex, 0.82);
+                            vec3 coldIceTex = mix(vec3(iceTex * 0.70, iceTex * 0.88, iceTex * 1.15), rawIceTex, 0.90);
 
                             // Banchi di brina compatta, bolle d'aria intrappolate e finestre di ghiaccio abissale
                             float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.022 + sin(vIceWPos.y * 0.025) * 1.3) * cos(vIceWPos.y * 0.021 - cos(vIceWPos.x * 0.024) * 1.2);
@@ -12689,10 +12690,10 @@ class GameMap {
                             scratches *= smoothstep(0.25, 0.75, sheetNoise);
 
                             // Palette Ghiaccio Cristallino Vibrante: zaffiro profondo nelle trasparenze, turchese glaciale nel corpo e bianco brina
-                            vec3 deepSlabCol    = vec3(0.09, 0.26, 0.44);
-                            vec3 midGlacierCol  = vec3(0.28, 0.56, 0.78);
-                            vec3 frostedSlabCol = vec3(0.54, 0.78, 0.93);
-                            vec3 snowRimeCol    = vec3(0.80, 0.92, 0.99);
+                            vec3 deepSlabCol    = vec3(0.10, 0.38, 0.68);
+                            vec3 midGlacierCol  = vec3(0.32, 0.68, 0.94);
+                            vec3 frostedSlabCol = vec3(0.68, 0.88, 0.98);
+                            vec3 snowRimeCol    = vec3(0.95, 0.98, 1.00);
 
                             vec3 slabCol = mix(deepSlabCol, midGlacierCol, smoothstep(0.08, 0.52, frostBody));
                             slabCol = mix(slabCol, frostedSlabCol, smoothstep(0.45, 0.85, frostBody));
@@ -12701,7 +12702,7 @@ class GameMap {
 
                             // Ombra interna 3D blu abisso della crepa + venature cristalline bianche/azzurre
                             slabCol = mix(slabCol, vec3(0.04, 0.12, 0.24), clamp(depthWall * 0.65 + crackBevel * 0.55, 0.0, 0.78) * (1.0 - crackMask));
-                            slabCol = mix(slabCol, vec3(0.90, 0.97, 1.00), clamp(crackMask * 0.86 + scratches * 0.60, 0.0, 0.92));
+                            slabCol = mix(slabCol, vec3(0.96, 0.99, 1.00), clamp(crackMask * 0.88 + scratches * 0.65, 0.0, 0.95));
 
                             // Alone di pressione cristallino sotto i passi del giocatore
                             float stepFrost = 0.0;
@@ -12710,16 +12711,16 @@ class GameMap {
                                 if (iDist < 65.0) {
                                     float iRing = exp(-abs(iDist - 12.0) * 0.26) * 0.58 + exp(-iDist * 0.055) * 0.48;
                                     stepFrost = clamp(iRing * (0.58 + 0.42 * crackMask), 0.0, 1.0) * uPlayerPit.w;
-                                    slabCol = mix(slabCol, vec3(0.75, 0.92, 1.00), stepFrost * 0.58);
+                                    slabCol = mix(slabCol, vec3(0.82, 0.95, 1.00), stepFrost * 0.60);
                                 }
                             }
 
                             diffuseColor.rgb = slabCol;
                             totalEmissiveRadiance = mix(
-                                vec3(0.02, 0.06, 0.12),
-                                vec3(0.14, 0.34, 0.50),
+                                vec3(0.03, 0.09, 0.18),
+                                vec3(0.18, 0.42, 0.65),
                                 clamp(snowRime * 0.45 + crackMask * 0.75 + scratches * 0.50 + stepFrost * 0.70, 0.0, 1.0)
-                            ) * 0.25;
+                            ) * 0.28;
 
                             float slabOpacity = mix(0.78, 0.94, frostBody);
                             diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.96), 0.78, 0.96);
@@ -12728,8 +12729,8 @@ class GameMap {
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.76) {
-                                float compIce = 0.76 + (maxIceC - 0.76) / (1.0 + (maxIceC - 0.76) * 3.0);
+                            if (maxIceC > 0.80) {
+                                float compIce = 0.80 + (maxIceC - 0.80) / (1.0 + (maxIceC - 0.80) * 3.0);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
