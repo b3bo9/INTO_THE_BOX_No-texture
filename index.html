@@ -1548,7 +1548,7 @@ const AppSettings = {
     get maxTextsDrawn() { return isTouchDevice ? (this.mode === 0 ? 6 : (this.mode === 1 ? 10 : 16)) : (this.mode === 0 ? 14 : (this.mode === 1 ? 25 : 35)); },
     get maxWindSources() { return isTouchDevice ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 6)) : (this.mode === 0 ? 4 : (this.mode === 1 ? 8 : 10)); },
     get grassDensityMult() { return this.mode === 0 ? 0.50 : (this.mode === 1 ? 0.78 : 1.0); },
-    get targetFogCount() { return this.mode === 0 ? 0 : (isTouchDevice ? (this.mode === 1 ? 16 : 28) : (this.mode === 1 ? 30 : 50)); },
+    get targetFogCount() { return this.mode === 0 ? 0 : (isTouchDevice ? (this.mode === 1 ? 32 : 55) : (this.mode === 1 ? 55 : 95)); },
     get playerLightRadius() { return !isTouchDevice ? 1050 : (this.mode === 0 ? 520 : (this.mode === 1 ? 650 : 780)); },
     getTargetPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
@@ -1635,7 +1635,7 @@ const AppSettings = {
         if (typeof Game !== 'undefined' && Game.mistSystem) {
             Game.mistSystem.visible = !this.isLow;
             if (Game.mistMat1 && isTouchDevice) {
-                Game.mistMat1.opacity = this.isUltra ? 0.68 : 0.62;
+                Game.mistMat1.opacity = this.isUltra ? 0.52 : 0.46;
             }
         }
 
@@ -8104,15 +8104,12 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                 return field;
             }
 
-            // Canale R: macro-banchi ben distanziati; Canale G: increspature e volute interne più fini
-            const chBanks = buildFbmChannel([ { p: 3, a: 0.62 }, { p: 6, a: 0.26 }, { p: 12, a: 0.12 } ]);
-            const chWisps = buildFbmChannel([ { p: 5, a: 0.50 }, { p: 10, a: 0.32 }, { p: 20, a: 0.18 } ]);
+            // Canale R: frequenza bilanciata per molteplici mini banchi organici; Canale G: increspature e volute interne fini
+            const chBanks = buildFbmChannel([ { p: 6, a: 0.48 }, { p: 12, a: 0.32 }, { p: 24, a: 0.20 } ]);
+            const chWisps = buildFbmChannel([ { p: 8, a: 0.45 }, { p: 16, a: 0.35 }, { p: 32, a: 0.20 } ]);
 
             for (let i = 0; i < NS * NS; i++) {
-                // Espansione del contrasto sui macro-banchi per separare nettamente i pieni dai vuoti
-                let b = chBanks[i];
-                b = b * b * (3 - 2 * b);
-                img.data[i * 4]     = Math.round(b * 255);
+                img.data[i * 4]     = Math.round(chBanks[i] * 255);
                 img.data[i * 4 + 1] = Math.round(chWisps[i] * 255);
                 img.data[i * 4 + 2] = 0;
                 img.data[i * 4 + 3] = 255;
@@ -8121,13 +8118,13 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             const mistNoise = new THREE.CanvasTexture(mc);
             mistNoise.wrapS = THREE.RepeatWrapping; mistNoise.wrapT = THREE.RepeatWrapping;
 
-            this.mistScale = 0.00072; // Scala calibrata: 2-3 banchi ben distinti visibili sullo schermo dello smartphone
+            this.mistScale = 0.00095; // Scala calibrata per distribuire molteplici mini banchi senza enormi blocchi continui
             this.mistMat1 = new THREE.ShaderMaterial({
                 uniforms: {
                     uNoise: { value: mistNoise },
                     uColor: { value: new THREE.Color(0xdde8f0) },
                     uEdgeColor: { value: new THREE.Color(0x223828) },
-                    uOpacity: { value: 0.68 },
+                    uOpacity: { value: 0.50 }, // Densità calibrata: via di mezzo ideale tra codice vecchio (0.36) e nuovo (0.68)
                     uScale: { value: this.mistScale },
                     uOff1: { value: new THREE.Vector2() },
                     uOff2: { value: new THREE.Vector2() }
@@ -8150,34 +8147,36 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                     varying vec2 vLocal;
                     void main() {
                         vec2 p = vLocal * uScale;
-                        // 1. Sagoma principale del banco in movimento
+                        // 1. Sagoma articolata dei banchi in movimento
                         vec2 s1 = texture2D(uNoise, p + uOff1).rg;
-                        // 2. Volute interne deformate dal flusso (effetto fumo vivo che cambia forma)
-                        vec2 warp = (s1 - 0.5) * 0.26;
-                        vec2 s2 = texture2D(uNoise, p * 1.75 + uOff2 + warp).rg;
+                        // 2. Volute interne deformate dal flusso
+                        vec2 warp = (s1 - 0.5) * 0.28;
+                        vec2 s2 = texture2D(uNoise, p * 1.85 + uOff2 + warp).rg;
 
-                        // Maschera ad alto contrasto: oltre il 65% della mappa resta a 0.0 (terreno 100% pulito, zero patina!)
-                        float island = smoothstep(0.50, 0.72, s1.r + (s2.r - 0.5) * 0.22);
-                        float wisps  = smoothstep(0.28, 0.82, s2.g);
-                        float d = island * (0.58 + 0.42 * wisps);
+                        // Ripartizione bilanciata: molteplici banchi vaporosi separati da varchi nitidi
+                        float island = smoothstep(0.38, 0.68, s1.r + (s2.r - 0.5) * 0.24);
+                        float wisps  = smoothstep(0.24, 0.78, s2.g);
+                        float d = island * (0.60 + 0.40 * wisps);
 
-                        float bank = smoothstep(0.12, 0.65, d);
-                        float core = smoothstep(0.45, 0.88, d);
+                        float bank = smoothstep(0.18, 0.68, d);
+                        float core = smoothstep(0.50, 0.88, d);
 
                         float r = length(vLocal);
+                        // Visibilità garantita attorno al giocatore per la massima leggibilità dell'azione
+                        float clearZone = mix(0.55, 1.0, smoothstep(70.0, 280.0, r));
                         float edge = 1.0 - smoothstep(1600.0, 2400.0, r);
-                        float a = bank * edge * uOpacity;
+                        float a = bank * clearZone * edge * uOpacity;
 
-                        // Chiaroscuro volumetrico: bordo atmosferico che stacca sul terreno + cuore di vapore chiaro e scolpito
-                        vec3 col = mix(uEdgeColor, uColor, smoothstep(0.0, 0.55, d));
-                        col = mix(col, vec3(0.96, 0.98, 1.0), core * 0.50 + wisps * core * 0.25);
+                        // Estetica intermedia: corpo vaporoso tridimensionale senza opacità eccessiva
+                        vec3 col = mix(uEdgeColor, uColor, smoothstep(0.08, 0.58, d));
+                        col = mix(col, vec3(0.95, 0.97, 1.0), core * 0.28 + wisps * core * 0.14);
                         gl_FragColor = vec4(col, a);
                     }
                 `,
                 transparent: true, depthWrite: false, depthTest: true, fog: false,
                 blending: THREE.NormalBlending
             });
-            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.68 : 0.62) : 0.68;
+            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.52 : 0.46) : 0.50;
             this.mistMat1.color = this.mistMat1.uniforms.uColor.value; // alias compatibile col resto del codice
             this.mistMat2 = null;
 
@@ -8876,13 +8875,13 @@ pushDebris(px, pz, radius, force) {
             
             if (this.mistMat1 && this.mistMat1.uniforms) {
                 const u = this.mistMat1.uniforms;
-                const sc = this.mistScale || 0.00072;
+                const sc = this.mistScale || 0.00095;
                 const t = this.mistWindTime;
                 // Offset calcolati in JS (alta precisione) e riportati in [0,1): banchi ancorati al mondo che scorrono col vento
                 const bx = this.player.x * sc, bz = this.player.y * sc;
-                u.uOff1.value.set((bx + t * 0.024) % 1, (bz + t * 0.015 + Math.sin(t * 0.28) * 0.016) % 1);
-                u.uOff2.value.set((bx * 1.75 - t * 0.038) % 1, (bz * 1.75 + t * 0.029) % 1);
-                u.uOpacity.value = this.mistMat1.opacity * (0.92 + 0.08 * Math.sin(t * 0.40));
+                u.uOff1.value.set((bx + t * 0.014) % 1, (bz + t * 0.009 + Math.sin(t * 0.22) * 0.012) % 1);
+                u.uOff2.value.set((bx * 1.85 - t * 0.024) % 1, (bz * 1.85 + t * 0.018) % 1);
+                u.uOpacity.value = this.mistMat1.opacity * (0.90 + 0.10 * Math.sin(t * 0.35));
             }
             this.mistSystem.visible = !AppSettings.isLow; 
         }
@@ -9304,19 +9303,19 @@ loop(timestamp) {
         // Tinge e ripristina l'opacità della nebbia 3D per il nuovo piano
         if (this.mistSystem) {
             let mistTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
-            mistTint.lerp(new THREE.Color(0xffffff), this.currentThemeIndex === 1 ? 0.58 : 0.72); // cuore del banco luminoso e ben visibile
+            mistTint.lerp(new THREE.Color(0xffffff), this.currentThemeIndex === 1 ? 0.48 : 0.60); // via di mezzo estetica calibrata
             let edgeTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
-            edgeTint.lerp(new THREE.Color(currentTheme.fog), 0.35); // bordo atmosferico per staccare anche sui terreni chiari
+            edgeTint.lerp(new THREE.Color(currentTheme.fog), 0.25); // bordo atmosferico morbido
             if (this.mistMat1) {
                 this.mistMat1.color.copy(mistTint);
                 if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
                     this.mistMat1.uniforms.uEdgeColor.value.copy(edgeTint);
                 }
-                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.68 : 0.62) : 0.68;
+                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.52 : 0.46) : 0.50;
             }
         }
        if (window.GLOBAL_FOG_MAT) {
-            window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.22 : (this.currentThemeIndex === 1 ? 0.24 : 0.28);
+            window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.20 : (this.currentThemeIndex === 1 ? 0.22 : 0.26);
             if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
         }
         if (window.GLOBAL_DEBRIS_MAT && currentTheme.debris) {
@@ -10212,12 +10211,15 @@ startGame(diffMult) {
                     let d = this.map.fogData[i];
                     d.x += d.vx * timeScale;
                     d.z += d.vz * timeScale;
-                    if (d.x < 0) d.x += mapW;
-                    if (d.x > mapW) d.x -= mapW;
-                    if (d.z < 0) d.z += mapH;
-                    if (d.z > mapH) d.z -= mapH;
+                    if (d.vRot) d.rot += d.vRot * timeScale;
+                    
+                    // Wrapping perimetrale continuo con margine proporzionato ai mini-banchi
+                    if (d.x < -160) d.x = mapW + 160;
+                    if (d.x > mapW + 160) d.x = -160;
+                    if (d.z < -160) d.z = mapH + 160;
+                    if (d.z > mapH + 160) d.z = -160;
 
-                   dummyFog.position.set(d.x, d.y, d.z);
+                    dummyFog.position.set(d.x, d.y, d.z);
                     dummyFog.scale.set(d.scale, 1, d.scale);
                     dummyFog.rotation.set(0, d.rot, 0); // <-- FIX: Resetta X e Z a 0
                     dummyFog.updateMatrix();
@@ -14147,8 +14149,9 @@ Game.auras.push({
         const texSmoke = Preloader.textures.smoke;
         
         // FIX PRESTAZIONI E VISIBILITÀ: La nebbia si adatta al menu Opzioni!
+        // Numero aumentato di mini banchi di nebbia distribuiti per la mappa (niente enormi parti omogenee)
         // 0 (Performance) = Niente nebbia. 1 (Bilanciata) = Media. 2 (Ultra) = Densa.
-        let fogCount = 0; this.maxFogAllocated = 0; // Disattivato: sostituito dallo shader a banchi distinti (elimina la patina piatta interna)
+        let fogCount = isTouchDevice ? 55 : 95; this.maxFogAllocated = fogCount;
         // Allocata alla capienza massima del dispositivo per permettere il cambio live da Opzioni!
         // La visibilità e il .count effettivo sono regolati da AppSettings.targetFogCount
 
@@ -14158,23 +14161,24 @@ Game.auras.push({
             texSmoke.encoding = THREE.sRGBEncoding;
 
             if (!window.GLOBAL_FOG_GEO) {
-                window.GLOBAL_FOG_GEO = new THREE.PlaneGeometry(350, 350); 
+                // Dimensioni geometriche ridotte per generare molteplici mini banchi vaporosi
+                window.GLOBAL_FOG_GEO = new THREE.PlaneGeometry(170, 170); 
                 window.GLOBAL_FOG_GEO.rotateX(-Math.PI / 2);
                 window.GLOBAL_FOG_MAT = new THREE.MeshBasicMaterial({
-                    map: texSmoke, color: 0x5c8568, transparent: true, opacity: 0.32, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
+                    map: texSmoke, color: 0x5c8568, transparent: true, opacity: 0.26, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
                 });
             }
             if (currentTheme && currentTheme.groundMist) {
                 window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
             }
             this.fogMesh = new THREE.InstancedMesh(window.GLOBAL_FOG_GEO, window.GLOBAL_FOG_MAT, fogCount);
-this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (renderOrder alto = disegnato dopo)
+            this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (renderOrder alto = disegnato dopo)
             for(let i = 0; i < fogCount; i++) {
                 // Posizioni casuali su tutta la mappa
                 let px = Math.random() * (this.width * TILE_SIZE);
                 let pz = Math.random() * (this.height * TILE_SIZE);
-                let py = MathUtils.randomRange(2, 10); // Altezza fluttuante dal suolo
-                let s = MathUtils.randomRange(1.0, 2.5); // Grandezze variabili
+                let py = MathUtils.randomRange(2, 8); // Altezza fluttuante radente al suolo
+                let s = MathUtils.randomRange(0.75, 1.35); // Grandezze contenute per mini banchi realistici
                 let rotY = Math.random() * Math.PI * 2;
                 
                 dummy.position.set(px, py, pz);
@@ -14183,12 +14187,13 @@ this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (
                 dummy.updateMatrix();
                 this.fogMesh.setMatrixAt(i, dummy.matrix);
                 
-                // Salviamo i dati per animarli ogni frame
+                // Salviamo i dati per animarli ogni frame: brezza coerente con leggera deriva e rotazione
                 this.fogData.push({
                     x: px, y: py, z: pz,
                     rot: rotY, scale: s,
-                    vx: MathUtils.randomRange(-20, 20), // Deriva causale asse X
-                    vz: MathUtils.randomRange(-20, 20)  // Deriva casuale asse Z
+                    vx: 12 + MathUtils.randomRange(-6, 6), // Vento prevalente asse X
+                    vz: 7 + MathUtils.randomRange(-5, 5),   // Vento prevalente asse Z
+                    vRot: MathUtils.randomRange(-0.025, 0.025) // Lenta rotazione organica del vapore
                 });
             }
             this.fogMesh.count = Math.min(AppSettings.targetFogCount, fogCount);
