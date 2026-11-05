@@ -1635,7 +1635,7 @@ const AppSettings = {
         if (typeof Game !== 'undefined' && Game.mistSystem) {
             Game.mistSystem.visible = !this.isLow;
             if (Game.mistMat1 && isTouchDevice) {
-                Game.mistMat1.opacity = this.isUltra ? 0.52 : 0.46;
+                Game.mistMat1.opacity = this.isUltra ? 0.35 : 0.30;
             }
         }
 
@@ -8118,16 +8118,19 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             const mistNoise = new THREE.CanvasTexture(mc);
             mistNoise.wrapS = THREE.RepeatWrapping; mistNoise.wrapT = THREE.RepeatWrapping;
 
-            this.mistScale = 0.00095; // Scala calibrata per distribuire molteplici mini banchi senza enormi blocchi continui
+            this.mistScale = 0.00090;
             this.mistMat1 = new THREE.ShaderMaterial({
                 uniforms: {
                     uNoise: { value: mistNoise },
                     uColor: { value: new THREE.Color(0xdde8f0) },
                     uEdgeColor: { value: new THREE.Color(0x223828) },
-                    uOpacity: { value: 0.50 }, // Densità calibrata: via di mezzo ideale tra codice vecchio (0.36) e nuovo (0.68)
+                    uOpacity: { value: 0.33 },
                     uScale: { value: this.mistScale },
                     uOff1: { value: new THREE.Vector2() },
-                    uOff2: { value: new THREE.Vector2() }
+                    uOff2: { value: new THREE.Vector2() },
+                    uPlayerPos: { value: new THREE.Vector2(960, 960) },
+                    uMapSize: { value: new THREE.Vector2(1920, 1920) },
+                    uTime: { value: 0.0 }
                 },
                 vertexShader: `
                     varying vec2 vLocal;
@@ -8144,39 +8147,66 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                     uniform float uScale;
                     uniform vec2 uOff1;
                     uniform vec2 uOff2;
+                    uniform vec2 uPlayerPos;
+                    uniform vec2 uMapSize;
+                    uniform float uTime;
                     varying vec2 vLocal;
                     void main() {
+                        vec2 worldPos = vLocal + uPlayerPos;
                         vec2 p = vLocal * uScale;
-                        // 1. Sagoma articolata dei banchi in movimento
+
+                        // 1. Campionamento turbolento a doppia scala per volute eteree e realistiche
                         vec2 s1 = texture2D(uNoise, p + uOff1).rg;
-                        // 2. Volute interne deformate dal flusso
-                        vec2 warp = (s1 - 0.5) * 0.28;
-                        vec2 s2 = texture2D(uNoise, p * 1.85 + uOff2 + warp).rg;
+                        vec2 warp = (s1 - 0.5) * 0.36;
+                        vec2 s2 = texture2D(uNoise, p * 1.95 + uOff2 + warp).rg;
 
-                        // Ripartizione bilanciata: molteplici banchi vaporosi separati da varchi nitidi
-                        float island = smoothstep(0.38, 0.68, s1.r + (s2.r - 0.5) * 0.24);
-                        float wisps  = smoothstep(0.24, 0.78, s2.g);
-                        float d = island * (0.60 + 0.40 * wisps);
+                        // Transizione morbida e progressiva (niente chiazze opache dai bordi netti)
+                        float island = smoothstep(0.28, 0.78, s1.r * 0.65 + s2.r * 0.35);
+                        float wisps  = smoothstep(0.18, 0.85, s2.g);
+                        float filament = smoothstep(0.35, 0.90, s1.g * s2.g * 1.35);
+                        float d = island * (0.48 + 0.52 * wisps);
 
-                        float bank = smoothstep(0.18, 0.68, d);
-                        float core = smoothstep(0.50, 0.88, d);
+                        // Curva esponenziale soffice: bordi velati e nucleo mai gessoso
+                        float bank = pow(smoothstep(0.10, 0.76, d), 1.25);
+                        float core = smoothstep(0.55, 0.92, d) * filament;
 
                         float r = length(vLocal);
-                        // Visibilità garantita attorno al giocatore per la massima leggibilità dell'azione
-                        float clearZone = mix(0.55, 1.0, smoothstep(70.0, 280.0, r));
-                        float edge = 1.0 - smoothstep(1600.0, 2400.0, r);
-                        float a = bank * clearZone * edge * uOpacity;
+                        float clearZone = mix(0.42, 1.0, smoothstep(65.0, 290.0, r));
+                        float farFade = 1.0 - smoothstep(1650.0, 2450.0, r);
 
-                        // Estetica intermedia: corpo vaporoso tridimensionale senza opacità eccessiva
-                        vec3 col = mix(uEdgeColor, uColor, smoothstep(0.08, 0.58, d));
-                        col = mix(col, vec3(0.95, 0.97, 1.0), core * 0.28 + wisps * core * 0.14);
-                        gl_FragColor = vec4(col, a);
+                        // Colore fantasy atmosferico con velatura luminosa interna
+                        vec3 mistCol = mix(uEdgeColor, uColor, smoothstep(0.10, 0.68, d));
+                        mistCol = mix(mistCol, uColor * 1.22 + vec3(0.06, 0.08, 0.12), core * 0.35);
+                        float mistAlpha = bank * clearZone * farFade * uOpacity;
+
+                        // 2. LAYER ENERGIA OSCURA ESTERNA (Dietro ai muri perimetrali)
+                        // Calcola la distanza dal bordo dei muri (spessore muro = 64 unità)
+                        vec2 dMin = worldPos - vec2(52.0);
+                        vec2 dMax = (uMapSize - vec2(52.0)) - worldPos;
+                        float insideDist = min(min(dMin.x, dMin.y), min(dMax.x, dMax.y));
+                        // 0.0 dentro la mappa -> 1.0 dietro ai muri all'esterno della mappa
+                        float outsideMask = 1.0 - smoothstep(-28.0, 20.0, insideDist);
+
+                        // Energia oscura abissale che copre il fumo esterno con venature viola/indaco
+                        float darkPulse = 0.5 + 0.5 * sin(uTime * 1.6 + (s1.r - s2.g) * 6.2831);
+                        float darkVeins = pow(smoothstep(0.32, 0.82, s2.r * 0.6 + s1.g * 0.4), 1.8);
+                        float auraRim = smoothstep(-95.0, 0.0, insideDist) * outsideMask;
+
+                        vec3 voidBase = vec3(0.012, 0.006, 0.028);
+                        vec3 voidEnergy = mix(vec3(0.11, 0.02, 0.22), vec3(0.28, 0.06, 0.48), darkPulse);
+                        vec3 darkCol = mix(voidBase, voidEnergy, darkVeins * (0.35 + 0.45 * auraRim));
+                        float darkAlpha = outsideMask * farFade * mix(0.92, 0.98, darkVeins);
+
+                        vec3 finalCol = mix(mistCol, darkCol, outsideMask);
+                        float finalAlpha = mix(mistAlpha, darkAlpha, outsideMask);
+
+                        gl_FragColor = vec4(finalCol, finalAlpha);
                     }
                 `,
                 transparent: true, depthWrite: false, depthTest: true, fog: false,
                 blending: THREE.NormalBlending
             });
-            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.52 : 0.46) : 0.50;
+            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33;
             this.mistMat1.color = this.mistMat1.uniforms.uColor.value; // alias compatibile col resto del codice
             this.mistMat2 = null;
 
@@ -8867,7 +8897,7 @@ pushDebris(px, pz, radius, force) {
         this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + shakeZ * 0.25);
         InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
 
-        // 7. Parallasse Nebbia 3D
+       // 7. Parallasse Nebbia 3D + Confini Energia Oscura Esterna
         if (this.mistSystem && this.player) {
             this.mistSystem.position.x = this.player.x;
             this.mistSystem.position.z = this.player.y;
@@ -8875,13 +8905,17 @@ pushDebris(px, pz, radius, force) {
             
             if (this.mistMat1 && this.mistMat1.uniforms) {
                 const u = this.mistMat1.uniforms;
-                const sc = this.mistScale || 0.00095;
+                const sc = this.mistScale || 0.00090;
                 const t = this.mistWindTime;
-                // Offset calcolati in JS (alta precisione) e riportati in [0,1): banchi ancorati al mondo che scorrono col vento
                 const bx = this.player.x * sc, bz = this.player.y * sc;
-                u.uOff1.value.set((bx + t * 0.014) % 1, (bz + t * 0.009 + Math.sin(t * 0.22) * 0.012) % 1);
-                u.uOff2.value.set((bx * 1.85 - t * 0.024) % 1, (bz * 1.85 + t * 0.018) % 1);
-                u.uOpacity.value = this.mistMat1.opacity * (0.90 + 0.10 * Math.sin(t * 0.35));
+                u.uOff1.value.set((bx + t * 0.012) % 1, (bz + t * 0.008 + Math.sin(t * 0.22) * 0.010) % 1);
+                u.uOff2.value.set((bx * 1.95 - t * 0.020) % 1, (bz * 1.95 + t * 0.015) % 1);
+                u.uOpacity.value = this.mistMat1.opacity * (0.92 + 0.08 * Math.sin(t * 0.35));
+                u.uPlayerPos.value.set(this.player.x, this.player.y);
+                u.uTime.value = t;
+                if (this.map) {
+                    u.uMapSize.value.set(this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
+                }
             }
             this.mistSystem.visible = !AppSettings.isLow; 
         }
@@ -9300,22 +9334,22 @@ loop(timestamp) {
         let currentTheme = MAP_THEMES[this.currentThemeIndex];
         // Impostiamo nebbia, sfondo e luci in base al tema corrente!
         this.scene.background = new THREE.Color(currentTheme.fog); 
-        // Tinge e ripristina l'opacità della nebbia 3D per il nuovo piano
+        // Tinge e ripristina l'opacità della nebbia 3D per il nuovo piano (più atmosferica e meno gessosa)
         if (this.mistSystem) {
             let mistTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
-            mistTint.lerp(new THREE.Color(0xffffff), this.currentThemeIndex === 1 ? 0.48 : 0.60); // via di mezzo estetica calibrata
+            mistTint.lerp(new THREE.Color(0xe2f0ff), this.currentThemeIndex === 1 ? 0.24 : 0.30);
             let edgeTint = new THREE.Color(currentTheme.groundMist || currentTheme.fog);
-            edgeTint.lerp(new THREE.Color(currentTheme.fog), 0.25); // bordo atmosferico morbido
+            edgeTint.lerp(new THREE.Color(currentTheme.fog), 0.40);
             if (this.mistMat1) {
                 this.mistMat1.color.copy(mistTint);
                 if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
                     this.mistMat1.uniforms.uEdgeColor.value.copy(edgeTint);
                 }
-                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.52 : 0.46) : 0.50;
+                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33;
             }
         }
-       if (window.GLOBAL_FOG_MAT) {
-            window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.20 : (this.currentThemeIndex === 1 ? 0.22 : 0.26);
+        if (window.GLOBAL_FOG_MAT) {
+            window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.12 : (this.currentThemeIndex === 1 ? 0.13 : 0.15);
             if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
         }
         if (window.GLOBAL_DEBRIS_MAT && currentTheme.debris) {
@@ -10213,15 +10247,19 @@ startGame(diffMult) {
                     d.z += d.vz * timeScale;
                     if (d.vRot) d.rot += d.vRot * timeScale;
                     
-                    // Wrapping perimetrale continuo con margine proporzionato ai mini-banchi
-                    if (d.x < -160) d.x = mapW + 160;
-                    if (d.x > mapW + 160) d.x = -160;
-                    if (d.z < -160) d.z = mapH + 160;
-                    if (d.z > mapH + 160) d.z = -160;
+                    // Mantiene i banchi dentro i confini della mappa e aggiunge una lenta respirazione organica
+                    let minBound = TILE_SIZE * 1.2;
+                    let maxBoundX = mapW - TILE_SIZE * 1.2;
+                    let maxBoundZ = mapH - TILE_SIZE * 1.2;
+                    if (d.x < minBound) d.x = maxBoundX;
+                    if (d.x > maxBoundX) d.x = minBound;
+                    if (d.z < minBound) d.z = maxBoundZ;
+                    if (d.z > maxBoundZ) d.z = minBound;
 
+                    let breathScale = d.scale * (0.94 + Math.sin(this.visualTime * 0.7 + i * 1.3) * 0.08);
                     dummyFog.position.set(d.x, d.y, d.z);
-                    dummyFog.scale.set(d.scale, 1, d.scale);
-                    dummyFog.rotation.set(0, d.rot, 0); // <-- FIX: Resetta X e Z a 0
+                    dummyFog.scale.set(breathScale, 1, breathScale);
+                    dummyFog.rotation.set(0, d.rot, 0);
                     dummyFog.updateMatrix();
                     this.map.fogMesh.setMatrixAt(i, dummyFog.matrix);
                 }
@@ -12017,12 +12055,77 @@ class GameMap {
 }
       const wallMesh = new THREE.InstancedMesh(window.GLOBAL_WALL_GEO, this.wallMat, wallCount);
 
-        // --- DISTESA OSCURA (Sigilla il terreno sotto le rocce perimetrali e oltre i confini) ---
+        // --- 1. SIGILLO PAVIMENTO SOTTO LE ROCCE ---
         let abyssColor = new THREE.Color(currentTheme.fog).multiplyScalar(0.35);
         const abyssMat = new THREE.MeshBasicMaterial({ color: abyssColor });
         const meshAbyss = new THREE.InstancedMesh(floorGeo, abyssMat, wallCount);
         meshAbyss.renderOrder = -11;
         let idxAbyss = 0;
+
+        // --- 2. LAYER ENERGIA OSCURA DIETRO AI MURI (Copre il fumo mobile esterno a y = 15.5, renderOrder = 4) ---
+        if (!window.GLOBAL_DARK_VOID_MAT) {
+            const voidMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: false,
+                depthWrite: true,
+                depthTest: true
+            });
+            voidMat.customProgramCacheKey = () => 'dark_energy_void_v1';
+            voidMat.onBeforeCompile = (shader) => {
+                shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
+                shader.vertexShader = `
+                    varying vec2 vVoidWPos;
+                ` + shader.vertexShader.replace(
+                    '#include <project_vertex>',
+                    `
+                    vec4 voidWp = vec4(transformed, 1.0);
+                    #ifdef USE_INSTANCING
+                        voidWp = instanceMatrix * voidWp;
+                    #endif
+                    voidWp = modelMatrix * voidWp;
+                    vVoidWPos = voidWp.xz;
+                    #include <project_vertex>
+                    `
+                );
+                shader.fragmentShader = `
+                    uniform float uTime;
+                    varying vec2 vVoidWPos;
+                ` + shader.fragmentShader.replace(
+                    '#include <color_fragment>',
+                    `
+                    #include <color_fragment>
+                    vec2 vp = vVoidWPos * 0.0045;
+                    float t = uTime * 0.45;
+
+                    // Vortici e correnti di Energia Oscura
+                    float w1 = sin(vp.x * 3.2 + t + cos(vp.y * 2.8 - t * 0.8) * 1.6);
+                    float w2 = cos(vp.y * 3.6 - t * 1.1 + sin(vp.x * 2.4 + t * 0.6) * 1.6);
+                    float w3 = sin((vp.x + vp.y) * 5.2 - t * 1.4 + w1 * 1.2);
+
+                    float nebula = clamp(0.5 + 0.28 * w1 + 0.22 * w2, 0.0, 1.0);
+                    float veins  = pow(clamp(1.0 - abs(w1 * 0.55 + w2 * 0.45), 0.0, 1.0), 3.5);
+                    float sparks = pow(clamp(0.5 + 0.5 * w3, 0.0, 1.0), 6.0) * veins;
+
+                    vec3 abyssBlack = vec3(0.012, 0.005, 0.025);
+                    vec3 darkIndigo = vec3(0.075, 0.018, 0.155);
+                    vec3 voidPurple = vec3(0.260, 0.045, 0.420);
+                    vec3 arcaneGlow = vec3(0.520, 0.110, 0.680);
+
+                    vec3 col = mix(abyssBlack, darkIndigo, smoothstep(0.25, 0.78, nebula));
+                    col = mix(col, voidPurple, veins * 0.65);
+                    col += arcaneGlow * (sparks * 0.55);
+
+                    diffuseColor.rgb = col;
+                    `
+                );
+            };
+            voidMat._isGlobalCached = true;
+            window.GLOBAL_DARK_VOID_MAT = voidMat;
+        }
+        const meshDarkVoid = new THREE.InstancedMesh(floorGeo, window.GLOBAL_DARK_VOID_MAT, wallCount + 4);
+        meshDarkVoid.renderOrder = 4; // Disegnato SOPRA a fogMesh (-1) e mistSystem (3) per coprire il fumo esterno
+        meshDarkVoid.frustumCulled = false;
+        let idxDarkVoid = 0;
 // --- SISTEMA FOSSE ORGANICHE SENZA BORDI NETTI (Raccordo Seamless, Gonna Sfumata, Scarpata 3D e Shader GPU) ---
         const themeIdx = Game.currentThemeIndex;
         let pitColor, pitEmissive, pitOpacity, pitRoughness, pitMetalness, baseTexImage;
@@ -13890,31 +13993,48 @@ class GameMap {
                         }
                 } else if (this.grid[x][y] === 5) {
                         // Sponde scolpite, ombre e dettagli fiabeschi già costruiti sui contorni continui
-                } else {
-                        // Sigilla il suolo sotto le rocce e crea la distesa oscura oltre il perimetro
-                        dummy.position.set(x * TILE_SIZE + TILE_SIZE / 2, -0.05, y * TILE_SIZE + TILE_SIZE / 2);
+               } else {
+                        // Sigilla il suolo sotto le rocce
+                        let cellCenterX = x * TILE_SIZE + TILE_SIZE / 2;
+                        let cellCenterZ = y * TILE_SIZE + TILE_SIZE / 2;
+                        dummy.position.set(cellCenterX, -0.05, cellCenterZ);
                         dummy.scale.set(1, 1, 1);
                         dummy.rotation.set(0, 0, 0);
                         dummy.updateMatrix();
                         meshAbyss.setMatrixAt(idxAbyss++, dummy.matrix);
 
-                        // Controlla se questo blocco delimita direttamente l'area giocabile
+                        // Controlla se questo blocco delimita l'area giocabile e calcola il vettore verso l'esterno (dietro al muro)
                         let isBorder = false;
-                        for (let dx = -1; dx <= 1 && !isBorder; dx++) {
+                        let outX = 0, outZ = 0;
+                        for (let dx = -1; dx <= 1; dx++) {
                             for (let dy = -1; dy <= 1; dy++) {
+                                if (dx === 0 && dy === 0) continue;
                                 let nx = x + dx, ny = y + dy;
                                 if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && this.grid[nx][ny] !== 1) {
-                                    isBorder = true; break;
+                                    isBorder = true;
+                                    outX -= dx;
+                                    outZ -= dy;
                                 }
                             }
                         }
-                        // Genera le rocce alte SOLO lungo il perimetro rispettando il bordo di collisione del tile
+
                         if (isBorder) {
+                            // Sulle celle muro, arretra il layer di Energia Oscura dentro la metà esterna della roccia
+                            // così non sporge mai dentro la stanza ma sigilla il fumo subito dietro al muro
+                            let outLen = Math.hypot(outX, outZ);
+                            let shiftX = outLen > 0.01 ? (outX / outLen) * 18.0 : 0;
+                            let shiftZ = outLen > 0.01 ? (outZ / outLen) * 18.0 : 0;
+                            dummy.position.set(cellCenterX + shiftX, 15.5, cellCenterZ + shiftZ);
+                            dummy.scale.set(0.92, 1, 0.92);
+                            dummy.rotation.set(0, 0, 0);
+                            dummy.updateMatrix();
+                            meshDarkVoid.setMatrixAt(idxDarkVoid++, dummy.matrix);
+
                             if (!window._wallTint) window._wallTint = new THREE.Color();
                             let hash = Math.abs(Math.sin(x * 12.989 + y * 78.233)) % 1;
                             let ox = (hash - 0.5) * 3.0;
                             let oz = (((hash * 17.3) % 1) - 0.5) * 3.0;
-                            dummy.position.set(x * TILE_SIZE + TILE_SIZE / 2 + ox, 18, y * TILE_SIZE + TILE_SIZE / 2 + oz);
+                            dummy.position.set(cellCenterX + ox, 18, cellCenterZ + oz);
                             let sx = 0.98 + hash * 0.10;
                             let sy = 1.45 + ((hash * 7.1) % 1) * 0.45;
                             let sz = 0.98 + ((hash * 3.7) % 1) * 0.10;
@@ -13925,15 +14045,30 @@ class GameMap {
                             dummy.updateMatrix();
                             wallMesh.setColorAt(wIdx, window._wallTint);
                             wallMesh.setMatrixAt(wIdx++, dummy.matrix);
+                        } else {
+                            // Cella completamente dietro ai muri: copre il fumo mobile con il layer di Energia Oscura
+                            dummy.position.set(cellCenterX, 15.5, cellCenterZ);
+                            dummy.scale.set(1.03, 1, 1.03);
+                            dummy.rotation.set(0, 0, 0);
+                            dummy.updateMatrix();
+                            meshDarkVoid.setMatrixAt(idxDarkVoid++, dummy.matrix);
                         }
                     }
                 } else {
-                    // Confine Esterno Mappa (PADDING): Distesa oscura piatta che non riflette le luci di gioco
-                    dummy.position.set(x * TILE_SIZE + TILE_SIZE / 2, -0.05, y * TILE_SIZE + TILE_SIZE / 2);
+                    // Confine Esterno Mappa (PADDING): sigilla sia a terra sia sopra il fumo con Energia Oscura
+                    let cellCenterX = x * TILE_SIZE + TILE_SIZE / 2;
+                    let cellCenterZ = y * TILE_SIZE + TILE_SIZE / 2;
+                    dummy.position.set(cellCenterX, -0.05, cellCenterZ);
                     dummy.scale.set(1, 1, 1);
                     dummy.rotation.set(0, 0, 0);
                     dummy.updateMatrix();
                     meshAbyss.setMatrixAt(idxAbyss++, dummy.matrix);
+
+                    dummy.position.set(cellCenterX, 15.5, cellCenterZ);
+                    dummy.scale.set(1.03, 1, 1.03);
+                    dummy.rotation.set(0, 0, 0);
+                    dummy.updateMatrix();
+                    meshDarkVoid.setMatrixAt(idxDarkVoid++, dummy.matrix);
                 }
 
                // Strutture interattive (Colonne e Cristalli nel Labirinto)
@@ -14098,12 +14233,35 @@ Game.auras.push({
         }
         if (idxDebris > 0) this.mapGroup.add(meshDebris);
 
-      wallMesh.count = wIdx;
+      // 4 grandi quadranti esterni oltre il PADDING per coprire il fumo fino all'orizzonte estremo della telecamera
+        const padMinX = -PADDING * TILE_SIZE;
+        const padMaxX = (this.width + PADDING) * TILE_SIZE;
+        const padMinZ = -PADDING * TILE_SIZE;
+        const padMaxZ = (this.height + PADDING) * TILE_SIZE;
+        const padSpanX = padMaxX - padMinX;
+        const farExtent = 4000;
+        const outerSlabs = [
+            { x: (padMinX + padMaxX) * 0.5, z: padMinZ - farExtent * 0.5, sx: (padSpanX + farExtent * 2) / TILE_SIZE, sz: farExtent / TILE_SIZE },
+            { x: (padMinX + padMaxX) * 0.5, z: padMaxZ + farExtent * 0.5, sx: (padSpanX + farExtent * 2) / TILE_SIZE, sz: farExtent / TILE_SIZE },
+            { x: padMinX - farExtent * 0.5, z: (padMinZ + padMaxZ) * 0.5, sx: farExtent / TILE_SIZE, sz: (padMaxZ - padMinZ) / TILE_SIZE },
+            { x: padMaxX + farExtent * 0.5, z: (padMinZ + padMaxZ) * 0.5, sx: farExtent / TILE_SIZE, sz: (padMaxZ - padMinZ) / TILE_SIZE }
+        ];
+        for (let s = 0; s < outerSlabs.length; s++) {
+            dummy.position.set(outerSlabs[s].x, 15.5, outerSlabs[s].z);
+            dummy.scale.set(outerSlabs[s].sx, 1, outerSlabs[s].sz);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            meshDarkVoid.setMatrixAt(idxDarkVoid++, dummy.matrix);
+        }
+
+        wallMesh.count = wIdx;
         wallMesh.instanceMatrix.needsUpdate = true;
         if (wallMesh.instanceColor) wallMesh.instanceColor.needsUpdate = true;
         meshAbyss.count = idxAbyss;
         meshAbyss.instanceMatrix.needsUpdate = true;
-        this.mapGroup.add(meshAbyss, meshDirt, meshGrass, meshRock); 
+        meshDarkVoid.count = idxDarkVoid;
+        meshDarkVoid.instanceMatrix.needsUpdate = true;
+        this.mapGroup.add(meshAbyss, meshDarkVoid, meshDirt, meshGrass, meshRock); 
         this.mapGroup.add(wallMesh);
         
      if(pillarCount > 0) {
@@ -14161,24 +14319,25 @@ Game.auras.push({
             texSmoke.encoding = THREE.sRGBEncoding;
 
             if (!window.GLOBAL_FOG_GEO) {
-                // Dimensioni geometriche ridotte per generare molteplici mini banchi vaporosi
-                window.GLOBAL_FOG_GEO = new THREE.PlaneGeometry(170, 170); 
+                // Geometria più ampia e morbida per velature fantasy stratificate senza stacchi netti
+                window.GLOBAL_FOG_GEO = new THREE.PlaneGeometry(215, 215); 
                 window.GLOBAL_FOG_GEO.rotateX(-Math.PI / 2);
                 window.GLOBAL_FOG_MAT = new THREE.MeshBasicMaterial({
-                    map: texSmoke, color: 0x5c8568, transparent: true, opacity: 0.26, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
+                    map: texSmoke, color: 0x5c8568, transparent: true, opacity: 0.16, depthWrite: false, depthTest: true, blending: THREE.NormalBlending
                 });
             }
             if (currentTheme && currentTheme.groundMist) {
                 window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
             }
             this.fogMesh = new THREE.InstancedMesh(window.GLOBAL_FOG_GEO, window.GLOBAL_FOG_MAT, fogCount);
-            this.fogMesh.renderOrder = -1; // Assicura che venga disegnato DOPO il terreno (renderOrder alto = disegnato dopo)
+            this.fogMesh.renderOrder = -1;
             for(let i = 0; i < fogCount; i++) {
-                // Posizioni casuali su tutta la mappa
-                let px = Math.random() * (this.width * TILE_SIZE);
-                let pz = Math.random() * (this.height * TILE_SIZE);
-                let py = MathUtils.randomRange(2, 8); // Altezza fluttuante radente al suolo
-                let s = MathUtils.randomRange(0.75, 1.35); // Grandezze contenute per mini banchi realistici
+                // Posiziona i banchi sulle stanze/corridoi giocabili della mappa
+                let tile = this.getRandomFloorTile();
+                let px = tile.x * TILE_SIZE + MathUtils.randomRange(-20, TILE_SIZE + 20);
+                let pz = tile.y * TILE_SIZE + MathUtils.randomRange(-20, TILE_SIZE + 20);
+                let py = MathUtils.randomRange(2.5, 7.5);
+                let s = MathUtils.randomRange(0.85, 1.55);
                 let rotY = Math.random() * Math.PI * 2;
                 
                 dummy.position.set(px, py, pz);
@@ -21746,66 +21905,57 @@ const Preloader = {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
 
-        // Disegna sbuffi di vapore ad alto contrasto con wrap toroidale per un tiling seamless perfetto
-        function drawPuff(cx, cy, radius, alpha) {
-            for (let ox of [-size, 0, size]) {
-                for (let oy of [-size, 0, size]) {
-                    const x = cx + ox;
-                    const y = cy + oy;
-                    if (x + radius < 0 || x - radius > size || y + radius < 0 || y - radius > size) continue;
-                    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                    // Nucleo bianco e brillante, caduta rapida dell'alpha per evitare l'effetto velo slavato
-                    grad.addColorStop(0, "rgba(255,255,255," + alpha.toFixed(3) + ")");
-                    grad.addColorStop(0.32, "rgba(255,255,255," + (alpha * 0.72).toFixed(3) + ")");
-                    grad.addColorStop(0.68, "rgba(240,248,255," + (alpha * 0.16).toFixed(3) + ")");
-                    grad.addColorStop(1, "rgba(215,230,250,0)");
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(x, y, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
+        // Sbuffi ellittici morbidi e stratificati per simulare vere volute di nebbia fantasy
+        function drawWisp(cx, cy, rx, ry, rot, alpha) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rot);
+            ctx.scale(1.0, ry / Math.max(1, rx));
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+            grad.addColorStop(0.0,  "rgba(248, 252, 255, " + (alpha * 0.85).toFixed(3) + ")");
+            grad.addColorStop(0.35, "rgba(235, 245, 255, " + (alpha * 0.52).toFixed(3) + ")");
+            grad.addColorStop(0.70, "rgba(215, 232, 250, " + (alpha * 0.18).toFixed(3) + ")");
+            grad.addColorStop(1.0,  "rgba(200, 220, 245, 0)");
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, rx, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
 
-        // BANCHI DI NEBBIA AD ALTO CONTRASTO:
-        // Formiamo due soli grandi cumuli di vapore compatti e scolpiti (occupano solo il 35-40% del canvas)
-        // lasciando oltre il 60% del canvas a trasparenza PURA (zero velo continuo, zero slavatura)
-        
-        // Cumulo 1: Banco vaporoso nord-ovest
-        drawPuff(68, 72, 62, 0.58);
-        drawPuff(98, 92, 48, 0.48);
-        drawPuff(44, 88, 42, 0.44);
-        drawPuff(84, 52, 38, 0.38);
-        drawPuff(112, 68, 30, 0.32);
+        // Volute vaporose non saturate al centro e sfumate fino a zero prima del bordo
+        drawWisp(128, 128, 92, 64,  0.35, 0.26);
+        drawWisp(112, 118, 76, 52, -0.45, 0.22);
+        drawWisp(148, 138, 78, 50,  0.80, 0.22);
+        drawWisp(92,  144, 62, 42,  0.15, 0.18);
+        drawWisp(162, 108, 64, 40, -0.25, 0.18);
+        drawWisp(128, 96,  55, 36,  1.10, 0.15);
+        drawWisp(132, 158, 58, 38, -0.75, 0.15);
 
-        // Cumulo 2: Banco vaporoso sud-est
-        drawPuff(188, 178, 68, 0.62);
-        drawPuff(154, 196, 46, 0.46);
-        drawPuff(222, 162, 48, 0.48);
-        drawPuff(204, 214, 40, 0.36);
-        drawPuff(168, 150, 32, 0.32);
-
-        // Micro-sbuffo di raccordo volante
-        drawPuff(138, 118, 26, 0.22);
-
-        // Pulizia ad alto contrasto dei pixel:
-        // Taglia a ZERO assoluto ogni alone debole che causa desaturazione/slavatura
-        // ed esalta il contrasto del corpo vaporoso dei banchi
+        // Smorzamento radiale e curva morbida: impedisce qualsiasi chiazza opaca e lascia trasparire il terreno
         const imgData = ctx.getImageData(0, 0, size, size);
         const d = imgData.data;
-        for (let i = 0; i < d.length; i += 4) {
-            let a = d[i + 3] / 255.0;
-            if (a < 0.05) {
-                d[i + 3] = 0; // Trasparenza assoluta: il terreno sotto resta brillante e coi neri intatti
-            } else {
-                // Curva di contrasto: elimina il grigiore piatto e rende i banchi corposi e scolpiti
-                d[i + 3] = Math.min(255, Math.floor(Math.pow(a, 1.25) * 255 * 1.12));
+        const half = size * 0.5;
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const idx = (y * size + x) * 4;
+                const dx = (x - half) / half;
+                const dy = (y - half) / half;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const radialMask = Math.max(0.0, 1.0 - Math.pow(Math.min(1.0, dist), 1.8));
+                let a = (d[idx + 3] / 255.0) * radialMask;
+
+                // Texture organica interna a filamenti leggeri
+                const wispMod = 0.82 + 0.18 * Math.sin(x * 0.09 + Math.cos(y * 0.08) * 2.0);
+                a = Math.pow(a, 1.18) * 0.72 * wispMod;
+                d[idx + 3] = a < 0.008 ? 0 : Math.min(185, Math.floor(a * 255));
             }
         }
         ctx.putImageData(imgData, 0, 0);
 
         const tex = new THREE.CanvasTexture(canvas);
-        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
         tex.encoding = THREE.sRGBEncoding;
         return tex;
     },
