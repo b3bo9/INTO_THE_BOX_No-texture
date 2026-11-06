@@ -17002,7 +17002,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                             drop.vy = MathUtils.randomRange(28, 52);
                             drop.baseSize = MathUtils.randomRange(4.5, 7.5);
                             drop.life = 0.20; drop.maxLife = 0.20;
-                        }} else if (Game.currentThemeIndex === 1) {
+                        } else if (Game.currentThemeIndex === 1) {
                             // LAVA: Bolle viscose di magma denso e sbuffo caldo (zero strisce/laser ad alta velocità)
                             let blob = Game.getParticle();
                             let bAng = moveAng + Math.PI + MathUtils.randomRange(-1.1, 1.1);
