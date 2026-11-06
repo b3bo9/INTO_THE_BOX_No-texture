@@ -1980,13 +1980,14 @@ const AudioEngine = {
     toggleMusic() {
         this.musicMuted = !this.musicMuted; 
         if (this.musicMuted) {
+            clearInterval(this._menuFade); clearInterval(this._gameFade); clearInterval(this._bossFade);
+            this.musicNode = null;
             this.menuBGM.muted = true; this.gameBGM.muted = true; this.bossBGM.muted = true;
             this.menuBGM.pause(); this.gameBGM.pause(); this.bossBGM.pause();
         } else {
             if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
             this.menuBGM.muted = false; this.gameBGM.muted = false; this.bossBGM.muted = false;
-            // Se sei nel menu e togli il muto, fai ripartire la musica
-            if(Game.state === 'MENU' && this.musicNode === null) this.playMenuMusic();
+            if(Game.state === 'MENU') this.playMenuMusic();
             else if(Game.state === 'PLAYING') {
                 if (Game.isBossFloor) this.playBossMusic(); else this.playGameMusic();
             }
@@ -2294,23 +2295,12 @@ const AudioEngine = {
         if (this.sfxMuted) return;
         try {
             if (this.countdownSFX) {
-                let isLongSeq = !isNaN(this.countdownSFX.duration) && this.countdownSFX.duration > 2.0;
-                if (isLongSeq) {
-                    if (sec === undefined || sec <= 3) {
-                        if (this.countdownSFX.paused || this.countdownSFX.ended || this.countdownSFX.currentTime === 0) {
-                            this.countdownSFX.currentTime = 0;
-                            let p = this.countdownSFX.play();
-                            if (p !== undefined) p.catch(() => {});
-                            return;
-                        }
-                    }
-                    if (!this.countdownSFX.paused) return;
-                } else {
-                    this.countdownSFX.currentTime = 0;
-                    let p = this.countdownSFX.play();
-                    if (p !== undefined) p.catch(() => {});
-                    return;
-                }
+                this.countdownSFX.muted = false;
+                this.countdownSFX.pause();
+                try { this.countdownSFX.currentTime = 0; } catch(e) {}
+                let p = this.countdownSFX.play();
+                if (p !== undefined) p.catch(() => {});
+                return;
             }
         } catch(e) {}
         // Fallback sintetizzato WebAudio
@@ -2514,14 +2504,29 @@ playCoin() {
     },
   
     playMenuMusic() {
-        if (this.musicMuted || this.musicNode) return;
-        this.stopGameMusic(); this.stopBossMusic();
-        this.gameBGM.pause(); this.bossBGM.pause();
+        if (this.musicMuted) return;
+        if (this.musicNode && !this.menuBGM.paused) return;
         clearInterval(this._menuFade);
-        this.menuBGM.volume = 0;
-        this.menuBGM.currentTime = 0; 
+        clearInterval(this._gameFade);
+        clearInterval(this._bossFade);
+        this.gameBGM.pause(); try { this.gameBGM.volume = 0; } catch(e){}
+        this.bossBGM.pause(); try { this.bossBGM.volume = 0; } catch(e){}
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
+        this.menuBGM.muted = false;
+        this.menuBGM.loop = true;
+        try { this.menuBGM.volume = 0.1; } catch(e){}
+        try { this.menuBGM.currentTime = 0; } catch(e){}
         let p = this.menuBGM.play();
-        if(p !== undefined) p.catch(e => console.warn("Audio bloccato", e));
+        if (p !== undefined) {
+            p.catch(() => {
+                try {
+                    this.menuBGM.load();
+                    this.menuBGM.play().catch(() => {});
+                } catch(err) {}
+            });
+        }
         this.musicNode = true;
         
         this._menuFade = setInterval(() => {
@@ -12672,21 +12677,21 @@ class GameMap {
             const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.42 : 0.62),
+                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.22 : 0.62),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (isTouchDevice) {
-                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 65 : 32);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x66c8f0 : 0x183c58));
+                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 14 : 32);
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x081824 : 0x183c58));
             } else {
-                pitMatParams.roughness = themeIdx === 0 ? 0.20 : pitRoughness;
-                pitMatParams.metalness = themeIdx === 0 ? 0.08 : pitMetalness;
+                pitMatParams.roughness = themeIdx === 0 ? 0.72 : pitRoughness;
+                pitMatParams.metalness = themeIdx === 0 ? 0.02 : pitMetalness;
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v10_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v11_' + themeIdx + (isTouchDevice ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -12817,10 +12822,10 @@ class GameMap {
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.010, 0.045, 0.090),
-                            vec3(0.060, 0.220, 0.380),
+                            vec3(0.008, 0.035, 0.075),
+                            vec3(0.040, 0.150, 0.260),
                             clamp(waveCrest * 0.70 + causticMain * 0.50, 0.0, 1.0)
-                        ) * 0.45 + vec3(0.14, 0.42, 0.60) * (foamRidge * 0.45 + causticSharp * 0.30);
+                        ) * 0.35 + vec3(0.08, 0.26, 0.40) * (foamRidge * 0.35 + causticSharp * 0.22);
 
                         // RIPPLE PERSONAGGIO: Ondine concentriche sottili, discrete e 100% circolari
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
@@ -12841,8 +12846,9 @@ class GameMap {
                             diffuseColor.rgb *= (1.0 - ringTrough);
                             vec3 subtleRippleCol = mix(vec3(0.18, 0.60, 0.82), vec3(0.45, 0.85, 0.98), delicateRings);
                             diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.70);
-                            totalEmissiveRadiance += vec3(0.08, 0.26, 0.42) * rippleStrength;
+                            totalEmissiveRadiance += vec3(0.05, 0.18, 0.30) * rippleStrength;
                         }
+                        vec3 waterBaseCol = diffuseColor.rgb;
                     ` : (themeIdx === 1 ? `
                         // LAVA: Doppio campionamento convettivo + anelli magmatici radiali
                         float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
@@ -12904,8 +12910,15 @@ class GameMap {
                 ).replace(
                     '#include <dithering_fragment>',
                     `
+                    ${themeIdx === 0 ? `
+                        // Impedisce alla PointLight del giocatore e al riflesso speculare da Nord di bruciare i dettagli dell'acqua
+                        float baseLum = max(0.04, dot(waterBaseCol, vec3(0.299, 0.587, 0.114)));
+                        float litLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+                        float lumGain = clamp(litLum / baseLum, 0.18, 1.06);
+                        gl_FragColor.rgb = waterBaseCol * lumGain;
+                    ` : ''}
                     ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.94' : '0.68'};
+                        float capLim = 0.68;
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
                             float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
@@ -21927,9 +21940,16 @@ function respawnPlayer() {
 
 function goToMainMenu() {
     AudioEngine.playClick();
+    // Avvia la musica del menu in modo sincrono sul click per evitare blocchi autoplay del browser
+    AudioEngine.setLowHpState(false);
+    AudioEngine.stopAllMusic();
+    AudioEngine.playMenuMusic();
+
     TransitionSystem.wipeIn(() => {
         if (typeof DeathSceneSystem !== 'undefined') DeathSceneSystem.stop();
         document.getElementById('deathScreen').classList.add('hidden');
+        document.getElementById('floorScreen').classList.add('hidden');
+        document.getElementById('relicScreen').classList.add('hidden');
         let kBadgeMenu = document.getElementById('deathKillerBadge');
         if (kBadgeMenu) kBadgeMenu.classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
@@ -21974,7 +21994,10 @@ function goToMainMenu() {
             Game.player.destroy();
             Game.player = null;
         }
-        Game.state = 'MENU'; AudioEngine.stopAllMusic(); AudioEngine.playMenuMusic();
+        Game.state = 'MENU';
+        if (AudioEngine.menuBGM.paused && !AudioEngine.musicMuted) {
+            AudioEngine.playMenuMusic();
+        }
         if (typeof SkinSystem !== 'undefined') SkinSystem.updateMenuUI();
         
         if (typeof TitleSystem !== 'undefined') {
