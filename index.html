@@ -385,32 +385,147 @@
         /* uiCanvas sopra la vignetta così la barra del Boss e i testi sono sempre brillanti */
         #uiCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 7; pointer-events: none; }
         
-        .health-bar-container { background: #111; border: 1px solid #444; border-radius: 0; overflow: hidden; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
-        #ui-floor-progress { transform-origin: left; width: 100%; }
-        #combo-bar { transform-origin: bottom; width: 100%; height: 100%; }
-        .stack-dot { width: 22px; height: 22px; border-radius: 50% !important; background: #1a1a1a; border: 2px solid #555; transition: all 0.3s; transform: none !important; box-shadow: inset 0 0 8px #000; }
-        @media (min-width: 640px) { .stack-dot { width: 30px; height: 30px; border-width: 3px; } }
-        
-        .stack-dot.active.red { background: #FF1133; border-color: #ffffff; box-shadow: 0 0 25px #FF1133, inset 0 0 8px rgba(255,255,255,0.8); }
-        .stack-dot.active.blue { background: #00AAFF; border-color: #ffffff; box-shadow: 0 0 25px #00AAFF, inset 0 0 8px rgba(255,255,255,0.8); }
-        .stack-dot.active.green { background: #33FF00; border-color: #ffffff; box-shadow: 0 0 25px #33FF00, inset 0 0 8px rgba(255,255,255,0.8); }
-        
-        #combo-text { text-shadow: 0 0 15px #ffaa00, 0 0 5px #ff0000, 2px 2px 0 #000; }
-        @media (min-width: 640px) { #combo-text { text-shadow: 0 0 30px #ffaa00, 0 0 10px #ff0000, 4px 4px 0 #000; } }
-
-        @keyframes pulse-glow-red { 0%, 100% { box-shadow: 0 0 5px #FF1133; transform: scale(1); } 50% { box-shadow: 0 0 15px #FF1133, 0 0 6px #ffaaaa inset; transform: scale(1.15); } }
-        @keyframes pulse-glow-blue { 0%, 100% { box-shadow: 0 0 5px #00AAFF; transform: scale(1); } 50% { box-shadow: 0 0 15px #00AAFF, 0 0 6px #aaaaff inset; transform: scale(1.15); } }
-        @keyframes pulse-glow-green { 0%, 100% { box-shadow: 0 0 5px #33FF00; transform: scale(1); } 50% { box-shadow: 0 0 15px #33FF00, 0 0 6px #aaffaa inset; transform: scale(1.15); } }
-        
-        .dot-glow-red { animation: pulse-glow-red 2s infinite ease-in-out; }
-        .dot-glow-blue { animation: pulse-glow-blue 2s infinite ease-in-out 0.6s; }
-        .dot-glow-green { animation: pulse-glow-green 2s infinite ease-in-out 1.2s; }
-        
-       @keyframes ult-glow-anim {
-            0%, 100% { box-shadow: 0 0 12px rgba(0, 221, 255, 0.4); border-color: #4b5563; filter: brightness(1); }
-            50% { box-shadow: 0 0 35px rgba(0, 221, 255, 1), inset 0 0 15px rgba(0, 221, 255, 0.6); border-color: #00DDFF; filter: brightness(1.3); transform: scale(1.04); }
+        /* --- HUD IN-GAME STILE FORGIA ARCANA (ZERO COSTO GPU) --- */
+        .hud-panel {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.94) 0%, rgba(4, 7, 15, 0.96) 100%) !important;
+            border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+            position: relative;
         }
-        .ult-ready { animation: ult-glow-anim 1.2s infinite ease-in-out !important; }
+        .hud-panel-amber {
+            background: linear-gradient(180deg, rgba(69, 26, 3, 0.88) 0%, rgba(20, 10, 4, 0.96) 100%) !important;
+            border: 1.5px solid rgba(250, 204, 21, 0.75) !important;
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+        }
+        .hud-panel-purple {
+            background: linear-gradient(180deg, rgba(30, 20, 56, 0.92) 0%, rgba(8, 10, 22, 0.96) 100%) !important;
+            border: 1.5px solid rgba(192, 132, 252, 0.5) !important;
+            box-shadow: 0 0 16px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+        }
+
+        /* Condotti Barre (HP & Piano) */
+        .hud-bar-track {
+            background: #04060e;
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95);
+        }
+        /* Tacche di misurazione ogni 25% a costo zero */
+        .hud-bar-ticks {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(90deg, transparent 0%, transparent calc(25% - 1px), rgba(5, 7, 15, 0.65) calc(25% - 1px), rgba(5, 7, 15, 0.65) 25%);
+            pointer-events: none;
+            z-index: 4;
+        }
+        #ui-hp-fill {
+            background: linear-gradient(90deg, #991b1b 0%, #ef4444 55%, #fb7185 100%);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.75);
+        }
+        #ui-hp-fill::after, #ui-floor-progress::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0; bottom: 0;
+            width: 3px;
+            background: #ffffff;
+            box-shadow: 0 0 8px #ffffff;
+        }
+        #ui-floor-progress {
+            transform-origin: left center !important;
+            width: 100%;
+            background: linear-gradient(90deg, #6d28d9 0%, #a855f7 55%, #38bdf8 100%);
+        }
+        #combo-bar { transform-origin: bottom center !important; width: 100%; height: 100%; }
+
+        /* Medaglioni Essenze (Stile Mastery Orb dello Shop) */
+        .stack-dot {
+            width: 22px; height: 22px;
+            border-radius: 9999px !important;
+            background: radial-gradient(circle at 35% 35%, #1e293b 0%, #060913 100%);
+            border: 2px solid rgba(148, 163, 184, 0.4);
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, background 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15), 0 0 6px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+        @media (min-width: 640px) { .stack-dot { width: 26px; height: 26px; } }
+
+        .stack-dot.active { transform: scale(1.12) !important; border-color: #ffffff !important; }
+        .stack-dot.active.red {
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #ff1838 55%, #880015 100%);
+            box-shadow: 0 0 14px #ff1838, inset 0 0 4px #ffffff;
+        }
+        .stack-dot.active.blue {
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #00ccff 55%, #004477 100%);
+            box-shadow: 0 0 14px #00ccff, inset 0 0 4px #ffffff;
+        }
+        .stack-dot.active.green {
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #22ff44 55%, #0a5c18 100%);
+            box-shadow: 0 0 14px #22ff44, inset 0 0 4px #ffffff;
+        }
+
+        #combo-text { text-shadow: 0 0 14px #ffaa00, 2px 2px 0 #000; }
+
+        /* Micro-animazioni GPU (solo transform e opacity) */
+        @keyframes hud-pop-bounce {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+        @keyframes hud-hit-jolt {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            25% { transform: translate3d(-4px, 2px, 0); }
+            50% { transform: translate3d(4px, -2px, 0); }
+            75% { transform: translate3d(-2px, -1px, 0); }
+        }
+        @keyframes skill-ready-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        .anim-hud-pop { animation: hud-pop-bounce 0.26s cubic-bezier(0.22, 1, 0.36, 1); }
+        .anim-hud-jolt { animation: hud-hit-jolt 0.24s ease-out; }
+
+        /* Bottoni Abilità (Dash, Shield, Ult) stile Reattore / Mastery Orb */
+        .hud-skill-btn {
+            background: radial-gradient(circle at 35% 30%, #1e293b 0%, #070a14 85%) !important;
+            border-radius: 9999px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+            transition: transform 0.1s ease-out, border-color 0.2s ease;
+        }
+        .hud-skill-btn:active { transform: scale(0.90) !important; }
+        /* Ghiera interna arcana */
+        .hud-skill-btn::before {
+            content: "";
+            position: absolute;
+            inset: 3px;
+            border-radius: 9999px;
+            border: 1px dashed rgba(255, 255, 255, 0.22);
+            pointer-events: none;
+            z-index: 5;
+        }
+        /* Cresta incandescente sul liquido di ricarica dei bottoni */
+        #btn-dash-fill, #btn-shield-fill, #btn-ult-fill {
+            border-top: 2px solid rgba(255, 255, 255, 0.9);
+        }
+        .skill-dash-ready {
+            border-color: #facc15 !important;
+            box-shadow: 0 0 16px rgba(250, 204, 21, 0.45), inset 0 0 10px rgba(250, 204, 21, 0.25) !important;
+        }
+        .skill-shield-ready {
+            border-color: #22d3ee !important;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.5), inset 0 0 10px rgba(34, 211, 238, 0.25) !important;
+        }
+        .ult-ready {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 24px rgba(0, 221, 255, 0.85), 0 0 12px rgba(168, 85, 247, 0.7), inset 0 0 12px #00ddff !important;
+            animation: skill-ready-breathe 1.1s infinite ease-in-out !important;
+        }
+        .ult-ready::before {
+            border-color: #fde047 !important;
+            animation: orb-rune-spin 6s linear infinite;
+        }
 
         @keyframes shimmer { 100% { transform: translateX(100%); } }
        .animate-shimmer { animation: shimmer 1.5s infinite linear; }
@@ -821,39 +936,41 @@ body.colorblind-mode #opt-colorblind-text {
                 background-color: rgba(10, 10, 15, 0.98) !important; 
             }
 
-            /* Target specifico per i bottoni rotondi dell'HUD in-game (Dash, Scudo, Ulti) */
+           /* Target specifico per i bottoni rotondi dell'HUD in-game (Dash, Scudo, Ulti) */
             #btn-dash, #btn-shield, #btn-ult {
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
-                background-color: rgba(15, 15, 20, 0.95) !important;
-            }
-/* --- FIX JOYSTICK: Look 3D Arcade a costo zero per la GPU --- */
-            
-            /* Zona esterna Sinistra (Movimento) */
-            #joy-left-zone {
-                background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.4) 100%) !important;
-                border: 2px solid rgba(255,255,255,0.15) !important;
-            }
-            /* Levetta Sinistra (Palla 3D) */
-            #joy-left-stick {
-                background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.7) 0%, rgba(100,100,100,0.6) 80%, rgba(0,0,0,0.8) 100%) !important;
-                border: 1px solid rgba(255,255,255,0.4) !important;
-                box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), 0 5px 15px rgba(0,0,0,0.5) !important;
             }
 
-            /* Zona esterna Destra (Mira/Fuoco) */
+            /* --- JOYSTICK ARCADE ARCANI A COSTO GPU ZERO --- */
+            #joy-left-zone {
+                background:
+                    linear-gradient(90deg, transparent 48%, rgba(56, 189, 248, 0.12) 49%, rgba(56, 189, 248, 0.12) 51%, transparent 52%),
+                    linear-gradient(0deg, transparent 48%, rgba(56, 189, 248, 0.12) 49%, rgba(56, 189, 248, 0.12) 51%, transparent 52%),
+                    radial-gradient(circle, rgba(14, 22, 40, 0.35) 0%, rgba(4, 7, 15, 0.72) 100%) !important;
+                border: 2px solid rgba(56, 189, 248, 0.32) !important;
+                box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8) !important;
+            }
+            #joy-left-stick {
+                background: radial-gradient(circle at 35% 32%, #ffffff 0%, #38bdf8 45%, #0f172a 95%) !important;
+                border: 2px solid #e0f2fe !important;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.75) !important;
+            }
+
             #joy-right-zone {
-                background: radial-gradient(circle, rgba(255,50,50,0.05) 0%, rgba(50,0,0,0.5) 100%) !important;
-                border: 2px solid rgba(255,50,50,0.2) !important;
+                background:
+                    linear-gradient(90deg, transparent 48%, rgba(255, 24, 56, 0.14) 49%, rgba(255, 24, 56, 0.14) 51%, transparent 52%),
+                    linear-gradient(0deg, transparent 48%, rgba(255, 24, 56, 0.14) 49%, rgba(255, 24, 56, 0.14) 51%, transparent 52%),
+                    radial-gradient(circle, rgba(45, 10, 18, 0.35) 0%, rgba(12, 4, 8, 0.75) 100%) !important;
+                border: 2px solid rgba(248, 113, 113, 0.35) !important;
+                box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8) !important;
             }
-            /* Levetta Destra (Palla 3D Rossa) */
             #joy-right-stick {
-                background: radial-gradient(circle at 35% 35%, rgba(255,100,100,0.8) 0%, rgba(180,0,0,0.7) 80%, rgba(50,0,0,0.9) 100%) !important;
-                border: 1px solid rgba(255,100,100,0.5) !important;
-                box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), 0 5px 15px rgba(200,0,0,0.4) !important;
+                background: radial-gradient(circle at 35% 32%, #ffffff 0%, #fb7185 40%, #be123c 80%, #1f040a 100%) !important;
+                border: 2px solid #ffe4e6 !important;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.75) !important;
             }
-            
-            /* Disabilita i bagliori complessi sotto ai testi che causano overdraw */
+
             .drop-shadow-md, .drop-shadow-lg {
                 filter: none !important;
             }
@@ -1394,42 +1511,45 @@ body.colorblind-mode #opt-colorblind-text {
     <div id="vignette"></div>
 <div id="blood-vignette" class="absolute inset-0 pointer-events-none opacity-0 z-[6]"></div>
     <!-- CONTROLLI MOBILE -->
-   <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-50 hidden">
-        <div id="joy-left-zone" class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 landscape:bottom-6 landscape:left-12 w-28 h-28 sm:w-32 sm:h-32 bg-white/5 rounded-full border border-white/10 pointer-events-auto touch-none">
-            <div id="joy-left-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/30 rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_rgba(255,255,255,0.2)] backdrop-blur-sm pointer-events-none transition-transform duration-75"></div>
+    <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-50 hidden">
+        <div id="joy-left-zone" class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 landscape:bottom-6 landscape:left-12 w-28 h-28 sm:w-32 sm:h-32 bg-slate-950/60 rounded-full border-2 border-cyan-400/35 pointer-events-auto touch-none">
+            <div class="absolute inset-2.5 rounded-full border border-dashed border-cyan-300/20 pointer-events-none"></div>
+            <div id="joy-left-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-cyan-400/40 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 border-cyan-100 pointer-events-none transition-transform duration-75"></div>
         </div>
-        <div id="joy-right-zone" class="absolute bottom-8 right-6 sm:bottom-12 sm:right-12 landscape:bottom-6 landscape:right-12 w-28 h-28 sm:w-32 sm:h-32 bg-red-500/5 rounded-full border border-red-500/10 pointer-events-auto touch-none">
-            <div id="joy-right-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-red-500/40 rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_rgba(255,0,0,0.3)] backdrop-blur-sm pointer-events-none transition-transform duration-75"></div>
+        <div id="joy-right-zone" class="absolute bottom-8 right-6 sm:bottom-12 sm:right-12 landscape:bottom-6 landscape:right-12 w-28 h-28 sm:w-32 sm:h-32 bg-rose-950/60 rounded-full border-2 border-red-400/35 pointer-events-auto touch-none">
+            <div class="absolute inset-2.5 rounded-full border border-dashed border-red-300/20 pointer-events-none"></div>
+            <div id="joy-right-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-red-500/50 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 border-rose-100 pointer-events-none transition-transform duration-75"></div>
         </div>
-      
-       
     </div>
 
-<!-- HUD IN-GAME -->
+    <!-- HUD IN-GAME (STILE FORGIA / CONSOLE ARCANA) -->
     <div id="hud" class="absolute inset-0 pointer-events-none hidden z-10">
-        <!-- TOP-RIGHT: FPS & PAUSA (Allineati sulla stessa linea del pannello sinistro) -->
+        <!-- TOP-RIGHT: FPS & PAUSA -->
         <div class="absolute top-3 right-3 sm:top-5 sm:right-5 flex items-center gap-2 z-50 pointer-events-auto" style="margin-top: env(safe-area-inset-top); margin-right: env(safe-area-inset-right);">
-            <div id="fps-counter" class="hud-panel h-9 sm:h-10 font-bold px-3 text-[10px] sm:text-xs flex items-center justify-center pointer-events-none text-gray-300">
-                FPS: <span id="fps-value" class="text-green-400 ml-1">0</span>
+            <div id="fps-counter" class="hud-panel h-9 sm:h-10 font-black px-3 text-[10px] sm:text-xs flex items-center justify-center pointer-events-none text-cyan-100 tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5"></span>FPS: <span id="fps-value" class="text-green-400 ml-1 font-display">0</span>
             </div>
-            <button onclick="UIManager.togglePause()" class="w-9 h-9 sm:w-10 sm:h-10 hud-panel text-gray-300 hover:text-white flex items-center justify-center hover:border-white/50 transition-colors">
+            <button onclick="UIManager.togglePause()" class="w-9 h-9 sm:w-10 sm:h-10 hud-panel text-cyan-200 hover:text-white flex items-center justify-center hover:border-cyan-300 active:scale-90 transition-transform cursor-pointer">
                 <i class="fa-solid fa-pause text-xs sm:text-sm"></i>
             </button>
         </div>
 
-        <!-- TOP-LEFT: VITALS, PIANO E MONETE (Compatto e allineato per smartphone) -->
-        <div class="absolute top-3 left-3 sm:top-5 sm:left-5 flex flex-col gap-2 pointer-events-none w-[236px] sm:w-[320px] z-50" style="margin-top: env(safe-area-inset-top); margin-left: env(safe-area-inset-left);">
+        <!-- TOP-LEFT: VITALS, PIANO E MONETE -->
+        <div class="absolute top-3 left-3 sm:top-5 sm:left-5 flex flex-col gap-2 pointer-events-none w-[240px] sm:w-[320px] z-50" style="margin-top: env(safe-area-inset-top); margin-left: env(safe-area-inset-left);">
             
             <!-- MAIN VITALS PANEL -->
-            <div class="hud-panel p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3.5">
-                <!-- LEVEL RING -->
-                <div class="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-black/70 rounded-full border border-white/15 shrink-0">
+            <div id="hud-vitals-card" class="hud-panel p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3.5 overflow-hidden">
+                <!-- Linea energetica superiore tri-elementale -->
+                <div class="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#FF1838] via-[#00CCFF] to-[#22FF44] opacity-85"></div>
+
+                <!-- LEVEL MEDALLION -->
+                <div id="hud-level-badge" class="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center rounded-full bg-slate-950 border-2 border-cyan-400/50 shadow-[inset_0_0_10px_rgba(34,211,238,0.25)] shrink-0">
                     <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        <path class="text-gray-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.6"/>
-                        <path id="ui-xp-circle" class="text-cyan-400 transition-all duration-300" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                        <path class="text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.8"/>
+                        <path id="ui-xp-circle" class="text-cyan-400 transition-all duration-300" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
                     </svg>
                     <div class="absolute flex flex-col items-center mt-0.5">
-                        <span class="text-[7px] sm:text-[9px] text-cyan-200 font-black tracking-[0.18em] leading-none mb-0.5">LVL</span>
+                        <span class="text-[7px] sm:text-[9px] text-cyan-300 font-black tracking-[0.18em] leading-none mb-0.5">LVL</span>
                         <span id="ui-level" class="text-base sm:text-xl font-black text-white leading-none font-display">1</span>
                     </div>
                 </div>
@@ -1440,92 +1560,93 @@ body.colorblind-mode #opt-colorblind-text {
                         <span id="ui-hp-text" class="text-xs sm:text-sm font-black text-white tracking-wider font-display">100/100</span>
                         <div id="ui-lives" class="flex gap-1 items-center text-[11px] sm:text-xs"></div>
                     </div>
-                    <!-- HEALTH BAR -->
-                    <div class="w-full h-3 sm:h-3.5 bg-gray-950/90 border border-white/15 rounded-full overflow-hidden relative">
+                    <!-- HEALTH BAR CONDOTTO PLASMA -->
+                    <div class="w-full h-3.5 sm:h-4 hud-bar-track">
+                        <div class="hud-bar-ticks"></div>
                         <div id="ui-hp-catchup" class="absolute top-0 left-0 h-full w-full bg-white transition-transform origin-left"></div>
-                        <div id="ui-hp-fill" class="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-red-600 to-rose-500 transition-transform duration-100 origin-left"></div>
+                        <div id="ui-hp-fill" class="absolute top-0 left-0 h-full w-full transition-transform duration-100 origin-left"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- SECONDARY INFO PANEL (Piano & Monete allineati in altezza e larghezza) -->
-            <div class="flex gap-2 w-full">
+            <!-- SECONDARY INFO PANEL (Piano & Forziere Monete) -->
+            <div class="flex gap-2 w-full items-stretch">
                 <!-- FLOOR PROGRESS -->
-                <div class="flex-1 hud-panel px-2.5 py-2 flex flex-col justify-center min-w-0">
-                    <div class="flex items-center justify-between mb-1 gap-1">
-                        <span id="ui-floor-text" class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-300 flex items-center truncate">
-                            <i id="ui-floor-icon" class="fa-solid fa-skull text-gray-400 mr-1.5 transition-all duration-300"></i> Piano <span id="ui-floor" class="text-white ml-1">1</span>
+                <div class="flex-1 hud-panel hud-panel-purple px-2.5 py-2 flex flex-col justify-center min-w-0">
+                    <div class="flex items-center justify-between mb-1.5 gap-1">
+                        <span id="ui-floor-text" class="text-[10px] sm:text-xs font-display font-black uppercase tracking-wider text-purple-100 flex items-center truncate">
+                            <i id="ui-floor-icon" class="fa-solid fa-skull text-purple-300 mr-1.5 transition-all duration-300"></i> Piano <span id="ui-floor" class="text-white ml-1">1</span>
                         </span>
-                        <span id="ui-corruption-label" class="text-[8px] sm:text-[9px] font-black tracking-wider text-purple-200 hidden bg-purple-900/50 px-1.5 py-0.5 rounded border border-purple-400/40 uppercase whitespace-nowrap"></span>
+                        <span id="ui-corruption-label" class="text-[8px] sm:text-[9px] font-black tracking-wider text-fuchsia-200 hidden bg-purple-950/90 px-1.5 py-0.5 rounded border border-fuchsia-400/60 uppercase whitespace-nowrap"></span>
                     </div>
                     <!-- PROGRESS BAR -->
-                    <div class="w-full h-1.5 sm:h-2 bg-gray-950/90 border border-white/10 rounded-full overflow-hidden relative">
-                        <div id="ui-floor-progress" class="h-full w-0 bg-gradient-to-r from-purple-600 to-fuchsia-400 transition-all duration-300 relative overflow-hidden">
+                    <div class="w-full h-2 sm:h-2.5 hud-bar-track">
+                        <div id="ui-floor-progress" class="h-full w-0 transition-transform duration-300 relative overflow-hidden">
                             <div id="ui-floor-progress-glow" class="absolute inset-0 bg-white opacity-0 transition-opacity duration-300 mix-blend-overlay"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- COINS POUCH -->
-                <div class="shrink-0 hud-panel px-3 sm:px-3.5 flex items-center justify-center gap-1.5 min-w-[64px]">
-                    <i class="fa-solid fa-coins text-yellow-400 text-xs sm:text-sm"></i> 
-                    <span id="ui-coins" class="text-yellow-300 text-xs sm:text-sm font-black tracking-wider">0</span>
+                <!-- COINS POUCH (Stile Forziere di #floorScreen) -->
+                <div id="hud-coins-card" class="shrink-0 hud-panel hud-panel-amber px-3 sm:px-3.5 flex items-center justify-center gap-1.5 min-w-[68px]">
+                    <i class="fa-solid fa-coins text-yellow-300 text-xs sm:text-sm"></i>
+                    <span id="ui-coins" class="text-yellow-200 text-xs sm:text-base font-display font-black tracking-wider">0</span>
                 </div>
             </div>
         </div>
         
-        <!-- LATO DESTRO: COMBO E ESSENZE (Allineati con il margine destro) -->
+        <!-- LATO DESTRO: COMBO E ESSENZE -->
         <div class="absolute top-[19%] right-3 sm:top-[21%] sm:right-5 flex flex-col items-end gap-2 pointer-events-none z-50" style="margin-right: env(safe-area-inset-right);">
             
             <div id="combo-container" class="transition-all duration-300 opacity-0 translate-x-12">
-                <div id="combo-panel" class="relative hud-panel p-2.5 sm:p-3 flex flex-col items-end w-[118px] sm:w-[150px] transition-colors duration-200 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-1.5 h-full bg-gray-950/80">
-                        <div id="combo-bar" class="absolute bottom-0 w-full h-full bg-yellow-400 transition-all duration-100 ease-linear"></div>
+                <div id="combo-panel" class="relative hud-panel p-2.5 sm:p-3 flex flex-col items-end w-[122px] sm:w-[152px] transition-colors duration-200 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-2 h-full bg-slate-950 border-l border-white/15">
+                        <div id="combo-bar" class="absolute bottom-0 w-full h-full bg-yellow-400 transition-transform duration-100 ease-linear"></div>
                     </div>
-                    <div class="flex items-baseline gap-1 pr-2.5 sm:pr-3.5">
-                        <span id="combo-x" class="text-gray-400 font-black italic text-sm sm:text-lg font-display">x</span>
+                    <div class="flex items-baseline gap-1 pr-3 sm:pr-4">
+                        <span id="combo-x" class="text-amber-300 font-black italic text-sm sm:text-lg font-display">x</span>
                         <h2 id="combo-text" class="font-black m-0 leading-none text-3xl sm:text-4xl italic tracking-tighter text-yellow-400 font-display">2</h2>
                     </div>
-                    <span id="combo-label" class="text-[8px] sm:text-[9px] text-gray-300 font-black tracking-[0.25em] uppercase mt-0.5 opacity-90 transition-colors pr-2.5 sm:pr-3.5">HITS</span>
+                    <span id="combo-label" class="text-[8px] sm:text-[9px] text-cyan-200 font-black tracking-[0.25em] uppercase mt-0.5 opacity-95 transition-colors pr-3 sm:pr-4">HITS</span>
                 </div>
             </div>
 
             <div id="essence-hud" class="transition-all duration-300 opacity-0">
-                <div class="relative hud-panel p-2.5 sm:p-3 flex flex-col items-end w-[118px] sm:w-[150px] overflow-hidden">
-                    <div class="absolute top-0 right-0 w-1.5 h-full bg-gray-950/80 z-0">
-                        <div id="essence-timer" class="absolute bottom-0 w-full h-0 bg-white transition-all duration-100 ease-linear"></div>
+                <div class="relative hud-panel hud-panel-purple p-2.5 sm:p-3 flex flex-col items-end w-[122px] sm:w-[152px] overflow-hidden">
+                    <div class="absolute top-0 right-0 w-2 h-full bg-slate-950 border-l border-white/15 z-0">
+                        <div id="essence-timer" class="absolute bottom-0 w-full h-0 bg-gradient-to-t from-purple-400 to-white transition-all duration-100 ease-linear"></div>
                     </div>
-                    <div class="flex justify-end gap-1.5 sm:gap-2 mb-0.5 w-full pr-2.5 sm:pr-3.5 relative z-10">
-                        <div class="stack-dot w-[20px] h-[20px] sm:w-[24px] sm:h-[24px]" id="stack-1"></div>
-                        <div class="stack-dot w-[20px] h-[20px] sm:w-[24px] sm:h-[24px]" id="stack-2"></div>
-                        <div class="stack-dot w-[20px] h-[20px] sm:w-[24px] sm:h-[24px]" id="stack-3"></div>
+                    <div class="flex justify-end gap-1.5 sm:gap-2 mb-0.5 w-full pr-3 sm:pr-4 relative z-10">
+                        <div class="stack-dot" id="stack-1"></div>
+                        <div class="stack-dot" id="stack-2"></div>
+                        <div class="stack-dot" id="stack-3"></div>
                     </div>
-                    <div id="overdrive-text" class="font-black text-[9px] sm:text-[11px] text-white hidden tracking-widest uppercase leading-none mt-1.5 pr-2.5 sm:pr-3.5 relative z-10">INFERNO!</div>
+                    <div id="overdrive-text" class="font-display font-black text-[9px] sm:text-[11px] text-white hidden tracking-widest uppercase leading-none mt-1.5 pr-3 sm:pr-4 relative z-10">INFERNO!</div>
                 </div>
             </div>
         </div>
         
-        <!-- Tasto Scatto (Dash) (Ripristinato Rotondo) -->
-        <button id="btn-dash" onclick="if(Game.state === 'PLAYING') Game.player.dash();" class="absolute bottom-32 right-[8.5rem] landscape:bottom-6 landscape:right-48 lg:!bottom-8 lg:!right-[11rem] w-14 h-14 bg-black/80 backdrop-blur-md rounded-full border-2 border-gray-600 shadow-[0_0_15px_rgba(0,0,0,0.8)] text-gray-300 hover:text-white font-black text-xs pointer-events-auto transition-colors flex items-center justify-center touch-none overflow-hidden group">
-            <div id="btn-dash-fill" class="absolute bottom-0 left-0 w-full bg-yellow-500/50 h-0 transition-all duration-100 pointer-events-none"></div>
+        <!-- Tasto Scatto (Dash) -->
+        <button id="btn-dash" onclick="if(Game.state === 'PLAYING') Game.player.dash();" class="hud-skill-btn absolute bottom-32 right-[8.5rem] landscape:bottom-6 landscape:right-48 lg:!bottom-8 lg:!right-[11rem] w-14 h-14 rounded-full border-2 border-slate-600 text-amber-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+            <div id="btn-dash-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-amber-600/75 to-yellow-300/75 h-0 transition-all duration-100 pointer-events-none"></div>
             <i class="fa-solid fa-bolt text-2xl relative z-10"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">SPAZIO</span>
         </button>
 
-        <!-- Tasto Scudo (Shield) (Ripristinato Rotondo) -->
-        <button id="btn-shield" onclick="if(Game.state === 'PLAYING') Game.player.activateShield();" class="absolute bottom-[12.5rem] right-[8.5rem] landscape:bottom-[6.5rem] landscape:right-48 lg:!bottom-8 lg:!right-[6.5rem] w-14 h-14 bg-black/80 backdrop-blur-md rounded-full border-2 border-gray-600 shadow-[0_0_15px_rgba(0,0,0,0.8)] text-gray-300 hover:text-white font-black text-xs pointer-events-auto transition-colors flex items-center justify-center touch-none overflow-hidden group">
-            <div id="btn-shield-fill" class="absolute bottom-0 left-0 w-full bg-cyan-500/50 h-0 transition-all duration-200 pointer-events-none"></div>
+        <!-- Tasto Scudo (Shield) -->
+        <button id="btn-shield" onclick="if(Game.state === 'PLAYING') Game.player.activateShield();" class="hud-skill-btn absolute bottom-[12.5rem] right-[8.5rem] landscape:bottom-[6.5rem] landscape:right-48 lg:!bottom-8 lg:!right-[6.5rem] w-14 h-14 rounded-full border-2 border-slate-600 text-cyan-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+            <div id="btn-shield-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/75 to-cyan-300/75 h-0 transition-all duration-200 pointer-events-none"></div>
             <i class="fa-solid fa-shield text-2xl relative z-10"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">SHIFT</span>
         </button>
 
-        <!-- Tasto Ultimate (Ult) (Ripristinato Rotondo) -->
-        <button id="btn-ult" onclick="if(Game.state === 'PLAYING') Game.activateUltimate();" class="absolute bottom-[14rem] right-12 landscape:bottom-[8.5rem] landscape:right-40 lg:!bottom-8 lg:!right-8 w-14 h-14 bg-black/80 backdrop-blur-md rounded-full border-2 border-gray-600 shadow-[0_0_15px_rgba(0,0,0,0.8)] text-gray-300 hover:text-white font-black text-xs pointer-events-auto transition-colors flex items-center justify-center touch-none overflow-hidden group">
-            <div id="btn-ult-fill" class="absolute bottom-0 left-0 w-full bg-cyan-500/50 h-0 transition-all duration-200 pointer-events-none"></div>
+        <!-- Tasto Ultimate (Ult) -->
+        <button id="btn-ult" onclick="if(Game.state === 'PLAYING') Game.activateUltimate();" class="hud-skill-btn absolute bottom-[14rem] right-12 landscape:bottom-[8.5rem] landscape:right-40 lg:!bottom-8 lg:!right-8 w-14 h-14 rounded-full border-2 border-slate-600 text-purple-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+            <div id="btn-ult-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-purple-700/80 via-fuchsia-500/75 to-cyan-300/85 h-0 transition-all duration-200 pointer-events-none"></div>
             <i class="fa-solid fa-angles-up text-2xl relative z-10"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">TASTO DX</span>
         </button>
-    </div> 
+    </div>
 <script>
 window.handleRelicImgError = window.handleRelicImgError || function(img){ if(img) img.style.display='none'; };
 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -7841,76 +7962,83 @@ const TouchControls = {
 };
 
 const UI = {
-    cache: { hpPct: null, hpText: null, floor: null, enemiesLeft: null, ultActive: null, ultCharge: null, comboOpacity: null, lives: null, level: null, xpPct: null, isBossFloor: false, progressPct: null },
-    els: {},
-    init() { 
-        this.els.fpsValue = document.getElementById('fps-value'); // <--- RIGA CORRETTA
+    cache: { hpPct: null, hpText: null, floor: null, enemiesLeft: null, ultActive: null, ultCharge: null, comboOpacity: null, lives: null, level: null, xpPct: null, isBossFloor: false, progressPct: null, coins: null },
+    els: {},
+    init() { 
+        this.els.fpsValue = document.getElementById('fps-value');
         this.els.coins = document.getElementById('ui-coins');
+        this.els.coinsCard = document.getElementById('hud-coins-card');
+        this.els.vitalsCard = document.getElementById('hud-vitals-card');
+        this.els.levelBadge = document.getElementById('hud-level-badge');
         this.els.hpFill = document.getElementById('ui-hp-fill'); 
-        this.els.hpCatchup = document.getElementById('ui-hp-catchup'); // NUOVO CATCHUP
+        this.els.hpCatchup = document.getElementById('ui-hp-catchup');
         this.els.hpText = document.getElementById('ui-hp-text');
-        this.els.lives = document.getElementById('ui-lives'); this.els.level = document.getElementById('ui-level'); 
-        this.els.xpCircle = document.getElementById('ui-xp-circle');
+        this.els.lives = document.getElementById('ui-lives');
+        this.els.level = document.getElementById('ui-level'); 
+        this.els.xpCircle = document.getElementById('ui-xp-circle');
         this.els.floor = document.getElementById('ui-floor'); 
-        this.els.floorIcon = document.getElementById('ui-floor-icon'); // <-- NUOVA RIGA
+        this.els.floorIcon = document.getElementById('ui-floor-icon');
         this.els.corruptionLabel = document.getElementById('ui-corruption-label');
         this.els.floorProgress = document.getElementById('ui-floor-progress');
         this.els.floorProgressGlow = document.getElementById('ui-floor-progress-glow');
-        this.els.essenceHud = document.getElementById('essence-hud'); this.els.essenceTimer = document.getElementById('essence-timer');
-        this.els.overdriveText = document.getElementById('overdrive-text'); this.els.stacks = [document.getElementById('stack-1'), document.getElementById('stack-2'), document.getElementById('stack-3')];
-        this.els.comboContainer = document.getElementById('combo-container'); this.els.comboText = document.getElementById('combo-text');
-        this.els.comboBar = document.getElementById('combo-bar'); 
-        this.els.btnUlt = document.getElementById('btn-ult');
-        this.els.btnUltFill = document.getElementById('btn-ult-fill');
-        this.els.ultChargeText = document.getElementById('ult-charge-text');
-        this.els.btnShield = document.getElementById('btn-shield');
-        this.els.btnShieldFill = document.getElementById('btn-shield-fill');
-        this.els.btnDash = document.getElementById('btn-dash');
-        this.els.btnDashFill = document.getElementById('btn-dash-fill');
+        this.els.essenceHud = document.getElementById('essence-hud');
+        this.els.essenceTimer = document.getElementById('essence-timer');
+        this.els.overdriveText = document.getElementById('overdrive-text');
+        this.els.stacks = [document.getElementById('stack-1'), document.getElementById('stack-2'), document.getElementById('stack-3')];
+        this.els.comboContainer = document.getElementById('combo-container');
+        this.els.comboText = document.getElementById('combo-text');
+        this.els.comboBar = document.getElementById('combo-bar'); 
+        this.els.btnUlt = document.getElementById('btn-ult');
+        this.els.btnUltFill = document.getElementById('btn-ult-fill');
+        this.els.ultChargeText = document.getElementById('ult-charge-text');
+        this.els.btnShield = document.getElementById('btn-shield');
+        this.els.btnShieldFill = document.getElementById('btn-shield-fill');
+        this.els.btnDash = document.getElementById('btn-dash');
+        this.els.btnDashFill = document.getElementById('btn-dash-fill');
         this.els.vignette = document.getElementById('vignette');
         this.els.bloodVignette = document.getElementById('blood-vignette');
+
         let flashDiv = document.createElement('div');
         flashDiv.className = 'absolute inset-0 pointer-events-none z-[6] opacity-0 transition-opacity duration-75';
         flashDiv.style.background = 'radial-gradient(circle at center, transparent 40%, rgba(255, 0, 0, 0.8) 100%)';
         flashDiv.style.backgroundColor = 'rgba(200, 0, 0, 0.2)';
         document.getElementById('hud').appendChild(flashDiv);
         this.els.damageFlash = flashDiv;
-        // -------------------------------------------------
         
-       // --- INIZIO ANNUNCIATORE ARCADE ---
         let annDiv = document.createElement('div');
-        // FIX UI: Abbassato dal 15% al 22% su Mobile (e dal 12% al 20% su PC) per non coprire l'HUD
         annDiv.className = 'absolute top-[22%] sm:top-[20%] left-1/2 transform -translate-x-1/2 z-50 pointer-events-none text-center opacity-0 transition-all duration-200';
-        // FIX UI: Ingrandito da 4xl a 5xl su Mobile (e da 6xl a 7xl su PC) per maggiore impatto
         annDiv.innerHTML = '<h1 id="announcer-text" class="text-5xl sm:text-7xl font-black italic tracking-tighter uppercase font-display drop-shadow-[0_0_20px_rgba(255,0,0,0.8)]" style="transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: skewX(-5deg) scale(0.5);"></h1>';
         document.getElementById('hud').appendChild(annDiv);
         this.els.announcer = annDiv;
         this.els.announcerText = document.getElementById('announcer-text');
         this.els.gameContainer = document.getElementById('game-container');
-        // --- FINE ANNUNCIATORE ARCADE ---
     },
-    update() {
-        
+    triggerPulseClass(el, cls) {
+        if (!el) return;
+        el.classList.remove(cls);
+        void el.offsetWidth;
+        el.classList.add(cls);
+    },
+    update() {
         if (!Game.player) return;
         
-        // OTTIMIZZAZIONE DOM: Creiamo la stringa solo se i valori interni sono EFFETTIVAMENTE cambiati.
-        // Impedisce di allocare in RAM 60 stringhe identiche al secondo.
         let currentHp = Math.floor(Game.player.stats.hp);
         let maxHp = Math.floor(Game.player.stats.maxHp);
         
         if (this.cache.currHp !== currentHp || this.cache.maxHp !== maxHp) {
+            if (this.cache.currHp !== undefined && currentHp < this.cache.currHp) {
+                this.triggerPulseClass(this.els.vitalsCard, 'anim-hud-jolt');
+            }
             this.els.hpText.innerText = `${currentHp}/${maxHp}`;
             this.cache.currHp = currentHp;
             this.cache.maxHp = maxHp;
         }
 
-      let hpPct = Math.round((Game.player.stats.hp / Game.player.stats.maxHp) * 100);
+        let hpPct = Math.round((Game.player.stats.hp / Game.player.stats.maxHp) * 100);
         if (this.cache.hpPct !== hpPct) { 
-            // Se stiamo subendo danni, la barra bianca si ferma e poi "cade" verso il rosso in ritardo
             if (this.cache.hpPct !== undefined && hpPct < this.cache.hpPct) {
                 this.els.hpCatchup.style.transition = 'transform 0.4s ease-out 0.15s';
             } else {
-                // Se ci stiamo curando, la barra bianca sale istantaneamente e non crea artefatti
                 this.els.hpCatchup.style.transition = 'none';
             }
             this.els.hpFill.style.transform = `scaleX(${hpPct / 100})`;
@@ -7918,24 +8046,41 @@ const UI = {
             this.cache.hpPct = hpPct; 
         }
 
-       if (this.cache.lives !== Game.lives) {
+        if (this.cache.lives !== Game.lives) {
             let hearts = '';
-            for(let i = 0; i < Math.max(0, Game.lives); i++) {
+            for (let i = 0; i < Math.max(0, Game.lives); i++) {
                 hearts += '<i class="fa-solid fa-heart text-red-500 drop-shadow-[0_0_5px_rgba(220,38,38,0.9)] transition-all"></i>';
             }
             this.els.lives.innerHTML = hearts; 
             this.cache.lives = Game.lives; 
         }
-        if (this.cache.level !== Game.player.level) { this.els.level.innerText = Game.player.level; this.cache.level = Game.player.level; }
-        
-        let xpPct = (Game.player.xp / Game.player.xpNeeded) * 100; 
-        if (this.cache.xpPct !== xpPct) { this.els.xpCircle.setAttribute('stroke-dasharray', `${xpPct}, 100`); this.cache.xpPct = xpPct; }
-        
-      // Aggiorna Piano, Testo Corruzione e Icona Demone
+
+        if (this.cache.level !== Game.player.level) {
+            if (this.cache.level !== null && Game.player.level > this.cache.level) {
+                this.triggerPulseClass(this.els.levelBadge, 'anim-hud-pop');
+            }
+            this.els.level.innerText = Game.player.level;
+            this.cache.level = Game.player.level;
+        }
+
+        if (this.cache.coins !== Game.coins) {
+            if (this.cache.coins !== null && Game.coins > this.cache.coins) {
+                this.triggerPulseClass(this.els.coinsCard, 'anim-hud-pop');
+            }
+            if (this.els.coins) this.els.coins.innerText = Game.coins;
+            this.cache.coins = Game.coins;
+        }
+        
+        let xpPct = (Game.player.xp / Game.player.xpNeeded) * 100; 
+        if (this.cache.xpPct !== xpPct) {
+            this.els.xpCircle.setAttribute('stroke-dasharray', `${xpPct}, 100`);
+            this.cache.xpPct = xpPct;
+        }
+        
         if (this.cache.floor !== Game.floor || this.cache.corrupted !== Game.isCorrupted || this.cache.isBossFloor !== Game.isBossFloor) { 
             this.els.floor.innerText = Game.floor; 
             
-           let progWrap = this.els.floorProgress ? this.els.floorProgress.parentElement : null;
+            let progWrap = this.els.floorProgress ? this.els.floorProgress.parentElement : null;
             if (Game.isCorrupted) {
                 let typeText = "";
                 if (Game.corruptedType === 'darkness') typeText = "OSCURITÀ";
@@ -7959,15 +8104,14 @@ const UI = {
                 if (this.els.floorProgress) this.els.floorProgress.classList.remove('corrupted-progress-fill');
             }
 
-            // GESTIONE COLORE ICONA DEL PIANO (Demone)
             if (this.els.floorIcon) {
                 this.els.floorIcon.className = "fa-solid fa-skull mr-1.5 transition-all duration-300 ";
                 if (Game.isBossFloor) {
-                    this.els.floorIcon.className += "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)] scale-110";
+                    this.els.floorIcon.className += "text-red-500 scale-110";
                 } else if (Game.isCorrupted) {
-                    this.els.floorIcon.className += "text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]";
+                    this.els.floorIcon.className += "text-fuchsia-400";
                 } else {
-                    this.els.floorIcon.className += "text-gray-500";
+                    this.els.floorIcon.className += "text-purple-300";
                 }
             }
 
@@ -7981,28 +8125,23 @@ const UI = {
         
         if (this.cache.progressPct !== progressPct) { 
             this.els.floorProgress.style.transform = `scaleX(${progressPct / 100})`;
-            // Usa l'opacità hardware invece del costosissimo CSS filter
             if (this.els.floorProgressGlow) this.els.floorProgressGlow.style.opacity = (progressPct / 100).toString();
             this.cache.progressPct = progressPct; 
         }
         
-     // OTTIMIZZAZIONE DOM REALE: Alterare il box-shadow via JS causa "Layout Thrashing" anche su PC.
-       // Abbiamo già l'alterazione del "brightness" accelerata via hardware poche righe sopra. 
-       // Lasciamo che sia il CSS statico a gestire le ombre, spegnendo questo loop dannoso.
-       /* Blocco JS Box-Shadow eliminato per preservare il framerate */
-        
-        let hasEssence = Game.player.essenceList.length > 0 || Game.player.overdrive;
+        let hasEssence = Game.player.essenceList.length > 0 || Game.player.overdrive;
         if (this.cache.hasEssence !== hasEssence) {
             if (hasEssence) {
-                this.els.essenceHud.classList.remove('opacity-0'); this.els.essenceHud.classList.add('opacity-100');
+                this.els.essenceHud.classList.remove('opacity-0');
+                this.els.essenceHud.classList.add('opacity-100');
             } else {
-                this.els.essenceHud.classList.remove('opacity-100'); this.els.essenceHud.classList.add('opacity-0');
+                this.els.essenceHud.classList.remove('opacity-100');
+                this.els.essenceHud.classList.add('opacity-0');
             }
             this.cache.hasEssence = hasEssence;
         }
         
         if (hasEssence) {
-            // OTTIMIZZAZIONE DOM: Aggiorna le classi CSS delle essenze SOLO quando cambiano realmente
             let essenceSig = Game.player.overdrive ? `OD_${Game.player.essence}` : Game.player.essenceList.join('_');
             if (this.cache.essenceSig !== essenceSig) {
                 this.cache.essenceSig = essenceSig;
@@ -8025,7 +8164,7 @@ const UI = {
                 this.els.essenceTimer.style.height = `${ePct}%`;
                 this.cache.essenceWidth = ePct;
             }
-       } else if (this.cache.essenceSig !== '') {
+        } else if (this.cache.essenceSig !== '') {
             for (let i = 0; i < 3; i++) this.els.stacks[i].className = 'stack-dot';
             this.els.overdriveText.classList.add('hidden');
             this.els.essenceTimer.style.height = '0%';
@@ -8033,41 +8172,54 @@ const UI = {
             this.cache.essenceWidth = 0;
         }
 
-     if (Game.ultimateActive) {
+        if (Game.ultimateActive) {
             let maxUltTime = (10.0 + Game.player.modifiers.ascensionDurationAdd) * Game.player.modifiers.ultDurationPenalty;
             let uPct = `${Math.max(0, Math.round((Game.ultimateTimer / maxUltTime) * 100))}%`;
-            if(this.cache.ultCharge !== uPct || !this.cache.ultActive) {
-                if(this.els.btnUltFill) { 
+            if (this.cache.ultCharge !== uPct || !this.cache.ultActive) {
+                if (this.els.btnUltFill) { 
                     this.els.btnUltFill.style.height = uPct; 
-                    this.els.btnUltFill.className = "absolute bottom-0 left-0 w-full bg-cyan-500/50 transition-all duration-200 pointer-events-none"; 
                 }
-                if(this.els.btnUlt) { this.els.btnUlt.classList.add('opacity-100', 'border-cyan-400', 'ult-ready'); this.els.btnUlt.classList.remove('opacity-75', 'border-gray-600'); }
-                if(this.els.ultChargeText) { this.els.ultChargeText.innerText = "ON"; }
-                this.cache.ultCharge = uPct; this.cache.ultActive = true;
+                if (this.els.btnUlt) {
+                    this.els.btnUlt.classList.add('opacity-100', 'ult-ready');
+                    this.els.btnUlt.classList.remove('opacity-75', 'border-slate-600');
+                }
+                if (this.els.ultChargeText) { this.els.ultChargeText.innerText = "ON"; }
+                this.cache.ultCharge = uPct;
+                this.cache.ultActive = true;
             }
-       } else {
+        } else {
             let uPct = `${Math.floor(Game.ultimateCharge)}%`;
             if (this.cache.ultCharge !== uPct || this.cache.ultActive) {
-                if(this.els.btnUltFill) { 
+                if (this.els.btnUltFill) { 
                     this.els.btnUltFill.style.height = uPct; 
-                    this.els.btnUltFill.className = "absolute bottom-0 left-0 w-full bg-cyan-500/50 transition-all duration-200 pointer-events-none"; 
                 }
-                
                 if (Game.ultimateCharge >= 100) {
-                    if(this.els.btnUlt) { this.els.btnUlt.classList.add('opacity-100', 'border-cyan-300', 'ult-ready'); this.els.btnUlt.classList.remove('opacity-75', 'border-gray-600'); }
-                    if(this.els.ultChargeText) { this.els.ultChargeText.innerText = "MAX"; this.els.ultChargeText.classList.add('animate-pulse', 'text-cyan-200'); }
+                    if (this.els.btnUlt) {
+                        this.els.btnUlt.classList.add('opacity-100', 'ult-ready');
+                        this.els.btnUlt.classList.remove('opacity-75', 'border-slate-600');
+                    }
+                    if (this.els.ultChargeText) {
+                        this.els.ultChargeText.innerText = "MAX";
+                        this.els.ultChargeText.classList.add('animate-pulse', 'text-cyan-200');
+                    }
                 } else {
-                    if(this.els.btnUlt) { this.els.btnUlt.classList.add('opacity-75', 'border-gray-600'); this.els.btnUlt.classList.remove('opacity-100', 'border-cyan-300', 'ult-ready'); }
-                    if(this.els.ultChargeText) { this.els.ultChargeText.innerText = Math.floor(Game.ultimateCharge) + "%"; this.els.ultChargeText.classList.remove('animate-pulse', 'text-cyan-200'); }
+                    if (this.els.btnUlt) {
+                        this.els.btnUlt.classList.add('opacity-75', 'border-slate-600');
+                        this.els.btnUlt.classList.remove('opacity-100', 'ult-ready');
+                    }
+                    if (this.els.ultChargeText) {
+                        this.els.ultChargeText.innerText = Math.floor(Game.ultimateCharge) + "%";
+                        this.els.ultChargeText.classList.remove('animate-pulse', 'text-cyan-200');
+                    }
                 }
-                this.cache.ultCharge = uPct; this.cache.ultActive = false;
+                this.cache.ultCharge = uPct;
+                this.cache.ultActive = false;
             }
         }
 
-     let isCombo = Game.combo > 0;
+        let isCombo = Game.combo > 0;
         if (this.cache.comboOpacity !== isCombo) { 
             if (isCombo) { 
-                // Allineato con la classe HTML translate-x-12 per un'entrata fluida a scorrimento
                 this.els.comboContainer.classList.remove('opacity-0', 'translate-x-12'); 
                 this.els.comboContainer.classList.add('opacity-100', 'translate-x-0'); 
             } else { 
@@ -8076,27 +8228,26 @@ const UI = {
             }
             this.cache.comboOpacity = isCombo; 
         }
-       if (isCombo) {
+        if (isCombo) {
             let cPct = Math.round((Game.comboTimer / Game.comboMaxTime) * 100);
             if (this.cache.comboWidth !== cPct) {
-              this.els.comboBar.style.transform = `scaleY(${cPct / 100})`;
+                this.els.comboBar.style.transform = `scaleY(${cPct / 100})`;
                 this.cache.comboWidth = cPct;
             }
         }
         
-       // Update Scudo Attivo: Illuminato di Ciano mentre è in uso, lampeggia in Rosso nell'ultimo secondo (< 1.0s)
         if (Game.player.activeShieldTimer > 0 && !Game.player.autoShieldActive) {
             let isExpiring = Game.player.activeShieldTimer < 1.0;
             let stateKey = isExpiring ? 'expiring' : 'active';
             if (this.cache.shieldActive !== stateKey) {
                 if (this.els.btnShield) {
-                    this.els.btnShield.classList.remove('border-gray-600', 'opacity-50', 'opacity-75', 'grayscale', 'border-cyan-400', 'border-red-500', 'animate-pulse', 'shadow-[0_0_20px_rgba(34,211,238,0.7)]', 'shadow-[0_0_15px_rgba(0,0,0,0.8)]');
+                    this.els.btnShield.classList.remove('border-slate-600', 'opacity-75', 'skill-shield-ready', 'border-red-500', 'animate-pulse');
                     if (isExpiring) {
-                        this.els.btnShield.classList.add('border-red-500', 'opacity-100', 'animate-pulse', 'shadow-[0_0_25px_rgba(239,68,68,0.9)]');
-                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-red-500/60 transition-all duration-75 pointer-events-none";
+                        this.els.btnShield.classList.add('border-red-500', 'opacity-100', 'animate-pulse');
+                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-gradient-to-t from-red-700/80 to-rose-400/80 transition-all duration-75 pointer-events-none";
                     } else {
-                        this.els.btnShield.classList.add('border-cyan-400', 'opacity-100', 'shadow-[0_0_25px_rgba(34,211,238,0.9)]');
-                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-cyan-400/60 transition-all duration-100 pointer-events-none";
+                        this.els.btnShield.classList.add('skill-shield-ready', 'opacity-100');
+                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/75 to-cyan-300/75 transition-all duration-100 pointer-events-none";
                     }
                 }
                 this.cache.shieldActive = stateKey;
@@ -8121,27 +8272,26 @@ const UI = {
                 
                 if (Game.player.activeShieldCooldown <= 0) {
                     if (this.cache.shieldReady !== true) {
-                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-cyan-500/50 transition-all duration-100 pointer-events-none";
-                        this.els.btnShield.classList.add('border-cyan-400', 'opacity-100', 'shadow-[0_0_20px_rgba(34,211,238,0.7)]');
-                        this.els.btnShield.classList.remove('border-gray-600', 'opacity-75', 'shadow-[0_0_15px_rgba(0,0,0,0.8)]', 'opacity-50', 'grayscale','border-red-500', 'animate-pulse', 'shadow-[0_0_25px_rgba(239,68,68,0.9)]', 'shadow-[0_0_25px_rgba(34,211,238,0.9)]' );
+                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/75 to-cyan-300/75 transition-all duration-100 pointer-events-none";
+                        this.els.btnShield.classList.add('skill-shield-ready', 'opacity-100');
+                        this.els.btnShield.classList.remove('border-slate-600', 'opacity-75', 'border-red-500', 'animate-pulse');
                         this.cache.shieldReady = true;
                     }
                 } else {
                     if (this.cache.shieldReady !== false) {
-                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-cyan-500/50 transition-all duration-100 pointer-events-none";
-                        this.els.btnShield.classList.remove('border-cyan-400', 'opacity-100', 'shadow-[0_0_20px_rgba(34,211,238,0.7)]', 'opacity-50', 'grayscale', 'border-red-500', 'animate-pulse', 'shadow-[0_0_25px_rgba(239,68,68,0.9)]', 'shadow-[0_0_25px_rgba(34,211,238,0.9)]');
-                        this.els.btnShield.classList.add('border-gray-600', 'opacity-75', 'shadow-[0_0_15px_rgba(0,0,0,0.8)]');
+                        if (this.els.btnShieldFill) this.els.btnShieldFill.className = "absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-700/70 to-cyan-600/50 transition-all duration-100 pointer-events-none";
+                        this.els.btnShield.classList.remove('skill-shield-ready', 'opacity-100', 'border-red-500', 'animate-pulse');
+                        this.els.btnShield.classList.add('border-slate-600', 'opacity-75');
                         this.cache.shieldReady = false;
                     }
                 }
             }
         }
 
-        // Update Scatto Attivo (Dash)
         if (this.els.btnDash) {
             let maxDashCd = 2.0 * Game.player.modifiers.dashCooldownMult; 
             let dashCdPct = Game.player.dashCooldown > 0 ? (1 - (Game.player.dashCooldown / maxDashCd)) * 100 : 100;
-            let roundedDashPct = Math.round(dashCdPct); // Rimuove micro-decimali CSS
+            let roundedDashPct = Math.round(dashCdPct);
 
             if (this.cache.dashPct !== roundedDashPct) {
                 if (this.els.btnDashFill) this.els.btnDashFill.style.height = `${roundedDashPct}%`;
@@ -8150,21 +8300,21 @@ const UI = {
             
             if (Game.player.dashCooldown <= 0) {
                 if (this.cache.dashReady !== true) {
-                    this.els.btnDash.classList.add('border-yellow-400', 'opacity-100');
-                    this.els.btnDash.classList.remove('border-gray-600', 'opacity-75');
-                    if (this.els.btnDashFill) this.els.btnDashFill.className = "absolute bottom-0 left-0 w-full bg-yellow-500/50 transition-all duration-100 pointer-events-none";
+                    this.els.btnDash.classList.add('skill-dash-ready', 'opacity-100');
+                    this.els.btnDash.classList.remove('border-slate-600', 'opacity-75');
+                    if (this.els.btnDashFill) this.els.btnDashFill.className = "absolute bottom-0 left-0 w-full bg-gradient-to-t from-amber-600/75 to-yellow-300/75 transition-all duration-100 pointer-events-none";
                     this.cache.dashReady = true;
                 }
             } else {
                 if (this.cache.dashReady !== false) {
-                    this.els.btnDash.classList.remove('border-yellow-400', 'opacity-100');
-                    this.els.btnDash.classList.add('border-gray-600', 'opacity-75');
-                    if (this.els.btnDashFill) this.els.btnDashFill.className = "absolute bottom-0 left-0 w-full bg-gray-500/50 transition-all duration-100 pointer-events-none";
+                    this.els.btnDash.classList.remove('skill-dash-ready', 'opacity-100');
+                    this.els.btnDash.classList.add('border-slate-600', 'opacity-75');
+                    if (this.els.btnDashFill) this.els.btnDashFill.className = "absolute bottom-0 left-0 w-full bg-slate-700/60 transition-all duration-100 pointer-events-none";
                     this.cache.dashReady = false;
                 }
             }
         }
- // Ora si attiva SOLO se il giocatore è stato fisicamente colpito (flashTimer), non per il semplice screen shake.
+
         if (Game.player && Game.player.flashTimer > 0 && !Game.player.dead) {
             this.els.damageFlash.style.opacity = (Game.player.flashTimer / 0.1) * 0.6;
             this.cache.flashActive = true;
@@ -8173,9 +8323,7 @@ const UI = {
             this.cache.flashActive = false;
         }
         
-       let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
-
-     // ATTIVAZIONE SCHERMO LOW HP DINAMICO CON MASCHERA CONCENTRICA (Sotto il 30% HP)
+        let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
         let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state !== 'WARPING_OUT' && Game.state !== 'WARPING_IN';
         
         if (this.cache.isLowHp !== isLowHp) {
@@ -8191,11 +8339,10 @@ const UI = {
             this.cache.isLowHp = isLowHp;
         }
 
-        // Maschera radiale dinamica: si stringe al calare della vita ma protegge sempre il centro
         if (isLowHp) {
-            let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30)); // 0.0 al 30% HP -> 1.0 all'1% HP
-            let inner = Math.round(55 - t * 33); // Da 55% a 22% (Safe-zone garantita per non coprire mai il personaggio)
-            let outer = Math.round(85 - t * 37); // Da 85% a 48% (Bordo sfumato verso l'esterno)
+            let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
+            let inner = Math.round(55 - t * 33);
+            let outer = Math.round(85 - t * 37);
             let maskStr = `radial-gradient(circle at center, transparent ${inner}%, black ${outer}%)`;
             
             if (this.cache.lowHpMask !== maskStr) {
@@ -8205,12 +8352,10 @@ const UI = {
             }
         }
 
-        // Lo stato dell'audio si aggiorna solo se ci sono cambiamenti
         if (isLowHp !== AudioEngine.isLowHp) {
             AudioEngine.setLowHpState(isLowHp);
         }
         
-     // DISSOLVENZA ALLA MORTE (Il canvas di gioco non viene più desaturato globalmente durante il combattimento)
         let container = this.els.gameContainer;
         if (Game.player.dead) {
             if (this.cache.grayVal !== 'dead') {
@@ -8226,45 +8371,33 @@ const UI = {
             }
         }
     },
-     
-    
-triggerComboAnim(combo) {
+
+    triggerComboAnim(combo) {
         this.els.comboText.innerText = combo;
         
         let scale = isTouchDevice ? (1 + Math.min(combo * 0.02, 0.3)) : (1 + Math.min(combo * 0.015, 0.3)); 
         this.els.comboText.style.transform = `scale(${scale})`;
         
-        // --- TRANSIZIONE CROMATICA A 3 FASI CORRETTA ---
         let hue;
-        
         if (combo <= 20) {
-            // Da 1 a 20 Hits: Si scalda lentissimamente dal Giallo limone (60) ad un Oro/Arancio (35)
-            // (combo - 1) serve a far partire l'1x ESATTAMENTE da hue 60
             let p = (combo - 1) / 19.0; 
             hue = 60 - (p * 25); 
-        } 
-        else if (combo <= 50) {
-            // Da 21 a 50 Hits: Da Arancione (35) a Rosso Sangue (0)
+        } else if (combo <= 50) {
             let p = (combo - 20) / 30.0;
             hue = 35 - (p * 35);
-        } 
-        else {
-            // 51+ Hits: Da Rosso (360) a Fucsia/Viola (280)
+        } else {
             let p = Math.min(1.0, (combo - 50) / 50.0);
             hue = 360 - (p * 80); 
         }
 
-        // Palette Colori (Usa colori solidi, NO background-clip text)
-        let mainColor = `hsl(${hue}, 100%, 55%)`; // Colore testo
-        let lightColor = `hsl(${hue}, 100%, 75%)`; // Testi piccoli
-        let shadowColor = `hsla(${hue}, 100%, 50%, 0.8)`; // Alone neon
-        let borderColor = `hsla(${hue}, 100%, 50%, 0.9)`; // Colore barra timer
+        let mainColor = `hsl(${hue}, 100%, 55%)`;
+        let lightColor = `hsl(${hue}, 100%, 75%)`;
+        let shadowColor = `hsla(${hue}, 100%, 50%, 0.8)`;
+        let borderColor = `hsla(${hue}, 100%, 50%, 0.9)`;
 
-        // Applica testo e alone (Super sicuro su mobile)
         this.els.comboText.style.color = mainColor;
         this.els.comboText.style.textShadow = `0 0 20px ${shadowColor}`;
         
-        // Applica ai testi secondari
         let comboLabel = document.getElementById('combo-label');
         if (comboLabel) {
             comboLabel.style.color = lightColor;
@@ -8273,19 +8406,16 @@ triggerComboAnim(combo) {
         let comboX = document.getElementById('combo-x');
         if (comboX) comboX.style.color = lightColor;
 
-        // La barra verticale si colora
         if (this.els.comboBar) {
             this.els.comboBar.style.backgroundColor = borderColor;
-            this.els.comboBar.style.boxShadow = `0 0 15px ${shadowColor}`;
         }
 
-        // Il bordo sinistro e superiore del pannello reagiscono leggermente
         let comboPanel = document.getElementById('combo-panel');
         if (comboPanel) {
-            comboPanel.style.borderColor = `rgba(75, 85, 99, 0.4) ${borderColor} rgba(75, 85, 99, 0.4) rgba(75, 85, 99, 0.4)`;
+            comboPanel.style.borderColor = borderColor;
         }
 
-      if (this._comboScaleTimeout) clearTimeout(this._comboScaleTimeout);
+        if (this._comboScaleTimeout) clearTimeout(this._comboScaleTimeout);
         this._comboScaleTimeout = setTimeout(() => { 
             this.els.comboText.style.transform = `scale(${1 + Math.min(combo * 0.01, 0.1)})`; 
         }, 60);
@@ -8302,7 +8432,7 @@ triggerComboAnim(combo) {
         this.els.announcerText.style.transform = 'skewX(-8deg) scale(1.3)';
         
         setTimeout(() => {
-            if(this.els.announcerText) this.els.announcerText.style.transform = 'skewX(-8deg) scale(1.0)';
+            if (this.els.announcerText) this.els.announcerText.style.transform = 'skewX(-8deg) scale(1.0)';
         }, 150);
         
         clearTimeout(this._announcerTimeout);
@@ -11322,32 +11452,44 @@ startGame(diffMult) {
                     this.uiCtx.lineTo(b.x - 5, by - 4);
                     this.uiCtx.closePath();
                     this.uiCtx.fill();
-                } else {
-                    let w = b.isElite ? 44 : 32;
+               } else {
+                    let w = b.isElite ? 46 : 34;
                     let h = b.isElite ? 7 : 5;
-                    let bx = b.x - w * 0.5;
-                    let by = b.y - 2;
+                    let bx = Math.round(b.x - w * 0.5);
+                    let by = Math.round(b.y - 2);
+                    let fillW = Math.max(0, Math.round(w * b.pct));
 
-                    this.uiCtx.fillStyle = 'rgba(5, 5, 8, 0.9)';
-                    this.uiCtx.fillRect(bx - 1, by - 1, w + 2, h + 2);
+                    // Cornice scura stile slate-950 con bordo ciano/ambra
+                    this.uiCtx.fillStyle = 'rgba(4, 7, 15, 0.92)';
+                    this.uiCtx.fillRect(bx - 1.5, by - 1.5, w + 3, h + 3);
+                    this.uiCtx.strokeStyle = b.isElite ? '#fbbf24' : 'rgba(56, 189, 248, 0.55)';
+                    this.uiCtx.lineWidth = 1;
+                    this.uiCtx.strokeRect(bx - 1.5, by - 1.5, w + 3, h + 3);
 
+                    // Riempimento plasma + riflesso superiore + cresta bianca
                     this.uiCtx.fillStyle = b.flash ? '#ffffff' : (b.isElite ? '#fbbf24' : '#ef4444');
-                    this.uiCtx.fillRect(bx, by, w * b.pct, h);
+                    this.uiCtx.fillRect(bx, by, fillW, h);
+                    if (!b.flash && fillW > 2) {
+                        this.uiCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                        this.uiCtx.fillRect(bx, by, fillW, 1.5);
+                        this.uiCtx.fillStyle = '#ffffff';
+                        this.uiCtx.fillRect(bx + fillW - 1.5, by, 1.5, h);
+                    }
                 }
             }
         }
-      // INDICATORI NEMICI FUORI SCHERMO
+       // INDICATORI NEMICI FUORI SCHERMO (Dardi Arcani ad alta leggibilità)
        let offCount = 0;
        
-       if(this.player) {
-           for(let i=0; i<this.enemies.length; i++) {
+       if (this.player) {
+           for (let i = 0; i < this.enemies.length; i++) {
                let e = this.enemies[i];
                if (e.dead || e.isDying || e.type === 'crystal' || e.angle === undefined) continue;
                
                let distSq = MathUtils.distanceSq(this.player, e);
-               if(distSq < (e.aggroRangeSq || 1000000)) {
-                 let pos = this.toScreenPosition(e.x, 20, e.y);
-                   let padding = 20;
+               if (distSq < (e.aggroRangeSq || 1000000)) {
+                   let pos = this.toScreenPosition(e.x, 20, e.y);
+                   let padding = 22;
                    if (pos.x < padding || pos.x > this.width - padding || pos.y < padding || pos.y > this.height - padding || pos.z > 1) {
                        if (offCount < this._offScreenEnemies.length) {
                            this._offScreenEnemies[offCount].enemy = e;
@@ -11359,8 +11501,6 @@ startGame(diffMult) {
            }
        }
 
-       // ZERO-ALLOCATION SORT: Evitiamo .slice() e .sort() che generano array e funzioni temporanee ad ogni frame.
-       // Eseguiamo un velocissimo "Insertion Sort" direttamente sull'array pre-allocato.
        for (let i = 1; i < offCount; i++) {
            let key = this._offScreenEnemies[i];
            let j = i - 1;
@@ -11371,25 +11511,30 @@ startGame(diffMult) {
            this._offScreenEnemies[j + 1] = key;
        }
        
-       let maxArrows = 5; 
-       this.uiCtx.fillStyle = 'rgba(255, 0, 0, 0.3)'; 
+       let maxArrows = 5;
+       this.uiCtx.lineWidth = 1.5;
        
-       for(let i=0; i<Math.min(maxArrows, offCount); i++) {
-           let e = this._offScreenEnemies[i].enemy; // Peschiamo dall'array originale ordinato
-           let padding = 20;
+       for (let i = 0; i < Math.min(maxArrows, offCount); i++) {
+           let e = this._offScreenEnemies[i].enemy;
+           let padding = 22;
            let cx = this.width / 2; let cy = this.height / 2;
            let angle = Math.atan2(e.y - this.player.y, e.x - this.player.x);
            
-           let edgeX = cx + Math.cos(angle) * (this.width/2 - padding);
-           let edgeY = cy + Math.sin(angle) * (this.height/2 - padding);
+           let edgeX = cx + Math.cos(angle) * (this.width / 2 - padding);
+           let edgeY = cy + Math.sin(angle) * (this.height / 2 - padding);
            edgeX = Math.max(padding, Math.min(this.width - padding, edgeX));
            edgeY = Math.max(padding, Math.min(this.height - padding, edgeY));
            
+           this.uiCtx.fillStyle = e.isElite ? 'rgba(251, 191, 36, 0.85)' : 'rgba(239, 68, 68, 0.72)';
+           this.uiCtx.strokeStyle = 'rgba(4, 7, 15, 0.9)';
            this.uiCtx.beginPath();
-           this.uiCtx.moveTo(edgeX + Math.cos(angle)*10, edgeY + Math.sin(angle)*10);
-           this.uiCtx.lineTo(edgeX + Math.cos(angle - 2.5)*15, edgeY + Math.sin(angle - 2.5)*15);
-           this.uiCtx.lineTo(edgeX + Math.cos(angle + 2.5)*15, edgeY + Math.sin(angle + 2.5)*15);
+           this.uiCtx.moveTo(edgeX + Math.cos(angle) * 11, edgeY + Math.sin(angle) * 11);
+           this.uiCtx.lineTo(edgeX + Math.cos(angle - 2.45) * 13, edgeY + Math.sin(angle - 2.45) * 13);
+           this.uiCtx.lineTo(edgeX - Math.cos(angle) * 4, edgeY - Math.sin(angle) * 4);
+           this.uiCtx.lineTo(edgeX + Math.cos(angle + 2.45) * 13, edgeY + Math.sin(angle + 2.45) * 13);
+           this.uiCtx.closePath();
            this.uiCtx.fill();
+           this.uiCtx.stroke();
        }
 
         this.uiCtx.textAlign = 'center';
@@ -15989,6 +16134,10 @@ class Player extends Entity {
 
         this.essenceList.push(type); this.essence = type;
         this.essenceTimer = 8.0 * this.modifiers.essenceDurationMult;
+        if (typeof UI !== 'undefined' && UI.triggerPulseClass && UI.els.stacks) {
+            let dotEl = UI.els.stacks[this.essenceList.length - 1];
+            if (dotEl) UI.triggerPulseClass(dotEl, 'anim-hud-pop');
+        }
         this.updateAppearance();
         if (this.essenceList.length === 3) this.evaluateCombinations();
     }
@@ -16108,6 +16257,9 @@ class Player extends Entity {
         this.overdrive = true; Game.hitStop = 0.2; Game.addTrauma(1.0); 
         let odBase = 5.0 + (SkinSystem.selectedId === 'dark_mage' ? 2.0 : 0.0);
         this.essenceTimer = odBase * this.modifiers.essenceDurationMult;
+        if (typeof UI !== 'undefined' && UI.triggerPulseClass && UI.els.essenceHud) {
+            UI.triggerPulseClass(UI.els.essenceHud, 'anim-hud-pop');
+        }
         if (Game.matchStats) Game.matchStats.essencesUsed[this.essence]++;
         Game.getFloatingText().spawn(this.x, this.y, ESSENCE_NAMES[this.essence] + "!", '#' + ESSENCE_COLORS[this.essence].toString(16).padStart(6, '0'), 40, true);
         let mat = this.essence === 'red' ? SharedMat.spriteRed : (this.essence === 'blue' ? SharedMat.spriteBlue : SharedMat.spriteGreen);
@@ -17832,6 +17984,9 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         this.isDashing = true; this.dashTimer = 0.25; 
         this.dashCooldown = perfectDodge ? 0.5 : 2.0 * this.modifiers.dashCooldownMult;
         if (this.modifiers.dashCritsEnabled) this.modifiers.dashCritsStacks = 2;
+        if (typeof UI !== 'undefined' && UI.triggerPulseClass && UI.els.btnDash) {
+            UI.triggerPulseClass(UI.els.btnDash, 'anim-hud-pop');
+        }
         
         if (this.essence === 'blue') {
             let maxDist = 250; 
@@ -18372,6 +18527,9 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             this.setShieldVisualColor(shieldColor, shieldColor);
             
             this.shieldMesh.material.opacity = 0.9;
+            if (typeof UI !== 'undefined' && UI.triggerPulseClass && UI.els.btnShield) {
+                UI.triggerPulseClass(UI.els.btnShield, 'anim-hud-pop');
+            }
             AudioEngine.playCollect();
         }
     }
