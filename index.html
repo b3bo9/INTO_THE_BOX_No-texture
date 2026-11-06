@@ -3638,8 +3638,8 @@ const SkinSystem = {
         let waterTex = (typeof Preloader !== 'undefined' && Preloader.textures.water) ? Preloader.textures.water : CHAR_GRUNGE_TEX;
 
         this.waterMat = new THREE.MeshStandardMaterial({
-            color: 0x0b3866, emissive: 0x041830, emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.08,
-            map: waterTex, transparent: true, opacity: 0.94
+            color: 0x168bb8, emissive: 0x052840, emissiveIntensity: 0.40, roughness: 0.18, metalness: 0.08,
+            map: waterTex, transparent: true, opacity: 0.92
         });
         let poolGeo = new THREE.CircleGeometry(42, 24).rotateX(-Math.PI / 2);
         let pUv = poolGeo.attributes.uv;
@@ -3651,7 +3651,7 @@ const SkinSystem = {
         this.waterMesh.position.y = 0.1;
 
         this.waterGlowMat = new THREE.MeshBasicMaterial({
-            map: GLOW_TEX, color: 0x0a4880, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false
+            map: GLOW_TEX, color: 0x0ea5e9, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false
         });
         let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(102, 102).rotateX(-Math.PI / 2), this.waterGlowMat);
         waterGlow.position.y = 0.05;
@@ -3878,7 +3878,7 @@ const SkinSystem = {
             grass: new THREE.Color(0x8eb07c),
             foliage: new THREE.Color(0x13380d),
             canopy: new THREE.Color(0x153b0f),
-            water: new THREE.Color(0x0b3866),
+            water: new THREE.Color(0x168bb8),
             elem: new THREE.Color(0x22FF44)
         };
 
@@ -3938,8 +3938,8 @@ const SkinSystem = {
     cycleBiomeTheme() {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
-            // 0: Foresta Incantata (Acqua blu profonda + Vuoto viola abissale ai bordi)
-            { fog: 0x090414, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x0b3866, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
+            // 0: Foresta Incantata (Acqua cristallina tropicale + Vuoto viola abissale ai bordi)
+            { fog: 0x090414, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x168bb8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
             // 1: Fucina Infernale (Rosso)
             { fog: 0x120412, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing, grassRoot: 0x350704 },
           // 2: Caverna Cristallina (Ghiaccio cristallino bilanciato)
@@ -4104,6 +4104,10 @@ const SkinSystem = {
         if (this.waterMesh) {
             let wScale = 1.0 + Math.sin(this.time * 2.6) * 0.025;
             this.waterMesh.scale.set(wScale, wScale, 1);
+            if (this.waterMat && this.waterMat.map) {
+                this.waterMat.map.offset.x = (this.time * 0.025) % 1;
+                this.waterMat.map.offset.y = (this.time * 0.038) % 1;
+            }
         }
 
         // 3. ANIMAZIONE FLUIDA DEI MOSTRI MINACCIOSI SULLO SFONDO
@@ -12642,8 +12646,8 @@ class GameMap {
         this.pitPolys = [];
 
        if (themeIdx === 0) {
-            // Sorgente boschiva: bianco neutro per leggere water.jpg, ruvidità alta anti-abbagliamento ai bordi schermo
-            pitColor = 0xffffff; pitEmissive = 0x02121c; pitOpacity = 0.92; pitRoughness = 0.84; pitMetalness = 0.02;
+            // Sorgente boschiva incantata: brillante, cristallina con riflessi speculari vivaci e onde 3D
+            pitColor = 0xffffff; pitEmissive = 0x052840; pitOpacity = 0.90; pitRoughness = 0.20; pitMetalness = 0.08;
             baseTexImage = Preloader.textures.water;
         } else if (themeIdx === 1) {
             pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
@@ -12668,21 +12672,21 @@ class GameMap {
             const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.18 : 0.62),
+                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.42 : 0.62),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (isTouchDevice) {
-                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 36 : 32);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x16485e : 0x183c58));
+                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 65 : 32);
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x66c8f0 : 0x183c58));
             } else {
-                pitMatParams.roughness = themeIdx === 0 ? 0.62 : pitRoughness;
-                pitMatParams.metalness = pitMetalness;
+                pitMatParams.roughness = themeIdx === 0 ? 0.20 : pitRoughness;
+                pitMatParams.metalness = themeIdx === 0 ? 0.08 : pitMetalness;
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v9_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v10_' + themeIdx + (isTouchDevice ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -12741,7 +12745,7 @@ class GameMap {
                     }
 
                     ${themeIdx === 0 ? `
-                        // ONDE 3D AD ALTO CONTRASTO (Profilo Gerstner con ventri abissali scuri e creste nitide)
+                        // ONDE 3D ACQUA FORESTA: Profilo Gerstner con trasparenze vive, caustiche dinamiche e riflessi speculari
                         float ph1 = vPitWPos.x * 0.075 + vPitWPos.y * 0.050 + uTime * 2.35 + sin(vPitWPos.y * 0.035 - uTime * 1.15) * 0.95;
                         float ph2 = vPitWPos.y * 0.085 - vPitWPos.x * 0.046 - uTime * 1.95 + cos(vPitWPos.x * 0.038 + uTime * 1.05) * 0.85;
                         float ph3 = (vPitWPos.x - vPitWPos.y) * 0.105 + uTime * 2.90;
@@ -12752,74 +12756,71 @@ class GameMap {
                         float swellHeight = sw1 * 0.46 + sw2 * 0.36 + sw3 * 0.18;
                         float swellNorm = clamp(0.5 + 0.5 * swellHeight, 0.0, 1.0);
 
-                        // Gradiente 3D marcato per staccare il lato illuminato dal ventre in ombra
+                        // Gradiente 3D delle onde per catturare la luce direzionale e riflessi speculari
                         float dSwX = cos(ph1) * 0.075 * 0.46 - cos(ph2) * 0.046 * 0.36 - sin(ph3) * 0.105 * 0.18;
                         float dSwY = cos(ph1) * 0.050 * 0.46 + cos(ph2) * 0.085 * 0.36 + sin(ph3) * 0.105 * 0.18;
 
                     #ifdef USE_MAP
-                        vec2 wWarp = vec2(sw1, sw2) * 0.052 + pitRippleGrad * 0.025;
-                        vec2 uvWaterA = vPitWPos / 165.0 + vec2(uTime * 0.058, uTime * 0.095) + wWarp;
-                        vec2 uvWaterB = vPitWPos / 112.0 + vec2(-uTime * 0.048, uTime * 0.068) - wWarp * 0.90;
+                        vec2 wWarp = vec2(sw1, sw2) * 0.045 + pitRippleGrad * 0.025;
+                        vec2 uvWaterA = vPitWPos / 150.0 + vec2(uTime * 0.055, uTime * 0.085) + wWarp;
+                        vec2 uvWaterB = vPitWPos / 110.0 + vec2(-uTime * 0.042, uTime * 0.062) - wWarp * 0.85;
                         vec3 wA = ${sampleWaterTex('uvWaterA')}.rgb;
                         vec3 wB = ${sampleWaterTex('uvWaterB')}.rgb;
                     #else
                         vec3 wA = diffuseColor.rgb;
                         vec3 wB = diffuseColor.rgb;
                     #endif
-                        // Curva a S (smoothstep) invece di sqrt: esalta i fondali scuri e le venature chiare della texture
+
+                        // Fusione organica dei due flussi della texture
+                        vec3 rawTex = mix(wA, wB, 0.50);
                         float lA = dot(wA, vec3(0.299, 0.587, 0.114));
                         float lB = dot(wB, vec3(0.299, 0.587, 0.114));
-                        float pA = smoothstep(0.12, 0.88, lA);
-                        float pB = smoothstep(0.12, 0.88, lB);
-                        float texWave = pA * 0.56 + pB * 0.44;
+                        float pA = smoothstep(0.10, 0.90, lA);
+                        float pB = smoothstep(0.10, 0.90, lB);
+                        float texWave = pA * 0.55 + pB * 0.45;
                         float texDiff = (pA - pB);
 
-                        float waveH = clamp(swellNorm * 0.58 + texWave * 0.42 + texDiff * 0.24, 0.0, 1.0);
-                        float abyssMask = smoothstep(0.48, 0.08, waveH);
-                        float waveCrest = smoothstep(0.55, 0.88, waveH) * (0.40 + 0.60 * smoothstep(0.25, 0.78, pA * pB * 1.9));
-                        float foamRidge = pow(smoothstep(0.68, 0.94, waveH + pA * pB * 0.32), 1.5);
+                        float waveH = clamp(swellNorm * 0.55 + texWave * 0.45 + texDiff * 0.20, 0.0, 1.0);
+                        float abyssMask = smoothstep(0.45, 0.05, waveH);
+                        float waveCrest = smoothstep(0.50, 0.85, waveH) * (0.45 + 0.55 * smoothstep(0.20, 0.75, pA * pB * 2.0));
+                        float foamRidge = pow(smoothstep(0.64, 0.92, waveH + pA * pB * 0.35), 1.6);
 
-                        float slopeLit = clamp(0.5 + (dSwX * 11.5 + dSwY * 9.5) + texDiff * 0.85, 0.0, 1.0);
-                        float sunGlint = pow(clamp(slopeLit * waveH, 0.0, 1.0), 3.2);
+                        float slopeLit = clamp(0.5 + (dSwX * 12.0 + dSwY * 10.0) + texDiff * 0.90, 0.0, 1.0);
+                        float sunGlint = pow(clamp(slopeLit * waveH, 0.0, 1.0), 3.0);
 
-                        // Doppio reticolo di caustiche nitide sul fondale e a mezz'acqua
-                        vec2 caustPos = vPitWPos + vec2(sw1, sw2) * 11.0 + pitRippleGrad * 14.0;
-                        float c1 = sin(caustPos.x * 0.068 + uTime * 1.95 + sin(caustPos.y * 0.056 - uTime * 1.45) * 1.3);
-                        float c2 = cos(caustPos.y * 0.072 - uTime * 1.70 + cos(caustPos.x * 0.060 + uTime * 1.25) * 1.3);
+                        // Reticolo di caustiche luminose animate (interferenza solare subacquea)
+                        vec2 caustPos = vPitWPos + vec2(sw1, sw2) * 12.0 + pitRippleGrad * 15.0;
+                        float c1 = sin(caustPos.x * 0.072 + uTime * 2.10 + sin(caustPos.y * 0.058 - uTime * 1.50) * 1.35);
+                        float c2 = cos(caustPos.y * 0.076 - uTime * 1.80 + cos(caustPos.x * 0.064 + uTime * 1.30) * 1.35);
                         float causticMain = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 3.0);
-                        float c3 = sin((caustPos.x + caustPos.y) * 0.095 - uTime * 2.4);
+                        float c3 = sin((caustPos.x + caustPos.y) * 0.098 - uTime * 2.50);
                         float causticSharp = pow(clamp(0.5 + 0.5 * c1 * c3, 0.0, 1.0), 4.5);
 
-                        vec3 rawTex = mix(wA, wB, 0.45);
-                        vec3 tintedTex = vec3(
-                            rawTex.r * 0.02 + rawTex.b * 0.04,
-                            rawTex.g * 0.22 + rawTex.b * 0.20,
-                            max(rawTex.b * 0.82, rawTex.g * 0.42) * 0.65 + 0.02
-                        );
+                        // Palette Foresta Incantata: zaffiro profondo, turchese tropicale, ciano cristallino e creste spumeggianti
+                        vec3 deepAbyssCol  = vec3(0.015, 0.080, 0.220);
+                        vec3 midLagoonCol  = vec3(0.045, 0.320, 0.540);
+                        vec3 brightAquaCol = vec3(0.120, 0.600, 0.780);
+                        vec3 crestFoamCol  = vec3(0.780, 0.950, 1.000);
 
-                        // Palette ad alto contrasto: fosse abissali quasi nere, corpo ottanio/zaffiro e creste turchesi vive
-                        vec3 deepAbyssCol  = vec3(0.002, 0.010, 0.032);
-                        vec3 midLagoonCol  = vec3(0.012, 0.115, 0.255);
-                        vec3 brightAquaCol = vec3(0.055, 0.310, 0.510);
+                        vec3 waterCol = mix(deepAbyssCol, midLagoonCol, smoothstep(0.10, 0.52, waveH));
+                        waterCol = mix(waterCol, brightAquaCol, smoothstep(0.44, 0.84, waveH * (0.55 + 0.45 * slopeLit)));
+                        // Integra con pienezza cromatica i dettagli della texture acqua
+                        waterCol = mix(waterCol, rawTex, 0.48);
 
-                        vec3 waterCol = mix(deepAbyssCol, midLagoonCol, smoothstep(0.14, 0.54, waveH));
-                        waterCol = mix(waterCol, brightAquaCol, smoothstep(0.48, 0.85, waveH * (0.55 + 0.45 * slopeLit)));
-                        waterCol = mix(waterCol, tintedTex, 0.35);
-
-                        // Forte chiaroscuro 3D tra ventri d'onda e pareti d'acqua illuminate
-                        waterCol *= mix(0.40, 1.32, slopeLit);
-                        waterCol *= (1.0 - abyssMask * 0.42);
-                        waterCol += vec3(0.07, 0.28, 0.46) * (causticMain * (0.48 - 0.22 * abyssMask));
-                        waterCol += vec3(0.16, 0.48, 0.68) * (causticSharp * 0.38);
-                        waterCol = mix(waterCol, vec3(0.11, 0.38, 0.62), waveCrest * 0.65);
-                        waterCol = mix(waterCol, vec3(0.24, 0.58, 0.80), clamp(foamRidge * 0.55 + sunGlint * 0.40, 0.0, 0.68));
+                        // Chiaroscuro 3D e scintillio caustiche
+                        waterCol *= mix(0.55, 1.30, slopeLit);
+                        waterCol *= (1.0 - abyssMask * 0.35);
+                        waterCol += vec3(0.10, 0.42, 0.68) * (causticMain * 0.65 * (1.0 - abyssMask * 0.3));
+                        waterCol += vec3(0.22, 0.68, 0.92) * (causticSharp * 0.55);
+                        waterCol = mix(waterCol, vec3(0.25, 0.72, 0.88), waveCrest * 0.55);
+                        waterCol = mix(waterCol, crestFoamCol, clamp(foamRidge * 0.70 + sunGlint * 0.60, 0.0, 0.85));
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.001, 0.004, 0.015),
-                            vec3(0.024, 0.115, 0.235),
-                            clamp(waveCrest * 0.60 + causticMain * 0.45, 0.0, 1.0)
-                        ) * 0.22 + vec3(0.06, 0.20, 0.34) * (foamRidge * 0.25 + causticSharp * 0.20);
+                            vec3(0.010, 0.045, 0.090),
+                            vec3(0.060, 0.220, 0.380),
+                            clamp(waveCrest * 0.70 + causticMain * 0.50, 0.0, 1.0)
+                        ) * 0.45 + vec3(0.14, 0.42, 0.60) * (foamRidge * 0.45 + causticSharp * 0.30);
 
                         // RIPPLE PERSONAGGIO: Ondine concentriche sottili, discrete e 100% circolari
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
@@ -12832,15 +12833,15 @@ class GameMap {
 
                             // Anelli sottili e morbidi (nessuna geometria direzionale)
                             float delicateRings = pow(smoothstep(0.42, 0.98, wSine), 2.2) * rEnv * (0.35 + 0.65 * moveInt);
-                            floatringTrough = smoothstep(0.35, 0.90, -wSine) * rEnv * 0.22 * uPlayerPit.w;
+                            float ringTrough = smoothstep(0.35, 0.90, -wSine) * rEnv * 0.22 * uPlayerPit.w;
                             float meniscus = exp(-pow(rDist - 10.2, 2.0) * 0.18) * 0.42;
 
                             float rippleStrength = clamp(delicateRings * 0.58 + meniscus * 0.42, 0.0, 0.62) * uPlayerPit.w;
 
-                            diffuseColor.rgb *= (1.0 - floatringTrough);
-                            vec3 subtleRippleCol = mix(vec3(0.10, 0.36, 0.58), vec3(0.24, 0.54, 0.76), delicateRings);
-                            diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.65);
-                            totalEmissiveRadiance += vec3(0.04, 0.14, 0.26) * rippleStrength;
+                            diffuseColor.rgb *= (1.0 - ringTrough);
+                            vec3 subtleRippleCol = mix(vec3(0.18, 0.60, 0.82), vec3(0.45, 0.85, 0.98), delicateRings);
+                            diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.70);
+                            totalEmissiveRadiance += vec3(0.08, 0.26, 0.42) * rippleStrength;
                         }
                     ` : (themeIdx === 1 ? `
                         // LAVA: Doppio campionamento convettivo + anelli magmatici radiali
@@ -12904,7 +12905,7 @@ class GameMap {
                     '#include <dithering_fragment>',
                     `
                     ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.76' : '0.68'};
+                        float capLim = ${themeIdx === 0 ? '0.94' : '0.68'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
                             float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
@@ -12940,7 +12941,7 @@ class GameMap {
                         }
                     }
                     if (isPitTile || isAdjPlayableFloor) {
-                        let q = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
+                        let q = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE, 3, 3);
                         q.rotateX(-Math.PI / 2);
                         let wx = gx * TILE_SIZE + TILE_SIZE / 2;
                         let wz = gy * TILE_SIZE + TILE_SIZE / 2;
@@ -12963,7 +12964,7 @@ class GameMap {
         }
 
         if (pitAreaGeo) {
-            const bedHex = (themeIdx === 0) ? 0x031022 : ((themeIdx === 1) ? 0x240602 : 0x081830);
+            const bedHex = (themeIdx === 0) ? 0x02162e : ((themeIdx === 1) ? 0x240602 : 0x081830);
             const pitBedMat = new THREE.MeshBasicMaterial({ color: bedHex });
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
@@ -13726,7 +13727,7 @@ class GameMap {
                         polygonOffsetUnits: -1
                     });
 
-                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v5_' + themeIdx;
+                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v6_' + themeIdx;
                     cachedShoreMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                         shader.vertexShader = `
@@ -13760,15 +13761,15 @@ class GameMap {
                                 float ripWave = sin(d * 26.0 - uTime * 1.85 + sin(uArc * 4.0) * 0.75);
                                 float ripples = smoothstep(0.60, 0.95, ripWave) * smoothstep(0.07, 0.19, d) * (1.0 - smoothstep(0.42, 0.92, sDist));
 
-                                // Raccordo blu profondo e azzurro boschivo (senza aloni bianchi/ciano chiaro)
-                                vec3 innerAqua = vec3(0.05, 0.24, 0.46);
-                                vec3 midCyan   = vec3(0.03, 0.15, 0.34);
-                                vec3 outerBlue = vec3(0.01, 0.07, 0.20);
+                                // Raccordo sponda foresta: velo cristallino turchese e schiuma di battigia soffusa
+                                vec3 innerAqua = vec3(0.18, 0.62, 0.82);
+                                vec3 midCyan   = vec3(0.08, 0.42, 0.64);
+                                vec3 outerBlue = vec3(0.03, 0.20, 0.42);
                                 vec3 haloCol = mix(outerBlue, midCyan, smoothstep(0.18, 0.62, haloFade));
                                 haloCol = mix(haloCol, innerAqua, smoothstep(0.58, 0.96, haloFade));
-                                haloCol = mix(haloCol, vec3(0.12, 0.36, 0.62), clamp(rimGlow * 0.50 + ripples * 0.35, 0.0, 0.60));
+                                haloCol = mix(haloCol, vec3(0.70, 0.92, 1.00), clamp(rimGlow * 0.65 + ripples * 0.50, 0.0, 0.75));
 
-                                float haloAlpha = clamp(haloBody * 0.38 + rimGlow * 0.18 + ripples * 0.12, 0.0, 0.48) * (1.0 - smoothstep(0.80, 1.0, sDist));
+                                float haloAlpha = clamp(haloBody * 0.32 + rimGlow * 0.25 + ripples * 0.18, 0.0, 0.55) * (1.0 - smoothstep(0.80, 1.0, sDist));
                                 diffuseColor = vec4(haloCol, haloAlpha);
                             ` : (themeIdx === 1 ? `
                                 float pulse = 0.84 + 0.16 * sin(uTime * 2.6 + uArc * 2.0);
@@ -22240,11 +22241,39 @@ const Preloader = {
                 ctx.fillRect(Math.random()*128, Math.random()*128, Math.random()*8+2, Math.random()*8+2);
             }
         } else {
-            ctx.fillStyle = '#0284c7'; ctx.fillRect(0, 0, 128, 128);
-            for(let i=0; i<250; i++) {
-                ctx.fillStyle = Math.random() > 0.4 ? '#38bdf8' : '#0369a1';
-                ctx.fillRect(Math.random()*128, Math.random()*128, Math.random()*8+2, Math.random()*8+2);
+            // Procedurale Stylized Water: onde Gerstner fluide, caustiche luminose e creste di schiuma seamless
+            canvas.width = 256; canvas.height = 256;
+            const imgData = ctx.createImageData(256, 256);
+            const d = imgData.data;
+            const PI2 = Math.PI * 2;
+            for (let y = 0; y < 256; y++) {
+                const ny = (y / 256) * PI2;
+                for (let x = 0; x < 256; x++) {
+                    const nx = (x / 256) * PI2;
+                    // Onde sinusoidali multi-armonica a loop continuo
+                    const w1 = Math.sin(nx * 2.0 + Math.cos(ny * 2.0) * 1.5);
+                    const w2 = Math.cos(ny * 2.0 + Math.sin(nx * 2.0) * 1.5);
+                    const w3 = Math.sin(nx * 4.0 - ny * 3.0);
+                    const waveSum = w1 * 0.45 + w2 * 0.35 + w3 * 0.20;
+
+                    // Rete di caustiche luminose
+                    const c1 = Math.sin(nx * 3.0 + Math.sin(ny * 3.0) * 1.8);
+                    const c2 = Math.cos(ny * 3.0 - Math.cos(nx * 3.0) * 1.8);
+                    let caust = Math.pow((c1 * c2 + 1.0) * 0.5, 3.2);
+
+                    // Cresta di schiuma e bagliori
+                    const foam = Math.pow(Math.max(0.0, waveSum * 0.5 + 0.5), 4.0);
+
+                    // Palette: fondo blu zaffiro (#083358), corpo ciano smeraldo (#0ea5e9), caustiche (#7dd3fc), schiuma (#e0f7fe)
+                    const r = Math.min(255, Math.floor(10 + (waveSum * 0.5 + 0.5) * 35 + caust * 140 + foam * 180));
+                    const g = Math.min(255, Math.floor(65 + (waveSum * 0.5 + 0.5) * 115 + caust * 190 + foam * 230));
+                    const b = Math.min(255, Math.floor(120 + (waveSum * 0.5 + 0.5) * 125 + caust * 135 + foam * 240));
+
+                    const idx = (y * 256 + x) * 4;
+                    d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = 255;
+                }
             }
+            ctx.putImageData(imgData, 0, 0);
         }
         const tex = new THREE.CanvasTexture(canvas);
         tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
@@ -22310,11 +22339,16 @@ const Preloader = {
                 }
             };
 
-            // Cerca prima nella stessa cartella del codice (GitHub), poi in 'terreno/' o 'Terreno/'
+            // Cerca prima nella stessa cartella del codice (GitHub), poi nei percorsi relativi e sottocartelle
             const candidates = [
                 fileName,
+                `../${fileName}`,
                 `terreno/${fileName}`,
-                `Terreno/${fileName}`
+                `Terreno/${fileName}`,
+                `../terreno/${fileName}`,
+                `../Terreno/${fileName}`,
+                `Texture/${fileName}`,
+                `../Texture/${fileName}`
             ];
             let attempt = 0;
 
