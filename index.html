@@ -2608,13 +2608,13 @@ const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; con
         debris: 0x321612, groundMist: 0x9e3820,
         ambient: 0x3e1814, dirLight: 0xffa870, fog: 0x150506
     },
-    // TEMA 3: CAVERNA CRISTALLINA (Atmosfera notturna glaciale riposante per gli occhi, coerente con gli altri biomi)
+    // TEMA 3: CAVERNA CRISTALLINA (Compromesso ideale: cristallino e leggibile ma mai abbagliante)
     { 
-        dirt: 0x42627c, grass: 0x4e7391, rock: 0x3b5872, wall: 0x2a4156, 
-        grassShader: 0x0c4268, grassEmissive: 0x010b14, grassRoot: 0x072036,
-        canopyShader: 0x104566, canopyEmissive: 0x031322, tree: 0x0e1c30,
-        debris: 0x1b344b, groundMist: 0x35688e,
-        ambient: 0x152840, dirLight: 0x98bedb, fog: 0x060e1c
+        dirt: 0x557fa3, grass: 0x6b9bc0, rock: 0x4f7699, wall: 0x385a78, 
+        grassShader: 0x0e5280, grassEmissive: 0x02101d, grassRoot: 0x092946,
+        canopyShader: 0x14567f, canopyEmissive: 0x051b2f, tree: 0x11223a,
+        debris: 0x203e5a, groundMist: 0x488eba,
+        ambient: 0x1b3554, dirLight: 0xbad9f0, fog: 0x081225
     }
 ];
 
@@ -3237,12 +3237,12 @@ const SkinSystem = {
         let aspect = w / h;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x0b1409, 440, 1080);
+        this.scene.fog = new THREE.Fog(0x090414, 520, 1380);
 
-        this.camera = new THREE.PerspectiveCamera(44, aspect, 10, 1400);
+        this.camera = new THREE.PerspectiveCamera(44, aspect, 10, 1600);
 
         this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
-        this.renderer.setClearColor(0x0b1409, 1);
+        this.renderer.setClearColor(0x090414, 1);
         this.renderer.setSize(w, h);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -3268,22 +3268,79 @@ const SkinSystem = {
         this.worldGroup = new THREE.Group();
         this.scene.add(this.worldGroup);
 
-        // --- 1. TERRENO DELLA RADURA ---
+        // --- 1. ZOLLA DI TERRA 3D SOSPESA E ZONA DI ENERGIA OSCURA VIOLA AI BORDI ---
         let tDirt = (typeof Preloader !== 'undefined' && Preloader.textures['dirt']) ? Preloader.textures['dirt'] : CHAR_GRUNGE_TEX;
         let tGrass = (typeof Preloader !== 'undefined' && Preloader.textures['grass']) ? Preloader.textures['grass'] : CHAR_GRUNGE_TEX;
         let tRock = (typeof Preloader !== 'undefined' && Preloader.textures['rock']) ? Preloader.textures['rock'] : CHAR_GRUNGE_TEX;
 
+        // 1A. Superficie superiore organica della Zolla (raggio ~232 così i bordi si vedono sempre)
         this.groundDirtMat = new THREE.MeshPhongMaterial({ color: 0x828c78, map: tDirt, shininess: 2 });
-        let groundGeo = new THREE.CircleGeometry(580, 32).rotateX(-Math.PI / 2);
+        const ISLAND_RAD = 232;
+        let groundGeo = new THREE.CircleGeometry(ISLAND_RAD, 64).rotateX(-Math.PI / 2);
+        let gPos = groundGeo.attributes.position;
         let gUv = groundGeo.attributes.uv;
-        for (let i = 0; i < gUv.count; i++) {
-            gUv.setXY(i, (gUv.getX(i) - 0.5) * 14.0 + 0.5, (gUv.getY(i) - 0.5) * 14.0 + 0.5);
+        for (let i = 0; i < gPos.count; i++) {
+            let vx = gPos.getX(i), vz = gPos.getZ(i);
+            let dist = Math.hypot(vx, vz);
+            if (dist > 10) {
+                let ang = Math.atan2(vz, vx);
+                let jag = Math.sin(ang * 7.0) * 6.5 + Math.cos(ang * 13.0 - 1.2) * 4.2 + Math.sin(ang * 21.0 + 0.7) * 2.2;
+                let edgeWeight = Math.pow(dist / ISLAND_RAD, 1.5);
+                let newDist = dist + jag * edgeWeight;
+                gPos.setX(i, Math.cos(ang) * newDist);
+                gPos.setZ(i, Math.sin(ang) * newDist);
+            }
+            gUv.setXY(i, (gUv.getX(i) - 0.5) * 8.0 + 0.5, (gUv.getY(i) - 0.5) * 8.0 + 0.5);
         }
+        gPos.needsUpdate = true;
         gUv.needsUpdate = true;
+        groundGeo.computeVertexNormals();
         let groundBase = new THREE.Mesh(groundGeo, this.groundDirtMat);
-        groundBase.position.y = -0.2;
+        groundBase.position.y = -0.15;
         this.worldGroup.add(groundBase);
 
+        // 1B. Scarpata rocciosa 3D sotto la Zolla di Terra (effetto isola fluttuante)
+        this.cliffRockMat = new THREE.MeshStandardMaterial({
+            color: 0x5c6b56, map: tRock, roughness: 0.88, metalness: 0.12, flatShading: true
+        });
+        let cliffGeo = new THREE.CylinderGeometry(ISLAND_RAD + 2, ISLAND_RAD * 0.62, 52, 64, 4, true);
+        cliffGeo.translate(0, -26.2, 0);
+        let cPos = cliffGeo.attributes.position;
+        for (let i = 0; i < cPos.count; i++) {
+            let vx = cPos.getX(i), vy = cPos.getY(i), vz = cPos.getZ(i);
+            let ang = Math.atan2(vz, vx);
+            let rad = Math.hypot(vx, vz);
+            let depthRatio = Math.min(1.0, Math.abs(vy) / 52.0);
+            let jag = Math.sin(ang * 7.0) * 6.5 + Math.cos(ang * 13.0 - 1.2) * 4.2 + Math.sin(ang * 19.0 + vy * 0.12) * (3.5 + depthRatio * 6.0);
+            let finalRad = rad + jag;
+            cPos.setXYZ(i, Math.cos(ang) * finalRad, vy + Math.sin(ang * 11.0) * 1.8 * depthRatio, Math.sin(ang) * finalRad);
+        }
+        cPos.needsUpdate = true;
+        cliffGeo.computeVertexNormals();
+        let cliffMesh = new THREE.Mesh(cliffGeo, this.cliffRockMat);
+        this.worldGroup.add(cliffMesh);
+
+        // 1C. Rocce frastagliate lungo il ciglio della zolla
+        const rimBoulderCount = 38;
+        const rimBoulderMesh = new THREE.InstancedMesh(SharedGeo.rockDebris, this.cliffRockMat, rimBoulderCount);
+        let bDummy = new THREE.Object3D();
+        for (let i = 0; i < rimBoulderCount; i++) {
+            let ang = (Math.PI * 2 / rimBoulderCount) * i + (i % 2) * 0.05;
+            let jag = Math.sin(ang * 7.0) * 6.5 + Math.cos(ang * 13.0 - 1.2) * 4.2;
+            let rDist = (ISLAND_RAD - 3) + jag + (i % 3 - 1) * 3.5;
+            let sx = 4.2 + (i % 4) * 1.3;
+            let sy = 2.0 + (i % 3) * 0.9;
+            let sz = 3.6 + (i % 2) * 1.4;
+            bDummy.position.set(Math.cos(ang) * rDist, -0.6, Math.sin(ang) * rDist);
+            bDummy.rotation.set((i % 3 - 1) * 0.18, -ang + (i % 2) * 0.5, (i % 2 - 0.5) * 0.15);
+            bDummy.scale.set(sx, sy, sz);
+            bDummy.updateMatrix();
+            rimBoulderMesh.setMatrixAt(i, bDummy.matrix);
+        }
+        rimBoulderMesh.instanceMatrix.needsUpdate = true;
+        this.worldGroup.add(rimBoulderMesh);
+
+        // 1D. Manto erboso interno alla zolla
         this.groundGrassMat = new THREE.MeshPhongMaterial({
             color: 0x8eb07c, map: tGrass, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, shininess: 3
         });
@@ -3299,8 +3356,8 @@ const SkinSystem = {
             );
         };
         const patchCoords = [
-            { x: 0, z: 0, s: 270 }, { x: -95, z: -75, s: 220 }, { x: 105, z: -65, s: 210 },
-            { x: -85, z: 95, s: 220 }, { x: 95, z: 85, s: 205 }, { x: 0, z: -135, s: 230 }
+            { x: 0, z: 0, s: 230 }, { x: -75, z: -60, s: 175 }, { x: 80, z: -55, s: 170 },
+            { x: -70, z: 75, s: 175 }, { x: 75, z: 68, s: 165 }, { x: 0, z: -95, s: 180 }
         ];
         let patchGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
         patchCoords.forEach((pc, idx) => {
@@ -3310,6 +3367,71 @@ const SkinSystem = {
             pm.rotation.y = idx * 1.1;
             this.worldGroup.add(pm);
         });
+
+        // 1E. ZONA DI ENERGIA OSCURA VIOLA ATTORNO ALLA ZOLLA (Shader vorticoso a 360°)
+        this.voidEnergyMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: this.uMenuTime,
+                uShock: this.uShockwave
+            },
+            vertexShader: `
+                varying vec2 vWorldXZ;
+                void main() {
+                    vec4 wp = modelMatrix * vec4(position, 1.0);
+                    vWorldXZ = wp.xz;
+                    gl_Position = projectionMatrix * viewMatrix * wp;
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                uniform float uShock;
+                varying vec2 vWorldXZ;
+                void main() {
+                    float r = length(vWorldXZ);
+                    float ang = atan(vWorldXZ.y, vWorldXZ.x);
+
+                    // Sagoma frastagliata che combacia col bordo della zolla (r ~ 225)
+                    float edgeJag = sin(ang * 7.0) * 6.5 + cos(ang * 13.0 - 1.2) * 4.2;
+                    float distFromEdge = r - (222.0 + edgeJag);
+
+                    // Maschera esterna: inizia esattamente sotto il bordo roccioso della zolla e sfuma all'orizzonte
+                    float voidMask = smoothstep(-10.0, 16.0, distFromEdge);
+                    float horizonFade = 1.0 - smoothstep(680.0, 1250.0, r);
+
+                    // Correnti vorticose e fratture di Energia Oscura Viola
+                    vec2 vp = vWorldXZ * 0.0085;
+                    float t = uTime * 0.55;
+                    float swirl1 = sin(ang * 6.0 - r * 0.038 + t * 2.4 + sin(r * 0.022 - t) * 1.8);
+                    float swirl2 = cos(ang * 10.0 + r * 0.028 - t * 1.9 + cos(ang * 4.0 + t) * 1.5);
+                    float nField = sin(vp.x * 3.5 + t + cos(vp.y * 3.2 - t * 0.8) * 1.6) * cos(vp.y * 3.8 - t * 1.1 + sin(vp.x * 2.9 + t) * 1.6);
+
+                    float nebula = clamp(0.5 + 0.28 * swirl1 + 0.22 * nField, 0.0, 1.0);
+                    float veins = pow(clamp(1.0 - abs(swirl1 * 0.55 + swirl2 * 0.45), 0.0, 1.0), 3.2);
+
+                    // Corona d'energia viola incandescente che lambisce i bordi della zolla
+                    float rimAura = exp(-max(0.0, distFromEdge) * 0.018) * smoothstep(-8.0, 8.0, distFromEdge);
+                    float shockPulse = sin(distFromEdge * 0.06 - uTime * 14.0) * exp(-max(0.0, distFromEdge) * 0.006) * uShock;
+
+                    vec3 abyssBlack  = vec3(0.020, 0.006, 0.042);
+                    vec3 deepViolet  = vec3(0.140, 0.028, 0.280);
+                    vec3 darkMagenta = vec3(0.460, 0.080, 0.760);
+                    vec3 brightVoid  = vec3(0.860, 0.380, 1.000);
+
+                    vec3 col = mix(abyssBlack, deepViolet, smoothstep(0.18, 0.78, nebula));
+                    col = mix(col, darkMagenta, clamp(veins * 0.78 + rimAura * 0.65, 0.0, 1.0));
+                    col += brightVoid * (pow(veins, 2.5) * (0.35 + 0.65 * rimAura) + rimAura * 0.42 + max(0.0, shockPulse) * 0.8);
+
+                    gl_FragColor = vec4(col, voidMask * horizonFade);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        let voidPlane = new THREE.Mesh(new THREE.PlaneGeometry(2500, 2500).rotateX(-Math.PI / 2), this.voidEnergyMat);
+        voidPlane.position.y = -4.5;
+        voidPlane.renderOrder = -2;
+        this.worldGroup.add(voidPlane);
 
         // Runa Magica sotto l'Eroe (Sempre perfettamente allineata e planare al terreno)
         this.runeMesh = new THREE.Mesh(
@@ -3335,10 +3457,10 @@ const SkinSystem = {
         let waterTex = (typeof Preloader !== 'undefined' && Preloader.textures.water) ? Preloader.textures.water : CHAR_GRUNGE_TEX;
 
         this.waterMat = new THREE.MeshStandardMaterial({
-            color: 0x1888b8, emissive: 0x0a3d52, emissiveIntensity: 0.6, roughness: 0.22, metalness: 0.1,
-            map: waterTex, transparent: true, opacity: 0.92
+            color: 0x0b3866, emissive: 0x041830, emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.08,
+            map: waterTex, transparent: true, opacity: 0.94
         });
-        let poolGeo = new THREE.CircleGeometry(45, 24).rotateX(-Math.PI / 2);
+        let poolGeo = new THREE.CircleGeometry(42, 24).rotateX(-Math.PI / 2);
         let pUv = poolGeo.attributes.uv;
         for (let i = 0; i < pUv.count; i++) {
             pUv.setXY(i, (pUv.getX(i) - 0.5) * 2.6 + 0.5, (pUv.getY(i) - 0.5) * 2.6 + 0.5);
@@ -3348,9 +3470,9 @@ const SkinSystem = {
         this.waterMesh.position.y = 0.1;
 
         this.waterGlowMat = new THREE.MeshBasicMaterial({
-            map: GLOW_TEX, color: 0x00ddff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false
+            map: GLOW_TEX, color: 0x0a4880, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false
         });
-        let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(112, 112).rotateX(-Math.PI / 2), this.waterGlowMat);
+        let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(102, 102).rotateX(-Math.PI / 2), this.waterGlowMat);
         waterGlow.position.y = 0.05;
         poolGroup.add(waterGlow, this.waterMesh);
 
@@ -3358,17 +3480,17 @@ const SkinSystem = {
         this.rimRockMat = rimRockMat;
         for (let i = 0; i < 14; i++) {
             let a = (Math.PI * 2 / 14) * i + (i % 2) * 0.15;
-            let rad = 42 + Math.sin(i * 2.3) * 3.5;
+            let rad = 39 + Math.sin(i * 2.3) * 3.2;
             let stone = new THREE.Mesh(SharedGeo.rockDebris, rimRockMat);
-            let sc = 2.6 + (i % 3) * 1.2;
+            let sc = 2.5 + (i % 3) * 1.1;
             stone.scale.set(sc * 1.3, sc * 0.65, sc);
             stone.position.set(Math.cos(a) * rad, 1.2, Math.sin(a) * rad);
             stone.rotation.y = a;
             poolGroup.add(stone);
         }
-        let padGeo = new THREE.CylinderGeometry(5.2, 4.8, 0.5, 8);
+        let padGeo = new THREE.CylinderGeometry(5.0, 4.6, 0.5, 8);
         let padMat = new THREE.MeshStandardMaterial({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
-        [[-14, -8, 1.0], [12, 13, 0.85], [-5, 17, 0.7]].forEach(p => {
+        [[-12, -7, 1.0], [11, 12, 0.85], [-4, 15, 0.7]].forEach(p => {
             let pad = new THREE.Mesh(padGeo, padMat);
             pad.position.set(p[0], 0.4, p[1]);
             pad.scale.setScalar(p[2]);
@@ -3376,7 +3498,7 @@ const SkinSystem = {
         });
         this.worldGroup.add(poolGroup);
 
-        // --- 3. PRATO DI ERBA 3D (Con materiale dedicato anti-sparizione su mobile!) ---
+        // --- 3. PRATO DI ERBA 3D CONFINATO SULLA ZOLLA ---
         this.menuGrassMat = this.createMenuFoliageMaterial(0x13380d, false);
         const grassCount = isTouchDevice ? 580 : 980;
         const grassInst = new THREE.InstancedMesh(InteractiveGrassSystem.geo, this.menuGrassMat, grassCount);
@@ -3386,14 +3508,14 @@ const SkinSystem = {
         let gIdx = 0;
         for (let i = 0; i < grassCount; i++) {
             let ang = Math.random() * Math.PI * 2;
-            let dist = 24 + Math.pow(Math.random(), 0.78) * 235;
+            let dist = 22 + Math.pow(Math.random(), 0.82) * 188;
             let gx = Math.cos(ang) * dist;
             let gz = Math.sin(ang) * dist;
-            if (Math.hypot(gx - 76, gz - 46) < 50) continue;
+            if (Math.hypot(gx - 76, gz - 46) < 47) continue;
             if (Math.hypot(gx + 84, gz + 52) < 28) continue;
 
             dummy.position.set(gx, 0.2, gz);
-            let sc = MathUtils.randomRange(0.9, 1.5);
+            let sc = MathUtils.randomRange(0.9, 1.45) * (dist > 185 ? 0.75 : 1.0);
             dummy.scale.set(sc, sc, sc);
             dummy.rotation.set(MathUtils.randomRange(-0.16, 0.16), Math.random() * Math.PI * 2, MathUtils.randomRange(-0.16, 0.16));
             dummy.updateMatrix();
@@ -3403,24 +3525,24 @@ const SkinSystem = {
         grassInst.instanceMatrix.needsUpdate = true;
         this.worldGroup.add(grassInst);
 
-        // --- 4. CORONA DI ALBERI FRATTALI E CHIOME VIVE ---
+        // --- 4. CORONA DI ALBERI FRATTALI SUL BORDO DELLA ZOLLA ---
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
         let menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x1c1812, roughness: 0.9 });
         this.menuCanopyMat = this.createMenuFoliageMaterial(0x153b0f, true);
 
-        const treeCount = 14;
+        const treeCount = 11;
         const meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, menuTreeTrunkMat, treeCount);
         const meshCanopy = new THREE.InstancedMesh(TreeCanopySystem.geo, this.menuCanopyMat, treeCount);
         const meshTreeShadows = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), SharedMat.blobShadow, treeCount);
         meshTrees.frustumCulled = false; meshCanopy.frustumCulled = false; meshTreeShadows.frustumCulled = false;
 
         for (let i = 0; i < treeCount; i++) {
-            let a = (Math.PI * 2 / treeCount) * i + (i % 2) * 0.12;
-            let rad = 395 + (i % 3) * 35;
+            let a = (Math.PI * 2 / treeCount) * i + (i % 2) * 0.14;
+            let rad = 188 + (i % 3) * 10;
             let tx = Math.cos(a) * rad;
             let tz = Math.sin(a) * rad;
-            let s = MathUtils.randomRange(2.2, 3.1);
-            let sy = s * MathUtils.randomRange(1.15, 1.38);
+            let s = MathUtils.randomRange(1.85, 2.45);
+            let sy = s * MathUtils.randomRange(1.12, 1.30);
 
             dummy.position.set(tx, 0, tz);
             dummy.scale.set(s, sy, s);
@@ -3429,8 +3551,8 @@ const SkinSystem = {
             meshTrees.setMatrixAt(i, dummy.matrix);
             meshCanopy.setMatrixAt(i, dummy.matrix);
 
-            dummy.position.set(tx + 4, 0.35, tz + 4);
-            dummy.scale.set(s * 20, 1, s * 20);
+            dummy.position.set(tx + 3, 0.35, tz + 3);
+            dummy.scale.set(s * 18, 1, s * 18);
             dummy.rotation.set(0, 0, 0);
             dummy.updateMatrix();
             meshTreeShadows.setMatrixAt(i, dummy.matrix);
@@ -3541,29 +3663,41 @@ const SkinSystem = {
             this.orbs.push({ group: orbGroup, angle: (Math.PI * 2 / 3) * i, speed: 1.4, radiusX: 44, radiusY: 9, tilt: (i - 1) * 0.2 });
         }
 
-        // --- 9. LUCCIOLE E SCINTILLE NELLA RADURA ---
-        let pCount = isTouchDevice ? 36 : 75;
+       // --- 9. LUCCIOLE NELLA RADURA + SCINTILLE DI ENERGIA OSCURA VIOLA DAI BORDI DELLA ZOLLA ---
+        let pCount = isTouchDevice ? 44 : 88;
         this.particles = [];
+        if (!SharedMat.spriteVoidPurple) {
+            SharedMat.spriteVoidPurple = new THREE.SpriteMaterial({
+                color: 0xc084fc, map: GLOW_TEX, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+            });
+        }
         for (let i = 0; i < pCount; i++) {
-            let p = new THREE.Sprite(orbMats[i % 3]);
-            let size = MathUtils.randomRange(6, 13);
+            let isVoidWisp = (i % 3 === 0); // 1 su 3 sale direttamente dal Vuoto viola attorno ai bordi della zolla
+            let pMat = isVoidWisp ? (i % 2 === 0 ? SharedMat.spriteVoidPurple : SharedMat.spritePink) : orbMats[i % 3];
+            let p = new THREE.Sprite(pMat);
+            let size = isVoidWisp ? MathUtils.randomRange(12, 22) : MathUtils.randomRange(6, 12);
             p.scale.set(size, size, 1);
             let angle = Math.random() * Math.PI * 2;
-            let radius = MathUtils.randomRange(20, 220);
-            let y = MathUtils.randomRange(4, 85);
+            let radius = isVoidWisp ? MathUtils.randomRange(226, 275) : MathUtils.randomRange(20, 195);
+            let y = isVoidWisp ? MathUtils.randomRange(-14, 55) : MathUtils.randomRange(4, 85);
             p.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
             this.scene.add(p);
-            this.particles.push({ mesh: p, angle, radius, speed: MathUtils.randomRange(0.2, 0.65), vy: MathUtils.randomRange(7, 18), y });
+            this.particles.push({
+                mesh: p, angle, radius,
+                speed: isVoidWisp ? MathUtils.randomRange(0.35, 0.85) : MathUtils.randomRange(0.2, 0.6),
+                vy: isVoidWisp ? MathUtils.randomRange(14, 28) : MathUtils.randomRange(7, 16),
+                y, isVoidWisp
+            });
         }
 
-        // Target colori per transizione morbida tra i 3 biomi
+        // Target colori per transizione morbida tra i 3 biomi (con nebbia abissale viola e acqua blu profonda)
         this.targetColors = {
-            fog: new THREE.Color(0x091208),
+            fog: new THREE.Color(0x090414),
             dirt: new THREE.Color(0x828c78),
             grass: new THREE.Color(0x8eb07c),
             foliage: new THREE.Color(0x13380d),
             canopy: new THREE.Color(0x153b0f),
-            water: new THREE.Color(0x1888b8),
+            water: new THREE.Color(0x0b3866),
             elem: new THREE.Color(0x22FF44)
         };
 
@@ -3623,12 +3757,12 @@ const SkinSystem = {
     cycleBiomeTheme() {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
-            // 0: Foresta Incantata (Verde)
-            { fog: 0x091208, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x1888b8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
+            // 0: Foresta Incantata (Acqua blu profonda + Vuoto viola abissale ai bordi)
+            { fog: 0x090414, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x0b3866, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
             // 1: Fucina Infernale (Rosso)
-            { fog: 0x150506, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing, grassRoot: 0x350704 },
-            // 2: Caverna Cristallina (Azzurro)
-            { fog: 0x09162e, dirt: 0x6a9ec8, grass: 0x8cc4ea, foliage: 0x1272a8, canopy: 0x186898, water: 0x38bdf8, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing, grassRoot: 0x0b3156 }
+            { fog: 0x120412, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing, grassRoot: 0x350704 },
+          // 2: Caverna Cristallina (Ghiaccio cristallino bilanciato)
+            { fog: 0x08061a, dirt: 0x557fa3, grass: 0x6b9bc0, foliage: 0x0e5280, canopy: 0x14567f, water: 0x286f9e, elem: 0x00CCFF, sprite: SharedMat.spriteBlue, ring: SharedMat.auraBlueRing, grassRoot: 0x092946 }
         ];
         const p = presets[this.themeCycle];
 
@@ -3731,11 +3865,11 @@ const SkinSystem = {
             this.heroLight.intensity = Math.max(3.0, this.heroLight.intensity - safeDt * 10);
         }
 
-        // 1. ORBITA CINEMATOGRAFICA FLUIDA ATTORNO AL GIOCATORE (Visuale più alta e panoramica)
+        // 1. ORBITA CINEMATOGRAFICA FLUIDA (Inquadra l'intera Zolla e la Zona di Energia Oscura Viola intorno ai bordi)
         this.camAngle += safeDt * 0.16;
         let aspect = this.camera.aspect || 0.6;
-        let camDist = aspect < 0.75 ? 290 : (aspect < 1.0 ? 260 : 235);
-        let camHeight = aspect < 0.75 ? 250 : (aspect < 1.0 ? 225 : 205);
+        let camDist = aspect < 0.75 ? 328 : (aspect < 1.0 ? 292 : 265);
+        let camHeight = aspect < 0.75 ? 268 : (aspect < 1.0 ? 240 : 218);
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
@@ -9379,9 +9513,9 @@ loop(timestamp) {
         Game.arenaEvolution = false;
         Game.bossLightClear = false;
         
-        // Illuminazione calibrata: smorza il riverbero sul ghiaccio mantenendo profondità 3D
-        let targetDirInt = (this.currentThemeIndex === 2) ? 0.86 : (this.currentThemeIndex === 1 ? 1.16 : 1.16);
-        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.50 : (this.currentThemeIndex === 1 ? 0.68 : 0.68);
+        // Illuminazione bilanciata: via di mezzo esatta tra originale (1.14/0.66) e scura (0.86/0.50)
+        let targetDirInt = (this.currentThemeIndex === 2) ? 1.00 : (this.currentThemeIndex === 1 ? 1.16 : 1.16);
+        let targetAmbInt = (this.currentThemeIndex === 2) ? 0.58 : (this.currentThemeIndex === 1 ? 0.68 : 0.68);
         if (this.dirLight) { 
             this.dirLight.intensity = targetDirInt; 
             this.dirLight.color.setHex(currentTheme.dirLight); 
@@ -11914,13 +12048,13 @@ class GameMap {
         activeMats.wall.color.setHex(currentTheme.wall || currentTheme.rock);
   // --- DIFFERENZIAZIONE FISICA DEI MATERIALI (COSTO ZERO) ---
         if (Game.currentThemeIndex === 2) { 
-            // TEMA GHIACCIO: Riflesso morbido anti-abbagliamento coerente con gli altri biomi
-            activeMats.rock.shininess = 10;
-            activeMats.rock.specular.setHex(0x0b1622);
-            activeMats.rock.emissive.setHex(0x010408);
-            activeMats.dirt.emissive.setHex(0x010306);
-            activeMats.grass.emissive.setHex(0x01050a);
-            activeMats.wall.emissive.setHex(0x010306);
+            // TEMA GHIACCIO: Riflesso cristallino bilanciato (vivo ma senza abbagliare)
+            activeMats.rock.shininess = 15;
+            activeMats.rock.specular.setHex(0x13263a);
+            activeMats.rock.emissive.setHex(0x020710);
+            activeMats.dirt.emissive.setHex(0x02050b);
+            activeMats.grass.emissive.setHex(0x020812);
+            activeMats.wall.emissive.setHex(0x02050b);
         } else if (Game.currentThemeIndex === 1) {
             // TEMA LAVA: Basalto scuro non sovraesposto che fa risaltare al massimo i cerchi rossi nemici e il magma
             activeMats.rock.shininess = 12;
@@ -12829,15 +12963,15 @@ class GameMap {
                             `
                         );
                     };
-                    cachedIceMat.color.setHex(0x88b4d4);
-                    cachedIceMat.emissive.setHex(0x05182c);
-                    cachedIceMat.emissiveIntensity = 0.12;
-                    cachedIceMat.opacity = 0.90;
+                    cachedIceMat.color.setHex(0xaad2ee);
+                    cachedIceMat.emissive.setHex(0x082442);
+                    cachedIceMat.emissiveIntensity = 0.17;
+                    cachedIceMat.opacity = 0.91;
                     if (isTouchDevice) {
-                        cachedIceMat.shininess = 28;
-                        cachedIceMat.specular.setHex(0x284b66);
+                        cachedIceMat.shininess = 46;
+                        cachedIceMat.specular.setHex(0x467ca3);
                     } else {
-                        cachedIceMat.roughness = 0.42;
+                        cachedIceMat.roughness = 0.28;
                         cachedIceMat.metalness = 0.04;
                     }
                     cachedIceMat.customProgramCacheKey = () => 'pit_ice_v11' + (isTouchDevice ? '_m' : '_d');
@@ -12895,21 +13029,20 @@ class GameMap {
                             float scratches = pow(clamp(0.5 + 0.5 * sin(scratchCoord), 0.0, 1.0), 14.0) * 0.38
                                             + pow(clamp(0.5 + 0.5 * cos(scratchCoord2), 0.0, 1.0), 16.0) * 0.28;
                             scratches *= smoothstep(0.25, 0.75, sheetNoise);
-
-                            // Palette Ghiaccio Dark-Fantasy: blu abisso, azzurro artico morbido e venature mai accecanti
-                            vec3 deepSlabCol    = vec3(0.06, 0.22, 0.42);
-                            vec3 midGlacierCol  = vec3(0.16, 0.38, 0.60);
-                            vec3 frostedSlabCol = vec3(0.32, 0.54, 0.72);
-                            vec3 snowRimeCol    = vec3(0.48, 0.68, 0.84);
+// Palette Ghiaccio Bilanciata: azzurro ghiacciaio nitido e venature brillanti ma riposanti
+                            vec3 deepSlabCol    = vec3(0.08, 0.30, 0.55);
+                            vec3 midGlacierCol  = vec3(0.24, 0.52, 0.78);
+                            vec3 frostedSlabCol = vec3(0.48, 0.70, 0.86);
+                            vec3 snowRimeCol    = vec3(0.70, 0.84, 0.94);
 
                             vec3 slabCol = mix(deepSlabCol, midGlacierCol, smoothstep(0.08, 0.52, frostBody));
                             slabCol = mix(slabCol, frostedSlabCol, smoothstep(0.45, 0.85, frostBody));
-                            slabCol = mix(slabCol, coldIceTex * 0.58, 0.30);
-                            slabCol = mix(slabCol, snowRimeCol, snowRime * 0.35);
+                            slabCol = mix(slabCol, coldIceTex * 0.70, 0.32);
+                            slabCol = mix(slabCol, snowRimeCol, snowRime * 0.40);
 
-                            // Ombra interna 3D blu abisso della crepa + venature cristalline azzurre non abbaglianti
-                            slabCol = mix(slabCol, vec3(0.03, 0.09, 0.18), clamp(depthWall * 0.65 + crackBevel * 0.55, 0.0, 0.78) * (1.0 - crackMask));
-                            slabCol = mix(slabCol, vec3(0.56, 0.76, 0.90), clamp(crackMask * 0.75 + scratches * 0.50, 0.0, 0.82));
+                            // Ombra interna 3D blu abisso della crepa + venature cristalline nitide
+                            slabCol = mix(slabCol, vec3(0.03, 0.10, 0.20), clamp(depthWall * 0.65 + crackBevel * 0.55, 0.0, 0.78) * (1.0 - crackMask));
+                            slabCol = mix(slabCol, vec3(0.76, 0.90, 0.98), clamp(crackMask * 0.82 + scratches * 0.58, 0.0, 0.88));
 
                             // Alone di pressione sotto i passi del giocatore
                             float stepFrost = 0.0;
@@ -12918,26 +13051,26 @@ class GameMap {
                                 if (iDist < 65.0) {
                                     float iRing = exp(-abs(iDist - 12.0) * 0.26) * 0.58 + exp(-iDist * 0.055) * 0.48;
                                     stepFrost = clamp(iRing * (0.58 + 0.42 * crackMask), 0.0, 1.0) * uPlayerPit.w;
-                                    slabCol = mix(slabCol, vec3(0.52, 0.74, 0.90), stepFrost * 0.50);
+                                    slabCol = mix(slabCol, vec3(0.68, 0.86, 0.96), stepFrost * 0.55);
                                 }
                             }
 
                             diffuseColor.rgb = slabCol;
                             totalEmissiveRadiance = mix(
-                                vec3(0.01, 0.04, 0.09),
-                                vec3(0.08, 0.22, 0.38),
-                                clamp(snowRime * 0.40 + crackMask * 0.65 + scratches * 0.40 + stepFrost * 0.60, 0.0, 1.0)
-                            ) * 0.18;
+                                vec3(0.02, 0.06, 0.14),
+                                vec3(0.13, 0.32, 0.52),
+                                clamp(snowRime * 0.42 + crackMask * 0.70 + scratches * 0.45 + stepFrost * 0.65, 0.0, 1.0)
+                            ) * 0.23;
 
-                            float slabOpacity = mix(0.78, 0.92, frostBody);
-                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.94), 0.78, 0.94);
+                            float slabOpacity = mix(0.78, 0.93, frostBody);
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.95), 0.78, 0.95);
                             `
                         ).replace(
                             '#include <dithering_fragment>',
                             `
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.48) {
-                                float compIce = 0.48 + (maxIceC - 0.48) / (1.0 + (maxIceC - 0.48) * 3.5);
+                            if (maxIceC > 0.64) {
+                                float compIce = 0.64 + (maxIceC - 0.64) / (1.0 + (maxIceC - 0.64) * 3.2);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -13534,8 +13667,8 @@ class GameMap {
                                 float frostNoise = sin(uArc * 3.0) * 0.08 + cos(uArc * 7.0 + 1.2) * 0.05 + sin(uArc * 11.0) * 0.03;
                                 float rimeEdge = 1.0 - smoothstep(0.18 + frostNoise, 0.60 + frostNoise, d);
                                 float crystalGlint = smoothstep(0.05, 0.16, d) * (1.0 - smoothstep(0.16, 0.32, d));
-                                vec3 rimeCol = mix(vec3(0.18, 0.36, 0.54), vec3(0.42, 0.62, 0.78), clamp(rimeEdge * 0.60 + crystalGlint * 0.30, 0.0, 1.0));
-                                float rimeAlpha = clamp(rimeEdge * 0.50, 0.0, 0.55) * deepFade;
+                                vec3 rimeCol = mix(vec3(0.26, 0.50, 0.70), vec3(0.60, 0.78, 0.92), clamp(rimeEdge * 0.62 + crystalGlint * 0.32, 0.0, 1.0));
+                                float rimeAlpha = clamp(rimeEdge * 0.58, 0.0, 0.64) * deepFade;
                                 diffuseColor = vec4(rimeCol, rimeAlpha);
                             `)}
                             `
