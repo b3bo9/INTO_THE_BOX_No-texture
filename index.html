@@ -3912,7 +3912,15 @@ const SkinSystem = {
 
     buildHeroModel() {
         if (!this.worldGroup) return;
-        if (this.heroGroup) this.worldGroup.remove(this.heroGroup);
+        if (this.heroGroup) {
+            this.heroGroup.traverse(c => {
+                if ((c.isMesh || c.isSprite) && c.material && (typeof SharedMatSet === 'undefined' || !SharedMatSet.has(c.material))) {
+                    if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+                    else c.material.dispose();
+                }
+            });
+            this.worldGroup.remove(this.heroGroup);
+        }
 
         let bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7, metalness: 0.1, map: CHAR_GRUNGE_TEX });
         let gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.5 });
@@ -4482,6 +4490,23 @@ const DeathSceneSystem = {
 
     clearStageActors() {
         if (!this.stageGroup) return;
+        const cachedPlayerGeos = new Set();
+        if (typeof PlayerGeometryBuilder !== 'undefined' && PlayerGeometryBuilder.cache) {
+            Object.values(PlayerGeometryBuilder.cache).forEach(entry => {
+                if (entry) Object.values(entry).forEach(g => { if (g) cachedPlayerGeos.add(g); });
+            });
+        }
+        this.stageGroup.traverse(c => {
+            if (c.isMesh || c.isSprite) {
+                if (c.geometry && !c.geometry._isGlobalCached && !cachedPlayerGeos.has(c.geometry) && (typeof SharedGeoSet === 'undefined' || !SharedGeoSet.has(c.geometry))) {
+                    c.geometry.dispose();
+                }
+                if (c.material && !c.material._isGlobalCached && (typeof SharedMatSet === 'undefined' || !SharedMatSet.has(c.material))) {
+                    if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+                    else c.material.dispose();
+                }
+            }
+        });
         for (let i = this.stageGroup.children.length - 1; i >= 0; i--) {
             this.stageGroup.remove(this.stageGroup.children[i]);
         }
@@ -16161,6 +16186,7 @@ class Player extends Entity {
             for (let i = 0; i < this.dashGhosts.length; i++) {
                 this.dashGhosts[i].life = 0;
                 this.dashGhosts[i].mesh.visible = false;
+                if (this.dashGhosts[i].mat) this.dashGhosts[i].mat.dispose();
                 Game.scene.remove(this.dashGhosts[i].mesh);
             }
         }
@@ -16179,6 +16205,24 @@ class Player extends Entity {
             Game.scene.remove(this.auraGlow);
         }
         if (this.mesh) {
+            const cachedPlayerGeos = new Set();
+            if (typeof PlayerGeometryBuilder !== 'undefined' && PlayerGeometryBuilder.cache) {
+                Object.values(PlayerGeometryBuilder.cache).forEach(entry => {
+                    if (entry) Object.values(entry).forEach(g => { if (g) cachedPlayerGeos.add(g); });
+                });
+            }
+            const sharedHalo = window._bloodHaloAssets || {};
+            this.mesh.traverse(c => {
+                if (c.isMesh || c.isSprite) {
+                    if (c.geometry && !c.geometry._isGlobalCached && !cachedPlayerGeos.has(c.geometry) && !SharedGeoSet.has(c.geometry) && c.geometry !== sharedHalo.ringGeo && c.geometry !== sharedHalo.flameGeo && c.geometry !== window.GLOBAL_TELEGRAPH_GEO) {
+                        c.geometry.dispose();
+                    }
+                    if (c.material && !c.material._isGlobalCached && !SharedMatSet.has(c.material) && c.material !== sharedHalo.ringMat && c.material !== sharedHalo.flameMat && c.material !== SharedMat.purpleCrystal) {
+                        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+                        else c.material.dispose();
+                    }
+                }
+            });
             Game.scene.remove(this.mesh);
         }
     }
@@ -17022,18 +17066,21 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
             let isIce = (Game.currentThemeIndex === 2);
             
-            // 2. FISICA DEL GHIACCIO: Inerzia e Scivolamento
+            // 2. FISICA DEL GHIACCIO: Inerzia e Scivolamento con soglia di arresto pulita
+            let slideSpeed = 0;
             if (inPit && isIce) {
                 if (this.slideDx === undefined) { this.slideDx = 0; this.slideDy = 0; }
-                // Inerzia: accelera e frena molto lentamente (effetto scivoloso)
                 this.slideDx += (inputDx - this.slideDx) * dt * 1.5;
                 this.slideDy += (inputDy - this.slideDy) * dt * 1.5;
+                slideSpeed = Math.sqrt(this.slideDx * this.slideDx + this.slideDy * this.slideDy);
+                if (inputLen === 0 && slideSpeed < 0.06) {
+                    this.slideDx = 0;
+                    this.slideDy = 0;
+                    slideSpeed = 0;
+                }
                 dx = this.slideDx;
                 dy = this.slideDy;
-                
-                // La velocità scala in base allo slancio accumulato
-                let slideSpeed = Math.sqrt(dx*dx + dy*dy);
-                currentSpeed *= Math.max(0.15, slideSpeed); 
+                currentSpeed *= Math.max(0.15, slideSpeed);
             } else {
                 this.slideDx = inputDx;
                 this.slideDy = inputDy;
@@ -17043,29 +17090,31 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
             let isMoving = (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05);
 
-            // Aggiorna l'uniform GPU per le minionde in acqua e la scia magmatica nella lava deformate realisticamente lungo il movimento
+            // Aggiorna l'uniform GPU per le minionde in acqua e la scia magmatica nella lava
             this.updatePitRipplesUniform(dt, isMoving, dx, dy, inPit, isIce);
 
             // 3. FISICA E AUDIO AMBIENTALE ACQUA / LAVA / GHIACCIO + ORME RESIDUE
             if (inPit) {
                 if (!isIce) {
                     currentSpeed *= 0.35;
-                    this.wetFootprintTimer = 2.4; // Resti bagnato/incandescente per 2.4s quando esci dalla fossa!
+                    this.wetFootprintTimer = 2.4;
                     this.wetFootprintTheme = Game.currentThemeIndex;
                 }
                 let envType = Game.currentThemeIndex === 0 ? 'water' : (Game.currentThemeIndex === 1 ? 'lava' : 'ice');
                 AudioEngine.playEnvironmentSound(envType, isMoving, dt);
 
-                // DERAPATA SUL GHIACCIO: se cambi direzione bruscamente mentre scivoli, sollevi schegge di brina
-                if (isIce && inputLen > 0.1 && isMoving && Game.frameCount % (isTouchDevice ? 4 : 2) === 0) {
-                    let driftDot = inputDx * this.slideDx + inputDy * this.slideDy;
-                    if (driftDot < 0.55) {
+                // DERAPATA SUL GHIACCIO OTTIMIZZATA: zero gravità/rimbalzi CPU, bassa frequenza e niente overdraw
+                if (isIce && !AppSettings.isLow && inputLen > 0.1 && slideSpeed > 0.38 && Game.frameCount % (isTouchDevice ? 9 : 6) === 0) {
+                    let driftDot = (inputDx * this.slideDx + inputDy * this.slideDy) / slideSpeed;
+                    if (driftDot < 0.45) {
                         let frost = Game.getParticle();
-                        frost.spawn(this.x + MathUtils.randomRange(-6, 6), 3, this.y + MathUtils.randomRange(-6, 6), SharedMat.spriteWhite, 'spark');
-                        frost.vx = -this.slideDx * 140 + MathUtils.randomRange(-40, 40);
-                        frost.vz = -this.slideDy * 140 + MathUtils.randomRange(-40, 40);
-                        frost.vy = MathUtils.randomRange(40, 95);
-                        frost.baseSize = MathUtils.randomRange(9, 15);
+                        frost.spawn(this.x + MathUtils.randomRange(-4, 4), 2.5, this.y + MathUtils.randomRange(-4, 4), SharedMat.spriteWhite, 'trail');
+                        frost.vx = -this.slideDx * 95 + MathUtils.randomRange(-20, 20);
+                        frost.vz = -this.slideDy * 95 + MathUtils.randomRange(-20, 20);
+                        frost.vy = MathUtils.randomRange(18, 42);
+                        frost.baseSize = MathUtils.randomRange(6, 10);
+                        frost.life = 0.18;
+                        frost.maxLife = 0.18;
                     }
                 }
             } else if (this.wetFootprintTimer > 0) {
@@ -17078,7 +17127,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 
                 // --- EFFETTI VISIVI CAMMINATA E REAZIONE DEI LIQUIDI ---
                 let hasRelicStep = (this.modifiers.miserPact || this.modifiers.fireTrail || this.modifiers.dashLightning || this.modifiers.explosiveShield);
-                let stepRate = inPit ? (isTouchDevice ? 4 : 3) : (hasRelicStep ? (isTouchDevice ? 4 : 3) : 6);
+                let stepRate = inPit ? (isIce ? (isTouchDevice ? 10 : 7) : (isTouchDevice ? 4 : 3)) : (hasRelicStep ? (isTouchDevice ? 4 : 3) : 6);
                 if (Game.frameCount % stepRate === 0) {
                     if (inPit) {
                         let moveAng = Math.atan2(dy, dx);
@@ -17094,7 +17143,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                             drop.baseSize = MathUtils.randomRange(4.5, 7.5);
                             drop.life = 0.20; drop.maxLife = 0.20;
                         } else if (Game.currentThemeIndex === 1) {
-                            // LAVA: Bolle viscose di magma denso e sbuffo caldo (zero strisce/laser ad alta velocità)
+                            // LAVA: Bolle viscose di magma denso e sbuffo caldo
                             let blob = Game.getParticle();
                             let bAng = moveAng + Math.PI + MathUtils.randomRange(-1.1, 1.1);
                             let bSpd = MathUtils.randomRange(16, 42);
@@ -17111,8 +17160,16 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                                 fume.baseSize = MathUtils.randomRange(14, 20);
                                 fume.vy = MathUtils.randomRange(14, 26);
                             }
-                        } else {
-                            Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteWhite, 'dust');
+                        } else if (!AppSettings.isLow && slideSpeed > 0.25) {
+                            // GHIACCIO: Piccola scia di brina compatta a basso costo GPU (niente nuvole 'dust' giganti)
+                            let iceP = Game.getParticle();
+                            iceP.spawn(this.x + MathUtils.randomRange(-4, 4), 2.0, this.y + MathUtils.randomRange(-4, 4), SharedMat.spriteWhite, 'trail');
+                            iceP.vx = -dx * 35;
+                            iceP.vz = -dy * 35;
+                            iceP.vy = MathUtils.randomRange(8, 18);
+                            iceP.baseSize = MathUtils.randomRange(7, 10);
+                            iceP.life = 0.22;
+                            iceP.maxLife = 0.22;
                         }
                     } else if (this.wetFootprintTimer > 0) {
                         // ORME UMIDE / BRACI APPENA USCITO DALLA FOSSA
