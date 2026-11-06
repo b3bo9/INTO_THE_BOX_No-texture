@@ -1777,14 +1777,15 @@ const Haptics = {
 
 const AudioEngine = {
     ctx: null, musicNode: null, noiseBuffer: null, initialized: false, musicMuted: false, sfxMuted: false,
-        menuBGM: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
-    gameBGM: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
-    bossBGM: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
+    menuBGM: new Audio('The_Iron_Pulse.mp3'),
+    gameBGM: new Audio('Gameplay.mp3'),
+    bossBGM: new Audio('Boss.mp3'),
+    countdownSFX: new Audio('countdown.mp3'),
+    victorySFX: new Audio('Vittoria_Piano.mp3'),
     transitionSFX: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
     deathSFX: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
     gameOverSFX: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
     uiClickSFX: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
-    countdownSFX: { play() { return Promise.resolve(); }, pause() {}, load() {}, muted: false, volume: 1, currentTime: 0 },
     _menuFade: null, _gameFade: null, _bossFade: null,
     lastHitTime: 0, hitCount: 0, lastShootTime: 0, shootCount: 0,
     // ---> AGGIUNGI QUESTO BLOCCO <---
@@ -1830,12 +1831,26 @@ const AudioEngine = {
         this.masterCompressor.release.setValueAtTime(0.25, this.ctx.currentTime);
         this.masterCompressor.connect(this.ctx.destination);
         
-        // FIX LATENZA ANDROID: Forza il caricamento in RAM delle musiche base
-        if (isTouchDevice) {
+        // Configurazione e Pre-caricamento tracce audio
+        this.menuBGM.loop = true;
+        this.gameBGM.loop = true;
+        this.bossBGM.loop = true;
+        this.countdownSFX.loop = false;
+        this.victorySFX.loop = false;
+
+        this.menuBGM.preload = 'auto';
+        this.gameBGM.preload = 'auto';
+        this.bossBGM.preload = 'auto';
+        this.countdownSFX.preload = 'auto';
+        this.victorySFX.preload = 'auto';
+
+        try {
+            this.menuBGM.load();
             this.gameBGM.load();
             this.bossBGM.load();
-            this.transitionSFX.load();
-        }
+            this.countdownSFX.load();
+            this.victorySFX.load();
+        } catch(e) {}
         
       this.createNoiseBuffer();
         this.prebakeAudioBuffers();
@@ -1855,19 +1870,25 @@ const AudioEngine = {
         }
     },
     toggleMusic() {
-        this.musicMuted = !this.musicMuted; 
-        if (this.musicMuted) {
-            this.menuBGM.muted = true; this.gameBGM.muted = true; this.bossBGM.muted = true;
-        } else {
-            if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-            this.menuBGM.muted = false; this.gameBGM.muted = false; this.bossBGM.muted = false;
+        this.musicMuted = !this.musicMuted; 
+        if (this.musicMuted) {
+            this.menuBGM.muted = true; this.gameBGM.muted = true; this.bossBGM.muted = true;
+            this.menuBGM.pause(); this.gameBGM.pause(); this.bossBGM.pause();
+        } else {
+            if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            this.menuBGM.muted = false; this.gameBGM.muted = false; this.bossBGM.muted = false;
             // Se sei nel menu e togli il muto, fai ripartire la musica
             if(Game.state === 'MENU' && this.musicNode === null) this.playMenuMusic();
-        }
-    },
+            else if(Game.state === 'PLAYING') {
+                if (Game.isBossFloor) this.playBossMusic(); else this.playGameMusic();
+            }
+        }
+    },
     toggleSFX() {
         this.sfxMuted = !this.sfxMuted;
         if (!this.sfxMuted && this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (this.countdownSFX) this.countdownSFX.muted = this.sfxMuted;
+        if (this.victorySFX) this.victorySFX.muted = this.sfxMuted;
     },
     createNoiseBuffer() {
         let bufferSize = this.ctx.sampleRate * 2; 
@@ -2161,8 +2182,31 @@ const AudioEngine = {
             osc.stop(t + 0.04);
         } catch(e) {}
     },
-        playCountdown() {
-        if (this.sfxMuted || !this.ctx || this.ctx.state === 'suspended') return;
+    playCountdown(sec) {
+        if (this.sfxMuted) return;
+        try {
+            if (this.countdownSFX) {
+                let isLongSeq = !isNaN(this.countdownSFX.duration) && this.countdownSFX.duration > 2.0;
+                if (isLongSeq) {
+                    if (sec === undefined || sec <= 3) {
+                        if (this.countdownSFX.paused || this.countdownSFX.ended || this.countdownSFX.currentTime === 0) {
+                            this.countdownSFX.currentTime = 0;
+                            let p = this.countdownSFX.play();
+                            if (p !== undefined) p.catch(() => {});
+                            return;
+                        }
+                    }
+                    if (!this.countdownSFX.paused) return;
+                } else {
+                    this.countdownSFX.currentTime = 0;
+                    let p = this.countdownSFX.play();
+                    if (p !== undefined) p.catch(() => {});
+                    return;
+                }
+            }
+        } catch(e) {}
+        // Fallback sintetizzato WebAudio
+        if (!this.ctx || this.ctx.state === 'suspended') return;
         try {
             let t = this.ctx.currentTime;
             let osc = this.ctx.createOscillator();
@@ -2175,6 +2219,14 @@ const AudioEngine = {
             gain.connect(this.masterCompressor ? this.masterCompressor : this.ctx.destination);
             osc.start(t);
             osc.stop(t + 0.14);
+        } catch(e) {}
+    },
+    stopCountdown() {
+        try {
+            if (this.countdownSFX) {
+                this.countdownSFX.pause();
+                this.countdownSFX.currentTime = 0;
+            }
         } catch(e) {}
     },
 playCoin() {
@@ -2353,9 +2405,10 @@ playCoin() {
         }
     },
   
- playMenuMusic() {
+    playMenuMusic() {
         if (this.musicMuted || this.musicNode) return;
         this.stopGameMusic(); this.stopBossMusic();
+        this.gameBGM.pause(); this.bossBGM.pause();
         clearInterval(this._menuFade);
         this.menuBGM.volume = 0;
         this.menuBGM.currentTime = 0; 
@@ -2366,7 +2419,7 @@ playCoin() {
         this._menuFade = setInterval(() => {
             let prev = this.menuBGM.volume;
             if(prev < 0.4) {
-                this.menuBGM.volume = Math.min(0.4, prev + 0.05);
+                try { this.menuBGM.volume = Math.min(0.4, prev + 0.05); } catch(e){}
                 if (this.menuBGM.volume === prev) clearInterval(this._menuFade);
             } else clearInterval(this._menuFade);
         }, 100);
@@ -2377,14 +2430,15 @@ playCoin() {
         this._menuFade = setInterval(() => {
             let prev = this.menuBGM.volume;
             if(prev > 0.05) {
-                this.menuBGM.volume = Math.max(0, prev - 0.05);
+                try { this.menuBGM.volume = Math.max(0, prev - 0.05); } catch(e){}
                 if (this.menuBGM.volume === prev) { this.menuBGM.pause(); this.musicNode = null; clearInterval(this._menuFade); }
-            } else { this.menuBGM.volume = 0; this.menuBGM.pause(); this.musicNode = null; clearInterval(this._menuFade); }
+            } else { try { this.menuBGM.volume = 0; } catch(e){} this.menuBGM.pause(); this.musicNode = null; clearInterval(this._menuFade); }
         }, 100);
     },
     playGameMusic() {
         if (this.musicMuted) return;
         this.stopMenuMusic(); this.stopBossMusic();
+        this.menuBGM.pause(); this.bossBGM.pause();
         clearInterval(this._gameFade);
         this.gameBGM.volume = 0;
         let p = this.gameBGM.play();
@@ -2392,7 +2446,7 @@ playCoin() {
         this._gameFade = setInterval(() => {
             let prev = this.gameBGM.volume;
             if(prev < 0.3) {
-                this.gameBGM.volume = Math.min(0.3, prev + 0.05);
+                try { this.gameBGM.volume = Math.min(0.3, prev + 0.05); } catch(e){}
                 if (this.gameBGM.volume === prev) clearInterval(this._gameFade);
             } else clearInterval(this._gameFade);
         }, 100);
@@ -2402,14 +2456,15 @@ playCoin() {
         this._gameFade = setInterval(() => {
             let prev = this.gameBGM.volume;
             if(prev > 0.05) {
-                this.gameBGM.volume = Math.max(0, prev - 0.05);
+                try { this.gameBGM.volume = Math.max(0, prev - 0.05); } catch(e){}
                 if (this.gameBGM.volume === prev) { this.gameBGM.pause(); clearInterval(this._gameFade); }
-            } else { this.gameBGM.volume = 0; this.gameBGM.pause(); clearInterval(this._gameFade); }
+            } else { try { this.gameBGM.volume = 0; } catch(e){} this.gameBGM.pause(); clearInterval(this._gameFade); }
         }, 100);
     },
     playBossMusic() {
         if (this.musicMuted) return;
         this.stopMenuMusic(); this.stopGameMusic();
+        this.menuBGM.pause(); this.gameBGM.pause();
         clearInterval(this._bossFade);
         this.bossBGM.volume = 0;
         this.bossBGM.currentTime = 0; 
@@ -2418,7 +2473,7 @@ playCoin() {
         this._bossFade = setInterval(() => {
             let prev = this.bossBGM.volume;
             if(prev < 0.4) {
-                this.bossBGM.volume = Math.min(0.4, prev + 0.05);
+                try { this.bossBGM.volume = Math.min(0.4, prev + 0.05); } catch(e){}
                 if (this.bossBGM.volume === prev) clearInterval(this._bossFade);
             } else clearInterval(this._bossFade);
         }, 100);
@@ -2428,15 +2483,20 @@ playCoin() {
         this._bossFade = setInterval(() => {
             let prev = this.bossBGM.volume;
             if(prev > 0.05) {
-                this.bossBGM.volume = Math.max(0, prev - 0.05);
+                try { this.bossBGM.volume = Math.max(0, prev - 0.05); } catch(e){}
                 if (this.bossBGM.volume === prev) { this.bossBGM.pause(); clearInterval(this._bossFade); }
-            } else { this.bossBGM.volume = 0; this.bossBGM.pause(); clearInterval(this._bossFade); }
+            } else { try { this.bossBGM.volume = 0; } catch(e){} this.bossBGM.pause(); clearInterval(this._bossFade); }
         }, 100);
     },
     stopAllMusic() {
-        this.stopMenuMusic();
-        this.stopGameMusic();
-        this.stopBossMusic();
+        clearInterval(this._menuFade);
+        clearInterval(this._gameFade);
+        clearInterval(this._bossFade);
+        this.menuBGM.pause(); try { this.menuBGM.volume = 0; } catch(e){} this.musicNode = null;
+        this.gameBGM.pause(); try { this.gameBGM.volume = 0; } catch(e){}
+        this.bossBGM.pause(); try { this.bossBGM.volume = 0; } catch(e){}
+        this.stopCountdown();
+        if (this.victorySFX) { this.victorySFX.pause(); this.victorySFX.currentTime = 0; }
     },
        playShoot(type, isCrit = false) {
         if (!this.ctx || this.sfxMuted) return; if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -2521,8 +2581,18 @@ playCoin() {
     },
 
         
-       playLevelCompleteMusic() {
-        if (this.sfxMuted || !this.ctx || this.ctx.state === 'suspended') return;
+    playLevelCompleteMusic() {
+        if (this.sfxMuted) return;
+        try {
+            if (this.victorySFX) {
+                this.victorySFX.currentTime = 0;
+                let p = this.victorySFX.play();
+                if (p !== undefined) p.catch(() => {});
+                return;
+            }
+        } catch(e) {}
+        // Fallback sintetizzato se il file non Ã¨ disponibile
+        if (!this.ctx || this.ctx.state === 'suspended') return;
         try {
             const notes = [523.25, 659.25, 783.99, 1046.50];
             let t = this.ctx.currentTime;
@@ -2540,6 +2610,9 @@ playCoin() {
                 osc.stop(t + i * 0.08 + 0.35);
             });
         } catch(e) {}
+    },
+    playVictoryMusic() {
+        this.playLevelCompleteMusic();
     },
        
     playDescendSound() {
@@ -10977,10 +11050,11 @@ startGame(diffMult) {
             // Aggiunta Countdown Visivo e Sonoro per il Boss
             if (oldSec !== newSec && newSec > 0) {
                 Game.getFloatingText().spawn(this.player.x, this.player.y, newSec.toString(), '#00DDFF', 60, true);
-                AudioEngine.playCountdown();
+                AudioEngine.playCountdown(newSec);
             }
 
-            if (this.bossDefeatedTimer <= 0 && this.state === 'PLAYING') { 
+            if (this.bossDefeatedTimer <= 0 && this.state === 'PLAYING') {
+                AudioEngine.stopCountdown(); 
                 // ORDINE REWORK: Attiva prima l'animazione di discesa, non la UI!
                 this.state = 'WARPING_OUT';
                 this.warpTimer = 1.2; 
@@ -10999,6 +11073,7 @@ startGame(diffMult) {
             // BUGFIX 1: Annulla il countdown se il numero di nemici sale sopra 3 (es. Slime che si divide)
             if (this.floorEndTriggered && enemiesLeft > 3) {
                 this.floorEndTriggered = false;
+                AudioEngine.stopCountdown();
                 Game.getFloatingText().spawn(this.player.x, this.player.y, "PORTALE INSTABILE!", '#ff3300', 40, true);
             }
 
@@ -11023,12 +11098,13 @@ startGame(diffMult) {
                 
                 if (oldSec !== newSec && newSec > 0) {
                     Game.getFloatingText().spawn(this.player.x, this.player.y, newSec.toString(), '#00DDFF', 60, true);
-                    AudioEngine.playCountdown();
+                    AudioEngine.playCountdown(newSec);
                 }
                 
                 // Il warp scatta SOLO quando il timer arriva fisicamente a zero.
                 if (this.floorEndTimer <= 0) {
                     this.floorEndTriggered = false; 
+                    AudioEngine.stopCountdown();
                     this.state = 'WARPING_OUT';
                     this.warpTimer = 1.2; 
                     this.warpOutInitialized = false;
@@ -23050,6 +23126,7 @@ history.pushState(null, null, document.URL);
         mainMenu.classList.remove('hidden');
     };
     initScreen.addEventListener('click', handleInit);
+    initScreen.addEventListener('pointerdown', handleInit, { once: true });
 };
 </script>
 </body>
