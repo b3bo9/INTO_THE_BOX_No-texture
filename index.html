@@ -5942,15 +5942,76 @@ function createPlanetRingMaterial() {
             `
         );
     };
+   return mat;
+}
+
+function createNovaRingMaterial(hexColor = 0x00ddff) {
+    const mat = new THREE.MeshBasicMaterial({
+        color: hexColor,
+        transparent: true,
+        opacity: 0.90,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    mat.customProgramCacheKey = () => 'nova_smooth_wave_v2';
+    mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
+        shader.vertexShader = `
+            varying vec2 vNovaUv;
+        ` + shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `
+            #include <begin_vertex>
+            vNovaUv = uv;
+            `
+        );
+        shader.fragmentShader = `
+            uniform float uTime;
+            varying vec2 vNovaUv;
+        ` + shader.fragmentShader.replace(
+            '#include <color_fragment>',
+            `
+            #include <color_fragment>
+            vec3 baseCol = diffuseColor.rgb;
+            vec3 softCore = mix(baseCol * 1.35, vec3(1.0, 0.98, 1.0), 0.55);
+            vec3 deepAura = baseCol * 0.45;
+            float ang = vNovaUv.x * 6.2831853;
+
+            // Flusso energetico lento, dolce e continuo (zero seghettature o pixel)
+            float flow = 0.5 + 0.5 * sin(ang * 4.0 - uTime * 5.0 + cos(ang * 2.0 + uTime * 3.5));
+
+            if (vNovaUv.y <= 1.0) {
+                float r = vNovaUv.y;
+                // Campana gaussiana morbida centrata a r = 0.72 con lunga scia sfumata verso l'interno
+                float distToCrest = (r - 0.72) / 0.18;
+                float mainWave = exp(-distToCrest * distToCrest * 1.6);
+                float innerGlow = smoothstep(0.05, 0.68, r) * (1.0 - smoothstep(0.68, 0.95, r)) * 0.45;
+                float outerFade = 1.0 - smoothstep(0.82, 1.0, r);
+
+                float alpha = (mainWave * (0.78 + 0.22 * flow) + innerGlow) * outerFade * smoothstep(0.0, 0.18, r);
+                vec3 col = mix(deepAura, baseCol, smoothstep(0.15, 0.65, r));
+                col = mix(col, softCore, mainWave * (0.65 + 0.25 * flow));
+
+                diffuseColor = vec4(col, alpha * diffuseColor.a);
+            } else {
+                float h = vNovaUv.y - 1.0;
+                // Velo 3D verticale ultra-morbido che sfuma dolcemente verso l'alto
+                float softHeight = 0.65 + 0.30 * flow;
+                float vFade = max(0.0, 1.0 - (h / softHeight));
+                vFade = vFade * vFade * (3.0 - 2.0 * vFade);
+                float baseSoft = smoothstep(0.0, 0.15, h);
+
+                float alpha = vFade * baseSoft * 0.65;
+                vec3 col = mix(baseCol, softCore, (1.0 - h) * 0.55);
+                diffuseColor = vec4(col, alpha * diffuseColor.a);
+            }
+            `
+        );
+    };
     return mat;
 }
-// 2. Flash d'urto centrale + nuvola leggera di segatura o polvere di terracotta
-        if (!AppSettings.isLow) {
-            let pop = Game.getParticle();
-            pop.spawn(this.x, 14, this.y, isCrate ? SharedMat.spriteYellow : SharedMat.spriteWhite, 'nova');
-            pop.baseSize = 46 * this.originalScale;
-            pop.life = 0.11; pop.maxLife = 0.11;
-        }
+
 function createFireWallMaterials() {
     const wallMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
