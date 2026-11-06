@@ -12663,252 +12663,26 @@ class GameMap {
         liquidTex.repeat.set(mapRealWidth / 250, mapRealHeight / 250);
         liquidTex.needsUpdate = true;
 
-        if (!window.GLOBAL_PIT_MATS) window.GLOBAL_PIT_MATS = {};
+       if (!window.GLOBAL_PIT_MATS) window.GLOBAL_PIT_MATS = {};
         if (!window.GLOBAL_PIT_MATS[themeIdx]) {
             const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.15 : 0.62),
+                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.18 : 0.62),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (isTouchDevice) {
-                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 28 : 32);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x103444 : 0x183c58));
+                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 36 : 32);
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x16485e : 0x183c58));
             } else {
-                pitMatParams.roughness = pitRoughness;
+                pitMatParams.roughness = themeIdx === 0 ? 0.62 : pitRoughness;
                 pitMatParams.metalness = pitMetalness;
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v7_' + themeIdx + (isTouchDevice ? '_m' : '_d');
-            cachedPitMat.onBeforeCompile = (shader) => {
-                shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
-                shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
-                shader.uniforms.uPlayerPitDir = InteractiveGrassSystem.uniforms.uPlayerPitDir;
-                const hasMapDecode = THREE.ShaderChunk && THREE.ShaderChunk.map_fragment && THREE.ShaderChunk.map_fragment.includes('mapTexelToLinear');
-                const sampleWaterTex = (uvVar) => hasMapDecode ? `mapTexelToLinear(texture2D(map, ${uvVar}))` : `texture2D(map, ${uvVar})`;
-
-                shader.vertexShader = `
-                    uniform float uTime;
-                    uniform vec4 uPlayerPit;
-                    uniform vec4 uPlayerPitDir;
-                    varying vec2 vPitWPos;
-                ` + shader.vertexShader.replace(
-                    '#include <begin_vertex>',
-                    `
-                    #include <begin_vertex>
-                    vec4 wpPit = modelMatrix * vec4(transformed, 1.0);
-                    vPitWPos = wpPit.xz;
-                    transformed.y += sin(wpPit.x * 0.058 + uTime * 2.0) * cos(wpPit.z * 0.058 - uTime * 1.6) * 0.36;
-                    `
-                );
-                shader.fragmentShader = `
-                    uniform float uTime;
-                    uniform vec4 uPlayerPit;
-                    uniform vec4 uPlayerPitDir;
-                    varying vec2 vPitWPos;
-                ` + shader.fragmentShader.replace(
-                    '#include <emissivemap_fragment>',
-                    `
-                    #include <emissivemap_fragment>
-                    float texLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-
-                    // --- COORDINATE IDRODINAMICHE C-INFINITO CONTINUE (Zero cuciture o raggi dritti) ---
-                    vec2 relPos = vPitWPos - uPlayerPit.xy;
-                    float pDist = length(relPos);
-                    vec2 moveDir = uPlayerPitDir.xy;
-                    float dirLenSq = dot(moveDir, moveDir);
-                    moveDir = (dirLenSq < 0.001) ? vec2(1.0, 0.0) : (moveDir * inversesqrt(dirLenSq));
-                    vec2 perpDir = vec2(-moveDir.y, moveDir.x);
-
-                    float forward = dot(relPos, moveDir);
-                    float side    = dot(relPos, perpDir);
-                    float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
-                    float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
-
-                    // Transizione morbida C-infinito tra prua (forward > 0) e poppa (forward < 0)
-                    float smoothFront = forward / (14.0 + abs(forward));
-                    float behindSmooth = smoothstep(10.0, -16.0, forward);
-                    float asymScale = 1.0 + moveInt * (0.26 * smoothFront - 0.14);
-                    float kelvinBend = (side * side) * (0.0095 * moveInt) * behindSmooth;
-                    float wakeX = forward * asymScale + kelvinBend;
-                    float wakeY = side * (1.0 + 0.12 * moveInt);
-                    float effDist = sqrt(wakeX * wakeX + wakeY * wakeY + 1.0);
-
-                    // Vettore di rifrazione UV radiale generato dal passo del giocatore
-                    vec2 pitRippleGrad = vec2(0.0);
-                    if (uPlayerPit.w > 0.01 && pDist < 125.0) {
-                        vec2 radDir = relPos / (pDist + 1.5);
-                        float refWave = cos(effDist * 0.34 - uTime * mix(5.5, 9.5, moveInt));
-                        float refEnv = smoothstep(4.0, 14.0, pDist) * exp(-pDist * 0.032) * uPlayerPit.w;
-                        pitRippleGrad = radDir * (refWave * refEnv);
-                    }
-
-                    ${themeIdx === 0 ? `
-                    #ifdef USE_MAP
-                        vec2 wWarp = vec2(
-                            sin(vPitWPos.y * 0.058 + uTime * 2.1),
-                            cos(vPitWPos.x * 0.058 - uTime * 1.7)
-                        ) * 0.032 + pitRippleGrad * 0.028;
-                        vec2 uvWaterA = vPitWPos / 200.0 + vec2(uTime * 0.052, uTime * 0.090) + wWarp;
-                        vec2 uvWaterB = vPitWPos / 138.0 + vec2(-uTime * 0.042, uTime * 0.058) - wWarp * 0.90;
-                        vec3 wA = ${sampleWaterTex('uvWaterA')}.rgb;
-                        vec3 wB = ${sampleWaterTex('uvWaterB')}.rgb;
-                    #else
-                        vec3 wA = diffuseColor.rgb;
-                        vec3 wB = diffuseColor.rgb;
-                    #endif
-                        float pA = sqrt(clamp(dot(wA, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
-                        float pB = sqrt(clamp(dot(wB, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
-                        float rippleFactor = smoothstep(0.16, 0.78, pA * 0.65 + pB * 0.35);
-                        float crest = smoothstep(0.46, 0.82, pA * pB * 1.35);
-
-                        // Reticolo vivo di caustiche con rifrazione dinamica al passaggio del giocatore
-                        vec2 caustPos = vPitWPos + pitRippleGrad * 18.0;
-                        float c1 = sin(caustPos.x * 0.054 + uTime * 1.65 + sin(caustPos.y * 0.044 - uTime * 1.25));
-                        float c2 = cos(caustPos.y * 0.058 - uTime * 1.45 + cos(caustPos.x * 0.048 + uTime * 1.05));
-                        float caustic = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 2.6);
-
-                        vec3 rawTex = mix(wA, wB, 0.38);
-                        vec3 tintedTex = vec3(
-                            rawTex.r * 0.12 + rawTex.b * 0.05,
-                            rawTex.g * 0.46 + rawTex.b * 0.16,
-                            max(rawTex.b, rawTex.g * 0.85) * 0.68 + 0.03
-                        );
-                        vec3 deepLagoon = vec3(0.018, 0.105, 0.195);
-                        vec3 midSpring  = vec3(0.095, 0.435, 0.620);
-                        vec3 rampCol = mix(deepLagoon, midSpring, rippleFactor);
-
-                        diffuseColor.rgb = mix(rampCol, tintedTex, 0.46)
-                                         + vec3(0.14, 0.44, 0.48) * (crest * 0.48 + caustic * 0.32);
-                        totalEmissiveRadiance = mix(
-                            vec3(0.012, 0.055, 0.095),
-                            vec3(0.065, 0.250, 0.340),
-                            clamp(rippleFactor * 0.72 + caustic * 0.48, 0.0, 1.0)
-                        ) * 0.38;
-
-                        // ACQUA: Anelli idrodinamici concentrici, menisco d'immersione e scia di Kelvin curva
-                        if (uPlayerPit.w > 0.01 && pDist < 135.0) {
-                            float meniscus = exp(-abs(pDist - (10.8 + c1 * 1.1)) * 0.38) * (0.62 + 0.38 * moveInt);
-
-                            float freq = mix(0.31, 0.41, moveInt);
-                            float waveSpeed = mix(4.6, 10.6, moveInt) * mix(1.0, 1.28, clamp(spdRatio - 1.0, 0.0, 1.0));
-                            float wPhase1 = effDist * freq - uTime * waveSpeed + c1 * 0.45;
-                            float wPhase2 = effDist * (freq * 1.32) - uTime * (waveSpeed * 1.14) - c2 * 0.38;
-                            float waveComp = sin(wPhase1) * 0.64 + cos(wPhase2) * 0.36;
-
-                            float wakeTail = 1.0 + 0.68 * moveInt * behindSmooth * exp(-max(0.0, -forward) * 0.022);
-                            float ringEnv = smoothstep(5.0, 13.0, effDist) * exp(-effDist * 0.029) * wakeTail;
-
-                            float ringCrest = smoothstep(0.34, 0.88, waveComp) * ringEnv;
-                            float ringFoam = smoothstep(0.68, 0.96, waveComp) * ringEnv * (0.35 + 0.65 * moveInt);
-
-                            // Bracci curvi di Kelvin a poppa modulati in onde naturali (mai linee rigide)
-                            float backDist = max(0.0, -forward);
-                            float kelvinArm = abs(side) - (4.0 + pow(backDist + 1.0, 0.82) * 0.65 + c1 * 1.6);
-                            float kelvinGate = smoothstep(2.0, -10.0, forward) * exp(-backDist * 0.028) * moveInt;
-                            float kelvinWave = exp(-(kelvinArm * kelvinArm) * 0.055) * kelvinGate * (0.55 + 0.45 * sin(pDist * 0.36 - uTime * 8.2));
-
-                            // Archetto morbido di prua
-                            float bowArc = pDist - mix(13.0, 16.0, moveInt);
-                            float bowGate = smoothstep(-2.0, 8.0, forward) * exp(-(side * side) * 0.0038) * moveInt;
-                            float bowWave = exp(-(bowArc * bowArc) * 0.055) * bowGate;
-
-                            float totalCrest = clamp(ringCrest + kelvinWave * 0.68 + bowWave * 0.65 + meniscus * 0.55, 0.0, 1.0) * uPlayerPit.w;
-                            float totalFoam = clamp(ringFoam + meniscus * 0.65 + bowWave * 0.45 + kelvinWave * 0.38, 0.0, 1.0) * uPlayerPit.w;
-
-                            vec3 waveCyan = vec3(0.44, 0.86, 0.98);
-                            vec3 foamWhite = vec3(0.90, 0.98, 1.0);
-                            vec3 rippleCol = mix(waveCyan, foamWhite, totalFoam * 0.82);
-
-                            diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, totalCrest * 0.85);
-                            totalEmissiveRadiance += vec3(0.16, 0.48, 0.64) * totalCrest + vec3(0.24, 0.62, 0.78) * (totalFoam * 0.45);
-                        }
-                    ` : (themeIdx === 1 ? `
-                        // LAVA: Doppio campionamento convettivo di lava_water.png + spostamento viscoso delle placche
-                        float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
-                        float m2 = cos(vPitWPos.y * 0.044 - uTime * 0.70 + cos(vPitWPos.x * 0.038 + uTime * 0.52) * 1.4);
-                        float flow = 0.5 + 0.5 * m1 * m2;
-
-                    #ifdef USE_MAP
-                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.024;
-                        vec2 uvLavaA = vPitWPos / 220.0 + vec2(uTime * 0.018, uTime * 0.012) + lWarp;
-                        vec2 uvLavaB = vPitWPos / 155.0 + vec2(-uTime * 0.014, uTime * 0.019) - lWarp * 0.85;
-                        vec3 lA = ${sampleWaterTex('uvLavaA')}.rgb;
-                        vec3 lB = ${sampleWaterTex('uvLavaB')}.rgb;
-                        vec3 lavaTexCol = mix(lA, lB, 0.42);
-                        float lLumA = dot(lA, vec3(0.299, 0.587, 0.114));
-                        float lLumB = dot(lB, vec3(0.299, 0.587, 0.114));
-                        texLum = mix(lLumA, lLumB, 0.45);
-                    #else
-                        vec3 lavaTexCol = diffuseColor.rgb;
-                    #endif
-
-                        float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
-                        vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
-                        vec3 magmaCol = mix(vec3(0.95, 0.22, 0.02), vec3(1.0, 0.85, 0.24), smoothstep(0.48, 0.88, heat));
-                        magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
-                        float veinMask = smoothstep(0.32, 0.62, heat);
-                        diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
-                        totalEmissiveRadiance = mix(vec3(0.05, 0.01, 0.005), magmaCol * 1.28, veinMask);
-
-                        // INTERAZIONE LAVA VISCOSA (Zero effetto laser frontale: anelli magmatici pesanti e scia ribollente corta)
-                        if (uPlayerPit.w > 0.01 && pDist < 102.0) {
-                            // 1. Alone d'immersione e colletto di magma spostato attorno al giocatore
-                            float coreGlow = exp(-pDist * pDist * 0.0046) * (0.78 + 0.22 * sin(uTime * 3.4));
-                            float collarRadius = 12.2 + (flow - 0.5) * 3.4;
-                            float meniscusRing = exp(-abs(pDist - collarRadius) * 0.32) * (0.68 + 0.32 * moveInt);
-
-                            // 2. Onde concentriche viscose a bassa frequenza deformate dal flusso magmatico
-                            float lavaPhase = effDist * 0.27 - uTime * mix(3.6, 6.4, moveInt) + flow * 2.2;
-                            float lavaWave = smoothstep(0.30, 0.92, sin(lavaPhase));
-                            float lavaRings = lavaWave * smoothstep(7.0, 16.0, effDist) * exp(-effDist * 0.044) * (0.52 + 0.48 * moveInt);
-
-                            // 3. Scia magmatica corta e perturbata ESCLUSIVAMENTE dietro al giocatore (zero proiezione in avanti)
-                            float behindGate = smoothstep(1.5, -7.5, forward) * smoothstep(50.0, 9.0, -forward) * moveInt;
-                            float wobbledSide = side + m1 * 3.6 + sin(forward * 0.18 - uTime * 4.0) * 2.8;
-                            float trailWake = exp(-(wobbledSide * wobbledSide) * 0.0068) * behindGate * (0.55 + 0.45 * sin(forward * 0.24 + uTime * 5.0 + flow * 3.0));
-
-                            float moltenHeat = clamp(coreGlow * 0.82 + meniscusRing * 0.76 + lavaRings * 0.70 + trailWake * 0.72, 0.0, 1.0) * uPlayerPit.w;
-
-                            vec3 magmaDark = vec3(0.90, 0.20, 0.01);
-                            vec3 moltenGold = vec3(1.0, 0.86, 0.32);
-                            vec3 stepMagmaCol = mix(magmaDark, moltenGold, smoothstep(0.28, 0.86, moltenHeat));
-
-                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.90);
-                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.55);
-                        }
-                    ` : `
-                        vec2 dirFlow = vec2(0.4472, -0.8944);
-                        vec2 dirCross = vec2(0.8944, 0.4472);
-                        float along = dot(vPitWPos, dirFlow);
-                        float across = dot(vPitWPos, dirCross);
-                        float waveA = sin(across * 0.085 + sin(along * 0.030 - uTime * 1.9) * 1.4 - uTime * 0.6);
-                        float waveB = cos(along * 0.052 - uTime * 2.3 + sin(across * 0.065) * 1.1);
-                        float stream = pow(clamp(0.5 + 0.5 * waveA * waveB, 0.0, 1.0), 1.9);
-                        float flowMix = clamp(texLum * 0.48 + stream * 0.48, 0.0, 1.0);
-                        diffuseColor.rgb = mix(vec3(0.015, 0.06, 0.15), vec3(0.09, 0.40, 0.68), flowMix);
-                        totalEmissiveRadiance = mix(vec3(0.01, 0.05, 0.12), vec3(0.16, 0.56, 0.82), flowMix) * 0.62;
-                    `)}
-                    `
-                ).replace(
-                    '#include <dithering_fragment>',
-                    `
-                    ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.66' : '0.68'};
-                        float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                        if (maxC > capLim) {
-                            float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
-                            gl_FragColor.rgb *= (compressed / maxC);
-                        }
-                    ` : ''}
-                    #include <dithering_fragment>
-                    `
-                );
-            };
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v8_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v9_' + themeIdx + (isTouchDevice ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -12930,7 +12704,7 @@ class GameMap {
                     ${themeIdx === 0 ? `
                     float wSw1 = sin(wpPit.x * 0.068 + wpPit.z * 0.042 + uTime * 2.45);
                     float wSw2 = cos(wpPit.z * 0.074 - wpPit.x * 0.038 - uTime * 2.05);
-                    transformed.y += (wSw1 * 0.58 + wSw2 * 0.42) * 0.78;
+                    transformed.y += (wSw1 * 0.58 + wSw2 * 0.42) * 0.95;
                     ` : `
                     transformed.y += sin(wpPit.x * 0.058 + uTime * 2.0) * cos(wpPit.z * 0.058 - uTime * 1.6) * 0.36;
                     `}
@@ -12947,161 +12721,135 @@ class GameMap {
                     #include <emissivemap_fragment>
                     float texLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
 
-                    // --- COORDINATE IDRODINAMICHE C-INFINITO CONTINUE (Zero cuciture o raggi dritti) ---
+                    // --- COORDINATE RADIALI ISOTROPICHE (Zero rettangoli o coni che ruotano col personaggio) ---
                     vec2 relPos = vPitWPos - uPlayerPit.xy;
                     float pDist = length(relPos);
-                    vec2 moveDir = uPlayerPitDir.xy;
-                    float dirLenSq = dot(moveDir, moveDir);
-                    moveDir = (dirLenSq < 0.001) ? vec2(1.0, 0.0) : (moveDir * inversesqrt(dirLenSq));
-                    vec2 perpDir = vec2(-moveDir.y, moveDir.x);
-
-                    float forward = dot(relPos, moveDir);
-                    float side    = dot(relPos, perpDir);
                     float moveInt = clamp(uPlayerPit.z, 0.0, 1.0);
-                    float spdRatio = clamp(uPlayerPitDir.z, 0.0, 2.5);
 
-                    // Transizione morbida C-infinito tra prua (forward > 0) e poppa (forward < 0)
-                    float smoothFront = forward / (14.0 + abs(forward));
-                    float behindSmooth = smoothstep(10.0, -16.0, forward);
-                    float asymScale = 1.0 + moveInt * (0.26 * smoothFront - 0.14);
-                    float kelvinBend = (side * side) * (0.0095 * moveInt) * behindSmooth;
-                    float wakeX = forward * asymScale + kelvinBend;
-                    float wakeY = side * (1.0 + 0.12 * moveInt);
-                    float effDist = sqrt(wakeX * wakeX + wakeY * wakeY + 1.0);
+                    // Deformazione organica basata solo sulle coordinate mondo (non ruota mai quando giri il personaggio)
+                    float worldWobble = sin(vPitWPos.x * 0.13 + vPitWPos.y * 0.11 + uTime * 2.2) * 1.6
+                                      + cos(vPitWPos.x * 0.09 - vPitWPos.y * 0.14 - uTime * 1.8) * 1.2;
+                    float rDist = pDist + worldWobble;
 
-                    // Vettore di rifrazione UV radiale generato dal passo del giocatore
+                    // Leggera rifrazione radiale dell'acqua attorno ai piedi
                     vec2 pitRippleGrad = vec2(0.0);
-                    if (uPlayerPit.w > 0.01 && pDist < 125.0) {
-                        vec2 radDir = relPos / (pDist + 1.5);
-                        float refWave = cos(effDist * 0.34 - uTime * mix(5.5, 9.5, moveInt));
-                        float refEnv = smoothstep(4.0, 14.0, pDist) * exp(-pDist * 0.032) * uPlayerPit.w;
-                        pitRippleGrad = radDir * (refWave * refEnv);
+                    if (uPlayerPit.w > 0.01 && pDist < 72.0) {
+                        vec2 radDir = relPos / (pDist + 1.0);
+                        float refWave = cos(rDist * 0.42 - uTime * mix(4.2, 7.0, moveInt));
+                        float refEnv = smoothstep(4.0, 11.0, pDist) * exp(-pDist * 0.052) * uPlayerPit.w;
+                        pitRippleGrad = radDir * (refWave * refEnv * 0.65);
                     }
 
                     ${themeIdx === 0 ? `
-                        // ONDE 3D SCOLPITE E ACCENTUATE (Profilo trocoidale Gerstner: creste vive e ventri profondi)
-                        float ph1 = vPitWPos.x * 0.072 + vPitWPos.y * 0.048 + uTime * 2.35 + sin(vPitWPos.y * 0.032 - uTime * 1.15) * 0.85;
-                        float ph2 = vPitWPos.y * 0.082 - vPitWPos.x * 0.044 - uTime * 1.95 + cos(vPitWPos.x * 0.036 + uTime * 1.05) * 0.75;
-                        float ph3 = (vPitWPos.x - vPitWPos.y) * 0.095 + uTime * 2.85;
+                        // ONDE 3D AD ALTO CONTRASTO (Profilo Gerstner con ventri abissali scuri e creste nitide)
+                        float ph1 = vPitWPos.x * 0.075 + vPitWPos.y * 0.050 + uTime * 2.35 + sin(vPitWPos.y * 0.035 - uTime * 1.15) * 0.95;
+                        float ph2 = vPitWPos.y * 0.085 - vPitWPos.x * 0.046 - uTime * 1.95 + cos(vPitWPos.x * 0.038 + uTime * 1.05) * 0.85;
+                        float ph3 = (vPitWPos.x - vPitWPos.y) * 0.105 + uTime * 2.90;
 
-                        // Onde asimmetriche con creste appuntite e avvallamenti ampi
-                        float sw1 = sin(ph1 + 0.42 * sin(ph1));
-                        float sw2 = sin(ph2 + 0.38 * sin(ph2));
-                        float sw3 = cos(ph3 + 0.30 * cos(ph3));
+                        float sw1 = sin(ph1 + 0.48 * sin(ph1));
+                        float sw2 = sin(ph2 + 0.42 * sin(ph2));
+                        float sw3 = cos(ph3 + 0.35 * cos(ph3));
                         float swellHeight = sw1 * 0.46 + sw2 * 0.36 + sw3 * 0.18;
                         float swellNorm = clamp(0.5 + 0.5 * swellHeight, 0.0, 1.0);
 
-                        // Gradiente direzionale delle onde per chiaroscuro 3D e riflessi solari sulle creste
-                        float dSwX = cos(ph1) * 0.072 * 0.46 - cos(ph2) * 0.044 * 0.36 - sin(ph3) * 0.095 * 0.18;
-                        float dSwY = cos(ph1) * 0.048 * 0.46 + cos(ph2) * 0.082 * 0.36 + sin(ph3) * 0.095 * 0.18;
+                        // Gradiente 3D marcato per staccare il lato illuminato dal ventre in ombra
+                        float dSwX = cos(ph1) * 0.075 * 0.46 - cos(ph2) * 0.046 * 0.36 - sin(ph3) * 0.105 * 0.18;
+                        float dSwY = cos(ph1) * 0.050 * 0.46 + cos(ph2) * 0.085 * 0.36 + sin(ph3) * 0.105 * 0.18;
 
                     #ifdef USE_MAP
-                        vec2 wWarp = vec2(sw1, sw2) * 0.046 + pitRippleGrad * 0.036;
-                        vec2 uvWaterA = vPitWPos / 170.0 + vec2(uTime * 0.062, uTime * 0.105) + wWarp;
-                        vec2 uvWaterB = vPitWPos / 118.0 + vec2(-uTime * 0.052, uTime * 0.072) - wWarp * 0.92;
+                        vec2 wWarp = vec2(sw1, sw2) * 0.052 + pitRippleGrad * 0.025;
+                        vec2 uvWaterA = vPitWPos / 165.0 + vec2(uTime * 0.058, uTime * 0.095) + wWarp;
+                        vec2 uvWaterB = vPitWPos / 112.0 + vec2(-uTime * 0.048, uTime * 0.068) - wWarp * 0.90;
                         vec3 wA = ${sampleWaterTex('uvWaterA')}.rgb;
                         vec3 wB = ${sampleWaterTex('uvWaterB')}.rgb;
                     #else
                         vec3 wA = diffuseColor.rgb;
                         vec3 wB = diffuseColor.rgb;
                     #endif
-                        float pA = sqrt(clamp(dot(wA, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
-                        float pB = sqrt(clamp(dot(wB, vec3(0.299, 0.587, 0.114)), 0.0, 1.0));
-                        float texWave = pA * 0.58 + pB * 0.42;
+                        // Curva a S (smoothstep) invece di sqrt: esalta i fondali scuri e le venature chiare della texture
+                        float lA = dot(wA, vec3(0.299, 0.587, 0.114));
+                        float lB = dot(wB, vec3(0.299, 0.587, 0.114));
+                        float pA = smoothstep(0.12, 0.88, lA);
+                        float pB = smoothstep(0.12, 0.88, lB);
+                        float texWave = pA * 0.56 + pB * 0.44;
                         float texDiff = (pA - pB);
 
-                        // Altezza complessiva dell'onda (combinazione di onde lunghe 3D e increspature texture)
-                        float waveH = clamp(swellNorm * 0.62 + texWave * 0.38 + texDiff * 0.18, 0.0, 1.0);
-                        float waveTrough = smoothstep(0.46, 0.10, waveH);
-                        float waveBody   = smoothstep(0.18, 0.76, waveH);
-                        float waveCrest  = smoothstep(0.56, 0.86, waveH) * (0.45 + 0.55 * smoothstep(0.35, 0.82, pA * pB * 1.65));
-                        float foamRidge  = smoothstep(0.74, 0.93, waveH + pA * pB * 0.28);
+                        float waveH = clamp(swellNorm * 0.58 + texWave * 0.42 + texDiff * 0.24, 0.0, 1.0);
+                        float abyssMask = smoothstep(0.48, 0.08, waveH);
+                        float waveCrest = smoothstep(0.55, 0.88, waveH) * (0.40 + 0.60 * smoothstep(0.25, 0.78, pA * pB * 1.9));
+                        float foamRidge = pow(smoothstep(0.68, 0.94, waveH + pA * pB * 0.32), 1.5);
 
-                        // Illuminazione direzionale 3D sulla pendenza dell'onda (lato illuminato vs lato in ombra)
-                        float slopeLit = clamp(0.5 + (dSwX * 7.5 + dSwY * 6.5) + texDiff * 0.65, 0.0, 1.0);
-                        float sunGlint = pow(clamp(slopeLit * waveH, 0.0, 1.0), 3.6);
+                        float slopeLit = clamp(0.5 + (dSwX * 11.5 + dSwY * 9.5) + texDiff * 0.85, 0.0, 1.0);
+                        float sunGlint = pow(clamp(slopeLit * waveH, 0.0, 1.0), 3.2);
 
-                        // Reticolo vivo di caustiche con rifrazione dinamica
-                        vec2 caustPos = vPitWPos + vec2(sw1, sw2) * 9.5 + pitRippleGrad * 20.0;
-                        float c1 = sin(caustPos.x * 0.062 + uTime * 1.95 + sin(caustPos.y * 0.052 - uTime * 1.45));
-                        float c2 = cos(caustPos.y * 0.066 - uTime * 1.70 + cos(caustPos.x * 0.056 + uTime * 1.25));
-                        float caustic = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 2.3);
+                        // Doppio reticolo di caustiche nitide sul fondale e a mezz'acqua
+                        vec2 caustPos = vPitWPos + vec2(sw1, sw2) * 11.0 + pitRippleGrad * 14.0;
+                        float c1 = sin(caustPos.x * 0.068 + uTime * 1.95 + sin(caustPos.y * 0.056 - uTime * 1.45) * 1.3);
+                        float c2 = cos(caustPos.y * 0.072 - uTime * 1.70 + cos(caustPos.x * 0.060 + uTime * 1.25) * 1.3);
+                        float causticMain = pow(clamp(0.5 + 0.5 * c1 * c2, 0.0, 1.0), 3.0);
+                        float c3 = sin((caustPos.x + caustPos.y) * 0.095 - uTime * 2.4);
+                        float causticSharp = pow(clamp(0.5 + 0.5 * c1 * c3, 0.0, 1.0), 4.5);
 
-                        vec3 rawTex = mix(wA, wB, 0.42);
+                        vec3 rawTex = mix(wA, wB, 0.45);
                         vec3 tintedTex = vec3(
-                            rawTex.r * 0.03 + rawTex.b * 0.04,
-                            rawTex.g * 0.12 + rawTex.b * 0.18,
-                            max(rawTex.b * 0.72, rawTex.g * 0.32) * 0.56 + 0.04
+                            rawTex.r * 0.02 + rawTex.b * 0.04,
+                            rawTex.g * 0.22 + rawTex.b * 0.20,
+                            max(rawTex.b * 0.82, rawTex.g * 0.42) * 0.65 + 0.02
                         );
 
-                        // Palette Lago Boschivo Notturno: blu abissale nei ventri, blu zaffiro nel corpo e azzurro intenso sulle creste (niente bianco)
-                        vec3 deepTroughCol = vec3(0.006, 0.026, 0.095);
-                        vec3 midLagoonCol  = vec3(0.016, 0.095, 0.255);
-                        vec3 brightAquaCol = vec3(0.035, 0.185, 0.395);
+                        // Palette ad alto contrasto: fosse abissali quasi nere, corpo ottanio/zaffiro e creste turchesi vive
+                        vec3 deepAbyssCol  = vec3(0.002, 0.010, 0.032);
+                        vec3 midLagoonCol  = vec3(0.012, 0.115, 0.255);
+                        vec3 brightAquaCol = vec3(0.055, 0.310, 0.510);
 
-                        vec3 waterCol = mix(deepTroughCol, midLagoonCol, smoothstep(0.12, 0.56, waveH));
-                        waterCol = mix(waterCol, brightAquaCol, smoothstep(0.46, 0.84, waveH * (0.65 + 0.35 * slopeLit)));
-                        waterCol = mix(waterCol, tintedTex, 0.28);
+                        vec3 waterCol = mix(deepAbyssCol, midLagoonCol, smoothstep(0.14, 0.54, waveH));
+                        waterCol = mix(waterCol, brightAquaCol, smoothstep(0.48, 0.85, waveH * (0.55 + 0.45 * slopeLit)));
+                        waterCol = mix(waterCol, tintedTex, 0.35);
 
-                        // Chiaroscuro 3D e creste blu/azzurre (senza desaturazione bianca)
-                        waterCol *= mix(0.68, 1.10, slopeLit);
-                        waterCol += vec3(0.05, 0.18, 0.38) * (caustic * (0.28 - 0.10 * waveTrough));
-                        waterCol = mix(waterCol, vec3(0.08, 0.28, 0.54), waveCrest * 0.52);
-                        waterCol = mix(waterCol, vec3(0.16, 0.42, 0.70), clamp(foamRidge * 0.42 + sunGlint * 0.28, 0.0, 0.50));
+                        // Forte chiaroscuro 3D tra ventri d'onda e pareti d'acqua illuminate
+                        waterCol *= mix(0.40, 1.32, slopeLit);
+                        waterCol *= (1.0 - abyssMask * 0.42);
+                        waterCol += vec3(0.07, 0.28, 0.46) * (causticMain * (0.48 - 0.22 * abyssMask));
+                        waterCol += vec3(0.16, 0.48, 0.68) * (causticSharp * 0.38);
+                        waterCol = mix(waterCol, vec3(0.11, 0.38, 0.62), waveCrest * 0.65);
+                        waterCol = mix(waterCol, vec3(0.24, 0.58, 0.80), clamp(foamRidge * 0.55 + sunGlint * 0.40, 0.0, 0.68));
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.002, 0.010, 0.032),
-                            vec3(0.014, 0.068, 0.165),
-                            clamp(waveBody * 0.55 + caustic * 0.30 + waveCrest * 0.40, 0.0, 1.0)
-                        ) * 0.15 + vec3(0.04, 0.12, 0.26) * (foamRidge * 0.16 + sunGlint * 0.12);
+                            vec3(0.001, 0.004, 0.015),
+                            vec3(0.024, 0.115, 0.235),
+                            clamp(waveCrest * 0.60 + causticMain * 0.45, 0.0, 1.0)
+                        ) * 0.22 + vec3(0.06, 0.20, 0.34) * (foamRidge * 0.25 + causticSharp * 0.20);
 
-                        // ACQUA: Anelli idrodinamici 3D blu/azzurri al passaggio del giocatore
-                        if (uPlayerPit.w > 0.01 && pDist < 135.0) {
-                            float meniscus = exp(-abs(pDist - (10.8 + c1 * 1.1)) * 0.38) * (0.65 + 0.35 * moveInt);
+                        // RIPPLE PERSONAGGIO: Ondine concentriche sottili, discrete e 100% circolari
+                        if (uPlayerPit.w > 0.01 && pDist < 68.0) {
+                            float maxR = mix(40.0, 64.0, moveInt);
+                            float rEnv = smoothstep(5.5, 11.5, pDist) * (1.0 - smoothstep(18.0, maxR, pDist));
 
-                            float freq = mix(0.32, 0.42, moveInt);
-                            float waveSpeed = mix(4.8, 10.8, moveInt) * mix(1.0, 1.28, clamp(spdRatio - 1.0, 0.0, 1.0));
-                            float wPhase1 = effDist * freq - uTime * waveSpeed + c1 * 0.45;
-                            float wPhase2 = effDist * (freq * 1.32) - uTime * (waveSpeed * 1.14) - c2 * 0.38;
-                            float waveComp = sin(wPhase1) * 0.64 + cos(wPhase2) * 0.36;
+                            float wFreq = 0.46;
+                            float wSpd = mix(3.4, 6.4, moveInt);
+                            float wSine = sin(rDist * wFreq - uTime * wSpd);
 
-                            float wakeTail = 1.0 + 0.68 * moveInt * behindSmooth * exp(-max(0.0, -forward) * 0.022);
-                            float ringEnv = smoothstep(5.0, 13.0, effDist) * exp(-effDist * 0.028) * wakeTail;
+                            // Anelli sottili e morbidi (nessuna geometria direzionale)
+                            float delicateRings = pow(smoothstep(0.42, 0.98, wSine), 2.2) * rEnv * (0.35 + 0.65 * moveInt);
+                            floatringTrough = smoothstep(0.35, 0.90, -wSine) * rEnv * 0.22 * uPlayerPit.w;
+                            float meniscus = exp(-pow(rDist - 10.2, 2.0) * 0.18) * 0.42;
 
-                            float ringCrest  = smoothstep(0.28, 0.86, waveComp) * ringEnv;
-                            float ringTrough = smoothstep(0.25, 0.85, -waveComp) * ringEnv * uPlayerPit.w;
-                            float ringFoam   = smoothstep(0.64, 0.95, waveComp) * ringEnv * (0.40 + 0.60 * moveInt);
+                            float rippleStrength = clamp(delicateRings * 0.58 + meniscus * 0.42, 0.0, 0.62) * uPlayerPit.w;
 
-                            float backDist = max(0.0, -forward);
-                            float kelvinArm = abs(side) - (4.0 + pow(backDist + 1.0, 0.82) * 0.65 + c1 * 1.6);
-                            float kelvinGate = smoothstep(2.0, -10.0, forward) * exp(-backDist * 0.028) * moveInt;
-                            float kelvinWave = exp(-(kelvinArm * kelvinArm) * 0.055) * kelvinGate * (0.55 + 0.45 * sin(pDist * 0.36 - uTime * 8.2));
-
-                            float bowArc = pDist - mix(13.0, 16.0, moveInt);
-                            float bowGate = smoothstep(-2.0, 8.0, forward) * exp(-(side * side) * 0.0038) * moveInt;
-                            float bowWave = exp(-(bowArc * bowArc) * 0.055) * bowGate;
-
-                            float totalCrest = clamp(ringCrest + kelvinWave * 0.72 + bowWave * 0.68 + meniscus * 0.58, 0.0, 1.0) * uPlayerPit.w;
-                            float totalFoam = clamp(ringFoam + meniscus * 0.68 + bowWave * 0.48 + kelvinWave * 0.42, 0.0, 1.0) * uPlayerPit.w;
-
-                            diffuseColor.rgb *= (1.0 - ringTrough * 0.45);
-
-                            vec3 waveCyan = vec3(0.12, 0.38, 0.68);
-                            vec3 foamWhite = vec3(0.32, 0.60, 0.86);
-                            vec3 rippleCol = mix(waveCyan, foamWhite, totalFoam * 0.75);
-
-                            diffuseColor.rgb = mix(diffuseColor.rgb, rippleCol, totalCrest * 0.80);
-                            totalEmissiveRadiance += vec3(0.08, 0.26, 0.48) * totalCrest + vec3(0.14, 0.38, 0.62) * (totalFoam * 0.35);
+                            diffuseColor.rgb *= (1.0 - floatringTrough);
+                            vec3 subtleRippleCol = mix(vec3(0.10, 0.36, 0.58), vec3(0.24, 0.54, 0.76), delicateRings);
+                            diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.65);
+                            totalEmissiveRadiance += vec3(0.04, 0.14, 0.26) * rippleStrength;
                         }
                     ` : (themeIdx === 1 ? `
-                        // LAVA: Doppio campionamento convettivo di lava_water.png + spostamento viscoso delle placche
+                        // LAVA: Doppio campionamento convettivo + anelli magmatici radiali
                         float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
                         float m2 = cos(vPitWPos.y * 0.044 - uTime * 0.70 + cos(vPitWPos.x * 0.038 + uTime * 0.52) * 1.4);
                         float flow = 0.5 + 0.5 * m1 * m2;
 
                     #ifdef USE_MAP
-                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.024;
+                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.020;
                         vec2 uvLavaA = vPitWPos / 220.0 + vec2(uTime * 0.018, uTime * 0.012) + lWarp;
                         vec2 uvLavaB = vPitWPos / 155.0 + vec2(-uTime * 0.014, uTime * 0.019) - lWarp * 0.85;
                         vec3 lA = ${sampleWaterTex('uvLavaA')}.rgb;
@@ -13122,34 +12870,24 @@ class GameMap {
                         diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
                         totalEmissiveRadiance = mix(vec3(0.05, 0.01, 0.005), magmaCol * 1.28, veinMask);
 
-                        // INTERAZIONE LAVA VISCOSA (Zero effetto laser frontale: anelli magmatici pesanti e scia ribollente corta)
-                        if (uPlayerPit.w > 0.01 && pDist < 102.0) {
-                            // 1. Alone d'immersione e colletto di magma spostato attorno al giocatore
-                            float coreGlow = exp(-pDist * pDist * 0.0046) * (0.78 + 0.22 * sin(uTime * 3.4));
-                            float collarRadius = 12.2 + (flow - 0.5) * 3.4;
-                            float meniscusRing = exp(-abs(pDist - collarRadius) * 0.32) * (0.68 + 0.32 * moveInt);
+                        // INTERAZIONE LAVA RADIALE (Zero rettangoli direzionali)
+                        if (uPlayerPit.w > 0.01 && pDist < 68.0) {
+                            float coreGlow = exp(-pDist * pDist * 0.0055) * (0.75 + 0.25 * sin(uTime * 3.4));
+                            float collarRadius = 11.5 + (flow - 0.5) * 3.0;
+                            float meniscusRing = exp(-abs(rDist - collarRadius) * 0.35) * (0.55 + 0.45 * moveInt);
 
-                            // 2. Onde concentriche viscose a bassa frequenza deformate dal flusso magmatico
-                            float lavaPhase = effDist * 0.27 - uTime * mix(3.6, 6.4, moveInt) + flow * 2.2;
-                            float lavaWave = smoothstep(0.30, 0.92, sin(lavaPhase));
-                            float lavaRings = lavaWave * smoothstep(7.0, 16.0, effDist) * exp(-effDist * 0.044) * (0.52 + 0.48 * moveInt);
+                            float lavaPhase = rDist * 0.32 - uTime * mix(3.2, 5.4, moveInt) + flow * 2.0;
+                            float lavaWave = pow(smoothstep(0.40, 0.96, sin(lavaPhase)), 2.0);
+                            float lavaRings = lavaWave * smoothstep(7.0, 14.0, pDist) * exp(-pDist * 0.055) * (0.40 + 0.60 * moveInt);
 
-                            // 3. Scia magmatica corta e perturbata ESCLUSIVAMENTE dietro al giocatore (zero proiezione in avanti)
-                            float behindGate = smoothstep(1.5, -7.5, forward) * smoothstep(50.0, 9.0, -forward) * moveInt;
-                            float wobbledSide = side + m1 * 3.6 + sin(forward * 0.18 - uTime * 4.0) * 2.8;
-                            float trailWake = exp(-(wobbledSide * wobbledSide) * 0.0068) * behindGate * (0.55 + 0.45 * sin(forward * 0.24 + uTime * 5.0 + flow * 3.0));
+                            float moltenHeat = clamp(coreGlow * 0.65 + meniscusRing * 0.55 + lavaRings * 0.55, 0.0, 0.85) * uPlayerPit.w;
+                            vec3 stepMagmaCol = mix(vec3(0.90, 0.20, 0.01), vec3(1.0, 0.82, 0.28), smoothstep(0.25, 0.85, moltenHeat));
 
-                            float moltenHeat = clamp(coreGlow * 0.82 + meniscusRing * 0.76 + lavaRings * 0.70 + trailWake * 0.72, 0.0, 1.0) * uPlayerPit.w;
-
-                            vec3 magmaDark = vec3(0.90, 0.20, 0.01);
-                            vec3 moltenGold = vec3(1.0, 0.86, 0.32);
-                            vec3 stepMagmaCol = mix(magmaDark, moltenGold, smoothstep(0.28, 0.86, moltenHeat));
-
-                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.90);
-                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.55);
+                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.80);
+                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.25);
                         }
                     ` : `
-                        // GHIACCIO (Fondale abissale scuro sotto la lastra: evita la dominante azzurrina e dà profondità)
+                        // GHIACCIO (Fondale abissale scuro sotto la lastra)
                         vec2 dirFlow = vec2(0.4472, -0.8944);
                         vec2 dirCross = vec2(0.8944, 0.4472);
                         float along = dot(vPitWPos, dirFlow);
@@ -13166,7 +12904,7 @@ class GameMap {
                     '#include <dithering_fragment>',
                     `
                     ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.74' : '0.68'};
+                        float capLim = ${themeIdx === 0 ? '0.76' : '0.68'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
                             float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 3.0);
@@ -17254,17 +16992,17 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     if (inPit) {
                         let moveAng = Math.atan2(dy, dx);
                         if (Game.currentThemeIndex === 0) {
-                            // ACQUA: Goccioline morbide e spuma che si aprono lateralmente attorno ai piedi
-                            let side = (Game.frameCount % 2 === 0 ? 1 : -1) * (Math.PI * 0.48 + MathUtils.randomRange(-0.18, 0.18));
+                            // ACQUA: Micro-goccioline discrete attorno alle caviglie
+                            let side = (Game.frameCount % 2 === 0 ? 1 : -1) * (Math.PI * 0.55 + MathUtils.randomRange(-0.25, 0.25));
                             let drop = Game.getParticle();
-                            drop.spawn(this.x + MathUtils.randomRange(-5, 5), 2.5, this.y + MathUtils.randomRange(-5, 5), Math.random() > 0.35 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'trail');
-                            let sp = MathUtils.randomRange(38, 78);
+                            drop.spawn(this.x + MathUtils.randomRange(-4, 4), 1.8, this.y + MathUtils.randomRange(-4, 4), SharedMat.spriteBlue, 'trail');
+                            let sp = MathUtils.randomRange(22, 48);
                             drop.vx = Math.cos(moveAng + side) * sp;
                             drop.vz = Math.sin(moveAng + side) * sp;
-                            drop.vy = MathUtils.randomRange(55, 95);
-                            drop.baseSize = MathUtils.randomRange(8, 13);
-                            drop.life = 0.26; drop.maxLife = 0.26;
-                        } else if (Game.currentThemeIndex === 1) {
+                            drop.vy = MathUtils.randomRange(28, 52);
+                            drop.baseSize = MathUtils.randomRange(4.5, 7.5);
+                            drop.life = 0.20; drop.maxLife = 0.20;
+                        }} else if (Game.currentThemeIndex === 1) {
                             // LAVA: Bolle viscose di magma denso e sbuffo caldo (zero strisce/laser ad alta velocità)
                             let blob = Game.getParticle();
                             let bAng = moveAng + Math.PI + MathUtils.randomRange(-1.1, 1.1);
