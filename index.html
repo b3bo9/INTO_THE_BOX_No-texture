@@ -5765,16 +5765,16 @@ const SharedGeo = {
         return nonIdx;
     })(),
     novaCrown: (function() {
-        // Geometria ibrida 1-Draw-Call: Disco vorticoso a terra (uv.y 0..1) + Corona 3D di lame inclinate (uv.y 1..2)
-        const segs = 48;
+        // Geometria morbida a 64 segmenti: onda espansa sul terreno (uv.y 0..1) + alone 3D soffice (uv.y 1..2)
+        const segs = 64;
         const pos = [], norm = [], uvs = [], idx = [];
         let vOff = 0;
 
-        // 1. Disco d'onda a terra (da r = 0.32 a r = 1.04)
+        // 1. Fascia radiale ampia e morbida a terra (da r = 0.05 a r = 1.12 per sfumare senza bordi netti)
         for (let i = 0; i <= segs; i++) {
             const u = i / segs, a = u * Math.PI * 2;
             const ca = Math.cos(a), sa = Math.sin(a);
-            pos.push(ca * 0.32, sa * 0.32, 0.0, ca * 1.04, sa * 1.04, 0.0);
+            pos.push(ca * 0.05, sa * 0.05, 0.0, ca * 1.12, sa * 1.12, 0.0);
             norm.push(0, 0, 1, 0, 0, 1);
             uvs.push(u, 0.0, u, 1.0);
         }
@@ -5784,27 +5784,13 @@ const SharedGeo = {
         }
         vOff += (segs + 1) * 2;
 
-        // 2. Corona 3D esterna svasata (svetta in altezza lungo +Z locale = +Y mondo)
+        // 2. Velo 3D verticale morbido lungo il fronte d'onda
         for (let i = 0; i <= segs; i++) {
             const u = i / segs, a = u * Math.PI * 2;
             const ca = Math.cos(a), sa = Math.sin(a);
-            pos.push(ca * 0.92, sa * 0.92, 0.0, ca * 1.06, sa * 1.06, 1.0);
-            norm.push(ca, sa, 0.25, ca, sa, 0.25);
+            pos.push(ca * 0.72, sa * 0.72, 0.0, ca * 1.04, sa * 1.04, 1.0);
+            norm.push(ca, sa, 0.3, ca, sa, 0.3);
             uvs.push(u, 1.0, u, 2.0);
-        }
-        for (let i = 0; i < segs; i++) {
-            const p = vOff + i * 2;
-            idx.push(p, p + 1, p + 2, p + 1, p + 3, p + 2);
-        }
-        vOff += (segs + 1) * 2;
-
-        // 3. Cresta 3D interna controrotante
-        for (let i = 0; i <= segs; i++) {
-            const u = i / segs, a = u * Math.PI * 2;
-            const ca = Math.cos(a), sa = Math.sin(a);
-            pos.push(ca * 0.76, sa * 0.76, 0.0, ca * 0.84, sa * 0.84, 0.62);
-            norm.push(-ca, -sa, 0.35, -ca, -sa, 0.35);
-            uvs.push(u, 1.0, u, 1.85);
         }
         for (let i = 0; i < segs; i++) {
             const p = vOff + i * 2;
@@ -5958,82 +5944,13 @@ function createPlanetRingMaterial() {
     };
     return mat;
 }
-function createNovaRingMaterial(hexColor = 0x00ddff) {
-    const mat = new THREE.MeshBasicMaterial({
-        color: hexColor,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-    });
-    mat.customProgramCacheKey = () => 'nova_void_crown_v1';
-    mat.onBeforeCompile = (shader) => {
-        shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
-        shader.vertexShader = `
-            uniform float uTime;
-            varying vec2 vNovaUv;
-        ` + shader.vertexShader.replace(
-            '#include <begin_vertex>',
-            `
-            #include <begin_vertex>
-            vNovaUv = uv;
-            float ang = uv.x * 6.2831853;
-            float crownH = max(0.0, uv.y - 1.0);
-            // Vibrazione radiale delle lame 3D della corona
-            float bladeWave = sin(ang * 10.0 - uTime * 14.0) * 0.045 * crownH;
-            transformed.xy *= (1.0 + bladeWave);
-            `
-        );
-        shader.fragmentShader = `
-            uniform float uTime;
-            varying vec2 vNovaUv;
-        ` + shader.fragmentShader.replace(
-            '#include <color_fragment>',
-            `
-            #include <color_fragment>
-            vec3 baseCol = diffuseColor.rgb;
-            vec3 hotCore = mix(baseCol * 1.5, vec3(1.0, 0.97, 1.0), 0.72);
-            vec3 darkVoid = baseCol * vec3(0.16, 0.05, 0.26);
-            float ang = vNovaUv.x * 6.2831853;
-
-            if (vNovaUv.y <= 1.0) {
-                // 1. DISCO VORTICOSO A TERRA STILE VOID WALKER
-                float r = vNovaUv.y;
-                float scythe1 = sin(ang * 10.0 - r * 14.0 - uTime * 11.0);
-                float scythe2 = cos(ang * 16.0 + r * 9.0 + uTime * 14.0);
-                float vortex = clamp(0.5 + 0.32 * scythe1 + 0.22 * scythe2, 0.0, 1.0);
-
-                float subRing = smoothstep(0.52, 0.95, sin(r * 22.0 - uTime * 15.0 + scythe1 * 1.3));
-                float leadEdge = smoothstep(0.72, 0.93, r) * (1.0 - smoothstep(0.94, 1.0, r));
-                float wakeMask = smoothstep(0.0, 0.22, r) * (1.0 - smoothstep(0.93, 1.0, r));
-
-                float bladeCut = smoothstep(0.30, 0.78, vortex + leadEdge * 0.65);
-                float alpha = clamp((bladeCut * 0.62 + leadEdge * 0.98 + subRing * 0.38 * r) * wakeMask, 0.0, 1.0);
-
-                vec3 col = mix(darkVoid, baseCol * 1.25, smoothstep(0.18, 0.75, vortex + r * 0.3));
-                col = mix(col, hotCore, clamp(leadEdge * 0.92 + subRing * 0.48 * r, 0.0, 1.0));
-                diffuseColor = vec4(col, alpha * diffuseColor.a);
-            } else {
-                // 2. CORONA 3D DI FENDENTI E LINGUE D'ENERGIA
-                float h = vNovaUv.y - 1.0;
-                float slash1 = sin(ang * 12.0 + h * 5.0 - uTime * 15.0);
-                float slash2 = cos(ang * 20.0 - h * 6.5 + uTime * 19.0);
-                float spikeNoise = clamp(0.5 + 0.32 * slash1 + 0.20 * slash2, 0.0, 1.0);
-
-                float maxH = 0.24 + 0.76 * pow(spikeNoise, 1.25);
-                float alpha = smoothstep(maxH, maxH * 0.16, h) * smoothstep(0.0, 0.08, h);
-
-                float heat = clamp((1.0 - h / max(0.06, maxH)) * 0.85 + spikeNoise * 0.25, 0.0, 1.0);
-                vec3 col = mix(darkVoid, baseCol * 1.35, smoothstep(0.15, 0.60, heat));
-                col = mix(col, hotCore, smoothstep(0.62, 0.95, heat));
-                diffuseColor = vec4(col, alpha * diffuseColor.a);
-            }
-            `
-        );
-    };
-    return mat;
-}
+// 2. Flash d'urto centrale + nuvola leggera di segatura o polvere di terracotta
+        if (!AppSettings.isLow) {
+            let pop = Game.getParticle();
+            pop.spawn(this.x, 14, this.y, isCrate ? SharedMat.spriteYellow : SharedMat.spriteWhite, 'nova');
+            pop.baseSize = 46 * this.originalScale;
+            pop.life = 0.11; pop.maxLife = 0.11;
+        }
 function createFireWallMaterials() {
     const wallMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
@@ -6276,79 +6193,58 @@ function createGlowTexture() {
     return tex;
 }
 
-// Texture procedurale stile Void Walker per le esplosioni Nova (Lame vorticose + Anello fratturato + Stella centrale)
+// Texture ad alta risoluzione (512x512) morbida, sfuocata e omogenea (zero pixellatura o bordi netti)
 function createNovaTexture() {
-    const size = 256, c = size / 2;
-    const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+    const size = 512, c = size / 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, size, size);
 
-    // 1. Alone anulare cavo (lascia trasparire il terreno al centro)
-    const baseGrad = ctx.createRadialGradient(c, c, 18, c, c, 122);
-    baseGrad.addColorStop(0.0, 'rgba(255,255,255,0.15)');
-    baseGrad.addColorStop(0.28, 'rgba(255,255,255,0.03)');
-    baseGrad.addColorStop(0.66, 'rgba(255,255,255,0.42)');
-    baseGrad.addColorStop(0.84, 'rgba(255,255,255,0.85)');
-    baseGrad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+    // 1. Diffusione morbida di base (alone energetico omogeneo)
+    const baseGrad = ctx.createRadialGradient(c, c, 0, c, c, c);
+    baseGrad.addColorStop(0.0,  'rgba(255, 255, 255, 0.55)');
+    baseGrad.addColorStop(0.25, 'rgba(255, 255, 255, 0.35)');
+    baseGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.65)');
+    baseGrad.addColorStop(0.74, 'rgba(255, 255, 255, 0.28)');
+    baseGrad.addColorStop(0.90, 'rgba(255, 255, 255, 0.05)');
+    baseGrad.addColorStop(1.0,  'rgba(255, 255, 255, 0.0)');
     ctx.fillStyle = baseGrad;
-    ctx.beginPath(); ctx.arc(c, c, 122, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(0, 0, size, size);
 
-    // 2. 12 Falci / Lame del Vuoto curve che spiraleggiano verso l'esterno
-    const blades = 12;
-    for (let i = 0; i < blades; i++) {
+    // 2. Volute morbide e sfuocate (senza alcuna linea dura o spigolo)
+    const petals = 6;
+    for (let i = 0; i < petals; i++) {
         ctx.save();
         ctx.translate(c, c);
-        ctx.rotate((Math.PI * 2 / blades) * i);
+        ctx.rotate((Math.PI * 2 / petals) * i);
+        ctx.scale(1.35, 0.68);
+        const pGrad = ctx.createRadialGradient(0, 0, 12, 0, 0, c * 0.72);
+        pGrad.addColorStop(0.0,  'rgba(255, 255, 255, 0.0)');
+        pGrad.addColorStop(0.45, 'rgba(255, 255, 255, 0.22)');
+        pGrad.addColorStop(0.75, 'rgba(255, 255, 255, 0.08)');
+        pGrad.addColorStop(1.0,  'rgba(255, 255, 255, 0.0)');
+        ctx.fillStyle = pGrad;
         ctx.beginPath();
-        ctx.moveTo(26, 0);
-        ctx.quadraticCurveTo(64, -26, 112, -8);
-        ctx.quadraticCurveTo(72, -6, 32, 9);
-        ctx.closePath();
-        const bGrad = ctx.createLinearGradient(26, 0, 112, 0);
-        bGrad.addColorStop(0.0, 'rgba(255,255,255,0.0)');
-        bGrad.addColorStop(0.45, 'rgba(255,255,255,0.75)');
-        bGrad.addColorStop(1.0, 'rgba(255,255,255,1.0)');
-        ctx.fillStyle = bGrad;
+        ctx.arc(0, 0, c * 0.72, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
 
-    // 3. Anelli d'urto spezzati ad alto contrasto
-    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-    for (let i = 0; i < 8; i++) {
-        let a0 = (Math.PI * 2 / 8) * i + 0.08;
-        let a1 = a0 + (Math.PI / 8) * 1.35;
-        ctx.lineWidth = (i % 2 === 0) ? 4.0 : 2.2;
-        ctx.beginPath(); ctx.arc(c, c, 96, a0, a1); ctx.stroke();
-        ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.arc(c, c, 70, a0 + 0.2, a1 - 0.1); ctx.stroke();
-    }
-
-    // 4. Dardi radiali esterni e stella arcana a 4 punte nel nucleo
-    for (let i = 0; i < 16; i++) {
-        ctx.save();
-        ctx.translate(c, c);
-        ctx.rotate((Math.PI * 2 / 16) * i);
-        let len = (i % 2 === 0) ? 124 : 110;
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.beginPath();
-        ctx.moveTo(86, -2.5); ctx.lineTo(len, 0); ctx.lineTo(86, 2.5);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
-    }
-    for (let i = 0; i < 4; i++) {
-        ctx.save();
-        ctx.translate(c, c);
-        ctx.rotate((Math.PI / 4) * i);
-        let sLen = (i % 2 === 0) ? 34 : 20;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(-4, 0); ctx.lineTo(0, -sLen); ctx.lineTo(4, 0); ctx.lineTo(0, sLen);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
-    }
+    // 3. Onda d'urto soffice e vellutata
+    const waveGrad = ctx.createRadialGradient(c, c, c * 0.25, c, c, c * 0.95);
+    waveGrad.addColorStop(0.0,  'rgba(255, 255, 255, 0.0)');
+    waveGrad.addColorStop(0.45, 'rgba(255, 255, 255, 0.42)');
+    waveGrad.addColorStop(0.68, 'rgba(255, 255, 255, 0.16)');
+    waveGrad.addColorStop(1.0,  'rgba(255, 255, 255, 0.0)');
+    ctx.fillStyle = waveGrad;
+    ctx.beginPath();
+    ctx.arc(c, c, c * 0.95, 0, Math.PI * 2);
+    ctx.fill();
 
     const tex = new THREE.CanvasTexture(canvas);
+    tex.magFilter = THREE.LinearFilter;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.encoding = THREE.sRGBEncoding;
     return tex;
 }
@@ -15145,13 +15041,7 @@ Game.auras.push({
             );
         }
 
-        // 2. Flash d'urto centrale + nuvola leggera di segatura o polvere di terracotta
-        if (!AppSettings.isLow) {
-            let pop = Game.getParticle();
-            pop.spawn(this.x, 14, this.y, isCrate ? SharedMat.spriteYellow : SharedMat.spriteWhite, 'nova');
-            pop.baseSize = 46 * this.originalScale;
-            pop.life = 0.11; pop.maxLife = 0.11;
-        }
+        // 2. Nuvola di segatura o polvere di terracotta (rimosso il cerchio piatto 'nova')
 
         let dustMat = isCrate ? SharedMat.spriteWoodDust : SharedMat.spriteClayDust;
         let dustCount = AppSettings.isLow ? 3 : (isTouchDevice ? 5 : 8);
@@ -15355,14 +15245,7 @@ class Entity {
             else if (Game.player.essence === 'blue') sparkMat = SharedMat.spriteBlue;
             else if (Game.player.essence === 'green') sparkMat = SharedMat.spriteGreen;
 
-            // 1. FLASH DI IMPATTO: Un cerchio istantaneo che "poppa" sul punto di contatto
-            if (!AppSettings.isLow) {
-                let flash = Game.getParticle();
-                // FIX CRASH: La variabile ora si chiama correttamente impactAngle!
-                flash.spawn(this.x + Math.cos(impactAngle)*10, 20, this.y + Math.sin(impactAngle)*10, sparkMat, 'nova');
-                flash.baseSize = isCrit ? 65 : 40;
-                flash.life = 0.1; flash.maxLife = 0.1; // Fulmineo
-            }
+            // (Rimosso il cerchio istantaneo 'nova' sul bersaglio: restano solo le scintille direzionali pulite)
 
             // 2. SCINTILLE CORPOSE: Rallentate e ingrandite per far apprezzare la direzione del colpo
             let sparkCount = AppSettings.isLow ? 2 : (isCrit ? 6 : 3);
@@ -17631,9 +17514,9 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             let muzzleZ = this.y + Math.sin(this.angle) * 24 + Math.sin(this.angle + Math.PI/2) * 10;
             let mMat = this.essence === 'red' ? SharedMat.spriteRed : (this.essence === 'blue' ? SharedMat.spriteBlue : (this.essence === 'green' ? SharedMat.spriteGreen : SharedMat.spriteYellow));
             let mf = Game.getParticle();
-            mf.spawn(muzzleX, 24, muzzleZ, mMat, 'nova');
-            mf.baseSize = isCrit ? 42 : 26;
-            mf.life = 0.08; mf.maxLife = 0.08;
+            mf.spawn(muzzleX, 24, muzzleZ, mMat, 'spark', this.angle);
+            mf.baseSize = isCrit ? 14 : 9;
+            mf.life = 0.09; mf.maxLife = 0.09;
         }
         
         let projSpeed = (projType === 'explosive_arrow') ? 400 : 800;
@@ -21391,27 +21274,13 @@ class Particle {
             this.vz = Math.sin(a) * speed;
         }
         
-        if (type === 'nova' && mat) {
-            if (!mat._novaVariant) {
-                mat._novaVariant = new THREE.SpriteMaterial({
-                    color: mat.color.getHex(),
-                    map: NOVA_TEX,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false,
-                    alphaTest: 0.02
-                });
-                SharedMatSet.add(mat._novaVariant);
-            }
-            mat._novaVariant.color.copy(mat.color);
-            mat = mat._novaVariant;
-        }
+        this.baseMat = mat;
         this.maxLife = this.life; 
         this.mesh.material = mat; 
         this.mesh.position.set(x, y, z); 
         let initSize = (type === 'nova' || type === 'ambient') ? 0.01 : this.baseSize;
         this.mesh.scale.set(initSize, initSize, 1);
-        this.mesh.updateMatrix(); // FONDAMENTALE: Ricalcola la matrice locale prima del render!
+        this.mesh.updateMatrix();
         this.mesh.updateMatrixWorld(true);
         this.mesh.visible = true;
     }
@@ -21419,7 +21288,6 @@ class Particle {
     update(dt) {
         if (!this.active) return;
         
-        // FIX THERMAL THROTTLING & NEAR-PLANE CLIP: Uccide la particella se esce dall'inquadratura o si avvicina troppo alla lente della camera
         let camX = Game.camera.position.x;
         let camY = Game.camera.position.y;
         let camZ = Game.camera.position.z;
@@ -21430,13 +21298,33 @@ class Particle {
         }
 
         if (this.type === 'nova') {
-            let progress = 1.0 - Math.max(0, Math.min(1, this.life / this.maxLife));
-            // Espansione esplosiva rapida (ease-out) seguita da chiusura a fendente orizzontale stile Void Walker
-            let expand = 1.0 - Math.pow(1.0 - Math.min(1.0, progress / 0.72), 3.0);
-            let slashCollapse = progress > 0.72 ? (1.0 - (progress - 0.72) / 0.28) : 1.0;
-            let currentSize = Math.max(0.01, this.baseSize * (0.22 + 0.88 * expand));
-            let isoAspect = (this.baseSize >= 65 ? 0.68 : 0.86) * slashCollapse;
-            this.mesh.scale.set(currentSize * 1.12, Math.max(0.01, currentSize * isoAspect), 1);
+            // Se un effetto secondario imposta una baseSize piccola (< 75), lo converte in una scintilla rapida invisibile come cerchio
+            if (this.baseSize < 75) {
+                let pctSmall = Math.max(0, Math.min(1, this.life / this.maxLife));
+                let sSmall = Math.max(0.01, this.baseSize * 0.35 * Math.sin(pctSmall * Math.PI));
+                this.mesh.scale.set(sSmall, sSmall, 1);
+            } else {
+                // Grande Nova sfuocata e omogenea (senza alphaTest così i bordi sfumano morbidamente fino a 0)
+                if (this.baseMat && this.mesh.material === this.baseMat) {
+                    if (!this.baseMat._novaSoftVariant) {
+                        this.baseMat._novaSoftVariant = new THREE.SpriteMaterial({
+                            color: this.baseMat.color.getHex(),
+                            map: NOVA_TEX,
+                            transparent: true,
+                            opacity: 0.78,
+                            blending: THREE.AdditiveBlending,
+                            depthWrite: false
+                        });
+                        SharedMatSet.add(this.baseMat._novaSoftVariant);
+                    }
+                    this.baseMat._novaSoftVariant.color.copy(this.baseMat.color);
+                    this.mesh.material = this.baseMat._novaSoftVariant;
+                }
+                let pct = Math.max(0, Math.min(1, this.life / this.maxLife));
+                let expand = Math.sin(pct * Math.PI);
+                let currentSize = Math.max(0.01, this.baseSize * expand);
+                this.mesh.scale.set(currentSize, currentSize, 1);
+            }
         } else if (this.type === 'ambient') { 
             this.vx += Math.sin(this.life * 2.0 + this.seed) * 20.0 * dt;
             this.vz += Math.cos(this.life * 1.5 + this.seed) * 20.0 * dt;
