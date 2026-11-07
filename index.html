@@ -11363,7 +11363,7 @@ startGame(diffMult) {
             // Distanza di visuale per elementi UI (più ampia per il Boss)
             let maxUiDistSq = e.isBoss ? 1800000 : 1000000;
             if (distToCamSq < maxUiDistSq) { 
-               let yOffset = e.isBoss ? (e.radius * 3.4) : (e.type === 'ring_walker' ? (e.radius * 3.55) : (e.radius + 35));
+                let yOffset = e.isBoss ? (e.radius * 3.4) : (e.type === 'ring_walker' ? (e.radius * 3.55) : (e.radius + (e.isElite ? 44 : 35)));
                 let pos = this.toScreenPosition(e.x, yOffset, e.y);
                 
                 if (pos.z < 1 && pos.x > -60 && pos.x < this.width + 60 && pos.y > -60 && pos.y < this.height + 60) {
@@ -11373,6 +11373,7 @@ startGame(diffMult) {
                         bar.y = pos.y;
                         bar.pct = Math.max(0, e.stats.hp / e.stats.maxHp);
                         bar.isElite = e.isElite;
+                        bar.isGolden = !!e.isGolden;
                         bar.isBoss = !!e.isBoss;
                         bar.bossElement = e.bossElement;
                         bar.isEnraged = !!e.isEnraged;
@@ -11501,22 +11502,67 @@ startGame(diffMult) {
                     this.uiCtx.lineTo(b.x - 5, by - 4);
                     this.uiCtx.closePath();
                     this.uiCtx.fill();
-               } else {
-                    let w = b.isElite ? 46 : 34;
-                    let h = b.isElite ? 7 : 5;
+               } else if (b.isElite) {
+                    // --- BARRA HP CORAZZATA ELITE ---
+                    let w = 54;
+                    let h = 7;
+                    let bx = Math.round(b.x - w * 0.5);
+                    let by = Math.round(b.y - 4);
+                    let fillW = Math.max(0, Math.round(w * b.pct));
+                    let borderCol = b.isGolden ? '#fef08a' : '#fbbf24';
+                    let barCol = b.isGolden ? '#fde047' : '#f59e0b';
+
+                    // Sfondo corazzato e doppia cornice dorata
+                    this.uiCtx.fillStyle = 'rgba(5, 5, 10, 0.94)';
+                    this.uiCtx.fillRect(bx - 2.5, by - 2.5, w + 5, h + 5);
+                    this.uiCtx.strokeStyle = borderCol;
+                    this.uiCtx.lineWidth = 1.3;
+                    this.uiCtx.strokeRect(bx - 2, by - 2, w + 4, h + 4);
+
+                    // Alette corazzate laterali (sinistra e destra)
+                    this.uiCtx.fillStyle = borderCol;
+                    this.uiCtx.fillRect(bx - 4.5, by + 1, 2, h - 2);
+                    this.uiCtx.fillRect(bx + w + 2.5, by + 1, 2, h - 2);
+
+                    // Riempimento energia + riflesso lucido superiore + cresta incandescente
+                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : barCol;
+                    this.uiCtx.fillRect(bx, by, fillW, h);
+                    if (!b.flash && fillW > 2) {
+                        this.uiCtx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+                        this.uiCtx.fillRect(bx, by, fillW, 2);
+                        this.uiCtx.fillStyle = '#ffffff';
+                        this.uiCtx.fillRect(bx + fillW - 1.5, by, 1.5, h);
+                    }
+
+                    // Tacca divisoria centrale (50% HP)
+                    this.uiCtx.fillStyle = 'rgba(5, 5, 10, 0.80)';
+                    this.uiCtx.fillRect(bx + Math.round(w * 0.5) - 0.5, by, 1, h);
+
+                    // Fregio a losanga sopra il centro della barra
+                    this.uiCtx.fillStyle = borderCol;
+                    this.uiCtx.beginPath();
+                    this.uiCtx.moveTo(b.x, by - 6.5);
+                    this.uiCtx.lineTo(b.x + 3.5, by - 3.5);
+                    this.uiCtx.lineTo(b.x, by - 1);
+                    this.uiCtx.lineTo(b.x - 3.5, by - 3.5);
+                    this.uiCtx.closePath();
+                    this.uiCtx.fill();
+                } else {
+                    let w = 34;
+                    let h = 5;
                     let bx = Math.round(b.x - w * 0.5);
                     let by = Math.round(b.y - 2);
                     let fillW = Math.max(0, Math.round(w * b.pct));
 
-                    // Cornice scura stile slate-950 con bordo ciano/ambra
+                    // Cornice scura stile slate-950 con bordo ciano
                     this.uiCtx.fillStyle = 'rgba(4, 7, 15, 0.92)';
                     this.uiCtx.fillRect(bx - 1.5, by - 1.5, w + 3, h + 3);
-                    this.uiCtx.strokeStyle = b.isElite ? '#fbbf24' : 'rgba(56, 189, 248, 0.55)';
+                    this.uiCtx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
                     this.uiCtx.lineWidth = 1;
                     this.uiCtx.strokeRect(bx - 1.5, by - 1.5, w + 3, h + 3);
 
                     // Riempimento plasma + riflesso superiore + cresta bianca
-                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : (b.isElite ? '#fbbf24' : '#ef4444');
+                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : '#ef4444';
                     this.uiCtx.fillRect(bx, by, fillW, h);
                     if (!b.flash && fillW > 2) {
                         this.uiCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
@@ -15381,7 +15427,7 @@ class Entity {
         if (this.hitSquashTimer > 0) {
             this.hitSquashTimer -= dt;
             if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-                let visualScale = this.isElite ? 1.5 : 1.0;
+                let visualScale = this.isElite ? 1.65 : 1.0;
                 let squash = 1.0 + (this.hitSquashTimer * 1.8); 
                 let stretch = 1.0 - (this.hitSquashTimer * 1.2); 
                 this.mesh.scale.set(visualScale * squash, visualScale * stretch, visualScale * squash);
@@ -15390,7 +15436,7 @@ class Entity {
                 }
             }
         } else if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-            let visualScale = this.isElite ? 1.5 : 1.0;
+            let visualScale = this.isElite ? 1.65 : 1.0;
             this.mesh.scale.setScalar(visualScale);
             if (this !== Game.player && this.state !== 'leaping' && this.type !== 'goblin') {
                 this.mesh.rotation.x = 0;
@@ -18536,12 +18582,12 @@ class Enemy extends Entity {
         if (type !== 'boss' && type !== 'crystal' && type !== 'leaper' && type !== 'slime_mini' && type !== 'dark_prophet') {
             if (Math.random() < eliteChance) {
                 this.isElite = true;
-                size *= 1.5;
-                hpMod *= (type === 'ring_walker' || type === 'golem') ? 3.2 : 4.2;
+                size *= 1.65;
+                hpMod *= (type === 'ring_walker' || type === 'golem') ? 3.8 : 5.0;
                 dmgMod *= 1.35;
                 spdMod *= 1.15;
                 if (Math.random() < 0.12) {
-                    this.isGolden = true; color = 0xffd700; hpMod *= 1.4; spdMod *= 1.25;
+                    this.isGolden = true; color = 0xffd700; hpMod *= 1.45; spdMod *= 1.25;
                 }
             }
         }
@@ -18613,8 +18659,9 @@ class Enemy extends Entity {
             }
         }
 
-        let visualScale = this.isElite ? 1.5 : 1.0;
+        let visualScale = this.isElite ? 1.65 : 1.0;
         this.mesh.scale.setScalar(visualScale);
+     
 
         if (this.type === 'crystal') {
             this.mat.emissive.setHex(color);
@@ -19478,7 +19525,7 @@ class Enemy extends Entity {
             this.goblinTimer -= dt;
             let bs = this.baseModelSize || 11;
             let prog = Math.min(1.0, 1.0 - (this.goblinTimer / 0.42));
-            let vScale = this.isElite ? 1.5 : 1.0;
+            let vScale = this.isElite ? 1.65 : 1.0;
 
             this.mesh.rotation.y = -this.diveAngle + Math.PI / 2;
             this.push(-Math.cos(this.diveAngle), -Math.sin(this.diveAngle), 24 * dt);
