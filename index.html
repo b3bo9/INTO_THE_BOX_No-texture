@@ -9306,9 +9306,18 @@ pushDebris(px, pz, radius, force) {
             this.spawnEnemy();
         }
     },
-  snapCamera() {
-        let camY = isTouchDevice ? 750 : 600;
-        let camZ = this.player.y + (isTouchDevice ? 500 : 400);
+  getMobileAspectScale() {
+        if (!isTouchDevice) return 1.0;
+        let aspect = (this.width && this.height) ? (this.width / this.height) : 0.5;
+        // Sugli smartphone in verticale (aspect < 0.65) alza dolcemente la camera (fino a +18%)
+        // per garantire ~9 tile di visibilità orizzontale ed evitare attacchi fuori schermo
+        return aspect < 0.65 ? Math.min(1.20, 1.05 + (0.65 - aspect) * 0.65) : 1.0;
+    },
+
+    snapCamera() {
+        let mScale = this.getMobileAspectScale();
+        let camY = (isTouchDevice ? 750 : 600) * mScale;
+        let camZ = this.player.y + (isTouchDevice ? 500 : 400) * mScale;
         this._camFocusX = this.player.x;
         this._camFocusZ = this.player.y;
         this._camLeadX = 0;
@@ -9425,19 +9434,20 @@ pushDebris(px, pz, radius, force) {
 
         let moveX = this.player.slideDx || 0;
         let moveZ = this.player.slideDy || 0;
-        let leadSmooth = 1.0 - Math.exp(-dt * 3.5); // Filtro ultra-morbido per l'anticipo di corsa (max 14px)
-        this._camLeadX += (moveX * 14.0 - this._camLeadX) * leadSmooth;
-        this._camLeadZ += (moveZ * 14.0 - this._camLeadZ) * leadSmooth;
+        let leadDist = isTouchDevice ? 30.0 : 16.0;
+        let leadSmooth = 1.0 - Math.exp(-dt * 3.8);
+        this._camLeadX += (moveX * leadDist - this._camLeadX) * leadSmooth;
+        this._camLeadZ += (moveZ * leadDist - this._camLeadZ) * leadSmooth;
 
-        let posSmooth = 1.0 - Math.exp(-dt * 14.0); // Aggancio reattivo ma setoso sul giocatore
+        let posSmooth = 1.0 - Math.exp(-dt * 14.0);
         this._camFocusX += ((this.player.x + this._camLeadX) - this._camFocusX) * posSmooth;
         this._camFocusZ += ((this.player.y + this._camLeadZ) - this._camFocusZ) * posSmooth;
 
-        let baseHeight = (isTouchDevice ? 750 : 600) * this._camZoom;
-        let baseDist = (isTouchDevice ? 500 : 400) * this._camZoom;
+        let mScale = this.getMobileAspectScale();
+        let baseHeight = (isTouchDevice ? 750 : 600) * mScale * this._camZoom;
+        let baseDist = (isTouchDevice ? 500 : 400) * mScale * this._camZoom;
 
         this.camera.position.set(this._camFocusX + shakeX, baseHeight + shakeY, this._camFocusZ + baseDist + shakeZ);
-        // Il punto osservato subisce solo il 25% dello shake per non far ruotare l'orizzonte in modo fastidioso
         this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + shakeZ * 0.25);
         InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
 
@@ -9555,8 +9565,9 @@ loop(timestamp) {
                 let dropCurve = Math.pow(progress, 3); 
                 this.player.mesh.position.y = 800 - (800 * dropCurve); 
                 
-                let s = Math.max(0.01, progress);
-                this.player.mesh.scale.setScalar(s); 
+              let baseHeroScale = isTouchDevice ? 1.22 : 1.10;
+                let s = Math.max(0.01, progress * baseHeroScale);
+                this.player.mesh.scale.setScalar(s);
                 
                 this.player.mesh.updateMatrix();
                 this.player.mesh.updateMatrixWorld(true);
@@ -9598,7 +9609,7 @@ loop(timestamp) {
                 this.state = 'PLAYING';
                 this.player.mesh.position.y = 0;
                 this.player.mesh.rotation.y = 0;
-                this.player.mesh.scale.setScalar(1.0);
+               this.player.mesh.scale.setScalar(isTouchDevice ? 1.22 : 1.10);
                 this.camera.fov = 50;
                 this.camera.updateProjectionMatrix();
                 
@@ -9872,7 +9883,7 @@ loop(timestamp) {
         // Ora la mappa sa quale tema leggere!
         this.map = new GameMap(CHUNK_SIZE, CHUNK_SIZE); this.map.generate(this.isBossFloor);
         
-        let floorColor = 0xffffff; let mutatorText = ""; let camDist = isTouchDevice ? 1000 : 750;
+        let floorColor = 0xffffff; let mutatorText = ""; let camDist = isTouchDevice ? 1150 : 750;
         
         // Leggiamo il tema appena estratto per impostare luci e nebbia
         let currentTheme = MAP_THEMES[this.currentThemeIndex];
@@ -16938,17 +16949,18 @@ class Player extends Entity {
         }
         let greenSpdMult = 1.0 + ((this.greenSpeedStacks || 0) * 0.05);
 
-       // --- LOGICA MASSA CRITICA ---
-let massScale = 1.0;
-let massSpeedPenalty = 1.0;
-if (Game.isCorrupted && Game.corruptedType === 'critical_mass') {
-    // Cresce fino a 2.5x la grandezza normale a 50 combo!
-    massScale = 1.0 + Math.min(Game.combo * 0.03, 1.5);
-    // Diventi più lento man mano che diventi gigante (fino al -30% di velocità)
-    massSpeedPenalty = Math.max(0.7, 1.0 - (massScale - 1.0) * 0.2);
-}
-// Aggiorna fisicamente l'hitbox per farti prendere danni più facilmente!
-this.radius = 16 * massScale;
+      // --- SCALA VISIVA EROICA (1.22x su Mobile) SEPARATA DALL'HITBOX (16) ---
+        let heroVisualMult = isTouchDevice ? 1.22 : 1.10;
+        let logicMassScale = 1.0;
+        let massSpeedPenalty = 1.0;
+        if (Game.isCorrupted && Game.corruptedType === 'critical_mass') {
+            logicMassScale = 1.0 + Math.min(Game.combo * 0.03, 1.5);
+            massSpeedPenalty = Math.max(0.7, 1.0 - (logicMassScale - 1.0) * 0.2);
+        }
+        // L'hitbox cresce SOLO nel mutatore Massa Critica, restando 16 di base per schivare bene!
+        this.radius = 16 * logicMassScale;
+        // La mesh 3D invece usa la scala eroica maggiorata
+        let massScale = logicMassScale * heroVisualMult;
 
 let buffMovMult = this.shortBuffs.movSpeed > 0 ? 1.10 : 1.0; 
 let currentSpeed = this.baseSpeed * (1 + Math.min(Game.combo * 0.008, 0.35 * flowCapMult)) * this.modifiers.speedMult * shockSpdMult * dashSpdMult * miserSpdBonus * (1.0 + (this.essenceSpeedBonus || 0)) * auraSpdMult * buffMovMult * greenSpdMult;
