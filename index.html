@@ -8169,7 +8169,7 @@ const UI = {
                 if (Game.player.overdrive) {
                     for (let i = 0; i < 3; i++) this.els.stacks[i].className = `stack-dot active ${Game.player.essence}`;
                     this.els.overdriveText.classList.remove('hidden');
-                    this.els.overdriveText.innerText = ESSENCE_NAMES[Game.player.essence];
+                    this.els.overdriveText.innerText = 'OVERDRIVE';
                     this.els.overdriveText.style.color = '#' + ESSENCE_COLORS[Game.player.essence].toString(16).padStart(6, '0');
                 } else {
                     for (let i = 0; i < 3; i++) {
@@ -11208,14 +11208,11 @@ startGame(diffMult) {
                     if(UI.els.coins) UI.els.coins.innerText = Game.coins;
                     let shopCoinsEl = document.getElementById('shop-coins');
                     if(shopCoinsEl) shopCoinsEl.innerText = Game.coins;
-
-                    Game.getFloatingText().spawn(this.player.x, this.player.y, "+1", '#ffaa00', 25, true);
                     
                     if (this.player.modifiers.miserPact) {
                         if (this.player.miserBuffStacks === undefined) { this.player.miserBuffStacks = 0; this.player.miserBuffTimer = 0; }
                         this.player.miserBuffTimer = 3.0;
                         this.player.miserBuffStacks = Math.min(5, this.player.miserBuffStacks + 1); 
-                        Game.getFloatingText().spawn(this.player.x, this.player.y + 15, `FRENESIA x${this.player.miserBuffStacks}`, '#ffd700', 18, true);
                     }
                 }
             }
@@ -11660,7 +11657,9 @@ startGame(diffMult) {
                 let dynamicScale = targetSize / 40.0; // 40px è la nostra base fissa
                 let finalScale = (ft.isCrit ? (1.5 - progress*0.5) : (1.2 - progress*0.2)) * dynamicScale * ft.scalePop;
                 
-                let fontStr = `800 40px 'JetBrains Mono', monospace`; // Cambiato font per leggibilità "Hacker/RPG"
+               let fontStr = ft.isCallout
+                    ? `italic 900 40px 'Orbitron', sans-serif`
+                    : `800 40px 'JetBrains Mono', monospace`;
                 
                 if (currentFont !== fontStr) { this.uiCtx.font = fontStr; currentFont = fontStr; }
                 if (currentColor !== ft.color) { this.uiCtx.fillStyle = ft.color; currentColor = ft.color; }
@@ -15396,12 +15395,10 @@ class Entity {
                             p.glacialShieldMesh.material.color.setHex(0xff1133);
                             p.glacialShieldMesh.visible = true;
                         }
-                        Game.getFloatingText().spawn(this.x, this.y, `+${Math.max(1, Math.round(heal))} HP`, '#FF1133', 20, true);
                     } else if ((p.tempHp || 0) < maxBloodShield) {
                         p.tempHp = Math.min(maxBloodShield, (p.tempHp || 0) + heal);
                         p.glacialShieldMesh.material.color.setHex(0xff1133);
                         p.glacialShieldMesh.visible = true;
-                        Game.getFloatingText().spawn(this.x, this.y, `+SCUDO SANGUE`, '#FF1133', 18, true);
                     }
                 }
             }
@@ -16084,7 +16081,8 @@ class Player extends Entity {
             UI.triggerPulseClass(UI.els.essenceHud, 'anim-hud-pop');
         }
         if (Game.matchStats) Game.matchStats.essencesUsed[this.essence]++;
-        Game.getFloatingText().spawn(this.x, this.y, ESSENCE_NAMES[this.essence] + "!", '#' + ESSENCE_COLORS[this.essence].toString(16).padStart(6, '0'), 40, true);
+        let odColorHex = '#' + ESSENCE_COLORS[this.essence].toString(16).padStart(6, '0');
+        Game.getFloatingText().spawn(this.x, this.y, "OVERDRIVE", odColorHex, 42, true);
         let mat = this.essence === 'red' ? SharedMat.spriteRed : (this.essence === 'blue' ? SharedMat.spriteBlue : SharedMat.spriteGreen);
         let pCount = AppSettings.isLow ? 4 : (isTouchDevice ? 10 : (AppSettings.isUltraPC ? 60 : 30));
         for(let i=0; i<pCount; i++) Game.getParticle().spawn(this.x, 20, this.y, mat, 'trail');
@@ -18094,34 +18092,25 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         
        // 2. Priorità: Scudo Glaciale (Temp Hp Verde/Blu)
         if (this.tempHp > 0) {
-            Game.getFloatingText().spawn(this.x, this.y + 20, "ASSORBITO!", '#00ffaa', 25, true);
             Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteGreen, 'spark');
-            
-           // Flash visivo dello scudo glaciale quando colpito (Zero-Allocation Fix)
             this.glacialShieldMesh.material.opacity = 0.8; 
-            this.invincibilityTimer = 0.2; // L'update si occuperà di riabbassare l'opacità
+            this.invincibilityTimer = 0.2;
             
             if (this.tempHp >= amount) {
                 this.tempHp -= amount;
-                return; // Il danno è stato assorbito
+                return;
             } else {
                 amount -= this.tempHp;
                 this.tempHp = 0;
-                this.glacialShieldMesh.visible = false; // <-- FIX: Ora nasconde quello giusto!
+                this.glacialShieldMesh.visible = false;
                 AudioEngine.playShoot('explosive_arrow'); 
             }
         }
         
         let wasDead = this.dead; amount *= this.modifiers.dmgTakenMult; 
         
-   if (this.modifiers.flowMastery && !wasDead) {
-            if (Game.combo >= 50) {
-                amount *= 1.12;
-                Game.getFloatingText().spawn(this.x, this.y + 30, "SOVRACCARICO!", '#ff0000', 26, true);
-            } else {
-                amount *= 0.88;
-                Game.getFloatingText().spawn(this.x, this.y + 30, "DIFESA!", '#00DDFF', 26, true);
-            }
+        if (this.modifiers.flowMastery && !wasDead) {
+            amount *= (Game.combo >= 50) ? 1.12 : 0.88;
         }
 
         if (Game.matchStats) Game.matchStats.dmgTaken += amount;
@@ -18583,11 +18572,11 @@ class Enemy extends Entity {
             if (Math.random() < eliteChance) {
                 this.isElite = true;
                 size *= 1.65;
-                hpMod *= (type === 'ring_walker' || type === 'golem') ? 3.8 : 5.0;
+                hpMod *= (type === 'ring_walker' || type === 'golem') ? 5.2 : 6.8;
                 dmgMod *= 1.35;
                 spdMod *= 1.15;
                 if (Math.random() < 0.12) {
-                    this.isGolden = true; color = 0xffd700; hpMod *= 1.45; spdMod *= 1.25;
+                    this.isGolden = true; color = 0xffd700; hpMod *= 1.60; spdMod *= 1.25;
                 }
             }
         }
@@ -18741,10 +18730,8 @@ class Enemy extends Entity {
         this.shadowMesh.updateMatrix();
         this.shadowMesh.visible = !AppSettings.shadowsEnabled;
 
-        if (this.isElite) {
-            let txt = this.isGolden ? "ELITE DORATO" : "ELITE";
-            let col = this.isGolden ? '#fbbf24' : '#ff3300';
-            Game.getFloatingText().spawn(this.x, this.y + 20, txt, col, 35, true);
+        if (this.isGolden) {
+            Game.getFloatingText().spawn(this.x, this.y + 20, "ELITE DORATO", '#fbbf24', 32, true);
         }
     }
 
@@ -19246,7 +19233,7 @@ class Enemy extends Entity {
                         if (getTargetPriority(e) === prio && !e.isProphetBuffed && !this.buffTargets.includes(e) && MathUtils.distanceSq(this, e) <= BEAM_ACQUIRE_SQ) {
                             this.buffTargets.push(e);
                             e.isProphetBuffed = true;
-                            Game.getFloatingText().spawn(e.x, e.y + 20, prio === 1 ? "PROTETTO!" : "FURENTE!", '#ff5500', 30, true);
+                       
                         }
                     }
                 }
@@ -20438,7 +20425,7 @@ class Enemy extends Entity {
 
         if (this.isElite) {
             if (this.isGolden) Game.getFloatingText().spawn(this.x, this.y, "JACKPOT!", '#fbbf24', 50, true);
-            else Game.getFloatingText().spawn(this.x, this.y, "ELITE SCONFITTO", '#ffaa00', 30, true);
+           
 
             let eliteDensityScale = 28 / Math.max(28, Game.floorMaxKills);
             let ownedRelicsPenalty = 1 / (1 + Game.player.relics.length * 0.25);
@@ -20600,11 +20587,11 @@ class BossEnemy extends Enemy {
             if (this.bossElement === 'blue') {
                 this.leapDuration = 0.3; // Scatto fulmineo lineare
                 this.bossLeapCooldown = this.isEnraged ? 3.0 : 5.0; 
-                Game.getFloatingText().spawn(this.x, this.y, "FLASH!", '#00DDFF', 40, true);
+               
             } else {
                 this.leapDuration = 0.8; // Salto parabolico per Rosso e Verde
                 this.bossLeapCooldown = this.isEnraged ? 5.0 : 8.0; 
-                Game.getFloatingText().spawn(this.x, this.y, "SCHIANTO!", '#ffaa00', 40, true);
+              
             }
         }
 
@@ -20695,7 +20682,7 @@ class BossEnemy extends Enemy {
         }
         if(spawned) { 
             let colorHex = this.bossElement === 'blue' ? '#00DDFF' : (this.bossElement === 'green' ? '#33FF00' : '#ff0000');
-            Game.getFloatingText().spawn(this.x, this.y, "MINIONS!", colorHex, 30); Game.addTrauma(0.5); 
+          
         }
     }
     
@@ -21300,15 +21287,11 @@ if (type === 'arrow' || type === 'homing_arrow') {
                         let healPct = (Game.player.essence === 'green' ? 0.05 : 0.03) * Game.getHealScale();
                         let heal = Game.player.stats.maxHp * healPct; 
                         Game.player.stats.hp = Math.min(Game.player.stats.maxHp, Game.player.stats.hp + heal);
-                        Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 15, `+${Math.max(1, Math.floor(heal))}`, '#00ffaa', 22, true);
                     }
 
                     Game.addUltimateCharge(5.0); 
-                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 15, `+5%`, '#00DDFF', 22, true);
-                    
                     Game.player.shieldFlashTimer = 0.15;
 
-                    // --- SCUDO ROSSO: Riflette il proiettile ---
                     if (Game.player.essence === 'red') {
                         let returnAngle = this.angle + Math.PI; 
                         if (this.sourceEntity && !this.sourceEntity.dead) {
@@ -21316,24 +21299,19 @@ if (type === 'arrow' || type === 'homing_arrow') {
                         }
                         let p = Game.getProjectile(); 
                         p.spawn(this.x, this.y, returnAngle, 800, Game.player.stats.maxDmg * 1.5, 'player', 'explosive_arrow'); 
-                        p.radius = 8; p.mesh.scale.setScalar(8); // Mini palla!
+                        p.radius = 8; p.mesh.scale.setScalar(8);
                         p.canInfect = false;
                         AudioEngine.playShoot('flame');
-                    }
-                    // --- SCUDO BLU: Stordisce il tiratore a distanza ---
-                    else if (Game.player.essence === 'blue') {
+                    } else if (Game.player.essence === 'blue') {
                         if (this.sourceEntity && !this.sourceEntity.dead && this.sourceEntity.frozenTimer !== undefined) {
                             this.sourceEntity.frozenTimer = 1.5;
                             Game.getParticle().spawn(this.sourceEntity.x, 20, this.sourceEntity.y, SharedMat.spriteBlue, 'nova');
                             AudioEngine.playShoot('chain_lightning');
                         }
-                    }
-                    // --- SCUDO VERDE: Accumula Velocità per 3s (Cap 4 Stacks = +20%) ---
-                    else if (Game.player.essence === 'green') {
+                    } else if (Game.player.essence === 'green') {
                         Game.player.greenSpeedTimer = 3.0;
                         Game.player.greenSpeedStacks = Math.min(4, (Game.player.greenSpeedStacks || 0) + 1);
                         Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteGreen, 'spark');
-                        Game.getFloatingText().spawn(Game.player.x, Game.player.y - 15, `VEL +${Game.player.greenSpeedStacks * 5}%`, '#33ff00', 20, true);
                     }
                     this.handleHit(null);
                 } else {
@@ -21820,8 +21798,9 @@ class FloatingText {
         this.y = z; 
         this.h = 40;
         this.text = text.replace('!', ''); 
+        this.isCallout = /[A-Za-z]{2,}/.test(this.text); // True per parole (OVERDRIVE, ecc.), False per numeri
         this.color = color; 
-        this.size = size * 0.85; // Riduzione generale della dimensione base
+        this.size = size * (this.isCallout ? 0.80 : 0.85);
         this.isCrit = isCrit;
         this.life = isCrit ? 1.2 : 0.8; // Leggermente più longevi per essere letti bene
         this.maxLife = this.life; 
