@@ -2751,7 +2751,8 @@ playCoin() {
 const MathUtils = {
     distanceSq: (p1, p2) => (p2.x - p1.x)**2 + (p2.y - p1.y)**2, distance: (p1, p2) => Math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2),
     angle: (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x), randomRange: (min, max) => Math.random() * (max - min) + min,
-    randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min, lerp: (start, end, amt) => (1 - amt) * start + amt * end
+    randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min, lerp: (start, end, amt) => (1 - amt) * start + amt * end,
+    clamp: (val, min, max) => Math.max(min, Math.min(max, val))
 };
 
 const TILE_SIZE = 64; const CHUNK_SIZE = 30; const FIXED_TIME_STEP = 1 / 60; const MAX_TIME_STEP = 0.1;
@@ -10746,9 +10747,9 @@ startGame(diffMult) {
                 const ig = Math.max(0.05, map.initialRockColor.g);
                 const ib = Math.max(0.05, map.initialRockColor.b);
                 tr.toBankTint.setRGB(
-                    MathUtils.clamp(tr.toRockCol.r / ir, 0.45, 1.65),
-                    MathUtils.clamp(tr.toRockCol.g / ig, 0.45, 1.65),
-                    MathUtils.clamp(tr.toRockCol.b / ib, 0.45, 1.65)
+                    Math.max(0.45, Math.min(1.65, tr.toRockCol.r / ir)),
+                    Math.max(0.45, Math.min(1.65, tr.toRockCol.g / ig)),
+                    Math.max(0.45, Math.min(1.65, tr.toRockCol.b / ib))
                 );
             } else {
                 tr.toBankTint.setRGB(1, 1, 1);
