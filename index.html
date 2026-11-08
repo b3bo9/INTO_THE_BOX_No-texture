@@ -4599,6 +4599,9 @@ const DeathSceneSystem = {
             eMat = new THREE.MeshLambertMaterial({ color: 0x050505, emissive: 0xaa0000, emissiveIntensity: 1.4, side: THREE.DoubleSide });
         } else if (k.isGolden) {
             eMat = new THREE.MeshLambertMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 1.1, side: THREE.DoubleSide });
+        } else if (k.isMegaElite) {
+            eMat = new THREE.MeshLambertMaterial({ color: eColor, emissive: 0x77001a, emissiveIntensity: 1.15, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide });
+            baseSize *= 1.22;
         }
 
         const builtEnemy = ModelFactory.buildEnemy(eType, baseSize, eMat);
@@ -6541,6 +6544,63 @@ function createRuneTexture() {
     let tex = new THREE.CanvasTexture(canvas); tex.encoding = THREE.sRGBEncoding; return tex;
 }
 const RUNE_TEX = createRuneTexture();
+function createMegaAuraTexture() {
+    const size = 256, c = size / 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, size, size);
+
+    // 1. Campo energetico cremisi radiale (più intenso verso il perimetro di pericolo)
+    const grad = ctx.createRadialGradient(c, c, 8, c, c, 122);
+    grad.addColorStop(0.0,  'rgba(255, 16, 56, 0.08)');
+    grad.addColorStop(0.45, 'rgba(255, 16, 56, 0.16)');
+    grad.addColorStop(0.76, 'rgba(255, 24, 68, 0.42)');
+    grad.addColorStop(0.90, 'rgba(255, 40, 85, 0.68)');
+    grad.addColorStop(0.96, 'rgba(255, 120, 150, 0.35)');
+    grad.addColorStop(1.0,  'rgba(255, 16, 56, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // 2. Cerchio perimetrale esterno inciso e anello runico tratteggiato interno
+    ctx.strokeStyle = 'rgba(255, 70, 110, 0.85)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(c, c, 112, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 180, 200, 0.65)';
+    ctx.lineWidth = 2.5;
+    const segs = 12;
+    for (let i = 0; i < segs; i++) {
+        const a0 = (i / segs) * Math.PI * 2 + 0.06;
+        const a1 = ((i + 0.62) / segs) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(c, c, 94, a0, a1);
+        ctx.stroke();
+    }
+
+    // 3. Denti di pericolo rivolti verso l'interno lungo il bordo
+    ctx.fillStyle = 'rgba(255, 90, 125, 0.78)';
+    const teeth = 8;
+    for (let i = 0; i < teeth; i++) {
+        ctx.save();
+        ctx.translate(c, c);
+        ctx.rotate((Math.PI * 2 / teeth) * i);
+        ctx.beginPath();
+        ctx.moveTo(-6, -111);
+        ctx.lineTo(6, -111);
+        ctx.lineTo(0, -96);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+}
+const MEGA_AURA_TEX = createMegaAuraTexture();
 
 // OTTIMIZZAZIONE 1: Cache Globale delle texture del pavimento per evitare VRAM Leaks
 const GLOBAL_WALL_TEX = createPatternTexture('wall'); 
@@ -6675,7 +6735,9 @@ const GLOBAL_ALPHA_TEX = createOrganicAlphaMap();
         bumpScale: 0.15
     }),
     
-    scorchMark: new THREE.MeshBasicMaterial({ map: BLOB_SHADOW_TEX, color: 0x000000, transparent: true, opacity: 0.85, depthWrite: false })
+    scorchMark: new THREE.MeshBasicMaterial({ map: BLOB_SHADOW_TEX, color: 0x000000, transparent: true, opacity: 0.85, depthWrite: false }),
+    megaAuraDisc: new THREE.MeshBasicMaterial({ map: MEGA_AURA_TEX, color: 0xff1844, transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0.02 }),
+    megaAuraRing: new THREE.MeshBasicMaterial({ color: 0xff2255, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false })
 };
 SharedMat.coin = new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xaa6600, metalness: 1.0, roughness: 0.2});
 
@@ -9921,6 +9983,7 @@ loop(timestamp) {
         this.bossDefeatedTimer = 0; this.isBossFloor = (this.floor % 5 === 0);
         this.floorEndTimer = 0; this.floorEndTriggered = false;
         this.floorProphets = 0; // CAP PROFETI: Inizializza il contatore
+        this.floorMegaElites = 0; // CAP MEGA ELITE: Massimo 2 per piano
         this.floorBonusRelics = 0; // Limite massimo di reliquie extra droppabili nel piano corrente
         this.enemyGrid = new SpatialHashGrid([[-1000, -1000], [CHUNK_SIZE*TILE_SIZE+1000, CHUNK_SIZE*TILE_SIZE+1000]], [200, 200]);
         
@@ -10082,7 +10145,7 @@ loop(timestamp) {
 
                     let pursuer = this.getEnemy();
                     if (pursuer) {
-                        pursuer.spawn(pos.x * TILE_SIZE + TILE_SIZE/2, pos.y * TILE_SIZE + TILE_SIZE/2, 'golem', this.floor);
+                        pursuer.spawn(pos.x * TILE_SIZE + TILE_SIZE/2, pos.y * TILE_SIZE + TILE_SIZE/2, 'golem', this.floor, true);
                         pursuer.isPursuer = true;
                         // FIX NEMESI: Aumento drastico della velocità
                         pursuer.baseSpeed = pursuer.baseSpeed * 4.0; 
@@ -11410,25 +11473,26 @@ startGame(diffMult) {
             // Culling preventivo: usa _lastAuraType già calcolato in update()
             let isDamaged = (e.stats.hp < e.stats.maxHp);
             let auraType = e._lastAuraType;
-            if (!isDamaged && !auraType && !e.isBoss) continue;
+            if (!isDamaged && !auraType && !e.isBoss && !e.isMegaElite) continue;
 
             let dx = refX - e.x;
             let dy = refY - e.y;
             let distToCamSq = (dx * dx) + (dy * dy);
             
-            // Distanza di visuale per elementi UI (più ampia per il Boss)
-            let maxUiDistSq = e.isBoss ? 1800000 : 1000000;
+            // Distanza di visuale per elementi UI (più ampia per il Boss e Mega Elite)
+            let maxUiDistSq = (e.isBoss || e.isMegaElite) ? 1800000 : 1000000;
             if (distToCamSq < maxUiDistSq) { 
-                let yOffset = e.isBoss ? (e.radius * 3.4) : (e.type === 'ring_walker' ? (e.radius * 3.55) : (e.radius + (e.isElite ? 44 : 35)));
+                let yOffset = e.isBoss ? (e.radius * 3.4) : (e.type === 'ring_walker' ? (e.radius * (e.isMegaElite ? 3.72 : 3.55)) : (e.radius + (e.isMegaElite ? 58 : (e.isElite ? 44 : 35))));
                 let pos = this.toScreenPosition(e.x, yOffset, e.y);
                 
                 if (pos.z < 1 && pos.x > -60 && pos.x < this.width + 60 && pos.y > -60 && pos.y < this.height + 60) {
-                    if ((isDamaged || e.isBoss) && this._hpBarCount < this._hpBars.length) {
+                    if ((isDamaged || e.isBoss || e.isMegaElite) && this._hpBarCount < this._hpBars.length) {
                         let bar = this._hpBars[this._hpBarCount];
                         bar.x = pos.x;
                         bar.y = pos.y;
                         bar.pct = Math.max(0, e.stats.hp / e.stats.maxHp);
                         bar.isElite = e.isElite;
+                        bar.isMegaElite = !!e.isMegaElite;
                         bar.isGolden = !!e.isGolden;
                         bar.isBoss = !!e.isBoss;
                         bar.bossElement = e.bossElement;
@@ -11558,6 +11622,69 @@ startGame(diffMult) {
                     this.uiCtx.lineTo(b.x - 5, by - 4);
                     this.uiCtx.closePath();
                     this.uiCtx.fill();
+               } else if (b.isMegaElite) {
+                    // --- BARRA HP CORAZZATA MEGA ELITE CON CONTORNO DI PERICOLOSITÀ ---
+                    let w = 68;
+                    let h = 8;
+                    let bx = Math.round(b.x - w * 0.5);
+                    let by = Math.round(b.y - 5);
+                    let fillW = Math.max(0, Math.round(w * b.pct));
+                    let dangerPulse = 0.5 + 0.5 * Math.sin(Game.playTime * 9.0);
+
+                    // 1. Contorno esterno di pericolosità pulsante (alone + cornice di allerta cremisi)
+                    this.uiCtx.strokeStyle = `rgba(255, 16, 64, ${(0.42 + dangerPulse * 0.38).toFixed(2)})`;
+                    this.uiCtx.lineWidth = 3.2;
+                    this.uiCtx.strokeRect(bx - 5, by - 5, w + 10, h + 10);
+
+                    this.uiCtx.strokeStyle = dangerPulse > 0.5 ? '#ff2a55' : '#ff003c';
+                    this.uiCtx.lineWidth = 1.5;
+                    this.uiCtx.strokeRect(bx - 4.5, by - 4.5, w + 9, h + 9);
+
+                    // 2. Sfondo corazzato scuro e cornice interna oro-cremisi
+                    this.uiCtx.fillStyle = 'rgba(8, 2, 10, 0.96)';
+                    this.uiCtx.fillRect(bx - 3, by - 3, w + 6, h + 6);
+                    this.uiCtx.strokeStyle = '#fbbf24';
+                    this.uiCtx.lineWidth = 1.4;
+                    this.uiCtx.strokeRect(bx - 2, by - 2, w + 4, h + 4);
+
+                    // 3. Speroni laterali di pericolo (chevron acuminati a sinistra e destra)
+                    this.uiCtx.fillStyle = '#ff1e42';
+                    this.uiCtx.beginPath();
+                    this.uiCtx.moveTo(bx - 10, by + h * 0.5);
+                    this.uiCtx.lineTo(bx - 5, by - 3);
+                    this.uiCtx.lineTo(bx - 5, by + h + 3);
+                    this.uiCtx.moveTo(bx + w + 10, by + h * 0.5);
+                    this.uiCtx.lineTo(bx + w + 5, by - 3);
+                    this.uiCtx.lineTo(bx + w + 5, by + h + 3);
+                    this.uiCtx.fill();
+
+                    // 4. Riempimento HP cremisi-magma + riflesso superiore + cresta incandescente
+                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : '#e11d48';
+                    this.uiCtx.fillRect(bx, by, fillW, h);
+                    if (!b.flash && fillW > 2) {
+                        this.uiCtx.fillStyle = '#fb7185';
+                        this.uiCtx.fillRect(bx, by, fillW, 2.2);
+                        this.uiCtx.fillStyle = '#ffffff';
+                        this.uiCtx.fillRect(bx + fillW - 1.5, by, 1.5, h);
+                    }
+
+                    // 5. Due tacche divisorie (3 segmenti = 3x HP rispetto a un Elite normale)
+                    this.uiCtx.fillStyle = 'rgba(8, 2, 10, 0.85)';
+                    this.uiCtx.fillRect(bx + Math.round(w * 0.333) - 0.5, by, 1.2, h);
+                    this.uiCtx.fillRect(bx + Math.round(w * 0.666) - 0.5, by, 1.2, h);
+
+                    // 6. Fregio superiore di pericolo (losanga cremisi bordata d'oro)
+                    this.uiCtx.fillStyle = '#ff1e42';
+                    this.uiCtx.beginPath();
+                    this.uiCtx.moveTo(b.x, by - 10.5);
+                    this.uiCtx.lineTo(b.x + 5, by - 5.5);
+                    this.uiCtx.lineTo(b.x, by - 2);
+                    this.uiCtx.lineTo(b.x - 5, by - 5.5);
+                    this.uiCtx.closePath();
+                    this.uiCtx.fill();
+                    this.uiCtx.strokeStyle = '#fbbf24';
+                    this.uiCtx.lineWidth = 1.1;
+                    this.uiCtx.stroke();
                } else if (b.isElite) {
                     // --- BARRA HP CORAZZATA ELITE ---
                     let w = 54;
@@ -11675,7 +11802,7 @@ startGame(diffMult) {
            edgeX = Math.max(padding, Math.min(this.width - padding, edgeX));
            edgeY = Math.max(padding, Math.min(this.height - padding, edgeY));
            
-           this.uiCtx.fillStyle = e.isElite ? 'rgba(251, 191, 36, 0.32)' : 'rgba(239, 68, 68, 0.25)';
+           this.uiCtx.fillStyle = e.isMegaElite ? 'rgba(255, 24, 68, 0.62)' : (e.isElite ? 'rgba(251, 191, 36, 0.32)' : 'rgba(239, 68, 68, 0.25)');
            this.uiCtx.beginPath();
            this.uiCtx.moveTo(edgeX + Math.cos(angle) * 10, edgeY + Math.sin(angle) * 10);
            this.uiCtx.lineTo(edgeX + Math.cos(angle - 2.5) * 14, edgeY + Math.sin(angle - 2.5) * 14);
@@ -15307,6 +15434,8 @@ class Entity {
         this.auraRingMesh.visible = false;
         this.auraGlow.visible = false;
         this.shadowMesh.visible = false;
+        if (this.megaAuraRing) this.megaAuraRing.visible = false;
+        if (this.megaAuraGlow) this.megaAuraGlow.visible = false;
     }
     
     move(dx, dy, dt) {
@@ -15482,8 +15611,8 @@ class Entity {
                 if (this === Game.player) {
                     this.updateAppearance();
                 } else {
-                   let baseEmissive = this.isGolden ? 0xffaa00 : (this.isBerserk ? 0xff0000 : (this.isElite ? (this.type === 'ring_walker' ? 0x220406 : 0x440000) : (this.type === 'goblin' ? 0xff2200 : (this.type === 'slime' ? 0xaa00ff : (this.type === 'slime_mini' ? 0xcc33ff : 0x000000)))));
-                    let baseIntensity = this.isGolden ? 2.0 : (this.isBerserk ? 1.0 : (this.isElite ? (this.type === 'ring_walker' ? 0.45 : 1.0) : (this.type === 'goblin' ? 0.75 : ((this.type === 'slime' || this.type === 'slime_mini') ? 0.35 : 0.0))));
+                   let baseEmissive = this.isGolden ? 0xffaa00 : (this.isBerserk ? 0xff0000 : (this.isMegaElite ? (this.type === 'ring_walker' ? 0x3a0412 : 0x77001a) : (this.isElite ? (this.type === 'ring_walker' ? 0x220406 : 0x440000) : (this.type === 'goblin' ? 0xff2200 : (this.type === 'slime' ? 0xaa00ff : (this.type === 'slime_mini' ? 0xcc33ff : 0x000000))))));
+                    let baseIntensity = this.isGolden ? 2.0 : (this.isBerserk ? 1.0 : (this.isMegaElite ? (this.type === 'ring_walker' ? 0.65 : 1.30) : (this.isElite ? (this.type === 'ring_walker' ? 0.45 : 1.0) : (this.type === 'goblin' ? 0.75 : ((this.type === 'slime' || this.type === 'slime_mini') ? 0.35 : 0.0)))));
                     for (let i = 0; i < this.flashMats.length; i++) {
                         this.flashMats[i].emissive.setHex(baseEmissive);
                         this.flashMats[i].emissiveIntensity = baseIntensity;
@@ -15495,7 +15624,7 @@ class Entity {
         if (this.hitSquashTimer > 0) {
             this.hitSquashTimer -= dt;
             if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-                let visualScale = this.isElite ? 1.65 : 1.0;
+                let visualScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
                 let squash = 1.0 + (this.hitSquashTimer * 1.8); 
                 let stretch = 1.0 - (this.hitSquashTimer * 1.2); 
                 this.mesh.scale.set(visualScale * squash, visualScale * stretch, visualScale * squash);
@@ -15504,7 +15633,7 @@ class Entity {
                 }
             }
         } else if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-            let visualScale = this.isElite ? 1.65 : 1.0;
+            let visualScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
             this.mesh.scale.setScalar(visualScale);
             if (this !== Game.player && this.state !== 'leaping' && this.type !== 'goblin') {
                 this.mesh.rotation.x = 0;
@@ -18391,6 +18520,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 };
                 let killerName = enemyNamesIT[killerEntity.type] || 'Entità Oscura';
                 if (killerEntity.isPursuer) killerName = 'Inseguitore Immortale';
+                else if (killerEntity.isMegaElite) killerName += ' (Mega Elite)';
                 else if (killerEntity.isGolden) killerName += ' (Dorato)';
                 else if (killerEntity.isElite) killerName += ' (Elite)';
                 if (source === 'hazard' || source === 'pit') killerName = 'Baratro Infernale';
@@ -18401,6 +18531,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     type: killerEntity.type || 'orc',
                     color: (killerEntity.mat && killerEntity.mat.color) ? killerEntity.mat.color.getHex() : (defaultColors[killerEntity.type] || 0x5c4033),
                     isElite: !!killerEntity.isElite,
+                    isMegaElite: !!killerEntity.isMegaElite,
                     isGolden: !!killerEntity.isGolden,
                     isPursuer: !!killerEntity.isPursuer,
                     size: killerEntity.baseModelSize || 16,
@@ -18539,7 +18670,7 @@ class Enemy extends Entity {
         this.mat = null;
     }
 
-  spawn(x, y, type, level) {
+  spawn(x, y, type, level, disableElite = false) {
         this.active = true;
         this.dead = false;
         this.thinkOffset = Math.floor(Math.random() * 5);
@@ -18638,15 +18769,26 @@ class Enemy extends Entity {
 
         const baseModelSize = size;
         this.isElite = false;
+        this.isMegaElite = false;
+        this.megaAuraTick = 0.30;
         let eliteChance = Math.min(0.12, 0.03 + Game.floor * 0.005);
-        if (type !== 'boss' && type !== 'crystal' && type !== 'leaper' && type !== 'slime_mini' && type !== 'dark_prophet') {
+        if (!disableElite && type !== 'boss' && type !== 'crystal' && type !== 'leaper' && type !== 'slime_mini' && type !== 'dark_prophet') {
             if (Math.random() < eliteChance) {
                 this.isElite = true;
                 size *= 1.65;
                 hpMod *= (type === 'ring_walker' || type === 'golem') ? 5.2 : 6.8;
                 dmgMod *= 1.35;
                 spdMod *= 1.15;
-                if (Math.random() < 0.12) {
+
+                // MEGA ELITE: probabilità inferiore rispetto a un Elite normale e cap di massimo 2 per piano
+                let megaChance = Math.min(0.28, 0.16 + Game.floor * 0.006);
+                if ((Game.floorMegaElites || 0) < 2 && Math.random() < megaChance) {
+                    this.isMegaElite = true;
+                    Game.floorMegaElites = (Game.floorMegaElites || 0) + 1;
+                    size *= 1.30; // Scala ~2.15x rispetto al modello base
+                    hpMod *= 3.0; // HP triplicati rispetto a un Elite normale
+                    dmgMod *= 1.20;
+                } else if (Math.random() < 0.12) {
                     this.isGolden = true; color = 0xffd700; hpMod *= 1.60; spdMod *= 1.25;
                 }
             }
@@ -18719,7 +18861,7 @@ class Enemy extends Entity {
             }
         }
 
-        let visualScale = this.isElite ? 1.65 : 1.0;
+        let visualScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
         this.mesh.scale.setScalar(visualScale);
      
 
@@ -18730,6 +18872,10 @@ class Enemy extends Entity {
             this.mat.color.setHex(0xffd700);
             this.mat.emissive.setHex(0xffaa00);
             this.mat.emissiveIntensity = 2.0;
+       } else if (this.isMegaElite) {
+            this.mat.color.setHex(color);
+            this.mat.emissive.setHex(this.type === 'ring_walker' ? 0x3a0412 : 0x77001a);
+            this.mat.emissiveIntensity = this.type === 'ring_walker' ? 0.65 : 1.30;
        } else if (this.isElite) {
             this.mat.color.setHex(color);
             this.mat.emissive.setHex(this.type === 'ring_walker' ? 0x220406 : 0x440000);
@@ -18801,12 +18947,103 @@ class Enemy extends Entity {
         this.shadowMesh.updateMatrix();
         this.shadowMesh.visible = !AppSettings.shadowsEnabled;
 
-        if (this.isGolden) {
+        if (this.isMegaElite) {
+            this.megaAuraRadius = Math.round(this.radius * 2.25 + 36);
+            if (!this.megaAuraGlow) {
+                this.megaAuraGlow = new THREE.Mesh(window.GLOBAL_TELEGRAPH_GEO, SharedMat.megaAuraDisc);
+                this.megaAuraGlow.matrixAutoUpdate = false;
+                this.megaAuraGlow.renderOrder = -2;
+                Game.scene.add(this.megaAuraGlow);
+            }
+            if (!this.megaAuraRing) {
+                this.megaAuraRing = new THREE.Mesh(SharedGeo.torus, SharedMat.megaAuraRing);
+                this.megaAuraRing.rotation.x = -Math.PI / 2;
+                this.megaAuraRing.matrixAutoUpdate = false;
+                this.megaAuraRing.renderOrder = -1;
+                Game.scene.add(this.megaAuraRing);
+            }
+            let dScale = this.megaAuraRadius * 2.22;
+            this.megaAuraGlow.position.set(x, 0.48, y);
+            this.megaAuraGlow.scale.set(dScale, 1, dScale);
+            this.megaAuraGlow.updateMatrix();
+            this.megaAuraGlow.visible = true;
+
+            this.megaAuraRing.position.set(x, 0.56, y);
+            this.megaAuraRing.scale.set(this.megaAuraRadius, this.megaAuraRadius, 0.26);
+            this.megaAuraRing.updateMatrix();
+            this.megaAuraRing.visible = true;
+
+            Game.getFloatingText().spawn(this.x, this.y + 28, "MEGA ELITE!", '#ff1e56', 34, true);
+        } else if (this.isGolden) {
             Game.getFloatingText().spawn(this.x, this.y + 20, "ELITE DORATO", '#fbbf24', 32, true);
         }
     }
 
+    updateMegaAura(dt) {
+        if (!this.isMegaElite || this.dead || !this.active) return;
+        let auraRad = this.megaAuraRadius || 105;
+        if (this.megaAuraGlow && this.megaAuraGlow.visible) {
+            let pulse = 1.0 + Math.sin(Game.playTime * 6.5 + (this.thinkOffset || 0)) * 0.035;
+            let dScale = auraRad * 2.22 * pulse;
+            this.megaAuraGlow.position.set(this.x, 0.48, this.y);
+            this.megaAuraGlow.rotation.y += dt * 0.95;
+            this.megaAuraGlow.scale.set(dScale, 1, dScale);
+            this.megaAuraGlow.updateMatrix();
+        }
+        if (this.megaAuraRing && this.megaAuraRing.visible) {
+            let rPulse = 1.0 + Math.sin(Game.playTime * 6.5 + (this.thinkOffset || 0)) * 0.025;
+            this.megaAuraRing.position.set(this.x, 0.56, this.y);
+            this.megaAuraRing.rotation.z -= dt * 1.4;
+            this.megaAuraRing.scale.set(auraRad * rPulse, auraRad * rPulse, 0.26);
+            this.megaAuraRing.updateMatrix();
+        }
+        if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 10 : 6) === 0) {
+            let a = Math.random() * Math.PI * 2;
+            let r = auraRad * (0.45 + Math.random() * 0.52);
+            let sp = Game.getParticle();
+            sp.spawn(this.x + Math.cos(a) * r, 6, this.y + Math.sin(a) * r, SharedMat.spriteRed, 'trail');
+            sp.baseSize = 9;
+            sp.vy = 28;
+            sp.life = 0.28;
+            sp.maxLife = 0.28;
+        }
+        if (Game.player && !Game.player.dead && !Game.player.isDashing) {
+            let dxP = Game.player.x - this.x;
+            let dyP = Game.player.y - this.y;
+            let hitRad = auraRad + Game.player.radius * 0.55;
+            if ((dxP * dxP + dyP * dyP) <= hitRad * hitRad) {
+                this.megaAuraTick = (this.megaAuraTick || 0) + dt;
+                if (this.megaAuraTick >= 0.55) {
+                    this.megaAuraTick = 0;
+                    if (Game.player.activeShieldTimer > 0) {
+                        Game.player.isHealingFromShield = true;
+                        Game.player.shieldAbsorbed++;
+                        Game.getParticle().spawn(Game.player.x, 16, Game.player.y, SharedMat.spriteBlue, 'spark');
+                    } else {
+                        let auraDmg = Math.max(3, Math.floor(this.stats.maxDmg * 0.28));
+                        Game.player.takeDamage(auraDmg, this);
+                        if (!AppSettings.isLow) {
+                            for (let s = 0; s < 3; s++) {
+                                Game.getParticle().spawn(Game.player.x + MathUtils.randomRange(-6, 6), 16, Game.player.y + MathUtils.randomRange(-6, 6), SharedMat.spriteRed, 'spark');
+                            }
+                        }
+                    }
+                }
+            } else {
+                this.megaAuraTick = Math.min(0.30, Math.max(0, (this.megaAuraTick || 0) - dt * 0.8));
+            }
+        }
+    }
+
     syncFakeShadow(heightOffset = 0) {
+        if (this.isMegaElite && this.megaAuraRing && this.megaAuraRing.visible) {
+            this.megaAuraRing.position.set(this.x, 0.56, this.y);
+            this.megaAuraRing.updateMatrix();
+            if (this.megaAuraGlow) {
+                this.megaAuraGlow.position.set(this.x, 0.48, this.y);
+                this.megaAuraGlow.updateMatrix();
+            }
+        }
         if (!this.shadowMesh || !this.shadowMesh.visible) return;
         let isGob = (this.type === 'goblin');
         let baseScale = isGob ? this.radius * 2.4 : this.radius * 2.8;
@@ -18821,6 +19058,7 @@ class Enemy extends Entity {
 
     update(dt) {
         if (!this.active || this.dead || dt === 0) return;
+        if (this.isMegaElite) this.updateMegaAura(dt);
 
         if (this.isPursuer) {
             this.frozenTimer = 0;
@@ -18837,8 +19075,8 @@ class Enemy extends Entity {
             }
         }
 
-       let defaultEmissive = this.isGolden ? 0xffaa00 : (this.isBerserk ? 0xff0000 : (this.isElite ? (this.type === 'ring_walker' ? 0x220406 : 0x440000) : (this.type === 'goblin' ? 0xff2200 : 0x000000)));
-        let defaultIntensity = this.isGolden ? 2.0 : (this.isBerserk ? 1.0 : (this.isElite ? (this.type === 'ring_walker' ? 0.45 : 1.0) : (this.type === 'goblin' ? 0.75 : 0.0)));
+       let defaultEmissive = this.isGolden ? 0xffaa00 : (this.isBerserk ? 0xff0000 : (this.isMegaElite ? (this.type === 'ring_walker' ? 0x3a0412 : 0x77001a) : (this.isElite ? (this.type === 'ring_walker' ? 0x220406 : 0x440000) : (this.type === 'goblin' ? 0xff2200 : 0x000000))));
+        let defaultIntensity = this.isGolden ? 2.0 : (this.isBerserk ? 1.0 : (this.isMegaElite ? (this.type === 'ring_walker' ? 0.65 : 1.30) : (this.isElite ? (this.type === 'ring_walker' ? 0.45 : 1.0) : (this.type === 'goblin' ? 0.75 : 0.0))));
 
         // --- CONGELAMENTO ASSOLUTO ---
         if (this.frozenTimer > 0) {
@@ -19256,7 +19494,7 @@ class Enemy extends Entity {
                 const BEAM_MAX_RANGE_SQ = 520 * 520;
                 const getTargetPriority = (ent) => {
                     if (!ent || ent.dead || ent.isDying || !ent.active || ent.type === 'dark_prophet' || ent.type === 'crystal') return 0;
-                    if (ent.isBoss) return 4;
+                    if (ent.isBoss || ent.isMegaElite) return 4;
                     if (ent.type === 'crate' || ent.type === 'urn') return 1;
                     if (ent.type === 'goblin') return 2;
                     return 3;
@@ -19583,7 +19821,7 @@ class Enemy extends Entity {
             this.goblinTimer -= dt;
             let bs = this.baseModelSize || 11;
             let prog = Math.min(1.0, 1.0 - (this.goblinTimer / 0.42));
-            let vScale = this.isElite ? 1.65 : 1.0;
+            let vScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
 
             this.mesh.rotation.y = -this.diveAngle + Math.PI / 2;
             this.push(-Math.cos(this.diveAngle), -Math.sin(this.diveAngle), 24 * dt);
@@ -19751,7 +19989,7 @@ class Enemy extends Entity {
         if (this.distToTargetSq !== undefined && this.distToTargetSq < this.aggroRangeSq) {
             if (this.telegraphTimer > 0) {
                 this.telegraphTimer -= dt;
-                let vScale = this.isElite ? 1.5 : 1.0;
+                let vScale = this.isMegaElite ? 1.95 : (this.isElite ? 1.5 : 1.0);
 
                 // 1. RING WALKER: l'anello rosso brilla e si ingrandisce prima di partire
                 if (this.type === 'ring_walker' && this.modelParts && this.modelParts.ringPivot) {
@@ -19889,7 +20127,7 @@ class Enemy extends Entity {
 
                 // Caricamento standard (Mage, Pyromancer)
                 let prog = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.6));
-                let baseHex = this.isGolden ? 0xffaa00 : (this.isElite ? 0x440000 : 0x000000);
+                let baseHex = this.isGolden ? 0xffaa00 : (this.isMegaElite ? 0x77001a : (this.isElite ? 0x440000 : 0x000000));
                 let baseInt = this.isGolden ? 2.0 : 1.0;
 
                 if (!Game._dummyTelegraphColor) Game._dummyTelegraphColor = new THREE.Color();
@@ -19984,6 +20222,14 @@ class Enemy extends Entity {
             this.shadowMesh.position.set(this.x + (isGob ? 4 : 2), 0.45, this.y + (isGob ? 6 : 3));
             this.shadowMesh.scale.set(sSize, 1, sSize);
             this.shadowMesh.updateMatrix();
+        }
+        if (this.isMegaElite && this.megaAuraRing && this.megaAuraRing.visible) {
+            this.megaAuraRing.position.set(this.x, 0.56, this.y);
+            this.megaAuraRing.updateMatrix();
+            if (this.megaAuraGlow) {
+                this.megaAuraGlow.position.set(this.x, 0.48, this.y);
+                this.megaAuraGlow.updateMatrix();
+            }
         }
         this.mesh.updateMatrix();
     }
@@ -20461,16 +20707,17 @@ class Enemy extends Entity {
 
         let floorDecay = Math.max(0.50, 1.0 - (Game.floor * 0.025));
         let lifeChance = baseLifeChance * floorDecay * Game.player.modifiers.healDropMult;
-        if (this.isElite) lifeChance *= 3.0;
+        if (this.isMegaElite) lifeChance *= 5.0;
+        else if (this.isElite) lifeChance *= 3.0;
         if (Game.lives > 3) lifeChance = lifeChance / (1 + (Game.lives - 3) * 0.5);
         if (Game.player.modifiers.noHealDrops) lifeChance = 0;
 
         let itemsToSpawn = [];
         let isMini = (this.type === 'slime_mini');
         let lateCoinBoost = Math.min(0.14, Math.max(0, Game.floor - 5) * 0.01);
-        let coinChance = this.isBoss ? 1.0 : (this.isGolden ? 1.0 : (this.isElite ? 0.80 : (isMini ? 0.05 : (0.22 + lateCoinBoost))));
+        let coinChance = this.isBoss ? 1.0 : ((this.isGolden || this.isMegaElite) ? 1.0 : (this.isElite ? 0.80 : (isMini ? 0.05 : (0.22 + lateCoinBoost))));
         if (Math.random() < coinChance) {
-            let count = this.isBoss ? MathUtils.randomInt(2, 4) : (this.isGolden ? MathUtils.randomInt(12, 18) : (this.isElite ? MathUtils.randomInt(1, 3) : 1));
+            let count = this.isBoss ? MathUtils.randomInt(2, 4) : (this.isGolden ? MathUtils.randomInt(12, 18) : (this.isMegaElite ? MathUtils.randomInt(4, 7) : (this.isElite ? MathUtils.randomInt(1, 3) : 1)));
             if (Game.isCorrupted && Game.corruptedReward === 'coins') count *= 2;
             for (let c = 0; c < count; c++) itemsToSpawn.push('coin');
         }
@@ -20485,7 +20732,7 @@ class Enemy extends Entity {
             let essenceChance = this.isElite ? 1.0 : (isMini ? 0.01 : normalEssenceChance);
             if (Math.random() < essenceChance) {
                 itemsToSpawn.push('essence');
-                if (this.isElite && Math.random() < 0.4) itemsToSpawn.push('essence');
+                if (this.isMegaElite || (this.isElite && Math.random() < 0.4)) itemsToSpawn.push('essence');
             }
         }
 
@@ -20496,13 +20743,16 @@ class Enemy extends Entity {
 
         if (this.isElite) {
             if (this.isGolden) Game.getFloatingText().spawn(this.x, this.y, "JACKPOT!", '#fbbf24', 50, true);
-           
+            else if (this.isMegaElite) Game.getFloatingText().spawn(this.x, this.y, "MEGA ELITE SCONFITTO!", '#ff1e56', 34, true);
 
             let eliteDensityScale = 28 / Math.max(28, Game.floorMaxKills);
             let ownedRelicsPenalty = 1 / (1 + Game.player.relics.length * 0.25);
-            let eliteRelicChance = 0.018 * eliteDensityScale * ownedRelicsPenalty;
+            // I Mega Elite hanno una probabilità di droppare reliquia 4.5x superiore rispetto a un Elite normale!
+            let baseRelicRate = this.isMegaElite ? 0.081 : 0.018;
+            let eliteRelicChance = baseRelicRate * eliteDensityScale * ownedRelicsPenalty;
+            let maxFloorRelicDrops = this.isMegaElite ? 2 : 1;
 
-            if ((Game.floorBonusRelics || 0) < 1 && Math.random() < eliteRelicChance) {
+            if ((Game.floorBonusRelics || 0) < maxFloorRelicDrops && Math.random() < eliteRelicChance) {
                 let choices = RelicSystem.getChoices();
                 if (choices.length > 0) {
                     Game.floorBonusRelics = (Game.floorBonusRelics || 0) + 1;
