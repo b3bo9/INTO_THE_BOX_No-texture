@@ -953,22 +953,33 @@ body.colorblind-mode #opt-colorblind-text {
         body.force-rotate-landscape {
             position: fixed !important;
             top: 0 !important;
-            left: 100vw !important;
-            width: 100vh !important;
-            height: 100vw !important;
+            left: var(--raw-vw, 100vw) !important;
+            width: var(--raw-vh, 100vh) !important;
+            height: var(--raw-vw, 100vw) !important;
             transform: rotate(90deg) !important;
             transform-origin: top left !important;
             overflow: hidden !important;
         }
         body.force-rotate-portrait {
             position: fixed !important;
-            top: 100vh !important;
+            top: var(--raw-vh, 100vh) !important;
             left: 0 !important;
-            width: 100vh !important;
-            height: 100vw !important;
+            width: var(--raw-vh, 100vh) !important;
+            height: var(--raw-vw, 100vw) !important;
             transform: rotate(-90deg) !important;
             transform-origin: top left !important;
             overflow: hidden !important;
+        }
+
+        /* Abilita lo scorrimento touch fluido in tutti i menu/modali (sovrascrive * { touch-action: none }) */
+        #optionsModal, #optionsModal *,
+        #skinModal, #skinModal *,
+        #infoModal, #infoModal *,
+        #highScoreScreen, #highScoreScreen *,
+        #collectedRelicsModal, #collectedRelicsModal *,
+        #reforgeSelectModal, #reforgeSelectModal *,
+        .custom-scrollbar, .custom-scrollbar * {
+            touch-action: pan-x pan-y !important;
         }
 
         /* Posizionamento desktop PC (mouse/tastiera, non-touch) quando non in mobile-landscape */
@@ -987,67 +998,84 @@ body.colorblind-mode #opt-colorblind-text {
             }
         }
 
-        /* --- DISPOSIZIONE TASTI E JOYSTICK IN MODALITÀ ORIZZONTALE (Allineati al pixel, zero sovrapposizioni) --- */
-        html body.mobile-landscape #mobile-controls #joy-left-zone {
+        /* --- DISPOSIZIONE ERGONOMICA TASTI E JOYSTICK MAGGIORATI IN MODALITÀ ORIZZONTALE --- */
+        body.mobile-landscape #mobile-controls #joy-left-zone,
+        body.force-rotate-landscape #mobile-controls #joy-left-zone {
             bottom: 16px !important;
-            left: 20px !important;
+            left: 24px !important;
             right: auto !important;
             top: auto !important;
-            width: 100px !important;
-            height: 100px !important;
+            width: 124px !important;
+            height: 124px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #mobile-controls #joy-right-zone {
+        body.mobile-landscape #mobile-controls #joy-right-zone,
+        body.force-rotate-landscape #mobile-controls #joy-right-zone {
             bottom: 16px !important;
-            right: 20px !important;
+            right: 24px !important;
             left: auto !important;
             top: auto !important;
-            width: 100px !important;
-            height: 100px !important;
+            width: 124px !important;
+            height: 124px !important;
             margin: 0 !important;
         }
-        /* Griglia perfettamente allineata a sinistra del joystick destro (con ampio margine di sicurezza per l'escursione dello stick) */
-        html body.mobile-landscape #hud #btn-dash {
-            bottom: 16px !important;
-            right: 148px !important;
+        body.mobile-landscape #mobile-controls #joy-left-stick,
+        body.force-rotate-landscape #mobile-controls #joy-left-stick,
+        body.mobile-landscape #mobile-controls #joy-right-stick,
+        body.force-rotate-landscape #mobile-controls #joy-right-stick {
+            width: 54px !important;
+            height: 54px !important;
+        }
+        /* Disposizione ergonomica identica a quella verticale (Dash basso-sx, Shield sopra Dash, Ultimate in alto sopra il joystick) */
+        body.mobile-landscape #hud #btn-dash,
+        body.force-rotate-landscape #hud #btn-dash {
+            bottom: 18px !important;
+            right: 164px !important;
             left: auto !important;
             top: auto !important;
-            width: 46px !important;
-            height: 46px !important;
+            width: 52px !important;
+            height: 52px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #hud #btn-shield {
-            bottom: 70px !important;
-            right: 148px !important;
+        body.mobile-landscape #hud #btn-shield,
+        body.force-rotate-landscape #hud #btn-shield {
+            bottom: 82px !important;
+            right: 164px !important;
             left: auto !important;
             top: auto !important;
-            width: 46px !important;
-            height: 46px !important;
+            width: 52px !important;
+            height: 52px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #hud #btn-ult {
-            bottom: 16px !important;
-            right: 202px !important;
+        body.mobile-landscape #hud #btn-ult,
+        body.force-rotate-landscape #hud #btn-ult {
+            bottom: 146px !important;
+            right: 104px !important;
             left: auto !important;
             top: auto !important;
-            width: 46px !important;
-            height: 46px !important;
+            width: 52px !important;
+            height: 52px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #hud #btn-dash i,
-        html body.mobile-landscape #hud #btn-shield i,
-        html body.mobile-landscape #hud #btn-ult i {
-            font-size: 1.2rem !important;
+        body.mobile-landscape #hud #btn-dash i,
+        body.force-rotate-landscape #hud #btn-dash i,
+        body.mobile-landscape #hud #btn-shield i,
+        body.force-rotate-landscape #hud #btn-shield i,
+        body.mobile-landscape #hud #btn-ult i,
+        body.force-rotate-landscape #hud #btn-ult i {
+            font-size: 1.35rem !important;
         }
 
         /* --- HUD IN-GAME COMPATTO PER SCHERMO ORIZZONTALE --- */
-        html body.mobile-landscape #hud > div:nth-child(1) {
+        body.mobile-landscape #hud > div:nth-child(1),
+        body.force-rotate-landscape #hud > div:nth-child(1) {
             top: 8px !important;
             right: 14px !important;
             left: auto !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #hud > div:nth-child(2) {
+        body.mobile-landscape #hud > div:nth-child(2),
+        body.force-rotate-landscape #hud > div:nth-child(2) {
             top: 8px !important;
             left: 14px !important;
             right: auto !important;
@@ -1058,135 +1086,253 @@ body.colorblind-mode #opt-colorblind-text {
             gap: 6px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #hud-vitals-card {
+        body.mobile-landscape #hud-vitals-card,
+        body.force-rotate-landscape #hud-vitals-card {
             padding: 5px 9px !important;
             gap: 7px !important;
             min-width: 184px !important;
         }
-        html body.mobile-landscape #hud-level-badge {
+        body.mobile-landscape #hud-level-badge,
+        body.force-rotate-landscape #hud-level-badge {
             width: 36px !important;
             height: 36px !important;
         }
-        html body.mobile-landscape #ui-level {
+        body.mobile-landscape #ui-level,
+        body.force-rotate-landscape #ui-level {
             font-size: 0.82rem !important;
         }
-        html body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2) {
+        body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2),
+        body.force-rotate-landscape #hud > div:nth-child(2) > div:nth-child(2) {
             width: 192px !important;
             gap: 5px !important;
         }
-        /* Riquadro Combo ed Essenze disposto A DESTRA sotto i tasti FPS/Pausa, esattamente come sul verticale */
-        html body.mobile-landscape #hud > div:nth-child(3) {
-            top: 46px !important;
+        /* Riquadro Combo ed Essenze disposto A DESTRA sotto i tasti FPS/Pausa, ben distanziato */
+        body.mobile-landscape #hud > div:nth-child(3),
+        body.force-rotate-landscape #hud > div:nth-child(3) {
+            top: 56px !important;
             right: 14px !important;
             left: auto !important;
             flex-direction: column !important;
             align-items: flex-end !important;
-            gap: 5px !important;
+            gap: 6px !important;
             margin: 0 !important;
-            transform: scale(0.78) !important;
+            transform: scale(0.74) !important;
             transform-origin: top right !important;
         }
 
-        /* --- MENU PRINCIPALE IN MODALITÀ ORIZZONTALE --- */
-        html body.mobile-landscape #mainMenu > div.z-10 {
-            padding: 8px 18px !important;
+        /* --- MENU PRINCIPALE IN MODALITÀ ORIZZONTALE (A tutto schermo 100% senza tagli) --- */
+        body.mobile-landscape #mainMenu,
+        body.force-rotate-landscape #mainMenu,
+        body.mobile-landscape #title-3d-canvas-container,
+        body.force-rotate-landscape #title-3d-canvas-container {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            left: 0 !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            overflow: hidden !important;
         }
-        html body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub {
-            font-size: 1.5rem !important;
+        body.mobile-landscape #title-3d-canvas-container canvas,
+        body.force-rotate-landscape #title-3d-canvas-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block !important;
+            object-fit: cover !important;
         }
-        html body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word {
-            font-size: 2.25rem !important;
+        body.mobile-landscape #mainMenu > div.z-10,
+        body.force-rotate-landscape #mainMenu > div.z-10 {
+            width: 100% !important;
+            height: 100% !important;
+            padding: 6px 18px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+        }
+        body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub,
+        body.force-rotate-landscape #mainMenu .title-3d-text span.mc-word-sub {
+            font-size: 1.35rem !important;
+        }
+        body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word,
+        body.force-rotate-landscape #mainMenu .title-3d-text h1.mc-block-word {
+            font-size: 2.1rem !important;
             margin-top: 2px !important;
         }
-        html body.mobile-landscape #mainMenu > div.z-10 > div:last-child {
+        body.mobile-landscape #mainMenu > div.z-10 > div:last-child,
+        body.force-rotate-landscape #mainMenu > div.z-10 > div:last-child {
+            width: 100% !important;
             max-width: 520px !important;
             gap: 5px !important;
-            margin-bottom: 2px !important;
+            margin: 0 auto 2px auto !important;
         }
-        html body.mobile-landscape #mainMenu #btn-menu-skins {
+        body.mobile-landscape #mainMenu #btn-menu-skins,
+        body.force-rotate-landscape #mainMenu #btn-menu-skins {
             padding: 5px 10px !important;
         }
-        html body.mobile-landscape #mainMenu #menu-skin-frame {
+        body.mobile-landscape #mainMenu #menu-skin-frame,
+        body.force-rotate-landscape #mainMenu #menu-skin-frame {
             width: 32px !important;
             height: 32px !important;
         }
-        html body.mobile-landscape #mainMenu .anim-play-pulse {
+        body.mobile-landscape #mainMenu .anim-play-pulse,
+        body.force-rotate-landscape #mainMenu .anim-play-pulse {
             padding-top: 7px !important;
             padding-bottom: 7px !important;
             font-size: 1.15rem !important;
         }
-        html body.mobile-landscape #mainMenu .grid-cols-3 button {
+        body.mobile-landscape #mainMenu .grid-cols-3 button,
+        body.force-rotate-landscape #mainMenu .grid-cols-3 button {
             height: 34px !important;
         }
 
-        /* --- MODALI (OPZIONI, INFO, SKIN, PAUSA, CLASSIFICA, RELIQUIE) IN MODALITÀ ORIZZONTALE --- */
-        html body.mobile-landscape #optionsModal .modal-enter,
-        html body.mobile-landscape #infoModal .modal-enter,
-        html body.mobile-landscape #skinModal .modal-enter,
-        html body.mobile-landscape #highScoreScreen .modal-enter,
-        html body.mobile-landscape #collectedRelicsModal .modal-enter,
-        html body.mobile-landscape #reforgeSelectModal .modal-enter {
-            max-width: 650px !important;
-            max-height: 94% !important;
-            padding: 8px 14px !important;
+        /* --- MODALI SCORREVOLI IN MODALITÀ ORIZZONTALE (Opzioni, Skin, Info, Classifica, Reliquie) --- */
+        body.mobile-landscape #optionsModal,
+        body.force-rotate-landscape #optionsModal,
+        body.mobile-landscape #skinModal,
+        body.force-rotate-landscape #skinModal,
+        body.mobile-landscape #infoModal,
+        body.force-rotate-landscape #infoModal,
+        body.mobile-landscape #highScoreScreen,
+        body.force-rotate-landscape #highScoreScreen {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 8px 12px 24px 12px !important;
+            touch-action: pan-y !important;
         }
-        html body.mobile-landscape #pauseModal .modal-enter {
+        body.mobile-landscape #optionsModal.hidden,
+        body.force-rotate-landscape #optionsModal.hidden,
+        body.mobile-landscape #skinModal.hidden,
+        body.force-rotate-landscape #skinModal.hidden,
+        body.mobile-landscape #infoModal.hidden,
+        body.force-rotate-landscape #infoModal.hidden,
+        body.mobile-landscape #highScoreScreen.hidden,
+        body.force-rotate-landscape #highScoreScreen.hidden {
+            display: none !important;
+        }
+
+        body.mobile-landscape #optionsModal .modal-enter,
+        body.force-rotate-landscape #optionsModal .modal-enter,
+        body.mobile-landscape #infoModal .modal-enter,
+        body.force-rotate-landscape #infoModal .modal-enter,
+        body.mobile-landscape #skinModal .modal-enter,
+        body.force-rotate-landscape #skinModal .modal-enter,
+        body.mobile-landscape #highScoreScreen .modal-enter,
+        body.force-rotate-landscape #highScoreScreen .modal-enter,
+        body.mobile-landscape #collectedRelicsModal .modal-enter,
+        body.force-rotate-landscape #collectedRelicsModal .modal-enter,
+        body.mobile-landscape #reforgeSelectModal .modal-enter,
+        body.force-rotate-landscape #reforgeSelectModal .modal-enter {
+            display: flex !important;
+            flex-direction: column !important;
+            max-width: 640px !important;
+            width: 100% !important;
+            max-height: calc(var(--app-h, 100vh) - 16px) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 10px 14px 14px 14px !important;
+            margin: auto 0 !important;
+            touch-action: pan-y !important;
+        }
+        body.mobile-landscape #pauseModal .modal-enter,
+        body.force-rotate-landscape #pauseModal .modal-enter {
             max-width: 460px !important;
             padding: 10px 16px !important;
         }
-        html body.mobile-landscape #pauseModal .modal-enter > div:first-child {
+        body.mobile-landscape #pauseModal .modal-enter > div:first-child,
+        body.force-rotate-landscape #pauseModal .modal-enter > div:first-child {
             margin-bottom: 8px !important;
             padding: 6px 12px !important;
         }
-        html body.mobile-landscape #pauseModal .modal-enter > div:last-child {
+        body.mobile-landscape #pauseModal .modal-enter > div:last-child,
+        body.force-rotate-landscape #pauseModal .modal-enter > div:last-child {
             flex-direction: row !important;
             gap: 8px !important;
         }
-        html body.mobile-landscape #pauseModal .modal-enter > div:last-child button {
+        body.mobile-landscape #pauseModal .modal-enter > div:last-child button,
+        body.force-rotate-landscape #pauseModal .modal-enter > div:last-child button {
             margin-top: 0 !important;
             padding-top: 9px !important;
             padding-bottom: 9px !important;
         }
-        html body.mobile-landscape #optionsModal .space-y-2.5 {
+        body.mobile-landscape #optionsModal .space-y-2.5,
+        body.force-rotate-landscape #optionsModal .space-y-2.5 {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 6px !important;
+            margin: 0 !important;
         }
-        html body.mobile-landscape #optionsModal .space-y-2.5 > * {
+        body.mobile-landscape #optionsModal .space-y-2.5 > *,
+        body.force-rotate-landscape #optionsModal .space-y-2.5 > * {
             margin-top: 0 !important;
-            padding-top: 6px !important;
-            padding-bottom: 6px !important;
-        }
-        html body.mobile-landscape #optionsModal .modal-enter > button:last-child,
-        html body.mobile-landscape #infoModal .modal-enter > button:last-child,
-        html body.mobile-landscape #skinModal .modal-enter > button:last-child,
-        html body.mobile-landscape #highScoreScreen .modal-enter > button:last-child {
-            margin-top: 6px !important;
             padding-top: 7px !important;
             padding-bottom: 7px !important;
-            min-height: 36px !important;
+            min-height: 38px !important;
+            font-size: 11px !important;
         }
-        html body.mobile-landscape #infoModal .space-y-2.5 {
+        body.mobile-landscape #optionsModal .modal-enter > button:last-child,
+        body.force-rotate-landscape #optionsModal .modal-enter > button:last-child,
+        body.mobile-landscape #infoModal .modal-enter > button:last-child,
+        body.force-rotate-landscape #infoModal .modal-enter > button:last-child,
+        body.mobile-landscape #skinModal .modal-enter > button:last-child,
+        body.force-rotate-landscape #skinModal .modal-enter > button:last-child,
+        body.mobile-landscape #highScoreScreen .modal-enter > button:last-child,
+        body.force-rotate-landscape #highScoreScreen .modal-enter > button:last-child {
+            margin-top: 10px !important;
+            margin-bottom: 6px !important;
+            padding: 8px 12px !important;
+            min-height: 42px !important;
+            width: 100% !important;
+            flex-shrink: 0 !important;
+            position: relative !important;
+            z-index: 30 !important;
+        }
+        body.mobile-landscape #infoModal .space-y-2.5,
+        body.force-rotate-landscape #infoModal .space-y-2.5 {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 6px !important;
+            margin: 0 !important;
         }
-        html body.mobile-landscape #infoModal .space-y-2.5 > * {
+        body.mobile-landscape #infoModal .space-y-2.5 > *,
+        body.force-rotate-landscape #infoModal .space-y-2.5 > * {
             margin-top: 0 !important;
             padding: 6px 8px !important;
         }
-        html body.mobile-landscape #skinListContainer {
+        body.mobile-landscape #skinListContainer,
+        body.force-rotate-landscape #skinListContainer {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
+            gap: 6px !important;
+            overflow-y: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            flex: none !important;
         }
-        html body.mobile-landscape #collectedRelicsGrid,
-        html body.mobile-landscape #reforgeSelectGrid {
+        body.mobile-landscape #highScoresList,
+        body.force-rotate-landscape #highScoresList {
+            overflow-y: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            flex: none !important;
+        }
+        body.mobile-landscape #collectedRelicsGrid,
+        body.force-rotate-landscape #collectedRelicsGrid,
+        body.mobile-landscape #reforgeSelectGrid,
+        body.force-rotate-landscape #reforgeSelectGrid {
             grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
-            max-height: 115px !important;
+            max-height: 120px !important;
         }
 
-        /* --- FORGIA DELL'ASCESA (#floorScreen): 5 PERCORSI ORIZZONTALI SOLO NELLA VERSIONE ORIZZONTALE --- */
+        /* --- FORGIA DELL'ASCESA (#floorScreen): 5 PERCORSI ORIZZONTALI "CICCIOTTI" E BILANCIATI --- */
         @keyframes bubble-rise-horiz {
             0% { transform: translateX(0) scale(0.6); opacity: 0; }
             20% { opacity: 0.95; }
@@ -1197,173 +1343,222 @@ body.colorblind-mode #opt-colorblind-text {
             0% { transform: translateX(-100%) scaleX(0.4); opacity: 1; }
             100% { transform: translateX(120%) scaleX(1.6); opacity: 0; }
         }
-        html body.mobile-landscape #shop-main-wrap {
+        html body.mobile-landscape #shop-main-wrap,
+        html body.force-rotate-landscape #shop-main-wrap {
             display: grid !important;
-            grid-template-columns: 40% minmax(0, 1fr) !important;
+            grid-template-columns: 38% minmax(0, 1fr) !important;
             grid-template-rows: auto minmax(0, 1fr) auto !important;
-            gap: 4px 8px !important;
-            max-width: 820px !important;
+            gap: 5px 10px !important;
+            max-width: 860px !important;
             width: 100% !important;
             height: 100% !important;
             padding: 6px 14px !important;
             align-items: stretch !important;
         }
-        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) {
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1),
+        html body.force-rotate-landscape #shop-main-wrap > div:nth-child(1) {
             grid-column: 1 / 2 !important;
             grid-row: 1 / 2 !important;
-            padding: 4px 10px !important;
+            padding: 5px 12px !important;
             margin: 0 !important;
         }
-        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) h1 {
-            font-size: 0.95rem !important;
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) h1,
+        html body.force-rotate-landscape #shop-main-wrap > div:nth-child(1) h1 {
+            font-size: 1rem !important;
             margin-top: 1px !important;
         }
-        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) #shop-coins {
-            font-size: 1.05rem !important;
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) #shop-coins,
+        html body.force-rotate-landscape #shop-main-wrap > div:nth-child(1) #shop-coins {
+            font-size: 1.15rem !important;
         }
-        html body.mobile-landscape #shop-inspector {
+        html body.mobile-landscape #shop-inspector,
+        html body.force-rotate-landscape #shop-inspector {
             grid-column: 2 / 3 !important;
             grid-row: 1 / 2 !important;
             min-height: 0 !important;
-            padding: 4px 10px !important;
+            padding: 5px 12px !important;
             margin: 0 !important;
-            gap: 8px !important;
+            gap: 10px !important;
         }
-        html body.mobile-landscape #shop-insp-icon-wrap {
-            width: 32px !important;
-            height: 32px !important;
+        html body.mobile-landscape #shop-insp-icon-wrap,
+        html body.force-rotate-landscape #shop-insp-icon-wrap {
+            width: 36px !important;
+            height: 36px !important;
         }
-        html body.mobile-landscape #shop-insp-title {
-            font-size: 11px !important;
+        html body.mobile-landscape #shop-insp-title,
+        html body.force-rotate-landscape #shop-insp-title {
+            font-size: 11.5px !important;
         }
-        html body.mobile-landscape #shop-insp-desc {
-            font-size: 9.5px !important;
-            line-height: 1.15 !important;
+        html body.mobile-landscape #shop-insp-desc,
+        html body.force-rotate-landscape #shop-insp-desc {
+            font-size: 10px !important;
+            line-height: 1.2 !important;
             margin-top: 1px !important;
         }
-        /* Contenitore dei 5 percorsi: disposti in 5 corsie orizzontali dall'alto al basso */
-        html body.mobile-landscape #shop-tree-container {
+        /* Contenitore dei 5 percorsi: 5 corsie orizzontali piene e corpose */
+        html body.mobile-landscape #shop-tree-container,
+        html body.force-rotate-landscape #shop-tree-container {
             grid-column: 1 / -1 !important;
             grid-row: 2 / 3 !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 4px !important;
+            gap: 5px !important;
             min-height: 0 !important;
             max-height: none !important;
             height: 100% !important;
-            margin: 0 !important;
+            margin: 1px 0 !important;
         }
-        html body.mobile-landscape #floorScreen .totem-pillar {
+        html body.mobile-landscape #floorScreen .totem-pillar,
+        html body.force-rotate-landscape #floorScreen .totem-pillar {
             flex: 1 1 0% !important;
             min-height: 0 !important;
             flex-direction: row !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 2px 8px !important;
-            gap: 6px !important;
-            border-radius: 10px !important;
-            background: linear-gradient(90deg, var(--c-bg-bot) 0%, rgba(15, 20, 36, 0.90) 50%, var(--c-bg-top) 100%) !important;
+            padding: 4px 10px !important;
+            gap: 8px !important;
+            border-width: 2px !important;
+            border-radius: 12px !important;
+            background: linear-gradient(90deg, var(--c-bg-bot) 0%, rgba(15, 20, 36, 0.92) 50%, var(--c-bg-top) 100%) !important;
         }
-        /* 1. Etichetta statistica a sinistra */
-        html body.mobile-landscape #floorScreen .totem-label {
+        /* 1. Etichetta statistica a sinistra più grande e leggibile */
+        html body.mobile-landscape #floorScreen .totem-label,
+        html body.force-rotate-landscape #floorScreen .totem-label {
             order: 1 !important;
-            width: 82px !important;
-            min-width: 82px !important;
+            width: 96px !important;
+            min-width: 96px !important;
             justify-content: flex-start !important;
-            gap: 5px !important;
+            gap: 7px !important;
             margin: 0 !important;
-            padding-left: 2px !important;
+            padding-left: 4px !important;
             flex-shrink: 0 !important;
         }
-        html body.mobile-landscape #floorScreen .totem-label i {
-            font-size: 12px !important;
+        html body.mobile-landscape #floorScreen .totem-label i,
+        html body.force-rotate-landscape #floorScreen .totem-label i {
+            font-size: 15px !important;
+            filter: drop-shadow(0 0 6px var(--c-main)) !important;
         }
-        html body.mobile-landscape #floorScreen .totem-label span {
-            font-size: 10px !important;
+        html body.mobile-landscape #floorScreen .totem-label span,
+        html body.force-rotate-landscape #floorScreen .totem-label span {
+            font-size: 11px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.06em !important;
         }
-        /* 2. Condotto al plasma orizzontale al centro (da sinistra a destra) */
-        html body.mobile-landscape #floorScreen .pillar-chamber {
+        /* 2. Condotto al plasma orizzontale "cicciotto" al centro */
+        html body.mobile-landscape #floorScreen .pillar-chamber,
+        html body.force-rotate-landscape #floorScreen .pillar-chamber {
             order: 2 !important;
             flex: 1 1 0% !important;
             width: auto !important;
-            height: 18px !important;
-            min-height: 18px !important;
-            max-height: 20px !important;
-            margin: 0 6px !important;
+            height: 28px !important;
+            min-height: 26px !important;
+            max-height: 32px !important;
+            margin: 0 8px !important;
+            border-width: 2px !important;
+            border-radius: 10px !important;
         }
-        html body.mobile-landscape #floorScreen .chamber-inner-track {
+        html body.mobile-landscape #floorScreen .chamber-inner-track,
+        html body.force-rotate-landscape #floorScreen .chamber-inner-track {
             flex-direction: row !important;
             justify-content: flex-start !important;
             align-items: stretch !important;
+            border-radius: 8px !important;
         }
-        html body.mobile-landscape #floorScreen .plasma-fill {
+        html body.mobile-landscape #floorScreen .plasma-fill,
+        html body.force-rotate-landscape #floorScreen .plasma-fill {
             width: var(--fill-pct, 0%) !important;
             height: 100% !important;
             background: linear-gradient(90deg, var(--c-main) 0%, var(--c-dark) 45%, var(--c-main) 86%, #ffffff 100%) !important;
             background-size: 200% 100% !important;
             transition: width 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+            border-radius: 7px !important;
         }
-        html body.mobile-landscape #floorScreen .plasma-fill::after {
+        html body.mobile-landscape #floorScreen .plasma-fill::after,
+        html body.force-rotate-landscape #floorScreen .plasma-fill::after {
             top: 0 !important;
             bottom: 0 !important;
             right: 0 !important;
             left: auto !important;
-            width: 4px !important;
+            width: 5px !important;
             height: 100% !important;
         }
-        html body.mobile-landscape #floorScreen .plasma-bubble {
+        html body.mobile-landscape #floorScreen .plasma-bubble,
+        html body.force-rotate-landscape #floorScreen .plasma-bubble {
             left: 2px !important;
             bottom: auto !important;
             top: var(--pos, 50%) !important;
             animation-name: bubble-rise-horiz !important;
         }
-        html body.mobile-landscape #floorScreen .surge-wave {
+        html body.mobile-landscape #floorScreen .surge-wave,
+        html body.force-rotate-landscape #floorScreen .surge-wave {
             background: linear-gradient(90deg, transparent 0%, var(--c-main) 25%, #ffffff 55%, transparent 100%) !important;
         }
-        html body.mobile-landscape #floorScreen .surge-wave.active {
+        html body.mobile-landscape #floorScreen .surge-wave.active,
+        html body.force-rotate-landscape #floorScreen .surge-wave.active {
             animation: pillar-surge-right 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
         }
-        html body.mobile-landscape #floorScreen .chamber-steps-wrap {
+        html body.mobile-landscape #floorScreen .chamber-steps-wrap,
+        html body.force-rotate-landscape #floorScreen .chamber-steps-wrap {
             flex-direction: row-reverse !important;
         }
-        html body.mobile-landscape #floorScreen .chamber-step {
+        html body.mobile-landscape #floorScreen .chamber-step,
+        html body.force-rotate-landscape #floorScreen .chamber-step {
             width: auto !important;
             height: 100% !important;
             flex: 1 1 0% !important;
             border-bottom: none !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
+            border-right: 1.5px solid rgba(255, 255, 255, 0.20) !important;
         }
-        html body.mobile-landscape #floorScreen .chamber-step.lit {
-            border-right-color: rgba(255, 255, 255, 0.45) !important;
+        html body.mobile-landscape #floorScreen .chamber-step.lit,
+        html body.force-rotate-landscape #floorScreen .chamber-step.lit {
+            border-right-color: rgba(255, 255, 255, 0.55) !important;
         }
-        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb {
-            width: 27px !important;
-            height: 27px !important;
+        /* Medaglione Trait Grado 5 al centro del condotto */
+        html body.mobile-landscape #floorScreen .totem-mid-node,
+        html body.force-rotate-landscape #floorScreen .totem-mid-node {
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
         }
-        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb i {
-            font-size: 11px !important;
+        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb,
+        html body.force-rotate-landscape #floorScreen .totem-mid-node .mastery-orb {
+            width: 34px !important;
+            height: 34px !important;
+            border-width: 2.5px !important;
         }
-        /* 3. Medaglione Grado 10 alla fine destra del condotto */
-        html body.mobile-landscape #floorScreen .totem-top-node {
+        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb i,
+        html body.force-rotate-landscape #floorScreen .totem-mid-node .mastery-orb i {
+            font-size: 13.5px !important;
+        }
+        /* 3. Medaglione Trait Grado 10 alla fine destra del condotto */
+        html body.mobile-landscape #floorScreen .totem-top-node,
+        html body.force-rotate-landscape #floorScreen .totem-top-node {
             order: 3 !important;
-            margin: 0 4px 0 -10px !important;
+            margin: 0 6px 0 -12px !important;
             flex-shrink: 0 !important;
+            z-index: 20 !important;
         }
-        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb {
-            width: 29px !important;
-            height: 29px !important;
+        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb,
+        html body.force-rotate-landscape #floorScreen .totem-top-node .mastery-orb {
+            width: 36px !important;
+            height: 36px !important;
+            border-width: 2.5px !important;
         }
-        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb i {
-            font-size: 12px !important;
+        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb i,
+        html body.force-rotate-landscape #floorScreen .totem-top-node .mastery-orb i {
+            font-size: 14.5px !important;
         }
-        /* 4. Pulsante Acquisto allineato a destra */
-        html body.mobile-landscape #floorScreen .pillar-buy-btn {
+        /* 4. Pulsante Acquisto corposo e allineato a destra */
+        html body.mobile-landscape #floorScreen .pillar-buy-btn,
+        html body.force-rotate-landscape #floorScreen .pillar-buy-btn {
             order: 4 !important;
-            width: 72px !important;
-            min-width: 72px !important;
-            height: 29px !important;
-            padding: 0 8px !important;
+            width: 86px !important;
+            min-width: 86px !important;
+            height: 34px !important;
+            padding: 0 10px !important;
             margin: 0 !important;
+            font-size: 11.5px !important;
+            border-width: 2px !important;
             flex-shrink: 0 !important;
         }
         /* Bottoni azione in basso nella Forgia in orizzontale (nessun taglio) */
@@ -1398,44 +1593,85 @@ body.colorblind-mode #opt-colorblind-text {
             font-size: 9px !important;
         }
 
-        /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE --- */
-        html body.mobile-landscape #relic-main-wrap {
-            max-width: 780px !important;
+        /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE CON ICONE MAGGIORATE E HUD BILANCIATA --- */
+        html body.mobile-landscape #relic-main-wrap,
+        html body.force-rotate-landscape #relic-main-wrap {
+            max-width: 820px !important;
             padding: 5px 14px !important;
             gap: 4px !important;
         }
-        html body.mobile-landscape #relic-main-wrap > div:first-child > div > div {
+        html body.mobile-landscape #relic-main-wrap > div:first-child > div > div,
+        html body.force-rotate-landscape #relic-main-wrap > div:first-child > div > div {
             padding: 4px 12px !important;
         }
-        html body.mobile-landscape #relicCardsContainer {
+        html body.mobile-landscape #relic-main-wrap > div:first-child h2,
+        html body.force-rotate-landscape #relic-main-wrap > div:first-child h2 {
+            font-size: 1.05rem !important;
+            margin-top: 1px !important;
+        }
+        html body.mobile-landscape #relicCardsContainer,
+        html body.force-rotate-landscape #relicCardsContainer {
             flex: 1 1 0% !important;
             min-height: 0 !important;
-            margin: 2px 0 !important;
-        }
-        html body.mobile-landscape #relicCardsContainer .relic-card {
-            padding: 6px !important;
-        }
-        html body.mobile-landscape #relicCardsContainer .relic-icon-frame {
-            width: 38px !important;
-            height: 38px !important;
-            margin-bottom: 3px !important;
-        }
-        html body.mobile-landscape #reforgeSection {
-            min-height: 52px !important;
-            padding: 4px 10px !important;
             margin: 1px 0 !important;
+            gap: 8px !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-card,
+        html body.force-rotate-landscape #relicCardsContainer .relic-card {
+            padding: 6px 8px !important;
+            min-height: 0 !important;
+            justify-content: space-between !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-icon-frame,
+        html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame {
+            width: 58px !important;
+            height: 58px !important;
+            margin: 3px 0 !important;
+            border-radius: 12px !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-card h3,
+        html body.force-rotate-landscape #relicCardsContainer .relic-card h3 {
+            font-size: 11px !important;
+            line-height: 1.15 !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-desc-box,
+        html body.force-rotate-landscape #relicCardsContainer .relic-desc-box {
+            min-height: 38px !important;
+            padding: 4px 6px !important;
+            margin: 2px 0 !important;
+            flex: 1 1 auto !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-desc-box p,
+        html body.force-rotate-landscape #relicCardsContainer .relic-desc-box p {
+            font-size: 9.5px !important;
+            line-height: 1.18 !important;
+        }
+        html body.mobile-landscape #relicCardsContainer [id^="relic-pick-pill-"],
+        html body.force-rotate-landscape #relicCardsContainer [id^="relic-pick-pill-"] {
+            padding: 3px 0 !important;
+            font-size: 8.5px !important;
+        }
+        html body.mobile-landscape #reforgeSection,
+        html body.force-rotate-landscape #reforgeSection {
+            min-height: 48px !important;
+            padding: 4px 10px !important;
+            margin: 0 !important;
             gap: 2px !important;
         }
-        html body.mobile-landscape #reforgeSection > div:first-child {
+        html body.mobile-landscape #reforgeSection > div:first-child,
+        html body.force-rotate-landscape #reforgeSection > div:first-child {
             padding-bottom: 2px !important;
         }
-        html body.mobile-landscape #btn-select-reforge {
+        html body.mobile-landscape #btn-select-reforge,
+        html body.force-rotate-landscape #btn-select-reforge {
             width: 38px !important;
             height: 38px !important;
         }
-        html body.mobile-landscape #btn-proceed-relic {
+        html body.mobile-landscape #btn-proceed-relic,
+        html body.force-rotate-landscape #btn-proceed-relic {
             min-height: 34px !important;
             padding: 5px 12px !important;
+            font-size: 11px !important;
         }
 
         /* --- SCHERMATA SEI CADUTO / MORTE (#deathScreen) IN ORIZZONTALE --- */
@@ -1626,7 +1862,7 @@ body.colorblind-mode #opt-colorblind-text {
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none"></div>
 
             <!-- TITOLO -->
-            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(34,211,238,0.25)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Codex Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Manuale di Gioco</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-book-open text-lg"></i></div></div><h2 class="hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(34,211,238,0.25)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Codex Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Manuale di Gioco</h2></div><div class="flex items-center gap-2"><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-book-open text-lg"></i></div><button onclick="UIManager.hideModal('infoModal')" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi"><i class="fa-solid fa-xmark text-base"></i></button></div></div><h2 class="hidden">
                 <i class="fa-solid fa-book text-blue-400"></i> Manuale
             </h2>
             
@@ -1681,7 +1917,7 @@ body.colorblind-mode #opt-colorblind-text {
             
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-gray-700/20 to-transparent pointer-events-none"></div>
 
-            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/50 rounded-xl px-4 py-2.5 mb-3.5 shadow-[0_0_22px_rgba(34,211,238,0.22)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Sistema & Prestazioni</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Impostazioni</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-sliders text-lg"></i></div></div><h2 class="hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/50 rounded-xl px-4 py-2.5 mb-3.5 shadow-[0_0_22px_rgba(34,211,238,0.22)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Sistema & Prestazioni</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Impostazioni</h2></div><div class="flex items-center gap-2"><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-sliders text-lg"></i></div><button onclick="UIManager.hideModal('optionsModal')" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi"><i class="fa-solid fa-xmark text-base"></i></button></div></div><h2 class="hidden">
                 <i class="fa-solid fa-gear text-gray-400"></i> Opzioni
             </h2>
             
@@ -1720,7 +1956,7 @@ body.colorblind-mode #opt-colorblind-text {
 
     <!-- MODALE PERSONALIZZAZIONE SKIN -->
     <div id="skinModal" class="absolute inset-0 bg-black/90 z-[280] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_45px_rgba(168,85,247,0.32)] relative overflow-hidden"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Guardaroba Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Shop Skin</h2></div><div class="flex items-center gap-2 bg-purple-950/80 px-3.5 py-1.5 rounded-lg border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.45)]"><i class="fa-solid fa-gem text-purple-300 text-sm sm:text-lg drop-shadow-[0_0_8px_rgba(192,132,252,1)]"></i><span id="skin-crystals-count" class="text-sm sm:text-xl font-display font-black text-white tracking-wider leading-none">0</span></div></div>
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[460px] flex flex-col max-h-[88vh] shadow-[0_0_45px_rgba(168,85,247,0.32)] relative overflow-hidden"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Guardaroba Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Shop Skin</h2></div><div class="flex items-center gap-2"><div class="flex items-center gap-2 bg-purple-950/80 px-3.5 py-1.5 rounded-lg border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.45)]"><i class="fa-solid fa-gem text-purple-300 text-sm sm:text-lg drop-shadow-[0_0_8px_rgba(192,132,252,1)]"></i><span id="skin-crystals-count" class="text-sm sm:text-xl font-display font-black text-white tracking-wider leading-none">0</span></div><button onclick="UIManager.hideModal('skinModal')" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi"><i class="fa-solid fa-xmark text-base"></i></button></div></div>
             <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none"></div>
 
             <div class="hidden">
@@ -2207,9 +2443,10 @@ const AppSettings = {
     getTargetPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
         if (isTouchDevice) {
-            if (this.mode === 2) return Math.max(1.10, Math.min(dpr * 0.85, 1.45));
-            if (this.mode === 1) return Math.max(0.90, Math.min(dpr * 0.68, 1.15));
-            return Math.max(0.70, Math.min(dpr * 0.50, 0.85));
+            if (this._batteryLow) return Math.min(dpr * 0.55, 0.85);
+            if (this.mode === 2) return Math.max(1.0, Math.min(dpr * 0.72, 1.22));
+            if (this.mode === 1) return Math.max(0.85, Math.min(dpr * 0.60, 1.0));
+            return Math.max(0.68, Math.min(dpr * 0.48, 0.80));
         }
         return this.mode === 2 ? Math.min(dpr, 1.5) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
     },
@@ -2276,6 +2513,12 @@ const AppSettings = {
         document.body.classList.toggle('force-rotate-landscape', needForceLand);
         document.body.classList.toggle('force-rotate-portrait', needForcePort);
 
+        const vp = this.getViewportSize();
+        document.documentElement.style.setProperty('--app-w', vp.width + 'px');
+        document.documentElement.style.setProperty('--app-h', vp.height + 'px');
+        document.documentElement.style.setProperty('--raw-vw', rawW + 'px');
+        document.documentElement.style.setProperty('--raw-vh', rawH + 'px');
+
         if (typeof Game !== 'undefined' && Game.renderer) {
             Game.resize();
             if (Game.player && (Game.state === 'PLAYING' || Game.state === 'PAUSED')) {
@@ -2285,11 +2528,14 @@ const AppSettings = {
                 }
             }
         }
-        if (typeof TitleDiorama !== 'undefined' && TitleDiorama.initialized) {
-            TitleDiorama.resize();
+        if (typeof TitleSystem !== 'undefined' && TitleSystem.initialized) {
+            TitleSystem.resize();
         }
         if (typeof DeathSceneSystem !== 'undefined' && DeathSceneSystem.initialized) {
             DeathSceneSystem.resize();
+        }
+        if (fromUserClick) {
+            setTimeout(() => this.applyOrientation(false), 120);
         }
     },
     
@@ -2329,6 +2575,25 @@ const AppSettings = {
             this._orientationListenerBound = true;
             window.addEventListener('resize', () => this.applyOrientation(false));
             window.addEventListener('orientationchange', () => setTimeout(() => this.applyOrientation(false), 60));
+        }
+        // Monitoraggio nativo Batteria Android per prevenire overheating a batteria scarica
+        if (isTouchDevice && navigator.getBattery) {
+            navigator.getBattery().then(bat => {
+                const checkBattery = () => {
+                    const isLow = (!bat.charging && bat.level <= 0.20);
+                    if (this._batteryLow !== isLow) {
+                        this._batteryLow = isLow;
+                        if (isLow && this.mode === 2) {
+                            this.mode = 1;
+                            if (typeof UIManager !== 'undefined') UIManager.updateOptionsUI();
+                        }
+                        this.applyGraphics();
+                    }
+                };
+                checkBattery();
+                bat.addEventListener('levelchange', checkBattery);
+                bat.addEventListener('chargingchange', checkBattery);
+            }).catch(() => {});
         }
     },
     
@@ -4080,8 +4345,9 @@ const SkinSystem = {
         InteractiveGrassSystem.init();
         TreeCanopySystem.init();
 
-        let w = this.container.clientWidth || window.innerWidth;
-        let h = this.container.clientHeight || window.innerHeight;
+        const vp = AppSettings.getViewportSize();
+        let w = vp.width;
+        let h = vp.height;
         let aspect = w / h;
 
         this.scene = new THREE.Scene();
@@ -4089,9 +4355,9 @@ const SkinSystem = {
 
         this.camera = new THREE.PerspectiveCamera(44, aspect, 10, 1600);
 
-        this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
+        this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: isTouchDevice ? "default" : "high-performance" });
         this.renderer.setClearColor(0x090414, 1);
-        this.renderer.setSize(w, h);
+        this.renderer.setSize(w, h, false);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.container.appendChild(this.renderer.domElement);
@@ -4664,14 +4930,15 @@ const SkinSystem = {
     },
 
     resize() {
-        if (!this.container || !this.renderer) return;
+        if (!this.container || !this.renderer || !this.camera) return;
         const vp = AppSettings.getViewportSize();
-        let w = this.container.clientWidth || vp.width;
-        let h = this.container.clientHeight || vp.height;
-        if (w && h) {
+        let w = vp.width;
+        let h = vp.height;
+        if (w > 0 && h > 0) {
             this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
-            this.renderer.setSize(w, h);
+            this.renderer.setSize(w, h, false);
+            if (this.scene) this.renderer.render(this.scene, this.camera);
         }
     },
 
@@ -5012,15 +5279,16 @@ const DeathSceneSystem = {
         const oldIris = document.getElementById('death-iris-overlay');
         if (oldIris && oldIris.parentNode) oldIris.parentNode.removeChild(oldIris);
 
-        let w = this.container.clientWidth || window.innerWidth;
-        let h = this.container.clientHeight || window.innerHeight;
+        const vp = AppSettings.getViewportSize();
+        let w = vp.width;
+        let h = vp.height;
 
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.Fog(0x000000, 950, 2800);
 
         this.camera = new THREE.PerspectiveCamera(50, w / h, 10, 3500);
 
-        this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: "high-performance" });
+        this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: !isTouchDevice, powerPreference: isTouchDevice ? "default" : "high-performance" });
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.setSize(w, h);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
@@ -5529,8 +5797,8 @@ const DeathSceneSystem = {
     resize() {
         if (!this.container || !this.renderer || !this.camera) return;
         const vp = AppSettings.getViewportSize();
-        let w = this.container.clientWidth || vp.width;
-        let h = this.container.clientHeight || vp.height;
+        let w = vp.width;
+        let h = vp.height;
         if (w > 0 && h > 0) {
             this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
@@ -5732,9 +6000,13 @@ const UIManager = {
         if(id === 'skinModal') SkinSystem.renderModal();
     },
     hideModal(id) {
-        AudioEngine.playClick();
-        document.getElementById(id).classList.add('hidden');
-    },
+        AudioEngine.playClick();
+        document.getElementById(id).classList.add('hidden');
+        if (id === 'optionsModal') {
+            if (typeof TitleSystem !== 'undefined' && TitleSystem.initialized) TitleSystem.resize();
+            if (typeof Game !== 'undefined' && Game.renderer) Game.resize();
+        }
+    },
     togglePause() {
         if (Game.state === 'PLAYING') {
             Game.state = 'PAUSED';
@@ -8802,10 +9074,47 @@ const TouchControls = {
         document.getElementById('btn-dash').addEventListener('touchstart', (e) => { e.preventDefault(); if(Game.state === 'PLAYING' && Game.player && !Game.player.dead) Game.player.dash(); });
         document.getElementById('btn-ult').addEventListener('touchstart', (e) => { e.preventDefault(); if(Game.state === 'PLAYING' && Game.player && !Game.player.dead) Game.activateUltimate(); });
         document.getElementById('btn-shield').addEventListener('touchstart', (e) => { e.preventDefault(); if(Game.state === 'PLAYING' && Game.player && !Game.player.dead) Game.player.activateShield(); });
+
+        // Supporto scorrimento touch fluido nei menu/modali (Opzioni, Skin, Info, Classifica, Reliquie) anche con viewport ruotato via CSS
+        let scrollTarget = null;
+        let lastScrollPos = 0;
+        const getLocalScrollY = (t) => {
+            if (AppSettings.isForcedLandscapeRotation()) return -t.clientX;
+            if (AppSettings.isForcedPortraitRotation()) return t.clientX;
+            return t.clientY;
+        };
+        const findScrollableModalEl = (el) => {
+            let cur = el;
+            while (cur && cur !== document.body && cur !== document.documentElement) {
+                if (cur.scrollHeight > cur.clientHeight + 2) {
+                    const oy = window.getComputedStyle(cur).overflowY;
+                    if (oy === 'auto' || oy === 'scroll') return cur;
+                }
+                cur = cur.parentElement;
+            }
+            return null;
+        };
+        document.addEventListener('touchstart', (e) => {
+            if (!e.touches || e.touches.length !== 1) { scrollTarget = null; return; }
+            const inModal = e.target.closest('#optionsModal, #skinModal, #infoModal, #highScoreScreen, #collectedRelicsModal, #reforgeSelectModal');
+            if (!inModal) { scrollTarget = null; return; }
+            scrollTarget = findScrollableModalEl(e.target);
+            if (scrollTarget) lastScrollPos = getLocalScrollY(e.touches[0]);
+        }, { passive: true });
+        document.addEventListener('touchmove', (e) => {
+            if (!scrollTarget || !e.touches || e.touches.length !== 1) return;
+            const curPos = getLocalScrollY(e.touches[0]);
+            const diff = lastScrollPos - curPos;
+            if (Math.abs(diff) > 0.5) {
+                scrollTarget.scrollTop += diff;
+                lastScrollPos = curPos;
+            }
+        }, { passive: true });
+        document.addEventListener('touchend', () => { scrollTarget = null; }, { passive: true });
     },
 
     setupJoystick(zone, stick, side) {
-        let identifier = null; const maxR = 40; let cx = 0, cy = 0;
+        let identifier = null; let maxR = 40; let cx = 0, cy = 0;
         
         const onStart = (e) => {
             e.preventDefault(); 
@@ -8821,7 +9130,10 @@ const TouchControls = {
             }
             // ----------------------------------------------------
 
-            let rect = zone.getBoundingClientRect(); cx = rect.left + rect.width / 2; cy = rect.top + rect.height / 2;
+            let rect = zone.getBoundingClientRect(); 
+            cx = rect.left + rect.width / 2; 
+            cy = rect.top + rect.height / 2;
+            maxR = Math.max(36, rect.width * 0.38);
             if(e.changedTouches) { 
                 for(let i=0; i<e.changedTouches.length; i++) { 
                     if(identifier === null) { 
@@ -9438,7 +9750,7 @@ getEnemy() {
         this.renderer = new THREE.WebGLRenderer({ 
             antialias: !isTouchDevice, 
             alpha: false, 
-            powerPreference: "high-performance" 
+           powerPreference: isTouchDevice ? "default" : "high-performance" 
         });
         const pixelRatio = AppSettings.getTargetPixelRatio(); this.renderer.setPixelRatio(pixelRatio); this.renderer.setSize(this.width, this.height); this.frameInterval = 1000 / AppSettings.fpsCap;
        this.renderer.outputEncoding = THREE.sRGBEncoding; 
@@ -9737,17 +10049,29 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
        // ^^^ INCOLLA SOPRA QUESTA RIGA ^^^
         this.prewarmShaders(); this.setupInputs(); this.initPools(); 
         
-        // --- FIX ANDROID: GESTIONE BACKGROUND E CRASH WEBGL ---
+        // --- FIX ANDROID: GESTIONE BACKGROUND, STOP LOOP E CRASH WEBGL ---
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
-                // Gioco in background: Pausa forzata e muto audio
                 if (this.state === 'PLAYING') UIManager.togglePause();
                 if (AudioEngine.ctx && AudioEngine.ctx.state === 'running') AudioEngine.ctx.suspend();
+                AudioEngine.menuBGM.pause();
+                AudioEngine.gameBGM.pause();
+                AudioEngine.bossBGM.pause();
             } else {
-                // Ritorno in gioco: Riattiva audio e resetta il tempo per evitare salti fisici
                 if (AudioEngine.ctx && AudioEngine.ctx.state === 'suspended' && !AudioEngine.musicMuted) AudioEngine.ctx.resume();
+                if (!AudioEngine.musicMuted) {
+                    if (this.state === 'MENU') AudioEngine.menuBGM.play().catch(()=>{});
+                    else if (this.state === 'PLAYING' || this.state === 'PAUSED') {
+                        if (this.isBossFloor) AudioEngine.bossBGM.play().catch(()=>{});
+                        else AudioEngine.gameBGM.play().catch(()=>{});
+                    }
+                }
                 this.lastTime = performance.now(); 
                 this.lastDrawTime = performance.now();
+                if (!this._loopRunning && this._boundLoop) {
+                    this._loopRunning = true;
+                    requestAnimationFrame(this._boundLoop);
+                }
             }
         });
 
@@ -10303,15 +10627,15 @@ pushDebris(px, pz, radius, force) {
   getMobileAspectScale() {
         let aspect = (this.width && this.height) ? (this.width / this.height) : 0.5;
         let shortSide = Math.min(this.width || 390, this.height || 390);
-        // Avvicina ulteriormente su schermi di smartphone più compatti (< 385px lato corto) per massima leggibilità
-        let smallPhoneBoost = (isTouchDevice && shortSide < 385) ? 0.94 : 1.0;
+        // Adattamento progressivo per schermi piccoli (< 410px lato corto): avvicina ancora di più la visuale sui cellulari compatti
+        let smallPhoneBoost = isTouchDevice ? MathUtils.clamp(shortSide / 410, 0.88, 1.0) : 1.0;
         if (AppSettings.orientation === 'landscape' && aspect > 1.0) {
-            // In modalità orizzontale su smartphone: inquadratura ravvicinata e nitida (~8 tile verticali x ~14.5 orizzontali)
-            return (isTouchDevice ? 0.66 : 0.82) * smallPhoneBoost;
+            // In orizzontale su smartphone: visuale ravvicinata ad alta leggibilità
+            return (isTouchDevice ? 0.58 : 0.76) * smallPhoneBoost;
         }
         if (!isTouchDevice) return 1.0;
-        // In verticale su smartphone: telecamera più ravvicinata per leggere chiaramente personaggi, proiettili e telegrafi
-        let portScale = aspect < 0.65 ? Math.min(1.03, 0.91 + (0.65 - aspect) * 0.50) : 0.91;
+        // In verticale su smartphone: visuale più vicina e nitida anche sugli schermi stretti
+        let portScale = aspect < 0.65 ? Math.min(0.92, 0.82 + (0.65 - aspect) * 0.42) : 0.82;
         return portScale * smallPhoneBoost;
     },
 
@@ -10319,9 +10643,9 @@ pushDebris(px, pz, radius, force) {
         let mScale = this.getMobileAspectScale();
         let isLandMobile = (AppSettings.orientation === 'landscape' && this.width > this.height);
         let camY = (isTouchDevice ? 750 : 600) * mScale;
-        let distFactor = isLandMobile ? (mScale * 0.84) : mScale;
+        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
         let camZ = this.player.y + (isTouchDevice ? 500 : 400) * distFactor;
-        let lookZOff = isLandMobile ? -12 : 0;
+        let lookZOff = isLandMobile ? -8 : 0;
         this._camFocusX = this.player.x;
         this._camFocusZ = this.player.y;
         this._camLeadX = 0;
@@ -10439,9 +10763,9 @@ pushDebris(px, pz, radius, force) {
         let moveX = this.player.slideDx || 0;
         let moveZ = this.player.slideDy || 0;
         let isLandMobile = (AppSettings.orientation === 'landscape' && this.width > this.height);
-        let leadDistX = isTouchDevice ? (isLandMobile ? 35.0 : 30.0) : 16.0;
-        let leadDistZ = isTouchDevice ? (isLandMobile ? 22.0 : 30.0) : 16.0;
-        let leadSmooth = 1.0 - Math.exp(-dt * 3.8);
+        let leadDistX = isTouchDevice ? (isLandMobile ? 42.0 : 32.0) : 18.0;
+        let leadDistZ = isTouchDevice ? (isLandMobile ? 28.0 : 32.0) : 18.0;
+        let leadSmooth = 1.0 - Math.exp(-dt * 4.2);
         this._camLeadX += (moveX * leadDistX - this._camLeadX) * leadSmooth;
         this._camLeadZ += (moveZ * leadDistZ - this._camLeadZ) * leadSmooth;
 
@@ -10450,10 +10774,10 @@ pushDebris(px, pz, radius, force) {
         this._camFocusZ += ((this.player.y + this._camLeadZ) - this._camFocusZ) * posSmooth;
 
         let mScale = this.getMobileAspectScale();
-        let distFactor = isLandMobile ? (mScale * 0.84) : mScale;
+        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
         let baseHeight = (isTouchDevice ? 750 : 600) * mScale * this._camZoom;
         let baseDist = (isTouchDevice ? 500 : 400) * distFactor * this._camZoom;
-        let lookZOff = isLandMobile ? -12 : 0;
+        let lookZOff = isLandMobile ? -8 : 0;
 
         this.camera.position.set(this._camFocusX + shakeX, baseHeight + shakeY, this._camFocusZ + baseDist + shakeZ);
         this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + lookZOff + shakeZ * 0.25);
@@ -10495,9 +10819,22 @@ pushDebris(px, pz, radius, force) {
         if (this._vec3) { this.mouse.worldX = this._vec3.x; this.mouse.worldY = this._vec3.z; }
     },
 loop(timestamp) {
-        // --- INIZIO CAP FPS ---
-        // FIX PRESTAZIONI: Cappa rigorosamente a 30 o 60 FPS ovunque (anche su PC a 144Hz) per risparmiare risorse
-        this.frameInterval = 1000 / AppSettings.fpsCap;
+        // STOP TOTALE CPU/GPU SE L'APP È IN BACKGROUND SU ANDROID
+        if (document.hidden) {
+            this._loopRunning = false;
+            return;
+        }
+        this._loopRunning = true;
+
+        // --- INIZIO CAP FPS INTELLIGENTE (Salva-Batteria nei Menu/Shop/Pausa) ---
+        // Nei menu, schermata morte, shop o pausa abbassa automaticamente il tick per far raffreddare il telefono
+        let targetFps = AppSettings.fpsCap;
+        if (this.state === 'MENU' || this.state === 'DEAD') {
+            targetFps = 30;
+        } else if (this.state === 'FLOOR_TRANSITION' || this.state === 'RELIC_SELECTION' || this.state === 'PAUSED') {
+            targetFps = 15;
+        }
+        this.frameInterval = 1000 / targetFps;
         
         if (this.frameInterval > 0) {
             if (!this.lastDrawTime) this.lastDrawTime = timestamp;
@@ -10893,7 +11230,9 @@ loop(timestamp) {
         // Ora la mappa sa quale tema leggere!
         this.map = new GameMap(CHUNK_SIZE, CHUNK_SIZE); this.map.generate(this.isBossFloor);
         
-        let floorColor = 0xffffff; let mutatorText = ""; let camDist = isTouchDevice ? 1150 : 750;
+       let floorColor = 0xffffff; let mutatorText = "";
+        let camScale = Math.max(0.62, this.getMobileAspectScale());
+        let camDist = (isTouchDevice ? 1150 : 750) * camScale;
         
         // Reset eventuale transizione tema in corso da un piano precedente
         this.themeTransition = null;
@@ -12343,8 +12682,9 @@ startGame(diffMult) {
                 let px = this.player.x + Math.cos(angle) * dist;
                 let pz = this.player.y + Math.sin(angle) * dist;
                 
-                // Nascono sotto la quota della telecamera (600-750) per non passare mai davanti all'obiettivo
-                let py = MathUtils.randomRange(150, 280);
+               // Si adatta dinamicamente alla telecamera ravvicinata
+                let camH = (this.camera && this.camera.position.y > 200) ? this.camera.position.y : 500;
+                let py = MathUtils.randomRange(Math.min(110, camH * 0.22), Math.min(220, camH * 0.40));
 
                 let p = this.getParticle();
                 let magicMat;
@@ -23297,7 +23637,7 @@ class Particle {
         let camX = Game.camera.position.x;
         let camY = Game.camera.position.y;
         let camZ = Game.camera.position.z;
-        if (Math.abs(this.mesh.position.x - camX) > 1000 || Math.abs(this.mesh.position.z - camZ) > 1400 || (camY - this.mesh.position.y) < 160) {
+       if (Math.abs(this.mesh.position.x - camX) > 1000 || Math.abs(this.mesh.position.z - camZ) > 1400 || (camY - this.mesh.position.y) < 75) {
             this.active = false; 
             this.mesh.visible = false; 
             return;
@@ -24518,14 +24858,24 @@ const ShopSystem = {
         desc.innerText = tData.desc;
     },
 
-    // Scintille direzionali (verso l'alto quando riempi la barra, o supernova radiale quando sblocchi un potere)
+   // Scintille direzionali (supporta sia orientamento nativo sia rotazione CSS force-rotate-landscape)
     spawnFX(targetEl, colorHex, count = 10, mode = 'upward') {
         if (AppSettings.isLow || !targetEl) return;
         const layer = document.getElementById('shop-fx-layer');
         if (!layer) return;
         const rect = targetEl.getBoundingClientRect();
-        const cx = rect.left + rect.width * 0.5;
-        const cy = rect.top + rect.height * 0.5;
+        const rawCx = rect.left + rect.width * 0.5;
+        const rawCy = rect.top + rect.height * 0.5;
+
+        let cx = rawCx;
+        let cy = rawCy;
+        if (AppSettings.isForcedLandscapeRotation()) {
+            cx = rawCy;
+            cy = (window.innerWidth || 1) - rawCx;
+        } else if (AppSettings.isForcedPortraitRotation()) {
+            cx = (window.innerHeight || 1) - rawCy;
+            cy = rawCx;
+        }
 
         if (mode === 'mastery') {
             const ring = document.createElement('div');
@@ -24544,17 +24894,15 @@ const ShopSystem = {
             let tx, ty, dur;
 
             if (mode === 'upward') {
-                // Getto di particelle che scorre lungo il percorso (orizzontale in landscape, verticale in portrait)
                 if (AppSettings.orientation === 'landscape') {
                     tx = -MathUtils.randomRange(45, 135);
-                    ty = MathUtils.randomRange(-16, 16);
+                    ty = MathUtils.randomRange(-18, 18);
                 } else {
                     tx = MathUtils.randomRange(-22, 22);
                     ty = -MathUtils.randomRange(55, 165);
                 }
                 dur = MathUtils.randomRange(0.45, 0.70);
             } else {
-                // Esplosione radiale a supernova per i Medaglioni 5 e 10
                 const angle = (Math.PI * 2 / count) * i + MathUtils.randomRange(-0.2, 0.2);
                 const dist = MathUtils.randomRange(45, 115);
                 tx = Math.cos(angle) * dist;
@@ -24589,13 +24937,13 @@ const ShopSystem = {
                 stepsHtml += `<div id="step-${key}-${step}" class="chamber-step"></div>`;
             }
 
-            // 6 bolle di plasma ascendenti continue dentro il liquido
+            // 6 bolle di plasma più visibili nei condotti maggiorati
             let bubblesHtml = '';
-            const bubbleLefts = [18, 42, 68, 28, 56, 78];
+            const bubbleLefts = [16, 38, 64, 26, 52, 78];
             const bubbleDurs = [1.5, 2.1, 1.7, 2.4, 1.9, 1.6];
             const bubbleDelays = [0.0, 0.4, 0.9, 0.2, 1.1, 0.6];
             for (let i = 0; i < 6; i++) {
-                let sz = (i % 2 === 0) ? 5 : 4;
+                let sz = (i % 2 === 0) ? 6 : 5;
                 bubblesHtml += `<span class="plasma-bubble" style="left:${bubbleLefts[i]}%; --pos:${bubbleLefts[i]}%; width:${sz}px; height:${sz}px; --dur:${bubbleDurs[i]}s; --dly:${bubbleDelays[i]}s;"></span>`;
             }
 
@@ -25044,6 +25392,7 @@ history.pushState(null, null, document.URL);
         }
         initScreen.classList.add('hidden'); 
         mainMenu.classList.remove('hidden');
+        if (typeof TitleSystem !== 'undefined' && TitleSystem.initialized) TitleSystem.resize();
     };
     initScreen.addEventListener('click', handleInit);
     initScreen.addEventListener('pointerdown', handleInit, { once: true });
