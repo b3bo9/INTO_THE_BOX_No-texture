@@ -10216,6 +10216,9 @@ loop(timestamp) {
         
         let floorColor = 0xffffff; let mutatorText = ""; let camDist = isTouchDevice ? 1150 : 750;
         
+        // Reset eventuale transizione tema in corso da un piano precedente
+        this.themeTransition = null;
+
         // Leggiamo il tema appena estratto per impostare luci e nebbia
         let currentTheme = MAP_THEMES[this.currentThemeIndex];
         // Impostiamo nebbia, sfondo e luci in base al tema corrente!
@@ -10491,6 +10494,399 @@ startGame(diffMult) {
     },
     
 // Nuova funzione helper per aggiungere oggetti alla coda a costo CPU 0
+    getThemeMaterialSpec(themeIdx) {
+        if (themeIdx === 2) {
+            return {
+                rockShininess: 15, rockSpec: 0x13263a,
+                rockEm: 0x020710, dirtEm: 0x02050b, grassEm: 0x020812, wallEm: 0x02050b,
+                fogOp: 0.12, dirInt: 1.00, ambInt: 0.58,
+                bedHex: 0x0d4a80, shoreY: -8.38, padY: -8.25,
+                portalHex: 0x00ddff, portalSprite: SharedMat.spriteBlue,
+                vignette: 'radial-gradient(circle at center, transparent 68%, rgba(8, 16, 38, 0.24) 88%, rgba(3, 6, 16, 0.50) 100%)'
+            };
+        } else if (themeIdx === 1) {
+            return {
+                rockShininess: 12, rockSpec: 0x24100a,
+                rockEm: 0x070101, dirtEm: 0x050101, grassEm: 0x090201, wallEm: 0x050101,
+                fogOp: 0.13, dirInt: 1.16, ambInt: 0.68,
+                bedHex: 0x240602, shoreY: -17.35, padY: -17.12,
+                portalHex: 0xff3300, portalSprite: SharedMat.spriteRed,
+                vignette: 'radial-gradient(circle at center, transparent 68%, rgba(38, 10, 8, 0.22) 88%, rgba(16, 4, 4, 0.48) 100%)'
+            };
+        }
+        return {
+            rockShininess: 14, rockSpec: 0x182010,
+            rockEm: 0x030602, dirtEm: 0x030302, grassEm: 0x040902, wallEm: 0x020401,
+            fogOp: 0.15, dirInt: 1.16, ambInt: 0.68,
+            bedHex: 0x0e4f82, shoreY: -17.26, padY: -17.12,
+            portalHex: 0x33ff66, portalSprite: SharedMat.spriteGreen,
+            vignette: 'radial-gradient(circle at center, transparent 68%, rgba(14, 24, 8, 0.22) 88%, rgba(5, 10, 3, 0.48) 100%)'
+        };
+    },
+
+    triggerThemeTransition(targetThemeIdx, originX, originY) {
+        if (targetThemeIdx === undefined || targetThemeIdx === null || !MAP_THEMES[targetThemeIdx]) return;
+        const prevThemeIdx = this.currentThemeIndex;
+        // Aggiorna subito currentThemeIndex: le probabilità di drop essenze e la fisica del bioma si adeguano istantaneamente!
+        this.currentThemeIndex = targetThemeIdx;
+
+        const targetTheme = MAP_THEMES[targetThemeIdx];
+        const spec = this.getThemeMaterialSpec(targetThemeIdx);
+
+        // Effetto onda d'urto cromatica a costo zero (anello + impulso vento sull'erba + flash luminoso)
+        const waveHex = targetThemeIdx === 2 ? 0x00ddff : (targetThemeIdx === 1 ? 0xff3300 : 0x33ff66);
+        if (originX !== undefined && originY !== undefined) {
+            this.getHazard().spawn(originX, originY, 390, 0.55, 0, waveHex, 'nova_ring');
+            this.spawnLightFlash(originX, originY, waveHex, 5.2, 480, 0.48);
+            if (!this.explosionWinds) this.explosionWinds = [];
+            this.explosionWinds.push({ x: originX, z: originY, force: 5.2, life: 0.70, maxLife: 0.70 });
+        }
+
+        // Se il tema era già identico e non c'è una transizione in corso, non serve interpolare i materiali
+        if (prevThemeIdx === targetThemeIdx && !this.themeTransition) return;
+
+        // Vignettatura CSS (ha già transition: background 0.6s ease)
+        const vignetteEl = document.getElementById('vignette');
+        if (vignetteEl && !(this.isCorrupted && this.corruptedType === 'darkness')) {
+            vignetteEl.style.background = spec.vignette;
+        }
+
+        // Neve leggera GPU attiva sul tema ghiaccio
+        if (this.snowSystem) {
+            this.snowSystem.visible = (targetThemeIdx === 2);
+        }
+
+        const map = this.map;
+        const prevMats = (map && map.meshDirt && map.meshDirt.material) ? {
+            dirt: map.meshDirt.material,
+            grass: map.meshGrass ? map.meshGrass.material : window.GLOBAL_THEME_MATS[prevThemeIdx].grass,
+            rock: map.meshRock ? map.meshRock.material : window.GLOBAL_THEME_MATS[prevThemeIdx].rock,
+            wall: map.wallMesh ? map.wallMesh.material : window.GLOBAL_THEME_MATS[prevThemeIdx].wall
+        } : window.GLOBAL_THEME_MATS[prevThemeIdx];
+
+        const nextMats = window.GLOBAL_THEME_MATS ? window.GLOBAL_THEME_MATS[targetThemeIdx] : null;
+
+        // Pre-alloca o riusa il contenitore di transizione per evitare qualsiasi allocazione GC durante il loop
+        const tr = this._themeTrPool || (this._themeTrPool = {
+            elapsed: 0, duration: 1.15, fromIdx: 0, toIdx: 0,
+            fromDirtCol: new THREE.Color(), toDirtCol: new THREE.Color(),
+            fromGrassCol: new THREE.Color(), toGrassCol: new THREE.Color(),
+            fromRockCol: new THREE.Color(), toRockCol: new THREE.Color(),
+            fromWallCol: new THREE.Color(), toWallCol: new THREE.Color(),
+            fromDirtEm: new THREE.Color(), toDirtEm: new THREE.Color(),
+            fromGrassEm: new THREE.Color(), toGrassEm: new THREE.Color(),
+            fromRockEm: new THREE.Color(), toRockEm: new THREE.Color(),
+            fromWallEm: new THREE.Color(), toWallEm: new THREE.Color(),
+            fromRockSpec: new THREE.Color(), toRockSpec: new THREE.Color(),
+            fromBgCol: new THREE.Color(), toBgCol: new THREE.Color(),
+            fromFogCol: new THREE.Color(), toFogCol: new THREE.Color(),
+            fromDirCol: new THREE.Color(), toDirCol: new THREE.Color(),
+            fromAmbCol: new THREE.Color(), toAmbCol: new THREE.Color(),
+            fromAmbGround: new THREE.Color(), toAmbGround: new THREE.Color(),
+            fromGrassShader: new THREE.Color(), toGrassShader: new THREE.Color(),
+            fromGrassEmShader: new THREE.Color(), toGrassEmShader: new THREE.Color(),
+            fromGrassRoot: new THREE.Color(), toGrassRoot: new THREE.Color(),
+            fromCanopyCol: new THREE.Color(), toCanopyCol: new THREE.Color(),
+            fromCanopyEm: new THREE.Color(), toCanopyEm: new THREE.Color(),
+            fromTreeCol: new THREE.Color(), toTreeCol: new THREE.Color(),
+            fromDebrisCol: new THREE.Color(), toDebrisCol: new THREE.Color(),
+            fromGroundMistCol: new THREE.Color(), toGroundMistCol: new THREE.Color(),
+            fromMist1Col: new THREE.Color(), toMist1Col: new THREE.Color(),
+            fromMistEdgeCol: new THREE.Color(), toMistEdgeCol: new THREE.Color(),
+            fromAbyssCol: new THREE.Color(), toAbyssCol: new THREE.Color(),
+            fromBedCol: new THREE.Color(), toBedCol: new THREE.Color(),
+            fromBankTint: new THREE.Color(), toBankTint: new THREE.Color(),
+            fromPortalCol: new THREE.Color(), toPortalCol: new THREE.Color(),
+            fromDirInt: 1.16, toDirInt: 1.16,
+            fromAmbInt: 0.68, toAmbInt: 0.68,
+            fromFogOp: 0.15, toFogOp: 0.15,
+            fromIceOp: 0.0, toIceOp: 0.80,
+            fromShoreY: 0, toShoreY: 0,
+            fromPadY: 0, toPadY: 0
+        });
+
+        tr.elapsed = 0;
+        tr.duration = 1.15;
+        tr.fromIdx = prevThemeIdx;
+        tr.toIdx = targetThemeIdx;
+
+        if (prevMats && nextMats) {
+            tr.fromDirtCol.copy(prevMats.dirt.color); tr.toDirtCol.setHex(targetTheme.dirt);
+            tr.fromGrassCol.copy(prevMats.grass.color); tr.toGrassCol.setHex(targetTheme.grass);
+            tr.fromRockCol.copy(prevMats.rock.color); tr.toRockCol.setHex(targetTheme.rock);
+            tr.fromWallCol.copy(prevMats.wall.color); tr.toWallCol.setHex(targetTheme.wall || targetTheme.rock);
+
+            tr.fromDirtEm.copy(prevMats.dirt.emissive); tr.toDirtEm.setHex(spec.dirtEm);
+            tr.fromGrassEm.copy(prevMats.grass.emissive); tr.toGrassEm.setHex(spec.grassEm);
+            tr.fromRockEm.copy(prevMats.rock.emissive); tr.toRockEm.setHex(spec.rockEm);
+            tr.fromWallEm.copy(prevMats.wall.emissive); tr.toWallEm.setHex(spec.wallEm);
+            tr.fromRockSpec.copy(prevMats.rock.specular); tr.toRockSpec.setHex(spec.rockSpec);
+
+            // Imposta i materiali del nuovo tema partendo dai colori attuali per una fusione cromatica continua (zero scatti)
+            nextMats.dirt.color.copy(tr.fromDirtCol); nextMats.dirt.emissive.copy(tr.fromDirtEm);
+            nextMats.grass.color.copy(tr.fromGrassCol); nextMats.grass.emissive.copy(tr.fromGrassEm);
+            nextMats.rock.color.copy(tr.fromRockCol); nextMats.rock.emissive.copy(tr.fromRockEm);
+            nextMats.rock.specular.copy(tr.fromRockSpec); nextMats.rock.shininess = spec.rockShininess;
+            nextMats.wall.color.copy(tr.fromWallCol); nextMats.wall.emissive.copy(tr.fromWallEm);
+
+            if (map) {
+                map.floorMat = nextMats.dirt;
+                map.wallMat = nextMats.wall;
+                if (map.meshDirt) map.meshDirt.material = nextMats.dirt;
+                if (map.meshGrass) map.meshGrass.material = nextMats.grass;
+                if (map.meshRock) map.meshRock.material = nextMats.rock;
+                if (map.wallMesh) map.wallMesh.material = nextMats.wall;
+                if (map.meshPitApron) map.meshPitApron.material = nextMats.dirt;
+            }
+        }
+
+        // Cielo, Nebbia e Luci
+        if (this.scene && this.scene.background) tr.fromBgCol.copy(this.scene.background);
+        tr.toBgCol.setHex(targetTheme.fog);
+        if (this.scene && this.scene.fog) tr.fromFogCol.copy(this.scene.fog.color);
+        tr.toFogCol.setHex(targetTheme.fog);
+
+        if (this.dirLight) {
+            tr.fromDirCol.copy(this.dirLight.color);
+            tr.fromDirInt = this.dirLight.intensity;
+        }
+        tr.toDirCol.setHex(targetTheme.dirLight);
+        tr.toDirInt = spec.dirInt;
+
+        if (this.ambientLight) {
+            tr.fromAmbCol.copy(this.ambientLight.color);
+            tr.fromAmbInt = this.ambientLight.intensity;
+            if (this.ambientLight.groundColor) tr.fromAmbGround.copy(this.ambientLight.groundColor);
+        }
+        tr.toAmbCol.setHex(targetTheme.dirLight);
+        tr.toAmbGround.setHex(targetTheme.ambient || targetTheme.fog);
+        tr.toAmbInt = spec.ambInt;
+
+        // Erba interattiva, chiome alberi, tronchi e detriti
+        if (InteractiveGrassSystem.mat) {
+            tr.fromGrassShader.copy(InteractiveGrassSystem.mat.color);
+            tr.fromGrassEmShader.copy(InteractiveGrassSystem.mat.emissive);
+            if (InteractiveGrassSystem.uniforms.uGroundGrassColor) {
+                tr.fromGrassRoot.copy(InteractiveGrassSystem.uniforms.uGroundGrassColor.value);
+            }
+        }
+        tr.toGrassShader.setHex(targetTheme.grassShader);
+        tr.toGrassEmShader.setHex(targetTheme.grassEmissive || 0x000000);
+        tr.toGrassRoot.setHex(targetTheme.grassRoot || targetTheme.grass);
+
+        if (TreeCanopySystem.mat) {
+            tr.fromCanopyCol.copy(TreeCanopySystem.mat.color);
+            tr.fromCanopyEm.copy(TreeCanopySystem.mat.emissive);
+        }
+        tr.toCanopyCol.setHex(targetTheme.canopyShader || targetTheme.grassShader);
+        tr.toCanopyEm.setHex(targetTheme.canopyEmissive || targetTheme.grassEmissive || 0x000000);
+
+        if (window.GLOBAL_TREE_MAT) tr.fromTreeCol.copy(window.GLOBAL_TREE_MAT.color);
+        tr.toTreeCol.setHex(targetTheme.tree || 0x241f16);
+
+        if (window.GLOBAL_DEBRIS_MAT) tr.fromDebrisCol.copy(window.GLOBAL_DEBRIS_MAT.color);
+        tr.toDebrisCol.setHex(targetTheme.debris || 0x2c3628);
+
+        if (window.GLOBAL_FOG_MAT) {
+            tr.fromGroundMistCol.copy(window.GLOBAL_FOG_MAT.color);
+            tr.fromFogOp = window.GLOBAL_FOG_MAT.opacity;
+        }
+        tr.toGroundMistCol.setHex(targetTheme.groundMist || targetTheme.fog);
+        tr.toFogOp = spec.fogOp;
+
+        if (this.mistMat1) {
+            tr.fromMist1Col.copy(this.mistMat1.color);
+            if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
+                tr.fromMistEdgeCol.copy(this.mistMat1.uniforms.uEdgeColor.value);
+            }
+        }
+        tr.toMist1Col.setHex(targetTheme.groundMist || targetTheme.fog).lerp(new THREE.Color(0xe2f0ff), targetThemeIdx === 1 ? 0.24 : 0.30);
+        tr.toMistEdgeCol.setHex(targetTheme.groundMist || targetTheme.fog).lerp(tr.toFogCol, 0.40);
+
+        if (map && map.meshAbyss && map.meshAbyss.material) {
+            tr.fromAbyssCol.copy(map.meshAbyss.material.color);
+        }
+        tr.toAbyssCol.setHex(targetTheme.fog).multiplyScalar(0.35);
+
+        // Transizione Fosse (Acqua / Lava / Lastre di Ghiaccio)
+        if (map) {
+            if (map.meshPitBed && map.meshPitBed.material) {
+                tr.fromBedCol.copy(map.meshPitBed.material.color);
+                tr.toBedCol.setHex(spec.bedHex);
+            }
+            if (map.meshPitFloor && window.GLOBAL_PIT_MATS && window.GLOBAL_PIT_MATS[targetThemeIdx]) {
+                map.pitMat = window.GLOBAL_PIT_MATS[targetThemeIdx];
+                map.meshPitFloor.material = map.pitMat;
+            }
+            if (map.meshIceFloor && window.GLOBAL_ICE_MAT) {
+                if (targetThemeIdx === 2) {
+                    tr.fromIceOp = map.meshIceFloor.visible ? window.GLOBAL_ICE_MAT.opacity : 0.02;
+                    tr.toIceOp = 0.80;
+                    window.GLOBAL_ICE_MAT.opacity = tr.fromIceOp;
+                    map.meshIceFloor.visible = true;
+                } else {
+                    tr.fromIceOp = map.meshIceFloor.visible ? window.GLOBAL_ICE_MAT.opacity : 0.0;
+                    tr.toIceOp = 0.0;
+                }
+            }
+            const v = ['', '_lava', '_ice'][targetThemeIdx];
+            const tBank = Preloader.textures['rock' + v];
+            if (map.meshPitSkirt && map.meshPitSkirt.material) {
+                if (tBank) map.meshPitSkirt.material.map = tBank;
+                tr.fromBankTint.copy(map.meshPitSkirt.material.color);
+            }
+            if (map.meshPitBanks && map.meshPitBanks.material) {
+                if (tBank) {
+                    map.meshPitBanks.material.map = tBank;
+                    if (!isTouchDevice) map.meshPitBanks.material.bumpMap = tBank;
+                }
+            }
+            if (map.initialRockColor) {
+                const ir = Math.max(0.05, map.initialRockColor.r);
+                const ig = Math.max(0.05, map.initialRockColor.g);
+                const ib = Math.max(0.05, map.initialRockColor.b);
+                tr.toBankTint.setRGB(
+                    MathUtils.clamp(tr.toRockCol.r / ir, 0.45, 1.65),
+                    MathUtils.clamp(tr.toRockCol.g / ig, 0.45, 1.65),
+                    MathUtils.clamp(tr.toRockCol.b / ib, 0.45, 1.65)
+                );
+            } else {
+                tr.toBankTint.setRGB(1, 1, 1);
+            }
+            if (map.meshPitRimStones && map.meshPitRimStones.material) {
+                const tWall = Preloader.textures['wall' + v] || tBank;
+                if (tWall) map.meshPitRimStones.material.map = tWall;
+            }
+            if (map.meshShoreFoam && window.GLOBAL_SHORE_MATS && window.GLOBAL_SHORE_MATS[targetThemeIdx]) {
+                map.meshShoreFoam.material = window.GLOBAL_SHORE_MATS[targetThemeIdx];
+                tr.fromShoreY = map.meshShoreFoam.position.y;
+                tr.toShoreY = spec.shoreY - (map.shoreInitialY || 0);
+            }
+            if (map.meshPitPads) {
+                tr.fromPadY = map.meshPitPads.position.y;
+                tr.toPadY = spec.padY - (map.padInitialY || 0);
+            }
+        }
+
+        // Portali Arcani sul piano
+        if (this.portals && this.portals.length > 0) {
+            tr.fromPortalCol.setHex(this.portals[0].colorHex || spec.portalHex);
+            tr.toPortalCol.setHex(spec.portalHex);
+            for (let i = 0; i < this.portals.length; i++) {
+                this.portals[i].colorHex = spec.portalHex;
+                this.portals[i].particleMat = spec.portalSprite;
+            }
+        }
+
+        this.themeTransition = tr;
+    },
+
+    updateThemeTransition(dt) {
+        const tr = this.themeTransition;
+        if (!tr) return;
+        tr.elapsed += dt;
+        let rawT = Math.min(1.0, tr.elapsed / tr.duration);
+        // Smoothstep cubico per una transizione vellutata e naturale
+        let t = rawT * rawT * (3.0 - 2.0 * rawT);
+
+        const map = this.map;
+        const nextMats = window.GLOBAL_THEME_MATS ? window.GLOBAL_THEME_MATS[tr.toIdx] : null;
+        if (nextMats) {
+            nextMats.dirt.color.copy(tr.fromDirtCol).lerp(tr.toDirtCol, t);
+            nextMats.grass.color.copy(tr.fromGrassCol).lerp(tr.toGrassCol, t);
+            nextMats.rock.color.copy(tr.fromRockCol).lerp(tr.toRockCol, t);
+            nextMats.wall.color.copy(tr.fromWallCol).lerp(tr.toWallCol, t);
+
+            nextMats.dirt.emissive.copy(tr.fromDirtEm).lerp(tr.toDirtEm, t);
+            nextMats.grass.emissive.copy(tr.fromGrassEm).lerp(tr.toGrassEm, t);
+            nextMats.rock.emissive.copy(tr.fromRockEm).lerp(tr.toRockEm, t);
+            nextMats.wall.emissive.copy(tr.fromWallEm).lerp(tr.toWallEm, t);
+            nextMats.rock.specular.copy(tr.fromRockSpec).lerp(tr.toRockSpec, t);
+        }
+
+        const isDarkness = (this.isCorrupted && this.corruptedType === 'darkness');
+        if (!isDarkness && !this.arenaEvolution && !this.bossLightClear) {
+            if (this.scene && this.scene.background) this.scene.background.copy(tr.fromBgCol).lerp(tr.toBgCol, t);
+            if (this.scene && this.scene.fog) this.scene.fog.color.copy(tr.fromFogCol).lerp(tr.toFogCol, t);
+            if (this.dirLight) {
+                this.dirLight.color.copy(tr.fromDirCol).lerp(tr.toDirCol, t);
+                this.dirLight.intensity = tr.fromDirInt + (tr.toDirInt - tr.fromDirInt) * t;
+            }
+            if (this.ambientLight) {
+                this.ambientLight.color.copy(tr.fromAmbCol).lerp(tr.toAmbCol, t);
+                if (this.ambientLight.groundColor) this.ambientLight.groundColor.copy(tr.fromAmbGround).lerp(tr.toAmbGround, t);
+                this.ambientLight.intensity = tr.fromAmbInt + (tr.toAmbInt - tr.fromAmbInt) * t;
+            }
+        }
+
+        if (InteractiveGrassSystem.mat) {
+            InteractiveGrassSystem.mat.color.copy(tr.fromGrassShader).lerp(tr.toGrassShader, t);
+            InteractiveGrassSystem.mat.emissive.copy(tr.fromGrassEmShader).lerp(tr.toGrassEmShader, t);
+            if (InteractiveGrassSystem.uniforms.uGroundGrassColor) {
+                InteractiveGrassSystem.uniforms.uGroundGrassColor.value.copy(tr.fromGrassRoot).lerp(tr.toGrassRoot, t);
+            }
+        }
+        if (TreeCanopySystem.mat) {
+            TreeCanopySystem.mat.color.copy(tr.fromCanopyCol).lerp(tr.toCanopyCol, t);
+            TreeCanopySystem.mat.emissive.copy(tr.fromCanopyEm).lerp(tr.toCanopyEm, t);
+        }
+        if (window.GLOBAL_TREE_MAT) window.GLOBAL_TREE_MAT.color.copy(tr.fromTreeCol).lerp(tr.toTreeCol, t);
+        if (window.GLOBAL_DEBRIS_MAT) window.GLOBAL_DEBRIS_MAT.color.copy(tr.fromDebrisCol).lerp(tr.toDebrisCol, t);
+        if (window.GLOBAL_FOG_MAT && !this.bossLightClear) {
+            window.GLOBAL_FOG_MAT.color.copy(tr.fromGroundMistCol).lerp(tr.toGroundMistCol, t);
+            window.GLOBAL_FOG_MAT.opacity = tr.fromFogOp + (tr.toFogOp - tr.fromFogOp) * t;
+        }
+        if (this.mistMat1) {
+            this.mistMat1.color.copy(tr.fromMist1Col).lerp(tr.toMist1Col, t);
+            if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
+                this.mistMat1.uniforms.uEdgeColor.value.copy(tr.fromMistEdgeCol).lerp(tr.toMistEdgeCol, t);
+            }
+        }
+
+        if (map) {
+            if (map.meshAbyss && map.meshAbyss.material) {
+                map.meshAbyss.material.color.copy(tr.fromAbyssCol).lerp(tr.toAbyssCol, t);
+            }
+            if (map.meshPitBed && map.meshPitBed.material) {
+                map.meshPitBed.material.color.copy(tr.fromBedCol).lerp(tr.toBedCol, t);
+            }
+            if (map.meshIceFloor && window.GLOBAL_ICE_MAT) {
+                window.GLOBAL_ICE_MAT.opacity = tr.fromIceOp + (tr.toIceOp - tr.fromIceOp) * t;
+                if (rawT >= 1.0) {
+                    map.meshIceFloor.visible = (tr.toIdx === 2);
+                    window.GLOBAL_ICE_MAT.opacity = 0.80;
+                }
+            }
+            if (map.meshPitSkirt && map.meshPitSkirt.material) {
+                map.meshPitSkirt.material.color.copy(tr.fromBankTint).lerp(tr.toBankTint, t);
+            }
+            if (map.meshPitBanks && map.meshPitBanks.material) {
+                map.meshPitBanks.material.color.copy(tr.fromBankTint).lerp(tr.toBankTint, t);
+            }
+            if (map.meshPitRimStones && map.meshPitRimStones.material && nextMats) {
+                map.meshPitRimStones.material.color.copy(nextMats.wall.color);
+                map.meshPitRimStones.material.emissive.copy(nextMats.wall.emissive);
+            }
+            if (map.meshShoreFoam) {
+                map.meshShoreFoam.position.y = tr.fromShoreY + (tr.toShoreY - tr.fromShoreY) * t;
+            }
+            if (map.meshPitPads) {
+                map.meshPitPads.position.y = tr.fromPadY + (tr.toPadY - tr.fromPadY) * t;
+            }
+        }
+
+        if (this.portals && this.portals.length > 0) {
+            const p0 = this.portals[0];
+            if (p0.vortexOuterMat) p0.vortexOuterMat.color.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
+            if (p0.frameMat) p0.frameMat.emissive.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
+            if (p0.baseRuneMat) p0.baseRuneMat.color.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
+        }
+
+        if (rawT >= 1.0) {
+            this.themeTransition = null;
+        }
+    },
+
     queueDrop(type, originX, originY, spreadRadius, isVolcano = false) {
         this.pendingDrops.push({ type, x: originX, y: originY, rad: spreadRadius, isVolcano });
     },
@@ -10504,6 +10900,11 @@ startGame(diffMult) {
         this.visualTime += safeVisualDt;
         this.particlesThisFrame = 0;
         this.debrisThisFrame = 0;
+
+        // Aggiorna la transizione fluida del tema (costo CPU/GPU quasi nullo)
+        if (this.themeTransition) {
+            this.updateThemeTransition(safeVisualDt);
+        }
 
         // --- SISTEMA TIME-SLICING: Elaborazione Coda Drop (Previene i freeze) ---
         if (this.pendingDrops && this.pendingDrops.length > 0) {
@@ -10674,10 +11075,14 @@ startGame(diffMult) {
                             this.map.raysMesh.instanceMatrix.needsUpdate = true;
                         }
 
-                        // --- Fai scomparire la Runa al suolo ---
+                        // --- Fai scomparire la Runa al suolo e il Floor Glow ---
                         if (a.runeIdx !== undefined && a.runeIdx >= 0 && this.map.runesMesh) {
                             this.map.runesMesh.setMatrixAt(a.runeIdx, dummy.matrix);
                             this.map.runesMesh.instanceMatrix.needsUpdate = true;
+                        }
+                        if (a.floorGlowIdx !== undefined && a.floorGlowIdx >= 0 && this.map.floorGlowsMesh) {
+                            this.map.floorGlowsMesh.setMatrixAt(a.floorGlowIdx, dummy.matrix);
+                            this.map.floorGlowsMesh.instanceMatrix.needsUpdate = true;
                         }
 
                        // Spawna il Cadavere Oscuro (usando materiali condivisi per evitare Memory Leak)
@@ -10700,6 +11105,12 @@ startGame(diffMult) {
                         // FIX LAG: Dimezzate le particelle Nova che causavano spike di fill-rate
                         let pCount = AppSettings.isLow ? 5 : 12;
                         for(let p=0; p<pCount; p++) this.getParticle().spawn(a.x, 20, a.y, SharedMat.spriteWhite, 'nova');
+
+                        // --- CAMBIO TEMA DINAMICO ALLA CATTURA DELL'OBELISCO (Gli obelischi corrotti non cambiano il tema) ---
+                        if (a.type !== 'corrupted') {
+                            let targetThemeIdx = (a.type === 'green') ? 0 : ((a.type === 'red') ? 1 : 2);
+                            this.triggerThemeTransition(targetThemeIdx, a.x, a.y);
+                        }
                         
                         let itemsToSpawn = [];
                         let dropsRelic = false;
@@ -12955,6 +13366,9 @@ class GameMap {
         const meshGrass = new THREE.InstancedMesh(floorGeo, activeMats.grass, floorCount);
         const meshRock = new THREE.InstancedMesh(floorGeo, activeMats.rock, floorCount);
         meshDirt.renderOrder = -10; meshGrass.renderOrder = -9; meshRock.renderOrder = -8;
+        this.meshDirt = meshDirt;
+        this.meshGrass = meshGrass;
+        this.meshRock = meshRock;
 
      // --- INIZIO FAKE LIGHTING & ATMOSFERA ---
         if (!window.GLOBAL_RUNE_GEO) window.GLOBAL_RUNE_GEO = new THREE.PlaneGeometry(160, 160).rotateX(-Math.PI/2); // Runa base ingrandita
@@ -12963,14 +13377,14 @@ class GameMap {
             window.GLOBAL_GODRAY_GEO = new THREE.CylinderGeometry(5, 90, 2000, 8, 1, true).translate(0, 1000, 0);
             window.GLOBAL_FLOORGLOW_GEO = new THREE.PlaneGeometry(80, 80).rotateX(-Math.PI/2);
         }
-        // Colori in base al Tema
-        let runeColor = Game.currentThemeIndex === 2 ? 0x00DDFF : (Game.currentThemeIndex === 1 ? 0xff3300 : 0x33ff00);
-        let rayColor = Game.currentThemeIndex === 2 ? 0xaaddff : (Game.currentThemeIndex === 1 ? 0xffaa66 : 0xccffaa);
+        // Colori base bianchi (0xffffff) per supportare colori individuali per ogni obelisco tramite setColorAt!
+        let bossRuneHex = Game.currentThemeIndex === 2 ? 0x00DDFF : (Game.currentThemeIndex === 1 ? 0xff3300 : 0x33ff00);
+        let bossRayHex = Game.currentThemeIndex === 2 ? 0xaaddff : (Game.currentThemeIndex === 1 ? 0xffaa66 : 0xccffaa);
         
        // Materiali rigorosamente Additive e senza scrittura sul Depth Buffer (per non buggare le particelle dietro)
-        let runeMat = new THREE.MeshBasicMaterial({map: RUNE_TEX, color: runeColor, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false});
-        let rayMat = new THREE.MeshBasicMaterial({color: rayColor, transparent: true, opacity: 0.03, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide});
-        let floorGlowMat = new THREE.MeshBasicMaterial({map: GLOW_TEX, color: runeColor, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false});
+        let runeMat = new THREE.MeshBasicMaterial({map: RUNE_TEX, color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false});
+        let rayMat = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.03, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide});
+        let floorGlowMat = new THREE.MeshBasicMaterial({map: GLOW_TEX, color: 0xffffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false});
         let imRunes = new THREE.InstancedMesh(window.GLOBAL_RUNE_GEO, runeMat, pillarCount + 1); 
         this.runesMesh = imRunes; // Salviamo il riferimento per scurirle dopo
         
@@ -12979,9 +13393,11 @@ class GameMap {
         this.raysMesh = imRays; // Salviamo il riferimento per spegnerli dopo
         
         let imFloorGlows = new THREE.InstancedMesh(window.GLOBAL_FLOORGLOW_GEO, floorGlowMat, pillarCount + 10);
+        this.floorGlowsMesh = imFloorGlows;
         let idxRune = 0, idxRay = 0, idxFGlow = 0;
 
         let tempDummy = new THREE.Object3D();
+        let tempInstColor = new THREE.Color();
         
         // Piazziamo la Runa e il Raggio SOLO sotto il boss
         if (isBossFloor) {
@@ -12992,8 +13408,10 @@ class GameMap {
             tempDummy.rotation.set(0, Math.random() * Math.PI, 0); 
             tempDummy.scale.setScalar(2.4); // Runa enorme per il Boss
             tempDummy.updateMatrix();
+            imRunes.setColorAt(idxRune, tempInstColor.setHex(bossRuneHex));
             imRunes.setMatrixAt(idxRune++, tempDummy.matrix);
             tempDummy.position.set(bx, 0, bz); tempDummy.rotation.set(0, 0, 0); tempDummy.scale.setScalar(3.0); tempDummy.updateMatrix();
+            imRays.setColorAt(idxRay, tempInstColor.setHex(bossRayHex));
             imRays.setMatrixAt(idxRay++, tempDummy.matrix);
             
             if (!AppSettings.isLow) {
@@ -13062,12 +13480,14 @@ class GameMap {
     window.GLOBAL_TELEGRAPH_GEO.rotateX(-Math.PI / 2);
 }
       const wallMesh = new THREE.InstancedMesh(window.GLOBAL_WALL_GEO, this.wallMat, wallCount);
+        this.wallMesh = wallMesh;
 
         // --- 1. SIGILLO PAVIMENTO SOTTO LE ROCCE ---
         let abyssColor = new THREE.Color(currentTheme.fog).multiplyScalar(0.35);
         const abyssMat = new THREE.MeshBasicMaterial({ color: abyssColor });
         const meshAbyss = new THREE.InstancedMesh(floorGeo, abyssMat, wallCount);
         meshAbyss.renderOrder = -11;
+        this.meshAbyss = meshAbyss;
         let idxAbyss = 0;
 
         // --- 2. LAYER ENERGIA OSCURA DIETRO AI MURI (Copre il fumo mobile esterno a y = 15.5, renderOrder = 4) ---
@@ -13136,33 +13556,32 @@ class GameMap {
         let idxDarkVoid = 0;
 // --- SISTEMA FOSSE ORGANICHE SENZA BORDI NETTI (Raccordo Seamless, Gonna Sfumata, Scarpata 3D e Shader GPU) ---
         const themeIdx = Game.currentThemeIndex;
-        let pitColor, pitEmissive, pitOpacity, pitRoughness, pitMetalness, baseTexImage;
         this.pitPolys = [];
-
-       if (themeIdx === 0) {
-            // Sorgente boschiva fiabesca: azzurro celeste luminoso, morbido e cristallino (ottimizzato per smartphone)
-            pitColor = 0xffffff; pitEmissive = 0x10588c; pitOpacity = 0.92; pitRoughness = 0.18; pitMetalness = 0.04;
-            baseTexImage = Preloader.textures.water;
-        } else if (themeIdx === 1) {
-            pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
-            baseTexImage = Preloader.textures.waterLava;
-        } else {
-            pitColor = 0x2288d8; pitEmissive = 0x0f4d8a; pitOpacity = 0.96; pitRoughness = 0.45; pitMetalness = 0.05;
-            baseTexImage = Preloader.textures.waterIce || Preloader.textures.water;
-        }
-
-        let liquidTex = baseTexImage || CHAR_GRUNGE_TEX;
-        liquidTex.wrapS = THREE.RepeatWrapping;
-        liquidTex.wrapT = THREE.RepeatWrapping;
-        liquidTex.encoding = THREE.sRGBEncoding;
 
         let mapRealWidth = (this.width + 16) * TILE_SIZE;
         let mapRealHeight = (this.height + 16) * TILE_SIZE;
-        liquidTex.repeat.set(mapRealWidth / 250, mapRealHeight / 250);
-        liquidTex.needsUpdate = true;
 
-       if (!window.GLOBAL_PIT_MATS) window.GLOBAL_PIT_MATS = {};
-        if (!window.GLOBAL_PIT_MATS[themeIdx]) {
+        // Pre-configura le 3 texture liquide e i 3 materiali fossa globali per supportare il cambio tema istantaneo a costo zero
+        if (!window.GLOBAL_PIT_MATS) window.GLOBAL_PIT_MATS = {};
+        for (let tIdx = 0; tIdx < 3; tIdx++) {
+            let baseTexImage = (tIdx === 0) ? Preloader.textures.water : ((tIdx === 1) ? Preloader.textures.waterLava : (Preloader.textures.waterIce || Preloader.textures.water));
+            let liquidTex = baseTexImage || CHAR_GRUNGE_TEX;
+            liquidTex.wrapS = THREE.RepeatWrapping;
+            liquidTex.wrapT = THREE.RepeatWrapping;
+            liquidTex.encoding = THREE.sRGBEncoding;
+            liquidTex.repeat.set(mapRealWidth / 250, mapRealHeight / 250);
+            liquidTex.needsUpdate = true;
+
+            if (!window.GLOBAL_PIT_MATS[tIdx]) {
+                const themeIdx = tIdx;
+                let pitColor, pitEmissive, pitOpacity, pitRoughness, pitMetalness;
+                if (themeIdx === 0) {
+                    pitColor = 0xffffff; pitEmissive = 0x10588c; pitOpacity = 0.92; pitRoughness = 0.18; pitMetalness = 0.04;
+                } else if (themeIdx === 1) {
+                    pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
+                } else {
+                    pitColor = 0x2288d8; pitEmissive = 0x0f4d8a; pitOpacity = 0.96; pitRoughness = 0.45; pitMetalness = 0.05;
+                }
             const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
@@ -13443,8 +13862,9 @@ class GameMap {
                     `
                 );
             };
-            cachedPitMat._isGlobalCached = true;
-            window.GLOBAL_PIT_MATS[themeIdx] = cachedPitMat;
+                cachedPitMat._isGlobalCached = true;
+                window.GLOBAL_PIT_MATS[tIdx] = cachedPitMat;
+            }
         }
         this.pitMat = window.GLOBAL_PIT_MATS[themeIdx];
 
@@ -13496,6 +13916,7 @@ class GameMap {
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
             meshPitBed.renderOrder = -7;
+            this.meshPitBed = meshPitBed;
             this.mapGroup.add(meshPitBed);
 
             this.meshPitFloor = new THREE.Mesh(pitAreaGeo, this.pitMat);
@@ -13504,7 +13925,7 @@ class GameMap {
             this.meshPitFloor.renderOrder = 1;
             this.mapGroup.add(this.meshPitFloor);
 
-            if (themeIdx === 2) {
+            {
                 let iceTex = Preloader.textures.iceCrust || Preloader.textures.waterIce || CHAR_GRUNGE_TEX;
                 iceTex.wrapS = THREE.RepeatWrapping;
                 iceTex.wrapT = THREE.RepeatWrapping;
@@ -13698,11 +14119,13 @@ class GameMap {
                     window.GLOBAL_ICE_MAT = cachedIceMat;
                 }
                 this.iceMat = window.GLOBAL_ICE_MAT;
+                this.iceMat.opacity = 0.80;
 
                 this.meshIceFloor = new THREE.Mesh(pitAreaGeo, this.iceMat);
                 this.meshIceFloor.position.set(0, -8.5, 0);
                 this.meshIceFloor.receiveShadow = true;
                 this.meshIceFloor.renderOrder = 2;
+                this.meshIceFloor.visible = (themeIdx === 2);
                 this.mapGroup.add(this.meshIceFloor);
             }
         }
@@ -13750,6 +14173,9 @@ class GameMap {
             const cGrass = new THREE.Color(currentTheme.grass);
             const cRock = new THREE.Color(currentTheme.rock);
             const cWall = new THREE.Color(currentTheme.wall);
+            this.initialRockColor = cRock.clone();
+            this.shoreInitialY = (themeIdx === 2) ? -8.38 : (themeIdx === 0 ? -17.26 : -17.35);
+            this.padInitialY = (themeIdx === 2) ? -8.25 : -17.12;
             const cDeep = (themeIdx === 1)
                 ? { r: 1.50, g: 0.40, b: 0.08 }
                 : ((themeIdx === 0) ? { r: 0.20, g: 0.64, b: 0.90 } : { r: 0.12, g: 0.48, b: 0.80 });
@@ -14128,6 +14554,7 @@ class GameMap {
                 const meshPitApron = new THREE.Mesh(apronGeo, activeMats.dirt);
                 meshPitApron.renderOrder = -10;
                 meshPitApron.receiveShadow = true;
+                this.meshPitApron = meshPitApron;
                 this.mapGroup.add(meshPitApron);
             }
 
@@ -14159,9 +14586,12 @@ class GameMap {
                     window.GLOBAL_PIT_SKIRT_MATS[themeIdx] = cachedSkirtMat;
                 }
                 const skirtMat = window.GLOBAL_PIT_SKIRT_MATS[themeIdx];
+                skirtMat.color.setRGB(1, 1, 1);
+                if (tBank) skirtMat.map = tBank;
                 const meshPitSkirt = new THREE.Mesh(skirtGeo, skirtMat);
                 meshPitSkirt.renderOrder = -6;
                 meshPitSkirt.receiveShadow = true;
+                this.meshPitSkirt = meshPitSkirt;
                 this.mapGroup.add(meshPitSkirt);
             }
 
@@ -14204,10 +14634,16 @@ class GameMap {
                     window.GLOBAL_PIT_BANK_MATS[themeIdx] = cachedBankMat;
                 }
                 const bankMat = window.GLOBAL_PIT_BANK_MATS[themeIdx];
+                bankMat.color.setRGB(1, 1, 1);
+                if (tBank) {
+                    bankMat.map = tBank;
+                    if (!isTouchDevice) bankMat.bumpMap = tBank;
+                }
                 const meshPitBanks = new THREE.Mesh(bankGeo, bankMat);
                 meshPitBanks.renderOrder = -5;
                 meshPitBanks.receiveShadow = true;
                 meshPitBanks.castShadow = AppSettings.shadowsEnabled;
+                this.meshPitBanks = meshPitBanks;
                 this.mapGroup.add(meshPitBanks);
             }
 
@@ -14219,7 +14655,9 @@ class GameMap {
                 shoreGeo.computeBoundingSphere();
 
                 if (!window.GLOBAL_SHORE_MATS) window.GLOBAL_SHORE_MATS = {};
-                if (!window.GLOBAL_SHORE_MATS[themeIdx]) {
+                for (let sIdx = 0; sIdx < 3; sIdx++) {
+                    if (!window.GLOBAL_SHORE_MATS[sIdx]) {
+                        const themeIdx = sIdx;
                     const cachedShoreMat = new THREE.MeshBasicMaterial({
                         color: 0xffffff,
                         transparent: true,
@@ -14292,13 +14730,15 @@ class GameMap {
                             `
                         );
                     };
-                    cachedShoreMat._isGlobalCached = true;
-                    window.GLOBAL_SHORE_MATS[themeIdx] = cachedShoreMat;
+                        cachedShoreMat._isGlobalCached = true;
+                        window.GLOBAL_SHORE_MATS[sIdx] = cachedShoreMat;
+                    }
                 }
                 const shoreMat = window.GLOBAL_SHORE_MATS[themeIdx];
 
                 const meshShoreFoam = new THREE.Mesh(shoreGeo, shoreMat);
                 meshShoreFoam.renderOrder = 3;
+                this.meshShoreFoam = meshShoreFoam;
                 this.mapGroup.add(meshShoreFoam);
             }
 
@@ -14346,6 +14786,7 @@ class GameMap {
                 }
                 meshPitRimStones.instanceMatrix.needsUpdate = true;
                 if (meshPitRimStones.instanceColor) meshPitRimStones.instanceColor.needsUpdate = true;
+                this.meshPitRimStones = meshPitRimStones;
                 this.mapGroup.add(meshPitRimStones);
             }
 
@@ -14383,6 +14824,7 @@ class GameMap {
                     meshPitPads.setMatrixAt(i, tempObj.matrix);
                 }
                 meshPitPads.instanceMatrix.needsUpdate = true;
+                this.meshPitPads = meshPitPads;
                 this.mapGroup.add(meshPitPads);
             }
 
@@ -14435,19 +14877,15 @@ class GameMap {
       // --- PREPARAZIONE VERI OBELISCHI ---
         if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
         
-        // Determiniamo solo il colore base del tema per il materiale fisico della roccia
-        let baseThemeAura = Game.currentThemeIndex === 2 ? 'blue' : (Game.currentThemeIndex === 1 ? 'red' : 'green');
-        let obEmissive = baseThemeAura === 'blue' ? 0x0088ff : (baseThemeAura === 'green' ? 0x33ff00 : 0xff3300);
-        
-      // MATERIALE OBELISCO: Ora usa la texture materica per un look di pietra antica
+      // MATERIALE OBELISCO: Pietra antica monolitica con supporto colore per-istanza (setColorAt) per obelischi multicolore
         this.obeliskMat = new THREE.MeshStandardMaterial({
-            color: 0x222225, // Grigio scuro per far risaltare il bump e i graffi della texture
-            emissive: obEmissive, 
-            emissiveIntensity: 0.25, // Abbassato da 0.8 a 0.25 per non bruciare le ombre e i volumi 3D
-            roughness: 0.85, 
-            metalness: 0.4, // Aumentato per dare un leggero riflesso monolitico sui bordi
-            map: CHAR_GRUNGE_TEX, // Usa i graffi universali dei personaggi per usurare la roccia
-            bumpMap: isTouchDevice ? null : CHAR_GRUNGE_TEX, // Dà profondità 3D ai graffi su PC
+            color: 0x383840, // Base grigia neutra modulata dal colore individuale dell'obelisco
+            emissive: 0x0c0c12, 
+            emissiveIntensity: 0.25,
+            roughness: 0.84, 
+            metalness: 0.38,
+            map: CHAR_GRUNGE_TEX,
+            bumpMap: isTouchDevice ? null : CHAR_GRUNGE_TEX,
             bumpScale: 0.15,
             transparent: false, 
             depthWrite: true,
@@ -14824,9 +15262,14 @@ class GameMap {
                    if (this.grid[x][y] === 3) {
                             let px = x * TILE_SIZE + TILE_SIZE / 2; let pz = y * TILE_SIZE + TILE_SIZE / 2;
                             
-                            // FIX CORRUZIONE: La probabilità del 5% si applica ad ogni singolo obelisco indipendentemente
-                            let aType = Game.currentThemeIndex === 2 ? 'blue' : (Game.currentThemeIndex === 1 ? 'red' : 'green');
+                            // Colore casuale indipendente per ogni obelisco (verde, rosso o blu) + 5% probabilità corrotto
+                            const obeliskColors = ['green', 'red', 'blue'];
+                            let aType = obeliskColors[Math.floor(Math.random() * 3)];
                             if (Math.random() < 0.05) aType = 'corrupted';
+
+                            let obRuneHex = aType === 'blue' ? 0x00DDFF : (aType === 'green' ? 0x33ff00 : (aType === 'corrupted' ? 0xaa00ff : 0xff3300));
+                            let obRayHex  = aType === 'blue' ? 0xaaddff : (aType === 'green' ? 0xccffaa : (aType === 'corrupted' ? 0xdd88ff : 0xffaa66));
+                            let obStoneHex = aType === 'blue' ? 0x6ea8d6 : (aType === 'green' ? 0x6ed67e : (aType === 'corrupted' ? 0xb46ed6 : 0xd6746e));
 
                           // --- SPAWN AUREE E OBELISCHI ---
                             let auraRadius = 240; 
@@ -14845,16 +15288,19 @@ class GameMap {
                         if(aType === 'red') imRedRing.setMatrixAt(cRed++, dummy.matrix);
                        if(aType === 'corrupted') imCorruptedRing.setMatrixAt(cCorrupted++, dummy.matrix);
 
-                        // --- OBELISCO VERO E PROPRIO (Questo mancava e li rendeva invisibili!) ---
+                        // --- OBELISCO VERO E PROPRIO ---
                         dummy.position.set(px, 0, pz); 
                         dummy.scale.setScalar(1.0); 
                         dummy.rotation.set(0, 0, 0);
                         dummy.updateMatrix(); 
+                        obeliskMesh.setColorAt(pIdx, tempInstColor.setHex(obStoneHex));
                         obeliskMesh.setMatrixAt(pIdx++, dummy.matrix);
 
-                        // FAKE LIGHTING: Bagliore a terra sotto l'Obelisco
+                        // FAKE LIGHTING: Bagliore a terra sotto l'Obelisco (colorato per singolo obelisco)
                         dummy.position.set(px, 0.6, pz);
                         dummy.updateMatrix();
+                        let currentFGlowIdx = idxFGlow;
+                        imFloorGlows.setColorAt(idxFGlow, tempInstColor.setHex(obRuneHex));
                         imFloorGlows.setMatrixAt(idxFGlow++, dummy.matrix);
                         
                        // FAKE LIGHTING: Runa magica posizionata perfettamente sotto la base
@@ -14863,9 +15309,12 @@ class GameMap {
                         dummy.scale.setScalar(1.25); // Leggermente più grande per avvolgere meglio la base
                         dummy.updateMatrix();
                         let currentRuneIdx = idxRune; // Salviamo l'indice di questa specifica runa
+                        imRunes.setColorAt(idxRune, tempInstColor.setHex(obRuneHex));
                         imRunes.setMatrixAt(idxRune++, dummy.matrix);
                         dummy.position.set(px, 0, pz); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1.4); dummy.updateMatrix();
-                        let _preRayIdx = idxRay; imRays.setMatrixAt(idxRay++, dummy.matrix);
+                        let _preRayIdx = idxRay;
+                        imRays.setColorAt(idxRay, tempInstColor.setHex(obRayHex));
+                        imRays.setMatrixAt(idxRay++, dummy.matrix);
 
                       let currentRayIdx = _preRayIdx;
 // --- FAKE LIGHTING: GOD RAY SULL'OBELISCO ---
@@ -14875,7 +15324,6 @@ if (!AppSettings.isLow) {
     dummy.scale.setScalar(1.4); // Avvolge in larghezza l'obelisco
     dummy.updateMatrix();
     currentRayIdx = _preRayIdx;
-    // Già popolato sopra per supportare il cambio grafica live da Opzioni
 }
 
 // Icona Fluttuante
@@ -14897,6 +15345,7 @@ Game.auras.push({
     active: true, colorIdx: colorIdx, obeliskIdx: (pIdx - 1), icon: iconSprite,
     runeIdx: currentRuneIdx,
     rayIdx: currentRayIdx,
+    floorGlowIdx: currentFGlowIdx,
     dropsCrystal: singleObeliskDropsCrystal
 });
                     } else if (!isBossFloor && Math.random() < 0.015 && this.grid[x][y] !== 1) {
@@ -15014,16 +15463,30 @@ Game.auras.push({
         
      if(pillarCount > 0) {
             this.mapGroup.add(obeliskMesh);
-            obeliskMesh.instanceMatrix.needsUpdate = true; // <-- FIX: Forza il disegno dell'obelisco
+            obeliskMesh.instanceMatrix.needsUpdate = true;
+            if (obeliskMesh.instanceColor) obeliskMesh.instanceColor.needsUpdate = true;
         }
       // Aggiorniamo e aggiungiamo il Fake Lighting
         imRunes.count = idxRune;
         imRays.count = idxRay;
         imFloorGlows.count = idxFGlow;
         
-        if (idxRune > 0) { imRunes.instanceMatrix.needsUpdate = true; this.mapGroup.add(imRunes); }
-        if (idxRay > 0) { imRays.visible = !AppSettings.isLow; imRays.instanceMatrix.needsUpdate = true; this.mapGroup.add(imRays); }
-        if (idxFGlow > 0) { imFloorGlows.instanceMatrix.needsUpdate = true; this.mapGroup.add(imFloorGlows); }
+        if (idxRune > 0) {
+            imRunes.instanceMatrix.needsUpdate = true;
+            if (imRunes.instanceColor) imRunes.instanceColor.needsUpdate = true;
+            this.mapGroup.add(imRunes);
+        }
+        if (idxRay > 0) {
+            imRays.visible = !AppSettings.isLow;
+            imRays.instanceMatrix.needsUpdate = true;
+            if (imRays.instanceColor) imRays.instanceColor.needsUpdate = true;
+            this.mapGroup.add(imRays);
+        }
+        if (idxFGlow > 0) {
+            imFloorGlows.instanceMatrix.needsUpdate = true;
+            if (imFloorGlows.instanceColor) imFloorGlows.instanceColor.needsUpdate = true;
+            this.mapGroup.add(imFloorGlows);
+        }
         
        imBlueDome.count = cBlue; imBlueRing.count = cBlue;
         imGreenDome.count = cGreen; imGreenRing.count = cGreen;
@@ -15203,6 +15666,7 @@ Game.auras.push({
                     Game.portals.push({
                         x: px, y: pz, targetIndex: 1 - i,
                         group: pGroup, vOuter: vOuter, vInner: vInner, baseRune: baseRune,
+                        frameMat: frameMat, baseRuneMat: baseRuneMat,
                         vortexOuterMat: vortexOuterMat, vortexInnerMat: vortexInnerMat,
                         colorHex: pColor, particleMat: pParticleMat
                     });
