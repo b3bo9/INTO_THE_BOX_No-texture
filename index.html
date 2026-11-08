@@ -1730,6 +1730,16 @@ const AppSettings = {
                 Game.mistMat1.opacity = this.isUltra ? 0.35 : 0.30;
             }
         }
+        if (typeof Game !== 'undefined' && Game.snowSystem) {
+            Game.snowSystem.visible = (Game.currentThemeIndex === 2);
+            const maxSnow = Game.maxSnowCount || (isTouchDevice ? 140 : 220);
+            const snowMult = this.isLow ? 0.55 : (this.isUltra ? 1.0 : 0.80);
+            Game.snowSystem.geometry.setDrawRange(0, Math.floor(maxSnow * snowMult));
+            if (Game.snowMat && Game.snowMat.uniforms && Game.snowMat.uniforms.uSizeScale) {
+                const pr = this.getTargetPixelRatio();
+                Game.snowMat.uniforms.uSizeScale.value = (isTouchDevice ? 1650.0 : 2100.0) * pr;
+            }
+        }
 
         if (this.isLow) document.body.classList.add('low-spec');
         else document.body.classList.remove('low-spec');
@@ -8700,6 +8710,95 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
 
             this.mistSystem.visible = !AppSettings.isLow; this.scene.add(this.mistSystem);
         }
+
+        // --- SISTEMA NEVICATA LEGGERA GPU (1 Draw Call, 0 cicli CPU per fiocco, Toroidale attorno alla Camera) ---
+        {
+            const maxSnow = isTouchDevice ? 140 : 220;
+            this.maxSnowCount = maxSnow;
+            const snowPos = new Float32Array(maxSnow * 3);
+            const snowSeed = new Float32Array(maxSnow * 3);
+            for (let i = 0; i < maxSnow; i++) {
+                snowPos[i * 3]     = (Math.random() - 0.5) * 1440.0;
+                snowPos[i * 3 + 1] = Math.random() * 420.0;
+                snowPos[i * 3 + 2] = (Math.random() - 0.5) * 1440.0;
+                snowSeed[i * 3]     = Math.random() * Math.PI * 2.0; // Fase oscillazione
+                snowSeed[i * 3 + 1] = 0.72 + Math.random() * 0.58;   // Velocità di caduta individuale
+                snowSeed[i * 3 + 2] = 0.75 + Math.random() * 0.65;   // Dimensione fiocco individuale
+            }
+            const snowGeo = new THREE.BufferGeometry();
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+            snowGeo.setAttribute('aSeed', new THREE.BufferAttribute(snowSeed, 3));
+            const snowMult = AppSettings.isLow ? 0.55 : (AppSettings.isUltra ? 1.0 : 0.80);
+            snowGeo.setDrawRange(0, Math.floor(maxSnow * snowMult));
+
+            this.snowMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0.0 },
+                    uFocusPos: { value: new THREE.Vector2(960, 960) },
+                    uSizeScale: { value: (isTouchDevice ? 1650.0 : 2100.0) * pixelRatio }
+                },
+                vertexShader: `
+                    attribute vec3 aSeed;
+                    uniform float uTime;
+                    uniform vec2 uFocusPos;
+                    uniform float uSizeScale;
+                    varying float vAlpha;
+                    varying float vTint;
+                    void main() {
+                        float t = uTime * aSeed.y;
+                        // Caduta verticale morbida e continua tra Y = 4 e Y = 424
+                        float wy = 4.0 + mod(position.y - t * 44.0, 420.0);
+
+                        // Brezza glaciale + dondolio sinusoidale soffice del singolo fiocco
+                        float swayX = sin(t * 1.45 + aSeed.x + wy * 0.018) * 16.0;
+                        float swayZ = cos(t * 1.15 + aSeed.x * 1.7 + wy * 0.015) * 14.0;
+                        float windX = uTime * 16.0;
+                        float windZ = uTime * 8.5;
+
+                        // Box toroidale infinito 1440x1440 ancorato al focus camera (zero pop-in anche durante il dash)
+                        float rx = mod(position.x + windX - uFocusPos.x + 720.0, 1440.0) - 720.0;
+                        float rz = mod(position.z + windZ - uFocusPos.y + 720.0, 1440.0) - 720.0;
+
+                        vec3 worldPos = vec3(uFocusPos.x + rx + swayX, wy, uFocusPos.y + rz + swayZ);
+                        vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
+                        gl_Position = projectionMatrix * mvPosition;
+
+                        // Dissolvenza dolce in quota, vicino a terra e ai margini del volume visivo
+                        float hFade = smoothstep(4.0, 36.0, wy) * (1.0 - smoothstep(340.0, 424.0, wy));
+                        float edgeDist = max(abs(rx), abs(rz));
+                        float boxFade = 1.0 - smoothstep(540.0, 710.0, edgeDist);
+                        float twinkle = 0.82 + 0.18 * sin(uTime * 2.6 + aSeed.x * 3.0);
+
+                        vAlpha = hFade * boxFade * twinkle;
+                        vTint = fract(aSeed.x * 0.3183);
+
+                        gl_PointSize = clamp((uSizeScale * aSeed.z) / max(120.0, -mvPosition.z), 2.2, 9.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying float vAlpha;
+                    varying float vTint;
+                    void main() {
+                        vec2 uv = gl_PointCoord - vec2(0.5);
+                        float d2 = dot(uv, uv);
+                        if (d2 > 0.25) discard;
+                        // Fiocco soffice procedurale (zero texture fetch per massime performance su smartphone)
+                        float flake = pow(1.0 - d2 * 4.0, 1.45);
+                        vec3 snowCol = mix(vec3(0.76, 0.93, 1.00), vec3(0.96, 0.99, 1.00), vTint);
+                        gl_FragColor = vec4(snowCol, flake * vAlpha * 0.72);
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                depthTest: true
+            });
+
+            this.snowSystem = new THREE.Points(snowGeo, this.snowMat);
+            this.snowSystem.frustumCulled = false;
+            this.snowSystem.renderOrder = 6;
+            this.snowSystem.visible = false;
+            this.scene.add(this.snowSystem);
+        }
        // ^^^ INCOLLA SOPRA QUESTA RIGA ^^^
         this.prewarmShaders(); this.setupInputs(); this.initPools(); 
         
@@ -9427,6 +9526,11 @@ pushDebris(px, pz, radius, force) {
             }
             this.mistSystem.visible = !AppSettings.isLow; 
         }
+        if (this.snowSystem && this.snowSystem.visible && this.snowMat) {
+            this.snowTime = (this.snowTime || 0) + dt;
+            this.snowMat.uniforms.uTime.value = this.snowTime;
+            this.snowMat.uniforms.uFocusPos.value.set(this._camFocusX, this._camFocusZ);
+        }
     },
     
     updateMouseWorld() {
@@ -9856,6 +9960,9 @@ loop(timestamp) {
                 }
                 this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33;
             }
+        }
+        if (this.snowSystem) {
+            this.snowSystem.visible = (this.currentThemeIndex === 2);
         }
         if (window.GLOBAL_FOG_MAT) {
             window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.12 : (this.currentThemeIndex === 1 ? 0.13 : 0.15);
@@ -12705,7 +12812,7 @@ class GameMap {
             pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
             baseTexImage = Preloader.textures.waterLava;
         } else {
-            pitColor = 0x0c4888; pitEmissive = 0x072c56; pitOpacity = 0.96; pitRoughness = 0.64; pitMetalness = 0.06;
+            pitColor = 0x2288d8; pitEmissive = 0x0f4d8a; pitOpacity = 0.96; pitRoughness = 0.45; pitMetalness = 0.05;
             baseTexImage = Preloader.textures.waterIce || Preloader.textures.water;
         }
 
@@ -12738,7 +12845,7 @@ class GameMap {
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v14_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v15_' + themeIdx + (isTouchDevice ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -12936,32 +13043,61 @@ class GameMap {
                             totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.25);
                         }
                     ` : `
-                        vec2 dirFlow = vec2(0.4472, -0.8944);
-                        vec2 dirCross = vec2(0.8944, 0.4472);
+                        vec2 dirFlow = vec2(0.5547, -0.8320);
+                        vec2 dirCross = vec2(0.8320, 0.5547);
                         float along = dot(vPitWPos, dirFlow);
                         float across = dot(vPitWPos, dirCross);
-                        float waveA = sin(across * 0.085 + sin(along * 0.030 - uTime * 0.85) * 1.4 - uTime * 0.28);
-                        float waveB = cos(along * 0.052 - uTime * 0.95 + sin(across * 0.065) * 1.1);
-                        float stream = pow(clamp(0.5 + 0.5 * waveA * waveB, 0.0, 1.0), 1.85);
-                        float subCaustic = pow(clamp(0.5 + 0.5 * sin(along * 0.09 + uTime * 1.4) * cos(across * 0.11 - uTime * 1.1), 0.0, 1.0), 3.0);
-                        float flowMix = clamp(texLum * 0.42 + stream * 0.52, 0.0, 1.0);
-                        // Corrente sub-glaciale abissale blu zaffiro con bagliori ciano profondi visibili attraverso il ghiaccio
-                        diffuseColor.rgb = mix(vec3(0.015, 0.065, 0.180), vec3(0.070, 0.340, 0.640), flowMix) + vec3(0.12, 0.48, 0.82) * (subCaustic * 0.35);
-                        totalEmissiveRadiance = mix(vec3(0.012, 0.050, 0.130), vec3(0.080, 0.320, 0.580), clamp(flowMix + subCaustic * 0.4, 0.0, 1.0)) * 0.45;
+
+                    #ifdef USE_MAP
+                        vec2 uvSubA = vPitWPos / 135.0 + dirFlow * (uTime * 0.19) + dirCross * (sin(along * 0.025 - uTime * 1.4) * 0.035);
+                        vec2 uvSubB = vPitWPos / 95.0 + dirFlow * (uTime * 0.13) - dirCross * (cos(across * 0.032 + uTime * 1.1) * 0.030);
+                        vec3 subTexA = ${sampleWaterTex('uvSubA')}.rgb;
+                        vec3 subTexB = ${sampleWaterTex('uvSubB')}.rgb;
+                        float subLumA = pow(clamp(dot(subTexA, vec3(0.299, 0.587, 0.114)), 0.0, 1.0), 0.68);
+                        float subLumB = pow(clamp(dot(subTexB, vec3(0.299, 0.587, 0.114)), 0.0, 1.0), 0.68);
+                        texLum = mix(subLumA, subLumB, 0.50);
+                    #endif
+
+                        // Onde e filamenti d'acqua che scorrono visibilmente sotto la lastra di ghiaccio
+                        float flowCoord = along * 0.055 - uTime * 2.65;
+                        float waveA = sin(across * 0.095 + sin(flowCoord * 0.65) * 1.5 - uTime * 1.85);
+                        float waveB = cos(flowCoord + sin(across * 0.072 + uTime * 1.2) * 1.2);
+                        float stream = clamp(0.5 + 0.5 * waveA * waveB, 0.0, 1.0);
+                        float streamRibbon = pow(smoothstep(0.25, 0.92, 0.5 + 0.5 * sin(across * 0.12 + sin(flowCoord * 0.8) * 1.6)), 2.2);
+
+                        // Caustiche e bolle d'aria sub-glaciali trascinate dalla corrente
+                        float cSub1 = sin(along * 0.088 - uTime * 3.1 + sin(across * 0.075 + uTime * 1.6) * 1.3);
+                        float cSub2 = cos(across * 0.092 + uTime * 2.1 + cos(along * 0.070 - uTime * 2.4) * 1.3);
+                        float subCaustic = pow(clamp(0.5 + 0.5 * cSub1 * cSub2, 0.0, 1.0), 2.4);
+
+                        vec2 bubGrid = vec2(along - uTime * 38.0, across + sin(along * 0.04 - uTime * 2.0) * 8.0) * 0.085;
+                        float subBubbles = pow(clamp(0.5 + 0.5 * sin(bubGrid.x) * cos(bubGrid.y * 1.3), 0.0, 1.0), 6.0) * smoothstep(0.35, 0.85, stream);
+
+                        float flowMix = clamp(texLum * 0.42 + stream * 0.58, 0.0, 1.0);
+                        vec3 deepSubCol   = vec3(0.080, 0.420, 0.780);
+                        vec3 midSubCol    = vec3(0.200, 0.680, 0.960);
+                        vec3 brightSubCol = vec3(0.520, 0.900, 1.000);
+
+                        vec3 subWaterCol = mix(deepSubCol, midSubCol, smoothstep(0.10, 0.78, flowMix));
+                        subWaterCol = mix(subWaterCol, brightSubCol, clamp(streamRibbon * 0.55 + subCaustic * 0.62, 0.0, 0.88));
+                        subWaterCol += vec3(0.75, 0.96, 1.00) * (subBubbles * 0.65);
+
+                        diffuseColor.rgb = subWaterCol;
+                        totalEmissiveRadiance = mix(vec3(0.045, 0.220, 0.440), vec3(0.220, 0.640, 0.920), clamp(flowMix * 0.6 + subCaustic * 0.5 + subBubbles * 0.5, 0.0, 1.0)) * 0.62;
+                        vec3 waterBaseCol = diffuseColor.rgb;
                     `)}
                     `
                 ).replace(
                     '#include <dithering_fragment>',
                     `
-                    ${themeIdx === 0 ? `
-                        // Mantiene l'azzurro fiabesco luminoso anche lontano dalla luce del giocatore su smartphone
+                    ${themeIdx !== 1 ? `
+                        // Mantiene l'acqua luminosa e fiabesca anche lontano dalla PointLight del giocatore su smartphone
                         float baseLum = max(0.06, dot(waterBaseCol, vec3(0.299, 0.587, 0.114)));
                         float litLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                        float lumGain = clamp(litLum / baseLum, 0.85, 1.12);
+                        float lumGain = clamp(litLum / baseLum, 0.86, 1.14);
                         gl_FragColor.rgb = waterBaseCol * lumGain;
-                    ` : ''}
-                    ${themeIdx !== 1 ? `
-                        float capLim = ${themeIdx === 0 ? '0.88' : '0.76'};
+
+                        float capLim = ${themeIdx === 0 ? '0.88' : '0.86'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
                             float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 2.5);
@@ -13020,7 +13156,7 @@ class GameMap {
         }
 
         if (pitAreaGeo) {
-            const bedHex = (themeIdx === 0) ? 0x0e4f82 : ((themeIdx === 1) ? 0x240602 : 0x041228);
+            const bedHex = (themeIdx === 0) ? 0x0e4f82 : ((themeIdx === 1) ? 0x240602 : 0x0d4a80);
             const pitBedMat = new THREE.MeshBasicMaterial({ color: bedHex });
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
@@ -13044,23 +13180,24 @@ class GameMap {
                 if (!window.GLOBAL_ICE_MAT) {
                     const IceMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
                     const iceMatParams = {
-                        color: 0x8cc8f0, emissive: 0x07264a,
-                        emissiveIntensity: 0.24,
+                        color: 0xb8e6ff, emissive: 0x165a8a,
+                        emissiveIntensity: 0.34,
                         map: iceTex, emissiveMap: iceTex,
-                        transparent: true, opacity: 0.88,
+                        transparent: true, opacity: 0.80,
                         depthWrite: false
                     };
                     if (isTouchDevice) {
-                        // Speculare Phong neutro/basso per evitare la patina grigio-azzurra piatta su tutto il piano mobile
-                        iceMatParams.shininess = 68;
-                        iceMatParams.specular = new THREE.Color(0x091d30);
+                        // Speculare Phong calibrato per non creare patine grigie piatte su smartphone
+                        iceMatParams.shininess = 72;
+                        iceMatParams.specular = new THREE.Color(0x0c243b);
                     } else {
-                        iceMatParams.roughness = 0.22;
-                        iceMatParams.metalness = 0.08;
+                        iceMatParams.roughness = 0.20;
+                        iceMatParams.metalness = 0.06;
                     }
                     const cachedIceMat = new IceMatClass(iceMatParams);
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v14' + (isTouchDevice ? '_m' : '_d');
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v15' + (isTouchDevice ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
+                        shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                         shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                         shader.uniforms.uCamPos = InteractiveGrassSystem.uniforms.uCamPos;
                         shader.vertexShader = `
@@ -13073,6 +13210,7 @@ class GameMap {
                             `
                         );
                         shader.fragmentShader = `
+                            uniform float uTime;
                             uniform vec4 uPlayerPit;
                             uniform vec3 uCamPos;
                             varying vec2 vIceWPos;
@@ -13082,28 +13220,41 @@ class GameMap {
                             #include <emissivemap_fragment>
                             vec3 rawIceTex = diffuseColor.rgb;
                             float iceTexRaw = dot(rawIceTex, vec3(0.299, 0.587, 0.114));
-                            // Espande la dinamica della texture per eliminare l'effetto piatto/slavato su smartphone
-                            float iceTex = smoothstep(0.14, 0.84, pow(clamp(iceTexRaw, 0.0, 1.0), 0.78));
-                            vec3 coldIceTex = vec3(iceTex * 0.24, iceTex * 0.62, 0.22 + iceTex * 0.78);
+                            float iceTex = smoothstep(0.10, 0.86, pow(clamp(iceTexRaw, 0.0, 1.0), 0.70));
+                            vec3 fairyIceTex = vec3(0.22 + iceTex * 0.34, 0.62 + iceTex * 0.28, 0.88 + iceTex * 0.12);
 
-                            // 1. Lastre e sfaccettature cristalline 3D con tasche di ghiaccio abissale traslucido
+                            // 1. Sfaccettature di cristallo fiabesco e ampie finestre di ghiaccio trasparente
                             float sheetNoise = 0.5 + 0.5 * sin(vIceWPos.x * 0.024 + sin(vIceWPos.y * 0.027) * 1.4) * cos(vIceWPos.y * 0.023 - cos(vIceWPos.x * 0.026) * 1.3);
                             float bubbleGrain = 0.5 + 0.5 * sin(vIceWPos.x * 0.12 + cos(vIceWPos.y * 0.10) * 2.1) * cos(vIceWPos.y * 0.13 - sin(vIceWPos.x * 0.11) * 2.1);
 
-                            // Sfaccettature angolari del cristallo (simulano normali sfaccettate 3D su mobile)
-                            vec2 fp = vIceWPos * 0.026;
+                            vec2 fp = vIceWPos * 0.025;
                             float facetA = sin(fp.x * 1.7 + fp.y * 1.1 + sin(fp.x * 0.8 - fp.y * 1.2) * 1.5);
                             float facetB = cos(fp.x * 1.2 - fp.y * 1.8 + cos(fp.x * 1.3 + fp.y * 0.7) * 1.5);
-                            float facetSlope = clamp(0.5 + 0.32 * facetA + 0.28 * facetB, 0.0, 1.0);
-                            float facetRidge = pow(clamp(1.0 - abs(facetA * 0.6 + facetB * 0.4), 0.0, 1.0), 3.2);
+                            float facetSlope = clamp(0.5 + 0.30 * facetA + 0.26 * facetB, 0.0, 1.0);
+                            float facetRidge = pow(clamp(1.0 - abs(facetA * 0.6 + facetB * 0.4), 0.0, 1.0), 3.0);
 
-                            // Dinamica ampia (0.0 -> 1.0): mostra vere finestre blu zaffiro scuro e banchi turchesi/brina
-                            float frostRaw = sheetNoise * 0.46 + iceTex * 0.38 + bubbleGrain * 0.16;
-                            float frostBody = smoothstep(0.22, 0.78, frostRaw);
-                            float abyssPocket = smoothstep(0.46, 0.14, frostRaw);
-                            float snowRime = pow(smoothstep(0.56, 0.90, frostBody * 0.76 + iceTex * 0.34), 1.45);
+                            float frostRaw = sheetNoise * 0.48 + iceTex * 0.36 + bubbleGrain * 0.16;
+                            float frostBody = smoothstep(0.24, 0.80, frostRaw);
+                            float clearWindow = 1.0 - smoothstep(0.18, 0.70, frostBody);
+                            float snowRime = pow(smoothstep(0.58, 0.90, frostBody * 0.74 + iceTex * 0.34), 1.40);
 
-                            // 2. Reticolo di fratture di tensione multi-scala (calibrato per essere nitido su DPR mobile)
+                            // 2. Acqua e bolle d'aria che scorrono sotto la lastra (rifratte dalle sfaccettature del ghiaccio)
+                            vec2 dirFlow = vec2(0.5547, -0.8320);
+                            vec2 dirCross = vec2(0.8320, 0.5547);
+                            vec2 refrPos = vIceWPos + vec2(facetA, facetB) * 6.5;
+                            float uAlong = dot(refrPos, dirFlow);
+                            float uAcross = dot(refrPos, dirCross);
+
+                            float uWave1 = sin(uAcross * 0.090 + sin(uAlong * 0.045 - uTime * 2.5) * 1.5 - uTime * 1.7);
+                            float uWave2 = cos(uAlong * 0.062 - uTime * 2.8 + sin(uAcross * 0.075 + uTime * 1.3) * 1.2);
+                            float underStream = pow(clamp(0.5 + 0.5 * uWave1 * uWave2, 0.0, 1.0), 1.9);
+                            float underRibbon = pow(smoothstep(0.35, 0.94, 0.5 + 0.5 * sin(uAcross * 0.11 + sin(uAlong * 0.05 - uTime * 2.6) * 1.6)), 2.2);
+
+                            // Bolle d'aria sub-glaciali che scivolano sotto la crosta ghiacciata
+                            vec2 uBubCoord = vec2(uAlong - uTime * 36.0, uAcross + sin(uAlong * 0.04 - uTime * 1.8) * 7.0) * 0.095;
+                            float underBubbles = pow(clamp(0.5 + 0.5 * sin(uBubCoord.x) * cos(uBubCoord.y * 1.25), 0.0, 1.0), 5.5) * (0.4 + 0.6 * underStream);
+
+                            // 3. Reticolo di fratture cristalline 3D nitide su smartphone
                             vec2 ip = vIceWPos * 0.0175;
                             vec2 warp = vec2(
                                 sin(ip.y * 2.4 + iceTex * 2.0) * 0.42,
@@ -13113,51 +13264,55 @@ class GameMap {
                             float f2 = abs(fract((ip.x * 0.46 - ip.y * 0.89 + warp.y) * 0.42 + 0.27) - 0.5);
                             float f3 = abs(fract((ip.x * 0.92 - ip.y * 0.38 - warp.x * 0.7) * 0.85 + 0.13) - 0.5);
 
-                            // Parallasse 3D interna della spaccatura (parete profonda + bisello rifrangente)
-                            float f1Depth = abs(fract(((ip.x + 0.036) * 0.86 + (ip.y + 0.042) * 0.50 + warp.x) * 0.54) - 0.5);
-                            float f2Depth = abs(fract(((ip.x + 0.030) * 0.46 - (ip.y + 0.036) * 0.89 + warp.y) * 0.42 + 0.27) - 0.5);
+                            float f1Depth = abs(fract(((ip.x + 0.034) * 0.86 + (ip.y + 0.040) * 0.50 + warp.x) * 0.54) - 0.5);
+                            float f2Depth = abs(fract(((ip.x + 0.028) * 0.46 - (ip.y + 0.034) * 0.89 + warp.y) * 0.42 + 0.27) - 0.5);
 
                             float mainCrack  = 1.0 - smoothstep(0.0, 0.022, f1);
                             float subCrack   = (1.0 - smoothstep(0.0, 0.016, f2)) * 0.82;
-                            float microCrack = (1.0 - smoothstep(0.0, 0.012, f3)) * 0.52 * smoothstep(0.28, 0.75, frostBody);
+                            float microCrack = (1.0 - smoothstep(0.0, 0.012, f3)) * 0.50 * smoothstep(0.28, 0.75, frostBody);
                             float crackMask  = clamp(mainCrack + subCrack + microCrack, 0.0, 1.0);
                             float crackCore  = clamp((1.0 - smoothstep(0.0, 0.009, f1)) + (1.0 - smoothstep(0.0, 0.007, f2)) * 0.70, 0.0, 1.0);
 
-                            float depthWall = clamp((1.0 - smoothstep(0.0, 0.044, f1Depth)) * 0.85 + (1.0 - smoothstep(0.0, 0.034, f2Depth)) * 0.60, 0.0, 1.0);
-                            float crackBevel = clamp((1.0 - smoothstep(0.018, 0.068, f1)) * 0.65 + (1.0 - smoothstep(0.014, 0.052, f2)) * 0.42, 0.0, 1.0);
+                            float depthWall = clamp((1.0 - smoothstep(0.0, 0.042, f1Depth)) * 0.80 + (1.0 - smoothstep(0.0, 0.032, f2Depth)) * 0.55, 0.0, 1.0);
+                            float crackBevel = clamp((1.0 - smoothstep(0.018, 0.066, f1)) * 0.62 + (1.0 - smoothstep(0.014, 0.050, f2)) * 0.40, 0.0, 1.0);
 
-                            // Graffi glaciali e micro-scintillii speculari dipendenti dalla visuale
                             float scratchCoord = (vIceWPos.x * 0.82 + vIceWPos.y * 0.57) * 0.26 + sin(vIceWPos.x * 0.03) * 1.6;
                             float scratchCoord2 = (vIceWPos.x * 0.35 - vIceWPos.y * 0.93) * 0.21 + cos(vIceWPos.y * 0.03) * 1.4;
-                            float scratches = pow(clamp(0.5 + 0.5 * sin(scratchCoord), 0.0, 1.0), 12.0) * 0.45
-                                            + pow(clamp(0.5 + 0.5 * cos(scratchCoord2), 0.0, 1.0), 14.0) * 0.35;
+                            float scratches = pow(clamp(0.5 + 0.5 * sin(scratchCoord), 0.0, 1.0), 12.0) * 0.42
+                                            + pow(clamp(0.5 + 0.5 * cos(scratchCoord2), 0.0, 1.0), 14.0) * 0.32;
                             scratches *= smoothstep(0.20, 0.78, sheetNoise);
 
                             vec2 viewDirXZ = normalize(uCamPos.xz - vIceWPos + vec2(0.001));
                             vec2 facetNormXZ = normalize(vec2(facetA, facetB) + vec2(0.001));
                             float viewFacet = clamp(dot(viewDirXZ, facetNormXZ) * 0.5 + 0.5, 0.0, 1.0);
-                            float crystalSpec = pow(viewFacet, 5.0) * (0.45 + 0.55 * facetRidge);
+                            float crystalSpec = pow(viewFacet, 4.5) * (0.45 + 0.55 * facetRidge);
 
-                            // 3. Palette Ghiaccio Cristallino ad Alto Contrasto (Blu Abisso, Cobalto, Turchese Ciano e Brina Pura)
-                            vec3 deepAbyssIce   = vec3(0.025, 0.140, 0.340);
-                            vec3 glacierBlue    = vec3(0.085, 0.360, 0.680);
-                            vec3 crystalCyan    = vec3(0.200, 0.580, 0.880);
-                            vec3 frostRimeCol   = vec3(0.640, 0.860, 0.980);
+                            // 4. Palette Lastre Ghiacciate Fiabesche (Azzurro Cristallo, Celeste Incantato, Acquamarina e Brina)
+                            vec3 windowIceCol     = vec3(0.220, 0.650, 0.940);
+                            vec3 fairyGlacierCol  = vec3(0.380, 0.780, 0.980);
+                            vec3 brightCrystalCol = vec3(0.580, 0.890, 1.000);
+                            vec3 frostRimeCol     = vec3(0.880, 0.970, 1.000);
 
-                            vec3 slabCol = mix(deepAbyssIce, glacierBlue, smoothstep(0.05, 0.48, frostBody));
-                            slabCol = mix(slabCol, crystalCyan, smoothstep(0.40, 0.82, frostBody * (0.68 + 0.32 * facetSlope)));
-                            slabCol = mix(slabCol, coldIceTex, 0.26);
-                            slabCol *= mix(0.84, 1.16, facetSlope);
+                            vec3 slabCol = mix(windowIceCol, fairyGlacierCol, smoothstep(0.08, 0.55, frostBody));
+                            slabCol = mix(slabCol, brightCrystalCol, smoothstep(0.45, 0.85, frostBody * (0.65 + 0.35 * facetSlope)));
+                            slabCol = mix(slabCol, fairyIceTex, 0.24);
+                            slabCol *= mix(0.92, 1.10, facetSlope);
 
-                            // Rifrazione turchese lungo le creste interne dei cristalli e i biselli
-                            slabCol += vec3(0.06, 0.24, 0.38) * (facetRidge * 0.55 + crackBevel * 0.45);
-                            slabCol = mix(slabCol, frostRimeCol, snowRime * 0.48);
+                            // Correnti d'acqua e bolle che scorrono sotto la lastra, visibili attraverso le finestre di ghiaccio trasparente
+                            float subFlowVis = (0.45 + 0.55 * clearWindow) * (1.0 - crackMask * 0.8);
+                            vec3 subFlowGlow = mix(vec3(0.16, 0.62, 0.94), vec3(0.56, 0.92, 1.00), clamp(underStream * 0.55 + underRibbon * 0.60, 0.0, 1.0));
+                            slabCol = mix(slabCol, subFlowGlow, subFlowVis * (0.35 + 0.35 * underRibbon));
+                            slabCol += vec3(0.72, 0.96, 1.00) * (underBubbles * subFlowVis * 0.52);
 
-                            // Ombra interna 3D blu indaco abissale a ridosso delle fratture (stacco netto e profondo)
-                            float shadowMask = clamp(depthWall * 0.78 + crackBevel * 0.45, 0.0, 0.88) * (1.0 - crackMask);
-                            slabCol = mix(slabCol, vec3(0.012, 0.055, 0.145), shadowMask);
+                            // Rifrazione celeste sulle creste sfaccettate e brina fiabesca
+                            slabCol += vec3(0.12, 0.32, 0.46) * (facetRidge * 0.45);
+                            slabCol = mix(slabCol, frostRimeCol, snowRime * 0.50);
 
-                            // Alone cristallino di pressione sotto i passi del giocatore
+                            // Bisello 3D interno delle fratture in azzurro ceruleo intenso (profondità 3D senza mai scurire la lastra)
+                            float shadowMask = clamp(depthWall * 0.72 + crackBevel * 0.42, 0.0, 0.82) * (1.0 - crackMask);
+                            slabCol = mix(slabCol, vec3(0.140, 0.490, 0.830), shadowMask);
+
+                            // Alone di pressione cristallino sotto i passi del giocatore
                             float stepFrost = 0.0;
                             if (uPlayerPit.w > 0.01) {
                                 float iDist = length(vIceWPos - uPlayerPit.xy);
@@ -13167,37 +13322,37 @@ class GameMap {
                                 }
                             }
 
-                            // Venature cristalline ciano-bianche ad alta visibilità su smartphone
-                            float brightVeinMask = clamp(crackMask * 0.88 + scratches * 0.62 + crystalSpec * 0.48 + stepFrost * 0.65, 0.0, 1.0);
-                            vec3 veinCol = mix(vec3(0.52, 0.86, 1.00), vec3(0.92, 0.99, 1.00), clamp(crackCore * 0.85 + crystalSpec * 0.60 + stepFrost * 0.50, 0.0, 1.0));
+                            // Venature di ghiaccio brillanti ciano-bianche
+                            float brightVeinMask = clamp(crackMask * 0.88 + scratches * 0.60 + crystalSpec * 0.46 + stepFrost * 0.65, 0.0, 1.0);
+                            vec3 veinCol = mix(vec3(0.66, 0.92, 1.00), vec3(0.96, 0.995, 1.00), clamp(crackCore * 0.85 + crystalSpec * 0.60 + stepFrost * 0.50, 0.0, 1.0));
                             slabCol = mix(slabCol, veinCol, brightVeinMask * 0.86);
 
                             vec3 baseIceCol = slabCol;
-                            vec3 iceHighlightCol = veinCol * (crackMask * 0.42 + crackCore * 0.34 + crystalSpec * 0.32 + scratches * 0.25 + stepFrost * 0.38);
+                            vec3 iceHighlightCol = veinCol * (crackMask * 0.36 + crackCore * 0.30 + crystalSpec * 0.28 + scratches * 0.22 + stepFrost * 0.34);
 
                             diffuseColor.rgb = slabCol;
                             totalEmissiveRadiance = mix(
-                                vec3(0.015, 0.075, 0.190),
-                                vec3(0.140, 0.460, 0.760),
-                                clamp(frostBody * 0.38 + crackMask * 0.75 + facetRidge * 0.35 + stepFrost * 0.65, 0.0, 1.0)
-                            ) * 0.34;
+                                vec3(0.065, 0.260, 0.480),
+                                vec3(0.240, 0.660, 0.940),
+                                clamp(frostBody * 0.35 + crackMask * 0.65 + underRibbon * 0.40 + stepFrost * 0.60, 0.0, 1.0)
+                            ) * 0.48;
 
-                            // Opacità dinamica: più trasparente sulle finestre blu zaffiro (0.62) per vedere l'acqua sotto, solida su crepe e brina (0.95)
-                            float slabOpacity = mix(0.62, 0.91, clamp(frostBody * 0.85 + snowRime * 0.35 - abyssPocket * 0.22, 0.0, 1.0));
-                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.96), 0.62, 0.96);
+                            // Opacità vitrea calibrata: 0.38..0.52 nelle finestre trasparenti per lasciar vedere l'acqua che scorre sotto, 0.88..0.94 su crepe e brina
+                            float slabOpacity = mix(0.38, 0.78, clamp(frostBody * 0.78 + snowRime * 0.36 - clearWindow * 0.24, 0.0, 1.0));
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.93), 0.38, 0.94);
                             `
                         ).replace(
                             '#include <dithering_fragment>',
                             `
-                            // Preserva la saturazione del ghiaccio ed esalta le fratture cristalline senza la patina slavata di Phong
-                            float baseIceLum = max(0.05, dot(baseIceCol, vec3(0.299, 0.587, 0.114)));
+                            // Mantiene le lastre di ghiaccio luminose, azzurre e fiabesche su smartphone
+                            float baseIceLum = max(0.06, dot(baseIceCol, vec3(0.299, 0.587, 0.114)));
                             float litIceLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                            float iceLumGain = clamp(litIceLum / baseIceLum, 0.76, 1.12);
+                            float iceLumGain = clamp(litIceLum / baseIceLum, 0.90, 1.15);
                             gl_FragColor.rgb = baseIceCol * iceLumGain + iceHighlightCol;
 
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.94) {
-                                float compIce = 0.94 + (maxIceC - 0.94) / (1.0 + (maxIceC - 0.94) * 3.0);
+                            if (maxIceC > 0.95) {
+                                float compIce = 0.95 + (maxIceC - 0.95) / (1.0 + (maxIceC - 0.95) * 3.0);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
