@@ -2819,15 +2819,38 @@ const PlayerGeometryBuilder = {
     getPrimitives() {
         if (!this._prims) {
             this._prims = {
-                robeFrustum: new THREE.CylinderGeometry(3.5, 12, 1, 8),
-                robeHex: new THREE.CylinderGeometry(3.5, 12.2, 1, 6),
-                robePyramid: new THREE.CylinderGeometry(3.5, 13, 1, 4),
+                robeFrustum: new THREE.CylinderGeometry(3.8, 12.2, 1, 8),
+                robeHex: new THREE.CylinderGeometry(3.8, 12.4, 1, 6),
+                robePyramid: new THREE.CylinderGeometry(3.8, 13.0, 1, 4),
+                robeVoid: new THREE.CylinderGeometry(5.6, 8.0, 1, 6),
                 cone4: new THREE.ConeGeometry(1, 1, 4),
+                octa: new THREE.OctahedronGeometry(1, 0),
                 dodeca: new THREE.DodecahedronGeometry(1, 0),
                 quad: new THREE.PlaneGeometry(1, 1)
             };
         }
         return this._prims;
+    },
+
+    getWeaponGemOffset(skinId) {
+        if (skinId === 'cyber_phantom') return { y: 1.4, z: 24.0 };
+        if (skinId === 'void_walker') return { y: 4.0, z: 3.0 };
+        if (skinId === 'astral_arcanist') return { y: 29.5, z: 0.0 };
+        if (skinId === 'emerald_warden' || skinId === 'solar_archon') return { y: 28.5, z: 0.0 };
+        return { y: 29.0, z: 0.0 }; // dark_mage, crimson_inquisitor
+    },
+
+    getRestPose(skinId) {
+        switch (skinId) {
+            case 'dark_mage':          return { rx: 0.18, ry: 0.0,   rz: -0.06 };
+            case 'astral_arcanist':    return { rx: 0.15, ry: 0.0,   rz: -0.08 };
+            case 'emerald_warden':     return { rx: 0.82, ry: -0.08, rz: 0.0   };
+            case 'crimson_inquisitor': return { rx: 0.55, ry: -0.38, rz: -0.22 };
+            case 'void_walker':        return { rx: 0.42, ry: 0.18,  rz: 0.34  };
+            case 'solar_archon':       return { rx: 0.68, ry: -0.05, rz: -0.05 };
+            case 'cyber_phantom':      return { rx: 0.0,  ry: 0.0,   rz: 0.0   };
+            default:                   return { rx: 0.15, ry: 0.0,   rz: 0.0   };
+        }
     },
 
     merge(list) {
@@ -2852,8 +2875,10 @@ const PlayerGeometryBuilder = {
         const robeFrustum = prims.robeFrustum;
         const robeHex = prims.robeHex;
         const robePyramid = prims.robePyramid;
+        const robeVoid = prims.robeVoid;
         const cone = SharedGeo.cone;
         const cone4 = prims.cone4;
+        const octa = prims.octa;
         const cyl = SharedGeo.cylinder;
         const box = SharedGeo.box;
         const sphere = SharedGeo.sphere;
@@ -2870,131 +2895,240 @@ const PlayerGeometryBuilder = {
         let accentParts = [];
         let headAccentParts = [];
 
-       if (skinId === 'dark_mage') {
-            // COMUNE 1: Bastone classico (1 asta, 1 icosaedro, 1 anello)
+        if (skinId === 'dark_mage') {
+            // COMUNE 1: Mago Oscuro — Cappuccio arcano a punta, mantello stratificato, occhi mistici e bastone biforcuto d'ombra
+            bodyParts = [
+                this.part(robeFrustum, 1.05, 24, 1.05, 0, 0, 0),
+                this.part(robeFrustum, 0.92, 11.5, 0.96, 0, 6.2, -0.5)
+            ];
+            scarfParts = [
+                this.part(torus, 6.6, 6.6, 2.5, 0, 0.3, -0.3, Math.PI / 2 - 0.18, 0, 0),
+                this.part(cone4, 3.6, 8.5, 1.8, 0, -3.5, 5.2, Math.PI + 0.22, Math.PI / 4, 0)
+            ];
+            headParts = [
+                this.part(sphere, 5.6, 5.6, 5.6, 0, -0.3, 0),
+                this.part(cone, 7.6, 9.5, 8.2, 0, 2.8, 0.4, 0.18, 0, 0),
+                this.part(cone4, 4.8, 10.5, 5.2, 0, 6.5, -3.8, -0.78, Math.PI / 4, 0)
+            ];
+            headAccentParts = [
+                this.part(box, 1.9, 0.95, 1.4, -2.1, 0.2, 5.1, 0, 0.20, -0.22),
+                this.part(box, 1.9, 0.95, 1.4, 2.1, 0.2, 5.1, 0, -0.20, 0.22)
+            ];
+            staffParts = [
+                this.part(cyl, 1.8, 36, 1.8, 0, 10, 0),
+                this.part(octa, 3.2, 2.4, 3.2, 0, 24.0, 0),
+                this.part(cone4, 1.6, 8.5, 1.6, -3.8, 27.5, 0, 0, 0, 0.42),
+                this.part(cone4, 1.6, 8.5, 1.6, 3.8, 27.5, 0, 0, 0, -0.42)
+            ];
+            gemParts = [this.part(icosa, 4.2, 4.8, 4.2, 0, 0, 0)];
+            haloParts = [this.part(torus, 5.8, 5.8, 4.5, 0, 0, 0, Math.PI / 2, 0.35, 0)];
         }
         else if (skinId === 'astral_arcanist') {
-            // COMUNE 2: Bastone Astrale (1 cristallo a diamante + doppio anello incrociato)
-            bodyParts = [this.part(robeHex, 1, 24, 1, 0, 0, 0)];
-            headParts.push(
-                this.part(cyl, 10.5, 1.2, 10.5, 0, 4.0, 0),
-                this.part(cone, 5.8, 14.0, 5.8, 0, 11.0, -1.2, -0.22, 0, 0)
-            );
-            gemParts = [
-                this.part(cone4, 4.0, 7.0, 4.0, 0, 3.5, 0),
-                this.part(cone4, 4.0, 7.0, 4.0, 0, -3.5, 0, Math.PI, 0, 0)
+            // COMUNE 2: Arcanista Astrale — Cappello a tesa larga inclinato, spallacci stellari, Astrolabio dorsale e Scettro Giroscopico
+            bodyParts = [this.part(robeHex, 1.04, 24, 1.04, 0, 0, 0)];
+            scarfParts = [
+                this.part(torus, 6.4, 6.4, 2.2, 0, 0, 0, Math.PI / 2, 0, 0),
+                this.part(cone4, 4.2, 7.5, 3.6, -8.5, -0.5, 0, 0, Math.PI / 4, 1.15),
+                this.part(cone4, 4.2, 7.5, 3.6, 8.5, -0.5, 0, 0, Math.PI / 4, -1.15)
             ];
+            headParts = [
+                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0),
+                this.part(cyl, 13.0, 1.3, 13.0, 0, 3.6, -0.4, -0.14, 0, 0.08),
+                this.part(cone, 6.8, 8.5, 6.8, 0, 7.5, -0.8, -0.20, 0, 0.08),
+                this.part(cone, 4.6, 11.5, 4.6, 0.4, 13.5, -3.2, -0.52, 0, 0.14)
+            ];
+            headAccentParts = [
+                this.part(octa, 1.6, 4.2, 1.2, 0, 6.2, 5.2, -0.18, 0, 0),
+                this.part(octa, 4.2, 1.6, 1.2, 0, 6.2, 5.2, -0.18, 0, 0),
+                this.part(box, 1.6, 0.9, 1.2, -2.0, 0.2, 5.3),
+                this.part(box, 1.6, 0.9, 1.2, 2.0, 0.2, 5.3)
+            ];
+            accentParts = [
+                this.part(torus, 11.5, 11.5, 2.2, 0, 9.5, -6.2, 0.15, 0, 0),
+                this.part(cone4, 1.8, 4.8, 1.4, 0, 22.0, -6.5),
+                this.part(cone4, 1.8, 4.8, 1.4, -12.5, 9.5, -6.5, 0, 0, Math.PI / 2),
+                this.part(cone4, 1.8, 4.8, 1.4, 12.5, 9.5, -6.5, 0, 0, -Math.PI / 2)
+            ];
+            staffParts = [
+                this.part(cyl, 1.8, 36, 1.8, 0, 10, 0),
+                this.part(torus, 3.8, 3.8, 2.5, 0, 22.5, 0, Math.PI / 2, 0, 0)
+            ];
+            gemParts = [this.part(octa, 4.2, 8.2, 4.2, 0, 0, 0)];
             haloParts = [
-                this.part(torus, 6.0, 6.0, 5.0, 0, 0, 0, Math.PI / 4, 0, 0),
-                this.part(torus, 6.0, 6.0, 5.0, 0, 0, 0, -Math.PI / 4, 0, 0)
+                this.part(torus, 6.8, 6.8, 4.5, 0, 0, 0, Math.PI / 4, 0, 0),
+                this.part(torus, 6.8, 6.8, 4.5, 0, 0, 0, -Math.PI / 4, 0, 0)
             ];
         }
         else if (skinId === 'emerald_warden') {
-            // COMUNE 3: Lancia Silvana (1 asta + 1 singola punta di lancia allungata)
-            bodyParts.push(
-                this.part(dodeca, 4.8, 3.5, 4.8, -9.2, 8.5, 0),
-                this.part(dodeca, 4.8, 3.5, 4.8, 9.2, 8.5, 0)
-            );
-            headParts.push(
-                this.part(cone4, 1.5, 11.0, 1.5, -5.5, 7.5, 0, 0, 0, 0.55),
-                this.part(cone4, 1.1, 7.0, 1.1, -8.5, 10.5, 1.0, 0.25, 0, 0.15),
-                this.part(cone4, 1.5, 11.0, 1.5, 5.5, 7.5, 0, 0, 0, -0.55),
-                this.part(cone4, 1.1, 7.0, 1.1, 8.5, 10.5, 1.0, 0.25, 0, -0.15)
-            );
-            gemParts = [this.part(cone4, 3.4, 18.0, 3.4, 0, 6.0, 0)];
-            haloParts = [this.part(box, 5.5, 1.8, 3.5, 0, -2.5, 0)];
-        }
-        else if (skinId === 'crimson_inquisitor') {
-            // RARA (Piano 5): Falce Cremisi (1 asta + 1 singola lama netta protesa in avanti)
+            // COMUNE 3: Custode Silvano — Grandi Palchi Reali di Cervo, spallacci fogliari e Lancia Silvana in resta
             bodyParts = [
-                this.part(robeHex, 1, 24, 1, 0, 0, 0),
-                this.part(cone4, 4.5, 9.0, 4.5, -10.5, 9.0, 0, 0, Math.PI / 4, 0.5),
-                this.part(cone4, 4.5, 9.0, 4.5, 10.5, 9.0, 0, 0, Math.PI / 4, -0.5)
+                this.part(robeFrustum, 1.02, 24, 1.02, 0, 0, 0),
+                this.part(cone4, 5.2, 9.5, 5.8, -9.8, 9.2, 0, 0, Math.PI / 4, 0.85),
+                this.part(cone4, 5.2, 9.5, 5.8, 9.8, 9.2, 0, 0, Math.PI / 4, -0.85)
+            ];
+            scarfParts = [
+                this.part(torus, 6.8, 6.8, 2.8, 0, 0.2, 0, Math.PI / 2, 0, 0),
+                this.part(octa, 4.5, 4.5, 2.2, 0, -2.2, 5.5)
             ];
             headParts = [
-                this.part(cyl, 5.8, 7.5, 5.8, 0, 0.5, 0),
-                this.part(cone, 2.2, 14.0, 2.2, -6.8, 8.5, -1.0, 0.25, 0, 0.55),
-                this.part(cone, 2.2, 14.0, 2.2, 6.8, 8.5, -1.0, 0.25, 0, -0.55)
+                this.part(dodeca, 6.2, 6.4, 6.4, 0, 0.2, 0),
+                this.part(cone4, 1.8, 13.5, 1.8, -6.5, 7.8, -0.5, -0.15, 0, 0.65),
+                this.part(cone4, 1.4, 9.5, 1.4, -10.8, 12.2, -1.2, -0.10, 0, 0.22),
+                this.part(cone4, 1.2, 7.0, 1.2, -6.2, 6.8, 3.2, 0.65, 0, 0.35),
+                this.part(cone4, 1.8, 13.5, 1.8, 6.5, 7.8, -0.5, -0.15, 0, -0.65),
+                this.part(cone4, 1.4, 9.5, 1.4, 10.8, 12.2, -1.2, -0.10, 0, -0.22),
+                this.part(cone4, 1.2, 7.0, 1.2, 6.2, 6.8, 3.2, 0.65, 0, -0.35)
             ];
-            headAccentParts.push(this.part(box, 7.5, 1.6, 2.5, 0, 0.5, 4.8));
+            headAccentParts = [
+                this.part(octa, 1.8, 3.4, 1.5, 0, 3.2, 5.6),
+                this.part(box, 1.8, 0.9, 1.2, -2.2, 0.4, 5.5, 0, 0.2, -0.15),
+                this.part(box, 1.8, 0.9, 1.2, 2.2, 0.4, 5.5, 0, -0.2, 0.15)
+            ];
             staffParts = [
-                this.part(cyl, 2.0, 38, 2.0, 0, 11, 0),
-                this.part(box, 3.8, 3.8, 4.8, 0, 28, 0)
+                this.part(cyl, 1.8, 38, 1.8, 0, 9.5, 0),
+                this.part(cone4, 7.5, 3.2, 2.8, 0, 26.5, 0, 0, Math.PI / 4, Math.PI)
             ];
-            gemParts = [this.part(cone4, 2.6, 19.0, 1.5, 0, 0.5, 9.5, Math.PI / 2 + 0.25, 0, 0)];
-            haloParts = [this.part(box, 4.2, 1.5, 5.2, 0, 0, 0)];
+            gemParts = [
+                this.part(cone4, 4.2, 16.5, 2.2, 0, 8.2, 0),
+                this.part(cone4, 4.2, 5.5, 2.2, 0, -2.5, 0, Math.PI, 0, 0)
+            ];
+            haloParts = [this.part(octa, 6.8, 2.2, 2.4, 0, -1.5, 0)];
+        }
+        else if (skinId === 'crimson_inquisitor') {
+            // RARA (Piano 5): Inquisitore Cremisi — Grande Elmo Cornuto con Visiera a Croce, Spallacci Gotici e Grande Falce da Mietitore
+            bodyParts = [
+                this.part(robeHex, 1.06, 24, 1.06, 0, 0, 0),
+                this.part(cone4, 5.2, 10.5, 5.2, -10.8, 9.2, 0, 0, Math.PI / 4, 0.62),
+                this.part(cone4, 5.2, 10.5, 5.2, 10.8, 9.2, 0, 0, Math.PI / 4, -0.62)
+            ];
+            scarfParts = [
+                this.part(torus, 6.8, 6.8, 2.8, 0, 0.4, 0, Math.PI / 2, 0, 0),
+                this.part(cone4, 2.4, 9.5, 2.0, -5.5, 4.5, -4.5, -0.25, 0, 0.25),
+                this.part(cone4, 2.4, 9.5, 2.0, 5.5, 4.5, -4.5, -0.25, 0, -0.25)
+            ];
+            headParts = [
+                this.part(cyl, 6.0, 8.2, 6.0, 0, 0.6, 0),
+                this.part(cone4, 2.5, 15.0, 2.5, -7.2, 8.2, 0.8, 0.38, Math.PI / 4, 0.58),
+                this.part(cone4, 2.5, 15.0, 2.5, 7.2, 8.2, 0.8, 0.38, Math.PI / 4, -0.58)
+            ];
+            headAccentParts = [
+                this.part(box, 8.2, 1.6, 2.6, 0, 1.0, 4.9),
+                this.part(box, 1.6, 5.4, 2.6, 0, -0.2, 5.0)
+            ];
+            staffParts = [
+                this.part(cyl, 2.0, 39, 2.0, 0, 11.0, 0),
+                this.part(box, 4.4, 4.5, 5.6, 0, 29.0, 0.5)
+            ];
+            gemParts = [
+                this.part(box, 1.8, 3.6, 13.0, -1.2, 0.8, 7.0, 0.12, -0.22, 0),
+                this.part(cone4, 1.6, 14.5, 3.8, -5.8, -0.6, 17.5, Math.PI / 2 + 0.22, 0, 0.52)
+            ];
+            haloParts = [
+                this.part(cone4, 2.2, 7.5, 2.6, 0.5, 1.2, -5.2, -Math.PI / 2 + 0.15, 0, 0)
+            ];
         }
         else if (skinId === 'void_walker') {
-            // EPICA (Piano 10): Doppia Lama del Vuoto (impugnatura centrale + 2 lame opposte pulite)
-            bodyParts.push(
-                this.part(cone4, 3.2, 8.5, 3.2, -11.5, 9.5, 0, 0, 0, 0.2),
-                this.part(cone4, 3.2, 8.5, 3.2, 11.5, 9.5, 0, 0, 0, -0.2)
-            );
-            headParts = [this.part(icosa, 6.0, 7.0, 6.0, 0, 0.5, 0)];
-            headAccentParts.push(this.part(torus, 4.5, 4.5, 1.5, 0, 7.5, 0, Math.PI / 2, 0, 0));
+            // EPICA (Piano 10): Viandante del Vuoto — Silhouette levitante rastremata, Corona del Vuoto, 3 Monoliti Orbitanti e Doppia Glaive Simmetrica
+            bodyParts = [
+                this.part(robeVoid, 1.0, 22, 1.0, 0, 1.0, 0),
+                this.part(cone4, 5.5, 8.0, 5.5, 0, -10.5, 0, Math.PI, Math.PI / 4, 0),
+                this.part(cone4, 3.8, 11.5, 3.8, -11.5, 10.2, 0, 0, Math.PI / 4, 0.32),
+                this.part(cone4, 3.8, 11.5, 3.8, 11.5, 10.2, 0, 0, Math.PI / 4, -0.32)
+            ];
+            scarfParts = [this.part(torus, 6.8, 6.8, 2.2, 0, 0.5, 0, Math.PI / 2, 0, 0)];
+            headParts = [this.part(icosa, 6.2, 7.4, 6.2, 0, 0.6, 0)];
+            headAccentParts = [
+                this.part(torus, 5.2, 5.2, 1.8, 0, 7.8, 0, Math.PI / 2, 0, 0),
+                this.part(octa, 1.6, 5.2, 1.4, 0, 9.5, 3.8, 0.15, 0, 0),
+                this.part(octa, 1.3, 4.2, 1.2, -3.8, 8.8, 2.2, 0.1, 0, 0.35),
+                this.part(octa, 1.3, 4.2, 1.2, 3.8, 8.8, 2.2, 0.1, 0, -0.35),
+                this.part(octa, 1.6, 4.2, 1.4, 0, 0.6, 5.6)
+            ];
             for (let i = 0; i < 3; i++) {
                 let a = (i * Math.PI * 2) / 3;
-                accentParts.push(this.part(icosa, 2.8, 5.0, 2.8, Math.cos(a) * 15.5, 6.0, Math.sin(a) * 15.5));
+                accentParts.push(this.part(octa, 3.2, 7.5, 3.2, Math.cos(a) * 16.5, 6.5, Math.sin(a) * 16.5));
             }
-            staffParts = [this.part(cyl, 2.0, 16, 2.0, 0, 14, 0, 0.45, 0, 0)];
-            gemParts = [this.part(cone4, 3.0, 16.0, 2.2, 0, 13.5, 6.5, 0.45, 0, 0)];
-            haloParts = [this.part(cone4, 3.0, 16.0, 2.2, 0, -13.5, -6.5, Math.PI + 0.45, 0, 0)];
+            staffParts = [
+                this.part(cyl, 2.0, 15.0, 2.0, 0, 4.0, 3.0, 0.50, 0, 0),
+                this.part(octa, 3.8, 3.8, 3.8, 0, 4.0, 3.0)
+            ];
+            gemParts = [this.part(cone4, 3.6, 19.5, 2.0, 0, 13.0, 7.2, 0.50, 0, 0)];
+            haloParts = [
+                this.part(cone4, 3.6, 19.5, 2.0, 0, -13.0, -7.2, Math.PI + 0.50, 0, 0),
+                this.part(torus, 4.6, 4.6, 2.2, 0, 0, 0, 0, Math.PI / 2, 0)
+            ];
         }
         else if (skinId === 'solar_archon') {
-            // LEGGENDARIA 1 (Piano 15): Tridente Solare (1 asta, 1 traversa, 3 punte nette)
-            bodyParts.push(
-                this.part(box, 5.2, 2.8, 4.8, -10.0, 9.0, 0, 0, 0, 0.3),
-                this.part(box, 5.2, 2.8, 4.8, 10.0, 9.0, 0, 0, 0, -0.3)
-            );
-            headAccentParts.push(
-                this.part(torus, 4.8, 4.8, 1.6, 0, 7.5, 0, Math.PI / 2, 0, 0),
-                this.part(cone4, 1.2, 6.5, 1.0, 0, 8.5, 3.5, 0.2, 0, 0),
-                this.part(cone4, 1.0, 5.5, 1.0, -4.0, 7.5, 2.5, 0.2, 0, 0.45),
-                this.part(cone4, 1.0, 5.5, 1.0, 4.0, 7.5, 2.5, 0.2, 0, -0.45)
-            );
-            accentParts.push(
-                this.part(cone4, 2.6, 20.0, 1.0, -14.0, 13.0, -5.5, -0.15, 0, 0.75),
-                this.part(cone4, 2.6, 20.0, 1.0, 14.0, 13.0, -5.5, -0.15, 0, -0.75),
-                this.part(cone4, 2.2, 15.0, 1.0, -12.5, 6.0, -5.5, -0.1, 0, 1.25),
-                this.part(cone4, 2.2, 15.0, 1.0, 12.5, 6.0, -5.5, -0.1, 0, -1.25)
-            );
-            staffParts = [
-                this.part(cyl, 2.0, 36, 2.0, 0, 10, 0),
-                this.part(box, 14.0, 2.2, 2.4, 0, 26.5, 0)
+            // LEGGENDARIA 1 (Piano 15): Arconte Solare — Diadema Raggiato a 5 punte, 6 Ali Serafiche spiegate e Tridente Imperiale
+            bodyParts = [
+                this.part(robeHex, 1.06, 24, 1.06, 0, 0, 0),
+                this.part(box, 6.4, 3.4, 5.8, -10.5, 9.4, 0, 0, 0, 0.32),
+                this.part(box, 6.4, 3.4, 5.8, 10.5, 9.4, 0, 0, 0, -0.32)
             ];
-            gemParts = [this.part(cone4, 2.6, 17.0, 2.6, 0, 6.5, 0)];
+            scarfParts = [
+                this.part(torus, 6.6, 6.6, 2.5, 0, 0.2, 0, Math.PI / 2, 0, 0),
+                this.part(octa, 3.8, 3.8, 2.0, 0, -2.0, 5.6)
+            ];
+            headParts = [this.part(dodeca, 6.2, 6.6, 6.2, 0, 0.3, 0)];
+            headAccentParts = [
+                this.part(torus, 5.2, 5.2, 1.8, 0, 7.5, 0, Math.PI / 2, 0, 0),
+                this.part(cone4, 1.5, 7.8, 1.2, 0, 9.2, 3.8, 0.18, 0, 0),
+                this.part(cone4, 1.2, 6.4, 1.0, -3.6, 8.2, 2.8, 0.18, 0, 0.42),
+                this.part(cone4, 1.2, 6.4, 1.0, 3.6, 8.2, 2.8, 0.18, 0, -0.42),
+                this.part(cone4, 1.1, 5.2, 1.0, -6.2, 6.2, 1.0, 0.12, 0, 0.85),
+                this.part(cone4, 1.1, 5.2, 1.0, 6.2, 6.2, 1.0, 0.12, 0, -0.85),
+                this.part(box, 7.2, 1.5, 2.2, 0, 0.8, 5.0)
+            ];
+            accentParts = [
+                this.part(cone4, 3.4, 24.0, 1.2, -15.5, 14.5, -5.8, -0.18, 0, 0.72),
+                this.part(cone4, 3.4, 24.0, 1.2, 15.5, 14.5, -5.8, -0.18, 0, -0.72),
+                this.part(cone4, 2.8, 19.0, 1.2, -16.0, 8.0, -5.8, -0.12, 0, 1.15),
+                this.part(cone4, 2.8, 19.0, 1.2, 16.0, 8.0, -5.8, -0.12, 0, -1.15),
+                this.part(cone4, 2.2, 14.0, 1.1, -13.0, 2.5, -5.8, -0.08, 0, 1.52),
+                this.part(cone4, 2.2, 14.0, 1.1, 13.0, 2.5, -5.8, -0.08, 0, -1.52)
+            ];
+            staffParts = [
+                this.part(cyl, 2.0, 37, 2.0, 0, 10.0, 0),
+                this.part(box, 15.5, 2.6, 2.8, 0, 26.5, 0)
+            ];
+            gemParts = [this.part(cone4, 3.0, 18.5, 2.4, 0, 7.2, 0)];
             haloParts = [
-                this.part(cone4, 2.0, 13.5, 2.0, -6.0, 4.5, 0),
-                this.part(cone4, 2.0, 13.5, 2.0, 6.0, 4.5, 0)
+                this.part(cone4, 2.2, 14.5, 2.0, -6.5, 5.2, 0, 0, 0, 0.08),
+                this.part(cone4, 2.2, 14.5, 2.0, 6.5, 5.2, 0, 0, 0, -0.08)
             ];
         }
         else if (skinId === 'cyber_phantom') {
-            // LEGGENDARIA 2 (Piano 20): Fucile Cibernetico minimalista (cassa + canna + striscia energetica)
+            // LEGGENDARIA 2 (Piano 20): Spettro Cibernetico — Cappello Kasa Cyber-Ronin largo, Stabilizzatori X-Wing e Railgun Pesante
             bodyParts = [
-                this.part(robePyramid, 1, 24, 1, 0, 0, 0, 0, Math.PI / 4, 0),
-                this.part(box, 4.2, 7.5, 6.5, -10.0, 8.5, -2.0, 0.25, 0, 0.2),
-                this.part(box, 4.2, 7.5, 6.5, 10.0, 8.5, -2.0, 0.25, 0, -0.2)
+                this.part(robePyramid, 1.05, 24, 1.05, 0, 0, 0, 0, Math.PI / 4, 0),
+                this.part(box, 4.8, 8.2, 6.8, -10.5, 8.8, -1.5, 0.25, 0, 0.25),
+                this.part(box, 4.8, 8.2, 6.8, 10.5, 8.8, -1.5, 0.25, 0, -0.25)
             ];
+            scarfParts = [this.part(torus, 6.6, 6.6, 2.4, 0, 0.3, 0, Math.PI / 2, 0, 0)];
             headParts = [
-                this.part(box, 5.8, 5.8, 5.8, 0, 0, 0),
-                this.part(cone, 11.5, 3.2, 11.5, 0, 4.8, 0)
+                this.part(box, 5.8, 6.0, 5.8, 0, 0, 0, 0, Math.PI / 4, 0),
+                this.part(cone, 13.8, 4.2, 13.8, 0, 4.6, 0)
             ];
-            headAccentParts.push(
-                this.part(box, 7.8, 1.8, 2.8, 0, 0.5, 4.2),
-                this.part(torus, 6.5, 6.5, 1.5, 0, 3.8, 0, Math.PI / 2, 0, 0)
-            );
-            accentParts.push(
-                this.part(box, 14.0, 1.8, 1.0, -13.0, 12.0, -5.8, 0, 0, -0.45),
-                this.part(box, 14.0, 1.8, 1.0, 13.0, 12.0, -5.8, 0, 0, 0.45),
-                this.part(box, 12.0, 1.6, 1.0, -11.5, 5.0, -5.8, 0, 0, 0.45),
-                this.part(box, 12.0, 1.6, 1.0, 11.5, 5.0, -5.8, 0, 0, -0.45)
-            );
+            headAccentParts = [
+                this.part(box, 8.2, 1.9, 3.2, 0, 0.6, 4.4),
+                this.part(torus, 11.2, 11.2, 1.4, 0, 3.0, 0, Math.PI / 2, 0, 0)
+            ];
+            accentParts = [
+                this.part(box, 16.5, 2.2, 1.2, -14.0, 13.0, -6.0, 0, -0.15, -0.48),
+                this.part(box, 16.5, 2.2, 1.2, 14.0, 13.0, -6.0, 0, 0.15, 0.48),
+                this.part(box, 13.5, 1.8, 1.2, -12.0, 4.5, -6.0, 0, -0.15, 0.45),
+                this.part(box, 13.5, 1.8, 1.2, 12.0, 4.5, -6.0, 0, 0.15, -0.45)
+            ];
             staffParts = [
-                this.part(box, 3.2, 4.6, 13.0, 0, 0.5, -2.0), // Calcio e corpo
-                this.part(box, 2.4, 3.0, 18.0, 0, 1.2, 13.0)  // Canna lunga
+                this.part(box, 3.4, 5.0, 14.0, 0, 0.5, -2.5),
+                this.part(box, 2.6, 3.2, 20.0, 0, 1.3, 14.0),
+                this.part(box, 2.2, 3.2, 6.5, 0, -1.8, 6.5, 0.25, 0, 0)
             ];
-            gemParts = [this.part(box, 1.4, 1.2, 19.0, 0, 1.2, -9.0)]; // Binario luminoso superiore
-            haloParts = [this.part(box, 2.6, 2.2, 2.5, 0, 0, 0)];      // Volata luminosa
+            gemParts = [this.part(box, 1.5, 1.4, 22.0, 0, 1.3, -10.0)];
+            haloParts = [
+                this.part(box, 3.0, 2.6, 2.8, 0, 0, 0),
+                this.part(torus, 1.8, 1.8, 1.6, 0, 3.2, -18.5)
+            ];
         }
 
         // --- PARTICELLARE AURA SOFFICE GPU A COSTO 0 (Solo bagliori GLOW_TEX, nessuna geometria solida) ---
@@ -3029,44 +3163,44 @@ const SkinSystem = {
         {
             id: 'dark_mage', name: 'Mago Oscuro', rarity: 'common', cost: 0,
             passive: 'Overdrive dura +2s',
-            colors: { body: 0x222222, head: 0xdddddd, scarf: 0x880000, staff: 0x444444 },
-            svg: '<polygon points="20,10 30,34 10,34" fill="#555"/><circle cx="20" cy="11" r="4.5" fill="#ddd"/><rect x="13" y="14" width="14" height="3" rx="1.5" fill="#880000"/>'
+            colors: { body: 0x231f33, head: 0xd6d3d1, scarf: 0x991b1b, staff: 0x4b4859 },
+            svg: '<polygon points="20,10 31,34 9,34" fill="#231f33"/><polygon points="20,3 27,13 13,13" fill="#3b3354"/><circle cx="20" cy="11.5" r="4.2" fill="#d6d3d1"/><rect x="16.5" y="10.5" width="2.4" height="1.3" fill="#ffdd33"/><rect x="21.1" y="10.5" width="2.4" height="1.3" fill="#ffdd33"/><rect x="12" y="14.5" width="16" height="3.2" rx="1.5" fill="#991b1b"/><polygon points="20,24 22.5,17.5 17.5,17.5" fill="#991b1b"/>'
         },
         {
             id: 'astral_arcanist', name: 'Arcanista Astrale', rarity: 'common', cost: 2,
             passive: '+15% ricarica Ultimate da tutte le fonti',
             colors: { body: 0x1e293b, head: 0xdbeafe, scarf: 0x0284c7, staff: 0x64748b },
-            svg: '<polygon points="20,11 30,34 10,34" fill="#1e293b"/><polygon points="20,2 25,11 15,11" fill="#dbeafe"/><ellipse cx="20" cy="11" rx="9" ry="2" fill="#dbeafe"/><rect x="13" y="14" width="14" height="3" rx="1.5" fill="#0284c7"/>'
+            svg: '<circle cx="20" cy="21" r="10.5" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 2"/><polygon points="20,11 30,34 10,34" fill="#1e293b"/><polygon points="20,1.5 25.5,11 14.5,11" fill="#dbeafe"/><ellipse cx="20" cy="11" rx="10.5" ry="2.2" fill="#dbeafe"/><polygon points="20,5 21.8,8 18.2,8" fill="#ffdd33"/><rect x="11" y="14" width="18" height="3" rx="1.5" fill="#0284c7"/>'
         },
         {
             id: 'emerald_warden', name: 'Custode Silvano', rarity: 'common', cost: 4,
             passive: '+50% velocità prosciugamento e +3s bonus Obelischi',
             colors: { body: 0x1b3626, head: 0xd1fae5, scarf: 0xb45309, staff: 0x5c3a21 },
-            svg: '<path d="M10,4 L15,11 M30,4 L25,11" stroke="#d1fae5" stroke-width="2.5"/><polygon points="20,10 30,34 10,34" fill="#1b3626"/><circle cx="11" cy="19" r="3.2" fill="#1b3626"/><circle cx="29" cy="19" r="3.2" fill="#1b3626"/><circle cx="20" cy="11" r="4.5" fill="#d1fae5"/><rect x="13" y="14" width="14" height="3" rx="1.5" fill="#b45309"/>'
+            svg: '<path d="M7,3 L14,11 M11,2 L13,7 M33,3 L26,11 M29,2 L27,7" stroke="#d1fae5" stroke-width="2.3" stroke-linecap="round"/><polygon points="20,10 30,34 10,34" fill="#1b3626"/><polygon points="7,17 14,15 12,22" fill="#244732"/><polygon points="33,17 26,15 28,22" fill="#244732"/><circle cx="20" cy="11" r="4.5" fill="#d1fae5"/><polygon points="20,7.5 21.6,10.2 20,12 18.4,10.2" fill="#34d399"/><rect x="13" y="14" width="14" height="3" rx="1.5" fill="#b45309"/>'
         },
         {
             id: 'crimson_inquisitor', name: 'Inquisitore Cremisi', rarity: 'rare', cost: 8,
             passive: 'Ogni 10 kill: +1 Moneta e cura 1% HP',
             colors: { body: 0x3b1216, head: 0xa1a1aa, scarf: 0x991b1b, staff: 0x27272a },
-            svg: '<polygon points="8,3 16,12 12,12" fill="#a1a1aa"/><polygon points="32,3 24,12 28,12" fill="#a1a1aa"/><polygon points="20,10 30,34 10,34" fill="#3b1216"/><circle cx="20" cy="11" r="4.5" fill="#a1a1aa"/><rect x="16" y="9.5" width="8" height="2" fill="#ffff00"/><rect x="13" y="14" width="14" height="3" rx="1.5" fill="#991b1b"/>'
+            svg: '<polygon points="7,2 16,12 11,12" fill="#a1a1aa"/><polygon points="33,2 24,12 29,12" fill="#a1a1aa"/><polygon points="20,10 31,34 9,34" fill="#3b1216"/><polygon points="6,18 14,14 12,22" fill="#7f1d1d"/><polygon points="34,18 26,14 28,22" fill="#7f1d1d"/><rect x="15.2" y="6.5" width="9.6" height="9" rx="2" fill="#a1a1aa"/><rect x="16" y="9.2" width="8" height="1.8" fill="#ffdd33"/><rect x="19.1" y="8.2" width="1.8" height="5.2" fill="#ffdd33"/><rect x="13" y="14.5" width="14" height="3" rx="1.5" fill="#991b1b"/>'
         },
         {
             id: 'void_walker', name: 'Viandante del Vuoto', rarity: 'epic', cost: 14,
             passive: 'Volo: ignora acqua, lava e ghiaccio',
             colors: { body: 0x27173a, head: 0xc084fc, scarf: 0x6b21a8, staff: 0x3b0764 },
-            svg: '<polygon points="20,10 30,34 10,34" fill="#27173a"/><polygon points="20,5 25,11 20,16 15,11" fill="#c084fc"/><circle cx="7" cy="21" r="2.6" fill="#ffff00"/><circle cx="33" cy="21" r="2.6" fill="#ffff00"/>'
+            svg: '<polygon points="11,14 29,14 24,31 20,36 16,31" fill="#27173a"/><polygon points="7,13 14,16 11,22" fill="#4c1d95"/><polygon points="33,13 26,16 29,22" fill="#4c1d95"/><polygon points="20,4.5 25,10.5 20,16 15,10.5" fill="#c084fc"/><ellipse cx="20" cy="4" rx="4.8" ry="1.4" fill="none" stroke="#ffdd33" stroke-width="1.6"/><polygon points="6,20 8,16 10,20 8,24" fill="#ffdd33"/><polygon points="30,20 32,16 34,20 32,24" fill="#ffdd33"/>'
         },
         {
             id: 'solar_archon', name: 'Arconte Solare', rarity: 'legendary', cost: 22,
             passive: 'Brucia i nemici (100% Danno Base in 5s)',
             colors: { body: 0x422810, head: 0xfef3c7, scarf: 0xd97706, staff: 0xb45309 },
-            svg: '<polygon points="4,13 15,20 11,26" fill="#ffff00"/><polygon points="36,13 25,20 29,26" fill="#ffff00"/><polygon points="20,10 30,34 10,34" fill="#422810"/><circle cx="20" cy="12" r="4.2" fill="#fef3c7"/><ellipse cx="20" cy="6" rx="5" ry="1.6" fill="none" stroke="#ffff00" stroke-width="2"/>'
+            svg: '<polygon points="2,10 15,18 11,22" fill="#ffdd33"/><polygon points="4,19 14,22 11,27" fill="#fbbf24"/><polygon points="38,10 25,18 29,22" fill="#ffdd33"/><polygon points="36,19 26,22 29,27" fill="#fbbf24"/><polygon points="20,10 30,34 10,34" fill="#422810"/><circle cx="20" cy="11.5" r="4.4" fill="#fef3c7"/><rect x="16.5" y="10.2" width="7" height="1.6" fill="#ffdd33"/><polygon points="20,2 21.6,6.5 18.4,6.5" fill="#ffdd33"/><polygon points="15,3.5 18,6.8 15.8,7.2" fill="#ffdd33"/><polygon points="25,3.5 22,6.8 24.2,7.2" fill="#ffdd33"/>'
         },
         {
             id: 'cyber_phantom', name: 'Spettro Cibernetico', rarity: 'legendary', cost: 30,
             passive: 'Ogni 5 spari lancia un Raggio Laser (100% Danno Base)',
             colors: { body: 0x182232, head: 0x475569, scarf: 0x0f172a, staff: 0x334155 },
-            svg: '<polygon points="20,11 31,34 9,34" fill="#182232"/><polygon points="20,4 32,9 8,9" fill="#475569"/><rect x="15" y="9.5" width="10" height="2.5" fill="#ffff00"/><rect x="24" y="18" width="14" height="3.5" fill="#94a3b8"/><rect x="33" y="18.8" width="5" height="1.8" fill="#ffff00"/>'
+            svg: '<polygon points="4,13 14,19 12,22" fill="#00eeff"/><polygon points="36,13 26,19 28,22" fill="#00eeff"/><polygon points="20,11 31,34 9,34" fill="#182232"/><polygon points="20,3.2 34,9.2 6,9.2" fill="#475569"/><line x1="8" y1="8.8" x2="32" y2="8.8" stroke="#ffdd33" stroke-width="1.4"/><rect x="15" y="9.6" width="10" height="2.4" fill="#ffdd33"/><rect x="23" y="17.5" width="15" height="3.4" fill="#64748b"/><rect x="26" y="18.2" width="12" height="1.5" fill="#ffdd33"/>'
         }
     ],
     selectedId: 'dark_mage',
@@ -3901,16 +4035,12 @@ const SkinSystem = {
             this.worldGroup.remove(this.heroGroup);
         }
 
-        let bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7, metalness: 0.1, map: CHAR_GRUNGE_TEX });
+        let skin = SkinSystem.getCurrentSkin();
+        let bodyMat = new THREE.MeshStandardMaterial({ color: skin.colors.body, roughness: 0.7, metalness: 0.1, map: getSkinTexture(skin.id) });
         let gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.5 });
         this.heroParts = ModelFactory.buildPlayer(bodyMat, gemMat);
         this.heroGroup = this.heroParts.group;
-
-        let skin = SkinSystem.getCurrentSkin();
-        this.heroParts.body.material.color.setHex(skin.colors.body);
-        this.heroParts.head.material.color.setHex(skin.colors.head);
-        this.heroParts.scarf.material.color.setHex(skin.colors.scarf);
-        if (this.heroParts.staff) this.heroParts.staff.material.color.setHex(skin.colors.staff);
+        applySkinMaterials(this.heroParts, skin);
 
         if (!this.heroShadow) {
             this.heroShadow = new THREE.Mesh(new THREE.PlaneGeometry(34, 34).rotateX(-Math.PI / 2), SharedMat.blobShadow);
@@ -4051,10 +4181,11 @@ const SkinSystem = {
         );
         this.camera.lookAt(0, 14, 0);
 
-        // 2. ANIMAZIONE NATURALE DELL'EROE AL CENTRO DELLA RUNA
+        // 2. ANIMAZIONE NATURALE DELL'EROE AL CENTRO DELLA RUNA (Coerente con l'archetipo di ogni Skin)
         if (this.heroGroup && this.heroParts) {
+            let curSkin = SkinSystem.selectedId;
             let breath = Math.sin(this.time * 2.8);
-            this.heroGroup.position.y = (breath + 1.0) * 0.6;
+            this.heroGroup.position.y = (curSkin === 'void_walker') ? (5.0 + breath * 1.3) : ((breath + 1.0) * 0.6);
             // L'eroe scrutando la foresta ruota autonomamente in modo naturale (non incollato alla camera!)
             this.heroGroup.rotation.y = Math.sin(this.time * 0.7) * 0.85 + Math.cos(this.time * 0.35) * 0.45;
 
@@ -4069,18 +4200,40 @@ const SkinSystem = {
             if (this.heroParts.scarf) {
                 this.heroParts.scarf.rotation.z = Math.sin(this.time * 4.2) * 0.14;
             }
-            if (this.heroParts.halo) this.heroParts.halo.rotation.z += safeDt * 2.2;
-            if (this.heroParts.staffGem) this.heroParts.staffGem.rotation.y += safeDt * 2.8;
+            if (curSkin === 'dark_mage' || curSkin === 'astral_arcanist') {
+                if (this.heroParts.halo) this.heroParts.halo.rotation.z += safeDt * 2.2;
+                if (this.heroParts.staffGem) this.heroParts.staffGem.rotation.y += safeDt * 2.8;
+            }
+            if (this.heroParts.accentMesh) {
+                if (curSkin === 'void_walker') this.heroParts.accentMesh.rotation.y += safeDt * 2.4;
+                else if (curSkin === 'solar_archon') this.heroParts.accentMesh.scale.set(1.0 + breath * 0.05, 1.0 + breath * 0.03, 1.0);
+            }
 
+            let rest = PlayerGeometryBuilder.getRestPose(curSkin);
             if (this.heroActionTimer > 0) {
                 this.heroActionTimer -= safeDt;
-                let swing = Math.sin((1.0 - this.heroActionTimer / 0.55) * Math.PI);
-                this.heroParts.weaponGroup.rotation.x = -swing * 1.35;
-                this.heroParts.weaponGroup.position.y = 16 + swing * 4.5;
+                let prog = 1.0 - this.heroActionTimer / 0.55;
+                let swing = Math.sin(prog * Math.PI);
+                if (curSkin === 'cyber_phantom') {
+                    this.heroParts.weaponGroup.rotation.set(-swing * 0.55, 0, 0);
+                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 1.5, 8 - swing * 11.0);
+                } else if (curSkin === 'crimson_inquisitor') {
+                    this.heroParts.weaponGroup.rotation.set(rest.rx + swing * 0.70, rest.ry + swing * 2.0, rest.rz - swing * 0.45);
+                    this.heroParts.weaponGroup.position.set(12 - swing * 8.0, 16 + swing * 2.0, 8 + swing * 9.5);
+                } else if (curSkin === 'void_walker') {
+                    this.heroParts.weaponGroup.rotation.set(rest.rx + prog * Math.PI * 2, rest.ry, rest.rz + swing * 0.5);
+                    this.heroParts.weaponGroup.position.set(12 - swing * 4.0, 16 + swing * 2.5, 8 + swing * 8.0);
+                } else {
+                    this.heroParts.weaponGroup.rotation.set(rest.rx + swing * 0.72, rest.ry, rest.rz);
+                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 3.5, 8 + swing * 11.0);
+                }
             } else {
-                this.heroParts.weaponGroup.position.y = 16 + Math.cos(this.time * 2.8) * 0.8;
-                this.heroParts.weaponGroup.rotation.x = Math.sin(this.time * 2.1) * 0.12;
-                this.heroParts.weaponGroup.rotation.z = Math.cos(this.time * 1.7) * 0.06;
+                this.heroParts.weaponGroup.position.set(12, 16 + Math.cos(this.time * 2.8) * 0.8, 8);
+                this.heroParts.weaponGroup.rotation.set(
+                    rest.rx + Math.sin(this.time * 2.1) * 0.08,
+                    rest.ry,
+                    rest.rz + Math.cos(this.time * 1.7) * 0.05
+                );
             }
         }
 
@@ -4569,13 +4722,11 @@ const DeathSceneSystem = {
 
         // 1. PERSONAGGIO CON SKIN EQUIPAGGIATA (a z = +26)
         const skin = SkinSystem.getCurrentSkin();
-        const bodyMat = new THREE.MeshStandardMaterial({ color: skin.colors.body, roughness: 0.65, metalness: 0.15, map: CHAR_GRUNGE_TEX, side: THREE.DoubleSide });
+        const bodyMat = new THREE.MeshStandardMaterial({ color: skin.colors.body, roughness: 0.65, metalness: 0.15, map: getSkinTexture(skin.id), side: THREE.DoubleSide });
         const gemMat = new THREE.MeshPhongMaterial({ color: 0xffdd33, emissive: 0xffdd33, emissiveIntensity: 1.2, side: THREE.DoubleSide });
         this.playerParts = ModelFactory.buildPlayer(bodyMat, gemMat);
         this.playerGroup = this.playerParts.group;
-        this.playerParts.head.material.color.setHex(skin.colors.head);
-        this.playerParts.scarf.material.color.setHex(skin.colors.scarf);
-        if (this.playerParts.staff) this.playerParts.staff.material.color.setHex(skin.colors.staff);
+        applySkinMaterials(this.playerParts, skin);
         if (this.playerParts.auraMesh) this.playerParts.auraMesh.visible = false;
         this.prepareModelForReflection(this.playerGroup);
 
@@ -4651,11 +4802,9 @@ const DeathSceneSystem = {
         const sMesh = new THREE.Mesh(geos.staff, staffMat);
         const gMesh = new THREE.Mesh(geos.gem, gemMat);
         const hMesh = new THREE.Mesh(geos.halo, gemMat);
-        let gemY = 28, gemZ = 0;
-        if (skin.id === 'cyber_phantom') { gemY = 1.2; gemZ = 22.5; }
-        else if (skin.id === 'void_walker') { gemY = 14.0; gemZ = 0.0; }
-        gMesh.position.set(0, gemY, gemZ);
-        hMesh.position.set(0, gemY, gemZ);
+        let gemOff = PlayerGeometryBuilder.getWeaponGemOffset(skin.id);
+        gMesh.position.set(0, gemOff.y, gemOff.z);
+        hMesh.position.set(0, gemOff.y, gemOff.z);
         pWeapon.add(sMesh, gMesh, hMesh);
 
         const rawList = [
@@ -5772,6 +5921,206 @@ function createCharacterTexture() {
 }
 const CHAR_GRUNGE_TEX = createCharacterTexture();
 
+// --- TEXTURE E MATERIALI PROCEDURALI COERENTI PER OGNI SKIN (Low-Poly Miniature Style) ---
+const SKIN_TEX_CACHE = {};
+function getSkinTexture(skinId) {
+    if (!skinId) return CHAR_GRUNGE_TEX;
+    if (SKIN_TEX_CACHE[skinId]) return SKIN_TEX_CACHE[skinId];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    // Base luminosa neutra per preservare la saturazione e la leggibilità dei colori su smartphone
+    ctx.fillStyle = '#f2f2f2';
+    ctx.fillRect(0, 0, 128, 128);
+
+    if (skinId === 'dark_mage') {
+        // Tessuto Arcano Oscuro: drappeggi verticali profondi, trama occulta incrociata e orlo runico
+        for (let x = 0; x < 128; x += 16) {
+            ctx.fillStyle = (x % 32 === 0) ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.65)';
+            ctx.fillRect(x, 0, 6, 128);
+            ctx.fillStyle = 'rgba(0,0,0,0.42)';
+            ctx.fillRect(x + 6, 0, 2, 128);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+        ctx.lineWidth = 2;
+        for (let y = 8; y < 128; y += 16) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y + 8); ctx.stroke();
+        }
+        // Simboli/graffi runici sull'orlo
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        for (let x = 8; x < 128; x += 24) {
+            ctx.fillRect(x, 106, 8, 3);
+            ctx.fillRect(x + 3, 100, 2, 14);
+        }
+    } else if (skinId === 'astral_arcanist') {
+        // Seta Celestiale: reticolo geometrico a losanghe stellari e nodi argentei
+        for (let x = 0; x < 128; x += 16) {
+            ctx.fillStyle = 'rgba(0,0,0,0.16)';
+            ctx.fillRect(x, 0, 4, 128);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.34)';
+        ctx.lineWidth = 2;
+        for (let i = -128; i < 128; i += 32) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 128, 128); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i + 128, 0); ctx.lineTo(i, 128); ctx.stroke();
+        }
+        ctx.fillStyle = '#ffffff';
+        for (let y = 16; y < 128; y += 32) {
+            for (let x = 16; x < 128; x += 32) {
+                ctx.fillRect(x - 2, y - 2, 5, 5);
+            }
+        }
+    } else if (skinId === 'emerald_warden') {
+        // Corteccia Antica e Scaglie Fogliari: venature lignee verticali e piastre a chevron
+        for (let x = 0; x < 128; x += 8) {
+            ctx.fillStyle = (x % 16 === 0) ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.55)';
+            ctx.fillRect(x, 0, 3, 128);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineWidth = 2.5;
+        for (let y = 12; y < 128; y += 24) {
+            ctx.beginPath();
+            for (let x = 0; x <= 128; x += 32) {
+                ctx.lineTo(x, y);
+                ctx.lineTo(x + 16, y + 10);
+            }
+            ctx.stroke();
+        }
+    } else if (skinId === 'crimson_inquisitor') {
+        // Corazza Gotica e Gambeson Trapuntato: losanghe pesanti, rivetti in ferro e sfregi da battaglia
+        ctx.strokeStyle = 'rgba(0,0,0,0.52)';
+        ctx.lineWidth = 3;
+        for (let i = -128; i < 128; i += 24) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 128, 128); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i + 128, 0); ctx.lineTo(i, 128); ctx.stroke();
+        }
+        ctx.fillStyle = '#ffffff';
+        for (let y = 12; y < 128; y += 24) {
+            for (let x = 12; x < 128; x += 24) {
+                ctx.fillRect(x - 2, y - 2, 4, 4);
+            }
+        }
+        ctx.fillStyle = 'rgba(0,0,0,0.38)';
+        ctx.fillRect(0, 58, 128, 6);
+    } else if (skinId === 'void_walker') {
+        // Cristallo Abissale: sfaccettature spigolose del Vuoto e fessure energetiche chiare
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+        ctx.lineWidth = 2.5;
+        const pts = [[0,20],[42,0],[88,28],[128,12],[24,68],[72,60],[116,74],[16,118],[64,110],[108,124]];
+        for (let i = 0; i < pts.length; i++) {
+            let p1 = pts[i], p2 = pts[(i + 1) % pts.length], p3 = pts[(i + 3) % pts.length];
+            ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.stroke();
+        }
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 128; i += 32) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo((i + 48) % 128, 128); ctx.stroke();
+        }
+    } else if (skinId === 'solar_archon') {
+        // Piastre Solari Scanalate: rilievi imperiali verticali e fregi dorati a raggiera
+        for (let x = 0; x < 128; x += 16) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x, 0, 7, 128);
+            ctx.fillStyle = 'rgba(0,0,0,0.38)';
+            ctx.fillRect(x + 7, 0, 3, 128);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 32, 128, 8);
+        ctx.strokeRect(0, 92, 128, 8);
+    } else if (skinId === 'cyber_phantom') {
+        // Fibra di Carbonio Esagonale e Pannelli Tattici Stealth
+        ctx.fillStyle = 'rgba(0,0,0,0.28)';
+        for (let y = 0; y < 128; y += 8) {
+            let shift = (y % 16 === 0) ? 0 : 4;
+            for (let x = shift; x < 128; x += 8) {
+                ctx.fillRect(x, y, 4, 4);
+            }
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.68)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 32); ctx.lineTo(44, 32); ctx.lineTo(64, 52); ctx.lineTo(128, 52);
+        ctx.moveTo(0, 96); ctx.lineTo(64, 96); ctx.lineTo(84, 76); ctx.lineTo(128, 76);
+        ctx.moveTo(64, 0); ctx.lineTo(64, 128);
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(4, 4, 120, 120);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+    tex.encoding = THREE.sRGBEncoding;
+    tex.magFilter = THREE.NearestFilter;
+    SKIN_TEX_CACHE[skinId] = tex;
+    return tex;
+}
+
+function getSkinMatConfig(skinId) {
+    switch (skinId) {
+        case 'dark_mage':
+            return { bodyRough: 0.78, bodyMetal: 0.08, headRough: 0.65, headMetal: 0.10, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.45, staffMetal: 0.55, bumpScale: 0.06 };
+        case 'astral_arcanist':
+            return { bodyRough: 0.52, bodyMetal: 0.25, headRough: 0.50, headMetal: 0.20, scarfRough: 0.60, scarfMetal: 0.18, staffRough: 0.25, staffMetal: 0.85, bumpScale: 0.05 };
+        case 'emerald_warden':
+            return { bodyRough: 0.70, bodyMetal: 0.14, headRough: 0.55, headMetal: 0.18, scarfRough: 0.75, scarfMetal: 0.12, staffRough: 0.60, staffMetal: 0.28, bumpScale: 0.07 };
+        case 'crimson_inquisitor':
+            return { bodyRough: 0.46, bodyMetal: 0.45, headRough: 0.30, headMetal: 0.78, scarfRough: 0.65, scarfMetal: 0.25, staffRough: 0.26, staffMetal: 0.88, bumpScale: 0.08 };
+        case 'void_walker':
+            return { bodyRough: 0.38, bodyMetal: 0.50, headRough: 0.22, headMetal: 0.68, scarfRough: 0.42, scarfMetal: 0.40, staffRough: 0.22, staffMetal: 0.82, bumpScale: 0.06 };
+        case 'solar_archon':
+            return { bodyRough: 0.28, bodyMetal: 0.68, headRough: 0.24, headMetal: 0.78, scarfRough: 0.42, scarfMetal: 0.45, staffRough: 0.18, staffMetal: 0.92, bumpScale: 0.06 };
+        case 'cyber_phantom':
+            return { bodyRough: 0.26, bodyMetal: 0.74, headRough: 0.22, headMetal: 0.82, scarfRough: 0.38, scarfMetal: 0.50, staffRough: 0.20, staffMetal: 0.90, bumpScale: 0.07 };
+        default:
+            return { bodyRough: 0.70, bodyMetal: 0.10, headRough: 0.60, headMetal: 0.10, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.35, staffMetal: 0.80, bumpScale: 0.06 };
+    }
+}
+
+function applySkinMaterials(parts, skin) {
+    if (!parts || !skin) return;
+    const tex = getSkinTexture(skin.id);
+    const cfg = getSkinMatConfig(skin.id);
+    if (parts.body && parts.body.material && parts.body.material.isMeshStandardMaterial) {
+        const m = parts.body.material;
+        m.color.setHex(skin.colors.body);
+        m.map = tex;
+        m.roughness = cfg.bodyRough;
+        m.metalness = cfg.bodyMetal;
+        if (m.bumpMap) { m.bumpMap = tex; m.bumpScale = cfg.bumpScale; }
+        m.needsUpdate = true;
+    }
+    if (parts.head && parts.head.material && parts.head.material.isMeshStandardMaterial) {
+        const m = parts.head.material;
+        m.color.setHex(skin.colors.head);
+        m.map = tex;
+        m.roughness = cfg.headRough;
+        m.metalness = cfg.headMetal;
+        m.needsUpdate = true;
+    }
+    if (parts.scarf && parts.scarf.material && parts.scarf.material.isMeshStandardMaterial) {
+        const m = parts.scarf.material;
+        m.color.setHex(skin.colors.scarf);
+        m.map = tex;
+        m.roughness = cfg.scarfRough;
+        m.metalness = cfg.scarfMetal;
+        if (m.bumpMap) m.bumpMap = tex;
+        m.needsUpdate = true;
+    }
+    if (parts.staff && parts.staff.material && parts.staff.material.isMeshStandardMaterial) {
+        const m = parts.staff.material;
+        m.color.setHex(skin.colors.staff);
+        m.map = tex;
+        m.roughness = cfg.staffRough;
+        m.metalness = cfg.staffMetal;
+        m.needsUpdate = true;
+    }
+}
+
 // --- ICONE AUREE E MODELLO OBELISCO ---
 function createAuraIcon(type) {
     const canvas = document.createElement('canvas');
@@ -6815,27 +7164,32 @@ const ModelFactory = {
     buildPlayer(mat, gemMat) {
         let skin = SkinSystem.getCurrentSkin();
         let geos = PlayerGeometryBuilder.getGeometries(skin.id);
+        let skinTex = getSkinTexture(skin.id);
+        let cfg = getSkinMatConfig(skin.id);
         let group = new THREE.Group();
 
         let body = new THREE.Mesh(geos.body, mat);
         body.position.y = 12; // Centro di rotazione sul busto: non compenetra mai sciarpa o testa
 
-        let headMat = new THREE.MeshStandardMaterial({color: skin.colors.head, emissive: 0x222222, map: CHAR_GRUNGE_TEX});
+        let headMat = new THREE.MeshStandardMaterial({color: skin.colors.head, emissive: 0x222222, roughness: cfg.headRough, metalness: cfg.headMetal, map: skinTex});
         let head = new THREE.Mesh(geos.head, headMat);
         head.position.y = 29;
 
-        let scarfMat = new THREE.MeshStandardMaterial({color: skin.colors.scarf, roughness: 0.9, map: CHAR_GRUNGE_TEX, bumpMap: isTouchDevice ? null : CHAR_GRUNGE_TEX, bumpScale: 0.05});
+        let scarfMat = new THREE.MeshStandardMaterial({color: skin.colors.scarf, roughness: cfg.scarfRough, metalness: cfg.scarfMetal, map: skinTex, bumpMap: isTouchDevice ? null : skinTex, bumpScale: 0.05});
         let scarf = new THREE.Mesh(geos.scarf, scarfMat);
         scarf.position.y = 24;
 
         let weaponGroup = new THREE.Group();
         weaponGroup.position.set(12, 16, 8);
-        let staffMat = new THREE.MeshStandardMaterial({color: skin.colors.staff, metalness: 0.8, map: CHAR_GRUNGE_TEX});
+        let rest = PlayerGeometryBuilder.getRestPose(skin.id);
+        weaponGroup.rotation.set(rest.rx, rest.ry, rest.rz);
+        let staffMat = new THREE.MeshStandardMaterial({color: skin.colors.staff, roughness: cfg.staffRough, metalness: cfg.staffMetal, map: skinTex});
         let staff = new THREE.Mesh(geos.staff, staffMat);
+        let gemOff = PlayerGeometryBuilder.getWeaponGemOffset(skin.id);
         let staffGem = new THREE.Mesh(geos.gem, gemMat);
-        staffGem.position.y = 28;
+        staffGem.position.set(0, gemOff.y, gemOff.z);
         let halo = new THREE.Mesh(geos.halo, gemMat);
-        halo.position.y = 28;
+        halo.position.set(0, gemOff.y, gemOff.z);
         weaponGroup.add(staff, staffGem, halo);
 
         // Accessori luminosi sul busto (Ali, Cristalli Orbitanti, Stabilizzatori)
@@ -9156,7 +9510,7 @@ pushDebris(px, pz, radius, force) {
     },
 
  getHealScale() {
-        let baseScale = this.floor <= 10 ? 1.0 : Math.max(0.55, 1.0 - (this.floor - 10) * 0.04);
+        let baseScale = this.floor <= 12 ? 1.0 : Math.max(0.78, 1.0 - (this.floor - 12) * 0.02);
         let masteryBonus = (this.player && typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('hp', 1)) ? 1.15 : 1.0;
         return baseScale * masteryBonus;
     },
@@ -10393,16 +10747,8 @@ startGame(diffMult) {
                     
                     let shrinkSpeed = 30;
 
-                    // LOGICHE SPECIALI CORROTTE
+                    // LOGICHE SPECIALI CORROTTE (Stessa area iniziale 240 e stesso tempo di prosciugamento 30 degli altri obelischi)
                     if (a.type === 'corrupted') {
-                        // FIX 1: Impostiamo una velocità di purificazione dimezzata (15) 
-                        // invece di 0, permettendo al giocatore di distruggere l'obelisco.
-                        shrinkSpeed = 15; 
-                        
-                        // FIX 2: Rimossa la chiamata a takeDamage e lo stile CSS della vignetta.
-                        // Il drenaggio della vita (senza invincibilità) e i feedback visivi 
-                        // sono già gestiti fluidamente e in sicurezza dentro Player.update(dt)!
-                        
                        if (a.hazardTimer === undefined) a.hazardTimer = 0;
                             a.hazardTimer -= combatDt;
                             if (a.hazardTimer <= 0) {
@@ -10508,16 +10854,22 @@ startGame(diffMult) {
                             : ((a.type === 'corrupted') ? true : (Math.random() < Math.min(0.85, 0.10 + (this.floor * 0.04))));
 
                         let obRelicPenalty = 1 / (1 + this.player.relics.length * 0.25);
+                        // Bilanciamento drop Vite da Obelisco: ridotto nei primi piani (niente sovrabbondanza iniziale) e più generoso nei piani avanzati
+                        let obLifeChance = Math.min(0.20, 0.08 + this.floor * 0.009) * (this.player ? this.player.modifiers.healDropMult : 1.0);
+                        if (a.type === 'corrupted') obLifeChance *= 1.25;
+                        if (this.lives >= 3) obLifeChance /= (1 + (this.lives - 2) * 0.55);
+                        if (this.player && this.player.modifiers.noHealDrops) obLifeChance = 0;
+
                         if (a.type === 'corrupted') {
-                            if ((this.floorBonusRelics || 0) < 1 && Math.random() < (0.20 * obRelicPenalty)) {
+                            if ((this.floorBonusRelics || 0) < 2 && Math.random() < (0.28 * obRelicPenalty)) {
                                 dropsRelic = true;
                                 this.floorBonusRelics = (this.floorBonusRelics || 0) + 1;
                             } else {
                                 for(let c=0; c<25; c++) itemsToSpawn.push('coin');
                             }
-                            if (Math.random() < 0.25) itemsToSpawn.push('life'); 
+                            if (Math.random() < obLifeChance) itemsToSpawn.push('life'); 
                         } else {
-                            if (Math.random() < 0.25) itemsToSpawn.push('life');
+                            if (Math.random() < obLifeChance) itemsToSpawn.push('life');
                             for(let c=0; c<MathUtils.randomInt(4, 8); c++) itemsToSpawn.push('coin');
                             itemsToSpawn.push('essence');
                             if (Math.random() < 0.6) itemsToSpawn.push('essence'); 
@@ -16335,27 +16687,33 @@ class Player extends Entity {
         this.modelParts.staffGem.geometry = geos.gem;
         this.modelParts.halo.geometry = geos.halo;
 
-        // Posiziona il nucleo luminoso in base al tipo di arma della skin
-        let gemY = 28, gemZ = 0;
-        if (skin.id === 'cyber_phantom') { gemY = 1.2; gemZ = 22.5; }
-        else if (skin.id === 'void_walker') { gemY = 14.0; gemZ = 0.0; }
+        // Posiziona il nucleo luminoso e la posa base in base al tipo di arma della skin
+        let gemOff = PlayerGeometryBuilder.getWeaponGemOffset(skin.id);
+        let gemY = gemOff.y, gemZ = gemOff.z;
+        let rest = PlayerGeometryBuilder.getRestPose(skin.id);
 
         this.modelParts.staffGem.position.set(0, gemY, gemZ);
         this.modelParts.halo.position.set(0, gemY, gemZ);
         this.modelParts.halo.rotation.set(0, 0, 0);
         this.modelParts.staffGem.rotation.set(0, 0, 0);
+        if (this.modelParts.weaponGroup) {
+            this.modelParts.weaponGroup.rotation.set(rest.rx, rest.ry, rest.rz);
+        }
+
+        // Applica texture procedurale e proprietà materiche specifiche della skin
+        applySkinMaterials(this.modelParts, skin);
 
         // Regola il bagliore sulla punta dell'arma mantenendo dimensioni compatte e leggibili
         if (this.fakeBloom) {
             if (skin.id === 'crimson_inquisitor') {
-                this.fakeBloom.position.set(0, 0, 8.5);
+                this.fakeBloom.position.set(-2.5, 0.5, 10.5);
                 this.fakeBloom.scale.set(20, 20, 1);
             } else if (skin.id === 'solar_archon' || skin.id === 'emerald_warden') {
-                this.fakeBloom.position.set(0, 5.5, 0);
+                this.fakeBloom.position.set(0, 6.5, 0);
                 this.fakeBloom.scale.set(18, 18, 1);
             } else if (skin.id === 'void_walker' || skin.id === 'cyber_phantom') {
                 this.fakeBloom.position.set(0, 0, 0);
-                this.fakeBloom.scale.set(16, 16, 1);
+                this.fakeBloom.scale.set(17, 17, 1);
             } else {
                 this.fakeBloom.position.set(0, 0, 0);
                 this.fakeBloom.scale.set(22, 22, 1);
@@ -16369,6 +16727,7 @@ class Player extends Entity {
 
         if (this.modelParts.accentMesh) {
             this.modelParts.accentMesh.rotation.set(0, 0, 0);
+            this.modelParts.accentMesh.scale.set(1, 1, 1);
             if (geos.accent) {
                 this.modelParts.accentMesh.geometry = geos.accent;
                 this.modelParts.accentMesh.visible = true;
@@ -16721,10 +17080,14 @@ class Player extends Entity {
             }
         }
         let curSkin = SkinSystem.selectedId;
-        // Ruotano solo i bastoni magici (Mago Oscuro e Arcanista Astrale); le armi a lama, il tridente e il fucile restano fermi
+        // Rotazione mistica dei bastoni (più rapida durante il lancio d'attacco)
         if (curSkin === 'dark_mage' || curSkin === 'astral_arcanist') {
-            this.modelParts.halo.rotation.z += dt;
-            this.modelParts.staffGem.rotation.y += dt;
+            let castBoost = this.isAttacking ? 4.2 : 1.2;
+            this.modelParts.halo.rotation.z += dt * castBoost;
+            this.modelParts.staffGem.rotation.y += dt * (castBoost * 1.15);
+            if (curSkin === 'astral_arcanist') {
+                this.modelParts.halo.rotation.x += dt * (castBoost * 0.65);
+            }
         }
         if (this.activeShieldCooldown > 0) this.activeShieldCooldown -= dt;
       if (this.shadowMesh.visible && this.mesh.visible) {
@@ -17506,8 +17869,11 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
             this.modelParts.body.rotation.x += (targetPitch - this.modelParts.body.rotation.x) * dt * 10;
             this.modelParts.body.rotation.z += (targetRoll - this.modelParts.body.rotation.z) * dt * 10;
+            if (!this.isAttacking) {
+                this.modelParts.body.rotation.y += (0 - this.modelParts.body.rotation.y) * dt * 12;
+            }
             if (this.modelParts.head) {
-                this.modelParts.head.position.y = 28 + Math.sin(Game.playTime * (isMoving ? 14 : 3.5)) * (isMoving ? 1.2 : 0.4);
+                this.modelParts.head.position.y = 28.5 + Math.sin(Game.playTime * (isMoving ? 14 : 3.5)) * (isMoving ? 1.2 : 0.4);
             }
             if (this.modelParts.scarf) {
                 this.modelParts.scarf.rotation.z = Math.sin(Game.playTime * 12) * (isMoving ? 0.25 : 0.05);
@@ -17519,13 +17885,19 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             this.currentSwingSpd += (targetSwingSpd - this.currentSwingSpd) * dt * 5.0; 
             this.swingPhase += this.currentSwingSpd * dt;
             
-            let targetX = 12 + Math.sin(this.swingPhase) * (isMoving ? 2.5 : 0.5);
-            let targetY = 16 + Math.abs(Math.cos(this.swingPhase)) * (isMoving ? 1.5 : 0.3);
-            let targetRotZ = Math.sin(this.swingPhase) * (isMoving ? 0.15 : 0.03);
+            let restPose = PlayerGeometryBuilder.getRestPose(curSkin);
+            let targetX = 12 + Math.sin(this.swingPhase) * (isMoving ? 2.2 : 0.45);
+            let targetY = 16 + Math.abs(Math.cos(this.swingPhase)) * (isMoving ? 1.4 : 0.3);
+            let targetRotZ = restPose.rz + Math.sin(this.swingPhase) * (isMoving ? 0.12 : 0.03);
 
-            this.modelParts.weaponGroup.position.x += (targetX - this.modelParts.weaponGroup.position.x) * dt * 12;
-            this.modelParts.weaponGroup.position.y += (targetY - this.modelParts.weaponGroup.position.y) * dt * 12;
-            this.modelParts.weaponGroup.rotation.z += (targetRotZ - this.modelParts.weaponGroup.rotation.z) * dt * 12;
+            if (!this.isAttacking) {
+                this.modelParts.weaponGroup.position.x += (targetX - this.modelParts.weaponGroup.position.x) * dt * 12;
+                this.modelParts.weaponGroup.position.y += (targetY - this.modelParts.weaponGroup.position.y) * dt * 12;
+                this.modelParts.weaponGroup.position.z += (8 - this.modelParts.weaponGroup.position.z) * dt * 12;
+                this.modelParts.weaponGroup.rotation.x += (restPose.rx - this.modelParts.weaponGroup.rotation.x) * dt * 12;
+                this.modelParts.weaponGroup.rotation.y += (restPose.ry - this.modelParts.weaponGroup.rotation.y) * dt * 12;
+                this.modelParts.weaponGroup.rotation.z += (targetRotZ - this.modelParts.weaponGroup.rotation.z) * dt * 12;
+            }
 
             this.light.position.x += (this.modelParts.weaponGroup.position.x + 2 - this.light.position.x) * dt * 18;
             this.light.position.y += (this.modelParts.weaponGroup.position.y + 18 - this.light.position.y) * dt * 18;
@@ -17644,26 +18016,59 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         
         this.attackTimer -= dt;
         if (isShooting && this.attackTimer <= 0 && !this.isDashing && !(this.overdrive && this.essence === 'red')) this.attack();
-        let restRotX = (curSkin === 'solar_archon' || curSkin === 'emerald_warden' || curSkin === 'crimson_inquisitor') ? 0.38 : 0;
+        let restPose = PlayerGeometryBuilder.getRestPose(curSkin);
         if (this.isAttacking) { 
-            this.attackSwing += dt * 14; 
+            this.attackSwing += dt * 15.0; 
             if (this.attackSwing >= Math.PI) { 
                 this.isAttacking = false; 
-                this.modelParts.weaponGroup.rotation.x = restRotX; 
-                this.modelParts.weaponGroup.position.z = 8; 
+                this.modelParts.weaponGroup.rotation.set(restPose.rx, restPose.ry, restPose.rz);
+                this.modelParts.weaponGroup.position.set(12, 16, 8);
+                this.modelParts.body.rotation.y = 0;
             } else {
+                let prog = this.attackSwing / Math.PI; // 0 -> 1
                 let sinSwing = Math.max(0, Math.sin(this.attackSwing));
+                let punch = Math.pow(sinSwing, 0.72);
+                let wg = this.modelParts.weaponGroup;
+
                 if (curSkin === 'cyber_phantom') {
-                    let kick = Math.sqrt(sinSwing);
-                    this.modelParts.weaponGroup.rotation.x = -kick * 0.65;
-                    this.modelParts.weaponGroup.position.z = 8 - kick * 14.0;
+                    // FUCILE RAILGUN: Rinculo balistico netto (amplificato al 5° colpo Laser)
+                    let isLaserShot = (this.cyberShotCount === 0);
+                    let kick = Math.sqrt(sinSwing) * (isLaserShot ? 1.32 : 1.0);
+                    wg.rotation.set(-kick * 0.52, 0, 0);
+                    wg.position.set(12, 16 + kick * 1.8, 8 - kick * 13.0);
+                    this.modelParts.body.rotation.y = -kick * 0.14;
+                } else if (curSkin === 'emerald_warden') {
+                    // LANCIA SILVANA: Affondo vipereo profondo in avanti con torsione del busto
+                    wg.rotation.set(restPose.rx + punch * 0.62, restPose.ry - punch * 0.10, restPose.rz);
+                    wg.position.set(12 - punch * 3.2, 16 - punch * 1.2, 8 + punch * 16.5);
+                    this.modelParts.body.rotation.y = punch * 0.28;
+                } else if (curSkin === 'crimson_inquisitor') {
+                    // GRANDE FALCE CREMISI: Ampia mietitura orizzontale da destra a sinistra
+                    wg.rotation.set(restPose.rx + punch * 0.72, restPose.ry + sinSwing * 2.15, restPose.rz - punch * 0.52);
+                    wg.position.set(12 - sinSwing * 9.5, 16 - punch * 1.0, 8 + punch * 11.5);
+                    this.modelParts.body.rotation.y = -0.18 + sinSwing * 0.56;
+                } else if (curSkin === 'void_walker') {
+                    // DOPPIA GLAIVE DEL VUOTO: Vortice acrobatico a 360° attorno all'impugnatura
+                    wg.rotation.set(restPose.rx + prog * Math.PI * 2.0, restPose.ry + sinSwing * 0.35, restPose.rz + sinSwing * 0.55);
+                    wg.position.set(12 - sinSwing * 4.5, 16 + sinSwing * 2.0, 8 + punch * 9.5);
+                    this.modelParts.body.rotation.y = sinSwing * 0.32;
+                } else if (curSkin === 'solar_archon') {
+                    // TRIDENTE SOLARE: Affondo imperiale dall'alto con apertura delle ali serafiche
+                    wg.rotation.set(restPose.rx + punch * 0.70, restPose.ry - punch * 0.08, restPose.rz);
+                    wg.position.set(12 - punch * 2.5, 16 + Math.sin(prog * Math.PI * 2.0) * 2.8, 8 + punch * 14.5);
+                    this.modelParts.body.rotation.y = punch * 0.25;
+                } else if (curSkin === 'astral_arcanist') {
+                    // SCETTRO ASTRALE: Evocazione cosmica ad arco con sollevamento del cristallo stellare
+                    wg.rotation.set(restPose.rx + punch * 0.78, -sinSwing * 0.28, restPose.rz - sinSwing * 0.32);
+                    wg.position.set(12 - sinSwing * 2.8, 16 + sinSwing * 4.2, 8 + punch * 9.0);
+                    this.modelParts.body.rotation.y = sinSwing * 0.20;
                 } else {
-                    this.modelParts.weaponGroup.rotation.x = -Math.PI/2 + this.attackSwing;
-                    this.modelParts.weaponGroup.position.z = 8 + sinSwing * 4.5;
+                    // MAGO OSCURO: Kanalizzazione arcana in avanti con spinta del bastone d'ombra
+                    wg.rotation.set(restPose.rx + punch * 0.82, -sinSwing * 0.22, restPose.rz - sinSwing * 0.18);
+                    wg.position.set(12 - sinSwing * 2.2, 16 + sinSwing * 3.4, 8 + punch * 9.5);
+                    this.modelParts.body.rotation.y = sinSwing * 0.18;
                 }
             }
-        } else {
-            this.modelParts.weaponGroup.rotation.x = restRotX;
         }
 
         let stackBonus = (this.essenceList ? this.essenceList.length : 0) * 0.20;
@@ -17685,8 +18090,19 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             this.weaponCoreBloom.scale.set(baseCore, baseCore, 1);
         }
 
-        if (SkinSystem.selectedId === 'void_walker' && this.modelParts.accentMesh) {
-            this.modelParts.accentMesh.rotation.y += dt * 2.5;
+        if (this.modelParts.accentMesh) {
+            if (curSkin === 'void_walker') {
+                this.modelParts.accentMesh.rotation.y += dt * (2.5 + attackSwingPulse * 5.5);
+                let voidFlare = 1.0 + attackSwingPulse * 0.16;
+                this.modelParts.accentMesh.scale.set(voidFlare, 1.0, voidFlare);
+            } else if (curSkin === 'solar_archon') {
+                let wingBreath = Math.sin(Game.playTime * 3.2) * 0.04;
+                let wingFlare = 1.0 + wingBreath + attackSwingPulse * 0.24;
+                this.modelParts.accentMesh.scale.set(wingFlare, 1.0 + attackSwingPulse * 0.12, 1.0);
+            } else if (curSkin === 'cyber_phantom') {
+                let finFlare = 1.0 + attackSwingPulse * 0.18;
+                this.modelParts.accentMesh.scale.set(finFlare, 1.0, 1.0);
+            }
         }
 
        // --- ORBITA ARMONICA MULTI-FAMIGLIO 3D (Con scie dedicate e reazioni agli attacchi) ---
@@ -18614,10 +19030,10 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.stats.maxHp += hpGain;
                 this.baseStats.maxHp += 16;
             }
-            if (Game.floor <= 8) {
+            if (Game.floor <= 10) {
                 this.stats.hp = this.stats.maxHp;
             } else {
-                let lvlHeal = (this.stats.maxHp - this.stats.hp) * 0.5 + this.stats.maxHp * 0.25;
+                let lvlHeal = (this.stats.maxHp - this.stats.hp) * 0.65 + this.stats.maxHp * 0.35;
                 this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + lvlHeal);
             }
             this.stats.minDmg += 3; this.stats.maxDmg += 5;
@@ -18780,9 +19196,9 @@ class Enemy extends Entity {
                 dmgMod *= 1.35;
                 spdMod *= 1.15;
 
-                // MEGA ELITE: probabilità inferiore rispetto a un Elite normale e cap di massimo 2 per piano
+                // MEGA ELITE: probabilità inferiore rispetto a un Elite normale, cap di max 2 per piano (escluso il Golem con scudo)
                 let megaChance = Math.min(0.28, 0.16 + Game.floor * 0.006);
-                if ((Game.floorMegaElites || 0) < 2 && Math.random() < megaChance) {
+                if (type !== 'golem' && (Game.floorMegaElites || 0) < 2 && Math.random() < megaChance) {
                     this.isMegaElite = true;
                     Game.floorMegaElites = (Game.floorMegaElites || 0) + 1;
                     size *= 1.30; // Scala ~2.15x rispetto al modello base
@@ -20701,15 +21117,16 @@ class Enemy extends Entity {
         }
 
         let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
-        let baseLifeChance = 0.005;
-        if (hpRatio > 0.8) baseLifeChance = 0.001;
-        else if (hpRatio < 0.3) baseLifeChance = 0.025;
+        let baseLifeChance = 0.0045;
+        if (hpRatio > 0.8) baseLifeChance = 0.0009;
+        else if (hpRatio < 0.3) baseLifeChance = 0.020;
 
-        let floorDecay = Math.max(0.50, 1.0 - (Game.floor * 0.025));
-        let lifeChance = baseLifeChance * floorDecay * Game.player.modifiers.healDropMult;
+        // Curva progressiva: riduce i drop di vite nei primi piani (0.68..0.80) e li aumenta leggermente nei piani avanzati (fino a 1.18x)
+        let floorLifeCurve = Math.min(1.18, 0.65 + (Game.floor * 0.035));
+        let lifeChance = baseLifeChance * floorLifeCurve * Game.player.modifiers.healDropMult;
         if (this.isMegaElite) lifeChance *= 5.0;
         else if (this.isElite) lifeChance *= 3.0;
-        if (Game.lives > 3) lifeChance = lifeChance / (1 + (Game.lives - 3) * 0.5);
+        if (Game.lives >= 3) lifeChance = lifeChance / (1 + (Game.lives - 2) * 0.50);
         if (Game.player.modifiers.noHealDrops) lifeChance = 0;
 
         let itemsToSpawn = [];
@@ -20746,9 +21163,10 @@ class Enemy extends Entity {
             else if (this.isMegaElite) Game.getFloatingText().spawn(this.x, this.y, "MEGA ELITE SCONFITTO!", '#ff1e56', 34, true);
 
             let eliteDensityScale = 28 / Math.max(28, Game.floorMaxKills);
-            let ownedRelicsPenalty = 1 / (1 + Game.player.relics.length * 0.25);
-            // I Mega Elite hanno una probabilità di droppare reliquia 4.5x superiore rispetto a un Elite normale!
-            let baseRelicRate = this.isMegaElite ? 0.081 : 0.018;
+            let relicPenaltyStep = this.isMegaElite ? 0.18 : 0.25;
+            let ownedRelicsPenalty = 1 / (1 + Game.player.relics.length * relicPenaltyStep);
+            // I Mega Elite hanno una probabilità di droppare reliquia nettamente superiore (~6x rispetto a un Elite normale)
+            let baseRelicRate = this.isMegaElite ? 0.110 : 0.018;
             let eliteRelicChance = baseRelicRate * eliteDensityScale * ownedRelicsPenalty;
             let maxFloorRelicDrops = this.isMegaElite ? 2 : 1;
 
