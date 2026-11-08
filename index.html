@@ -946,6 +946,295 @@ body.colorblind-mode #opt-colorblind-text {
                 filter: none !important;
             }
         }
+
+        /* ============================================================================
+           MODALITÀ ORIZZONTALE (LANDSCAPE) E VERTICALE PER SMARTPHONE (ZERO COSTO CPU/GPU)
+           ============================================================================ */
+        body.force-rotate-landscape {
+            position: fixed !important;
+            top: 0 !important;
+            left: 100vw !important;
+            width: 100vh !important;
+            height: 100vw !important;
+            transform: rotate(90deg) !important;
+            transform-origin: top left !important;
+            overflow: hidden !important;
+        }
+        body.force-rotate-portrait {
+            position: fixed !important;
+            top: 100vh !important;
+            left: 0 !important;
+            width: 100vh !important;
+            height: 100vw !important;
+            transform: rotate(-90deg) !important;
+            transform-origin: top left !important;
+            overflow: hidden !important;
+        }
+
+        /* --- DISPOSIZIONE TASTI E JOYSTICK IN MODALITÀ ORIZZONTALE (Stile Brawl Stars / Soul Knight) --- */
+        body.mobile-landscape #joy-left-zone {
+            bottom: 18px !important;
+            left: max(22px, env(safe-area-inset-left, 18px)) !important;
+            width: 108px !important;
+            height: 108px !important;
+        }
+        body.mobile-landscape #joy-right-zone {
+            bottom: 18px !important;
+            right: max(24px, env(safe-area-inset-right, 18px)) !important;
+            width: 108px !important;
+            height: 108px !important;
+        }
+        /* Arco ergonomico attorno al pollice destro: Dash (basso-sx), Shield (diagonale alto-sx), Ultimate (alto) */
+        body.mobile-landscape #btn-dash {
+            bottom: 14px !important;
+            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 124px) !important;
+            width: 52px !important;
+            height: 52px !important;
+        }
+        body.mobile-landscape #btn-shield {
+            bottom: 76px !important;
+            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 110px) !important;
+            width: 52px !important;
+            height: 52px !important;
+        }
+        body.mobile-landscape #btn-ult {
+            bottom: 132px !important;
+            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 54px) !important;
+            width: 54px !important;
+            height: 54px !important;
+        }
+
+        /* --- HUD IN-GAME COMPATTO PER SCHERMO ORIZZONTALE --- */
+        body.mobile-landscape #hud > div:nth-child(2) {
+            top: 8px !important;
+            left: max(12px, env(safe-area-inset-left, 10px)) !important;
+            flex-direction: row !important;
+            align-items: stretch !important;
+            width: auto !important;
+            max-width: 66% !important;
+            gap: 8px !important;
+        }
+        body.mobile-landscape #hud-vitals-card {
+            padding: 6px 10px !important;
+            gap: 8px !important;
+            min-width: 196px !important;
+        }
+        body.mobile-landscape #hud-level-badge {
+            width: 38px !important;
+            height: 38px !important;
+        }
+        body.mobile-landscape #ui-level {
+            font-size: 0.85rem !important;
+        }
+        body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2) {
+            width: 205px !important;
+            gap: 6px !important;
+        }
+        body.mobile-landscape #hud > div:nth-child(1) {
+            top: 8px !important;
+            right: max(12px, env(safe-area-inset-right, 10px)) !important;
+        }
+        /* Sposta Combo ed Essenze in alto accanto a FPS/Pausa per non coprire mai il tasto Ultimate */
+        body.mobile-landscape #hud > div:nth-child(3) {
+            top: 8px !important;
+            right: calc(max(12px, env(safe-area-inset-right, 10px)) + 136px) !important;
+            flex-direction: row-reverse !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            transform: scale(0.84) !important;
+            transform-origin: top right !important;
+        }
+
+        /* --- MENU PRINCIPALE IN MODALITÀ ORIZZONTALE --- */
+        body.mobile-landscape #mainMenu > div.z-10 {
+            padding: 8px 18px !important;
+        }
+        body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub {
+            font-size: 1.55rem !important;
+        }
+        body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word {
+            font-size: 2.35rem !important;
+            margin-top: 2px !important;
+        }
+        body.mobile-landscape #mainMenu > div.z-10 > div:last-child {
+            max-width: 540px !important;
+            gap: 6px !important;
+            margin-bottom: 2px !important;
+        }
+        body.mobile-landscape #mainMenu #btn-menu-skins {
+            padding: 6px 10px !important;
+        }
+        body.mobile-landscape #mainMenu #menu-skin-frame {
+            width: 34px !important;
+            height: 34px !important;
+        }
+        body.mobile-landscape #mainMenu .anim-play-pulse {
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+            font-size: 1.25rem !important;
+        }
+        body.mobile-landscape #mainMenu .grid-cols-3 button {
+            height: 36px !important;
+        }
+
+        /* --- MODALI (OPZIONI, INFO, SKIN, PAUSA, CLASSIFICA, RELIQUIE) IN MODALITÀ ORIZZONTALE --- */
+        body.mobile-landscape #optionsModal .modal-enter,
+        body.mobile-landscape #infoModal .modal-enter,
+        body.mobile-landscape #skinModal .modal-enter,
+        body.mobile-landscape #highScoreScreen .modal-enter,
+        body.mobile-landscape #collectedRelicsModal .modal-enter,
+        body.mobile-landscape #reforgeSelectModal .modal-enter {
+            max-width: 650px !important;
+            max-height: 94% !important;
+            padding: 10px 14px !important;
+        }
+        body.mobile-landscape #pauseModal .modal-enter {
+            max-width: 460px !important;
+            padding: 12px 16px !important;
+        }
+        body.mobile-landscape #pauseModal .modal-enter > div:first-child {
+            margin-bottom: 10px !important;
+            padding: 6px 12px !important;
+        }
+        body.mobile-landscape #pauseModal .modal-enter > div:last-child {
+            flex-direction: row !important;
+            gap: 8px !important;
+        }
+        body.mobile-landscape #pauseModal .modal-enter > div:last-child button {
+            margin-top: 0 !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+        }
+        body.mobile-landscape #optionsModal .space-y-2.5 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+        }
+        body.mobile-landscape #optionsModal .space-y-2.5 > * {
+            margin-top: 0 !important;
+            padding-top: 7px !important;
+            padding-bottom: 7px !important;
+        }
+        body.mobile-landscape #optionsModal .modal-enter > button:last-child,
+        body.mobile-landscape #infoModal .modal-enter > button:last-child,
+        body.mobile-landscape #skinModal .modal-enter > button:last-child,
+        body.mobile-landscape #highScoreScreen .modal-enter > button:last-child {
+            margin-top: 8px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+            min-height: 38px !important;
+        }
+        body.mobile-landscape #infoModal .space-y-2.5 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+        }
+        body.mobile-landscape #infoModal .space-y-2.5 > * {
+            margin-top: 0 !important;
+            padding: 6px 8px !important;
+        }
+        body.mobile-landscape #skinListContainer {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+        body.mobile-landscape #collectedRelicsGrid,
+        body.mobile-landscape #reforgeSelectGrid {
+            grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+            max-height: 120px !important;
+        }
+
+        /* --- FORGIA DELL'ASCESA (#floorScreen) E RELIQUIE (#relicScreen) IN ORIZZONTALE --- */
+        body.mobile-landscape #shop-main-wrap,
+        body.mobile-landscape #relic-main-wrap {
+            max-width: 760px !important;
+            padding: 6px 14px !important;
+        }
+        body.mobile-landscape #shop-main-wrap > div:first-child,
+        body.mobile-landscape #relic-main-wrap > div:first-child > div > div {
+            padding: 5px 12px !important;
+        }
+        body.mobile-landscape #shop-inspector {
+            min-height: 44px !important;
+            padding: 5px 10px !important;
+            margin: 3px 0 !important;
+        }
+        body.mobile-landscape #shop-tree-container {
+            min-height: 135px !important;
+            max-height: 46vh !important;
+            margin: 2px 0 !important;
+        }
+        body.mobile-landscape #shop-main-wrap > div:last-child {
+            flex-direction: row !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            margin-top: 2px !important;
+        }
+        body.mobile-landscape #shop-main-wrap > div:last-child > div.grid {
+            flex: 1.1 !important;
+        }
+        body.mobile-landscape #shop-main-wrap > div:last-child > div.grid button,
+        body.mobile-landscape #btn-next-floor {
+            min-height: 38px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+        body.mobile-landscape #btn-next-floor {
+            flex: 1.4 !important;
+        }
+        body.mobile-landscape #relicCardsContainer .relic-card {
+            padding: 6px !important;
+        }
+        body.mobile-landscape #relicCardsContainer .relic-icon-frame {
+            width: 42px !important;
+            height: 42px !important;
+            margin-bottom: 4px !important;
+        }
+        body.mobile-landscape #reforgeSection {
+            min-height: 62px !important;
+            padding: 6px 10px !important;
+            margin: 2px 0 !important;
+            gap: 4px !important;
+        }
+        body.mobile-landscape #btn-select-reforge {
+            width: 42px !important;
+            height: 42px !important;
+        }
+        body.mobile-landscape #btn-proceed-relic {
+            min-height: 38px !important;
+            padding: 6px 12px !important;
+        }
+
+        /* --- SCHERMATA MORTE (#deathScreen) IN ORIZZONTALE --- */
+        body.mobile-landscape #deathScreen > div.z-10 {
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 10px 20px !important;
+            gap: 14px !important;
+        }
+        body.mobile-landscape #deathScreen > div.z-10 > div:first-child {
+            max-width: 46% !important;
+            align-items: flex-start !important;
+            text-align: left !important;
+        }
+        body.mobile-landscape #deathTitle {
+            font-size: 2.8rem !important;
+        }
+        body.mobile-landscape #deathScreen > div.z-10 > div:nth-child(2) {
+            display: none !important;
+        }
+        body.mobile-landscape #deathScreen > div.z-10 > div:last-child {
+            max-width: 340px !important;
+            padding: 10px 12px !important;
+            gap: 6px !important;
+        }
+        body.mobile-landscape #btn-restart,
+        body.mobile-landscape #btn-respawn {
+            min-height: 42px !important;
+            padding: 8px 12px !important;
+            font-size: 0.95rem !important;
+        }
     </style>
 </head>
 <body class="text-white selection:bg-red-900">
@@ -1130,6 +1419,9 @@ body.colorblind-mode #opt-colorblind-text {
            <div class="space-y-2.5 relative z-10">
                 <button id="btn-opt-gfx" onclick="AppSettings.toggleGraphics(); UIManager.updateOptionsUI();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Grafica</span> <span id="opt-gfx-text"><i class="fa-solid fa-scale-balanced"></i> BILANCIATA</span>
+                </button>
+                <button id="btn-opt-orientation" onclick="AppSettings.toggleOrientation(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
+                    <span>Visuale</span> <span id="opt-orientation-text" class="text-cyan-300"><i class="fa-solid fa-mobile-screen"></i> VERTICALE</span>
                 </button>
                 <button id="btn-opt-fps" onclick="AppSettings.toggleFPS(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Frame Rate</span> <span id="opt-fps-text" class="text-green-400">60 FPS</span>
@@ -1630,6 +1922,7 @@ const AppSettings = {
     colorblind: false,
     screenShake: true,
     damageNumbers: true,
+    orientation: 'portrait',
     get isLow() { return this.mode === 0; },
     get isUltra() { return this.mode === 2; },
     get isBalanced() { return this.mode === 1; },
@@ -1669,9 +1962,66 @@ const AppSettings = {
         try {
             localStorage.setItem(this._storageKey, JSON.stringify({
                 mode: this.mode, fpsCap: this.fpsCap, colorblind: this.colorblind,
-                screenShake: this.screenShake, damageNumbers: this.damageNumbers
+                screenShake: this.screenShake, damageNumbers: this.damageNumbers,
+                orientation: this.orientation
             }));
         } catch (e) {}
+    },
+
+    isForcedLandscapeRotation() {
+        return document.body && document.body.classList.contains('force-rotate-landscape');
+    },
+    isForcedPortraitRotation() {
+        return document.body && document.body.classList.contains('force-rotate-portrait');
+    },
+    getViewportSize() {
+        const w = window.innerWidth || 1;
+        const h = window.innerHeight || 1;
+        if (this.isForcedLandscapeRotation() || this.isForcedPortraitRotation()) {
+            return { width: h, height: w };
+        }
+        return { width: w, height: h };
+    },
+    toggleOrientation() {
+        this.orientation = (this.orientation === 'landscape') ? 'portrait' : 'landscape';
+        this.save();
+        this.applyOrientation(true);
+    },
+    applyOrientation(fromUserClick = false) {
+        if (!document.body) return;
+        const isLand = (this.orientation === 'landscape');
+        document.body.classList.toggle('mobile-landscape', isLand);
+        document.body.classList.toggle('mobile-portrait', !isLand);
+
+        // Tenta il blocco nativo dell'orientamento se supportato dal browser mobile
+        if (fromUserClick && isTouchDevice && screen.orientation && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock(isLand ? 'landscape' : 'portrait').catch(() => {});
+        }
+
+        const rawW = window.innerWidth || 1;
+        const rawH = window.innerHeight || 1;
+        // Se lo smartphone ha la rotazione bloccata o il browser non ruota la finestra,
+        // ruota il viewport via CSS a costo zero così la modalità scelta funziona istantaneamente
+        const needForceLand = isLand && (rawW < rawH);
+        const needForcePort = !isLand && isTouchDevice && (rawW > rawH);
+        document.body.classList.toggle('force-rotate-landscape', needForceLand);
+        document.body.classList.toggle('force-rotate-portrait', needForcePort);
+
+        if (typeof Game !== 'undefined' && Game.renderer) {
+            Game.resize();
+            if (Game.player && (Game.state === 'PLAYING' || Game.state === 'PAUSED')) {
+                Game.snapCamera();
+                if (Game.state === 'PAUSED' && Game.scene && Game.camera) {
+                    Game.renderer.render(Game.scene, Game.camera);
+                }
+            }
+        }
+        if (typeof TitleDiorama !== 'undefined' && TitleDiorama.initialized) {
+            TitleDiorama.resize();
+        }
+        if (typeof DeathScreen3D !== 'undefined' && DeathScreen3D.initialized) {
+            DeathScreen3D.resize();
+        }
     },
     
    get shadowsEnabled() { return this.mode === 2; },
@@ -1688,6 +2038,9 @@ const AppSettings = {
                 if (data.fpsCap === 30 || data.fpsCap === 60) this.fpsCap = data.fpsCap;
                 if (typeof data.screenShake === 'boolean') this.screenShake = data.screenShake;
                 if (typeof data.damageNumbers === 'boolean') this.damageNumbers = data.damageNumbers;
+                if (data.orientation === 'landscape' || data.orientation === 'portrait') {
+                    this.orientation = data.orientation;
+                }
                 if (typeof data.colorblind === 'boolean' && data.colorblind !== this.colorblind) {
                     this.colorblind = data.colorblind;
                     if (this.colorblind) {
@@ -1702,6 +2055,12 @@ const AppSettings = {
         }
         if (this.isLow) document.body.classList.add('low-spec');
         else document.body.classList.remove('low-spec');
+        this.applyOrientation(false);
+        if (!this._orientationListenerBound) {
+            this._orientationListenerBound = true;
+            window.addEventListener('resize', () => this.applyOrientation(false));
+            window.addEventListener('orientationchange', () => setTimeout(() => this.applyOrientation(false), 60));
+        }
     },
     
     init() {
@@ -3928,8 +4287,20 @@ const SkinSystem = {
             this.container.addEventListener('pointerdown', (e) => {
                 if (!this.active || this.isExploding || !this.camera || !this.boxGroup) return;
                 let rect = this.container.getBoundingClientRect();
-                this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                if (AppSettings.isForcedLandscapeRotation()) {
+                    let lx = e.clientY - rect.top;
+                    let ly = rect.right - e.clientX;
+                    this.mouse.x = (lx / rect.height) * 2 - 1;
+                    this.mouse.y = -(ly / rect.width) * 2 + 1;
+                } else if (AppSettings.isForcedPortraitRotation()) {
+                    let lx = rect.bottom - e.clientY;
+                    let ly = e.clientX - rect.left;
+                    this.mouse.x = (lx / rect.height) * 2 - 1;
+                    this.mouse.y = -(ly / rect.width) * 2 + 1;
+                } else {
+                    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                }
 
                 this.raycaster.setFromCamera(this.mouse, this.camera);
                 let hitBox = this.raycaster.intersectObjects(this.boxGroup.children, true);
@@ -4025,8 +4396,9 @@ const SkinSystem = {
 
     resize() {
         if (!this.container || !this.renderer) return;
-        let w = this.container.clientWidth || window.innerWidth;
-        let h = this.container.clientHeight || window.innerHeight;
+        const vp = AppSettings.getViewportSize();
+        let w = this.container.clientWidth || vp.width;
+        let h = this.container.clientHeight || vp.height;
         if (w && h) {
             this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
@@ -4441,8 +4813,9 @@ const DeathSceneSystem = {
             return;
         }
 
-        const w = window.innerWidth;
-        const h = window.innerHeight;
+        const vp = AppSettings.getViewportSize();
+        const w = vp.width;
+        const h = vp.height;
         canvas.width = w;
         canvas.height = h;
         canvas.style.transition = 'none';
@@ -4886,16 +5259,17 @@ const DeathSceneSystem = {
 
     resize() {
         if (!this.container || !this.renderer || !this.camera) return;
-        let w = this.container.clientWidth || window.innerWidth;
-        let h = this.container.clientHeight || window.innerHeight;
+        const vp = AppSettings.getViewportSize();
+        let w = this.container.clientWidth || vp.width;
+        let h = this.container.clientHeight || vp.height;
         if (w > 0 && h > 0) {
             this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(w, h);
         }
         if (this.irisEl && this.irisEl.tagName === 'CANVAS') {
-            this.irisEl.width = window.innerWidth;
-            this.irisEl.height = window.innerHeight;
+            this.irisEl.width = vp.width;
+            this.irisEl.height = vp.height;
         }
     },
 
@@ -5236,6 +5610,17 @@ const UIManager = {
         if (fpsTxt) {
             if(AppSettings.fpsCap === 60) { fpsTxt.innerText = "60 FPS"; fpsTxt.className = "text-green-400"; }
             else { fpsTxt.innerText = "30 FPS"; fpsTxt.className = "text-yellow-400"; }
+        }
+        // Orientamento Schermo (Verticale / Orizzontale)
+        const orientTxt = document.getElementById('opt-orientation-text');
+        if (orientTxt) {
+            if (AppSettings.orientation === 'landscape') {
+                orientTxt.innerHTML = '<i class="fa-solid fa-mobile-screen rotate-90 mr-1"></i> ORIZZONTALE';
+                orientTxt.className = "text-amber-300 font-black";
+            } else {
+                orientTxt.innerHTML = '<i class="fa-solid fa-mobile-screen mr-1"></i> VERTICALE';
+                orientTxt.className = "text-cyan-300 font-black";
+            }
         }
     }
 };
@@ -8210,7 +8595,15 @@ const TouchControls = {
         };
 
         const updateStick = (clientX, clientY) => {
-            let dx = clientX - cx; let dy = clientY - cy; 
+            let rawDx = clientX - cx; let rawDy = clientY - cy;
+            let dx = rawDx, dy = rawDy;
+            if (AppSettings.isForcedLandscapeRotation()) {
+                dx = rawDy;
+                dy = -rawDx;
+            } else if (AppSettings.isForcedPortraitRotation()) {
+                dx = -rawDy;
+                dy = rawDx;
+            }
             let distance = Math.sqrt(dx*dx + dy*dy); 
             let nx = dx / distance || 0; let ny = dy / distance || 0;
             
@@ -9511,7 +9904,8 @@ pushDebris(px, pz, radius, force) {
     },
 
     resize() {
-        this.width = window.innerWidth; this.height = window.innerHeight; this.renderer.setSize(this.width, this.height);
+        const vp = AppSettings.getViewportSize();
+        this.width = vp.width; this.height = vp.height; this.renderer.setSize(this.width, this.height);
         this.camera.aspect = this.width / this.height; this.camera.updateProjectionMatrix(); 
         
         let dpr = AppSettings.getTargetUiDpr();
@@ -9524,6 +9918,11 @@ pushDebris(px, pz, radius, force) {
         
         if (this.composer) this.composer.setSize(this.width, this.height);
         if (this.bloomPass) this.bloomPass.setSize(Math.max(1, Math.floor(this.width / 2)), Math.max(1, Math.floor(this.height / 2)));
+        if (this.scene && this.scene.fog && !(this.isCorrupted && this.corruptedType === 'darkness')) {
+            let fScale = Math.max(1.05, this.getMobileAspectScale());
+            this.scene.fog.near = 700 * fScale;
+            this.scene.fog.far = 1850 * fScale;
+        }
         this.updateShadowConfig();
     },
     setupInputs() {
@@ -9633,8 +10032,13 @@ pushDebris(px, pz, radius, force) {
         }
     },
   getMobileAspectScale() {
-        if (!isTouchDevice) return 1.0;
         let aspect = (this.width && this.height) ? (this.width / this.height) : 0.5;
+        if (AppSettings.orientation === 'landscape' && aspect > 1.0) {
+            // In modalità orizzontale su smartphone, calibra l'altezza camera in stile action RPG mobile
+            // (Brawl Stars / Soul Knight): personaggi ben leggibili e ~9.5 tile verticali x ~16.5 tile orizzontali
+            return isTouchDevice ? 0.80 : 0.92;
+        }
+        if (!isTouchDevice) return 1.0;
         // Sugli smartphone in verticale (aspect < 0.65) alza dolcemente la camera (fino a +18%)
         // per garantire ~9 tile di visibilità orizzontale ed evitare attacchi fuori schermo
         return aspect < 0.65 ? Math.min(1.20, 1.05 + (0.65 - aspect) * 0.65) : 1.0;
@@ -9642,15 +10046,18 @@ pushDebris(px, pz, radius, force) {
 
     snapCamera() {
         let mScale = this.getMobileAspectScale();
+        let isLandMobile = (AppSettings.orientation === 'landscape' && this.width > this.height);
         let camY = (isTouchDevice ? 750 : 600) * mScale;
-        let camZ = this.player.y + (isTouchDevice ? 500 : 400) * mScale;
+        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
+        let camZ = this.player.y + (isTouchDevice ? 500 : 400) * distFactor;
+        let lookZOff = isLandMobile ? -14 : 0;
         this._camFocusX = this.player.x;
         this._camFocusZ = this.player.y;
         this._camLeadX = 0;
         this._camLeadZ = 0;
         this._camZoom = 1.0;
         this.camera.position.set(this.player.x, camY, camZ);
-        this.camera.lookAt(this.player.x, 0, this.player.y);
+        this.camera.lookAt(this.player.x, 0, this.player.y + lookZOff);
         InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
         if (this.dirLight) {
             this.dirLight.position.set(this.player.x - 400, 1000, this.player.y - 540);
@@ -9760,21 +10167,25 @@ pushDebris(px, pz, radius, force) {
 
         let moveX = this.player.slideDx || 0;
         let moveZ = this.player.slideDy || 0;
-        let leadDist = isTouchDevice ? 30.0 : 16.0;
+        let isLandMobile = (AppSettings.orientation === 'landscape' && this.width > this.height);
+        let leadDistX = isTouchDevice ? (isLandMobile ? 35.0 : 30.0) : 16.0;
+        let leadDistZ = isTouchDevice ? (isLandMobile ? 22.0 : 30.0) : 16.0;
         let leadSmooth = 1.0 - Math.exp(-dt * 3.8);
-        this._camLeadX += (moveX * leadDist - this._camLeadX) * leadSmooth;
-        this._camLeadZ += (moveZ * leadDist - this._camLeadZ) * leadSmooth;
+        this._camLeadX += (moveX * leadDistX - this._camLeadX) * leadSmooth;
+        this._camLeadZ += (moveZ * leadDistZ - this._camLeadZ) * leadSmooth;
 
         let posSmooth = 1.0 - Math.exp(-dt * 14.0);
         this._camFocusX += ((this.player.x + this._camLeadX) - this._camFocusX) * posSmooth;
         this._camFocusZ += ((this.player.y + this._camLeadZ) - this._camFocusZ) * posSmooth;
 
         let mScale = this.getMobileAspectScale();
+        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
         let baseHeight = (isTouchDevice ? 750 : 600) * mScale * this._camZoom;
-        let baseDist = (isTouchDevice ? 500 : 400) * mScale * this._camZoom;
+        let baseDist = (isTouchDevice ? 500 : 400) * distFactor * this._camZoom;
+        let lookZOff = isLandMobile ? -14 : 0;
 
         this.camera.position.set(this._camFocusX + shakeX, baseHeight + shakeY, this._camFocusZ + baseDist + shakeZ);
-        this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + shakeZ * 0.25);
+        this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + lookZOff + shakeZ * 0.25);
         InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
 
        // 7. Parallasse Nebbia 3D + Confini Energia Oscura Esterna
@@ -10015,8 +10426,8 @@ loop(timestamp) {
 
                     // --- PRE-CALCOLO TEMA SUCCESSIVO E SETUP DEL PORTALE MULTI-STRATO ---
                     if (this.nextThemeIndex === undefined) {
-                        let offset = Math.floor(Math.random() * (MAP_THEMES.length - 1)) + 1;
-                        this.nextThemeIndex = (this.currentThemeIndex + offset) % MAP_THEMES.length;
+                        // Mantiene il tema di fine piano anche per il prossimo piano
+                        this.nextThemeIndex = this.currentThemeIndex;
                     }
                     
                     let portalColor = this.nextThemeIndex === 2 ? 0x00DDFF : (this.nextThemeIndex === 1 ? 0xff3300 : 0x33ff00);
@@ -10203,13 +10614,9 @@ loop(timestamp) {
             // Se è il primo livello in assoluto, sceglie a caso tra tutti i temi
             this.currentThemeIndex = Math.floor(Math.random() * MAP_THEMES.length);
         } else if (this.nextThemeIndex !== undefined) {
-            // Usa il tema già pre-calcolato dal Portale durante l'animazione di Warp-Out!
+            // Mantiene il tema di fine piano precedente!
             this.currentThemeIndex = this.nextThemeIndex;
-            this.nextThemeIndex = undefined; // Consumato e svuotato per i prossimi calcoli
-        } else {
-            // Fallback di sicurezza
-            let offset = Math.floor(Math.random() * (MAP_THEMES.length - 1)) + 1;
-            this.currentThemeIndex = (this.currentThemeIndex + offset) % MAP_THEMES.length;
+            this.nextThemeIndex = undefined;
         }
         
         // Ora la mappa sa quale tema leggere!
@@ -10598,10 +11005,15 @@ startGame(diffMult) {
             fromBedCol: new THREE.Color(), toBedCol: new THREE.Color(),
             fromBankTint: new THREE.Color(), toBankTint: new THREE.Color(),
             fromPortalCol: new THREE.Color(), toPortalCol: new THREE.Color(),
+            fromPadCol: new THREE.Color(), toPadCol: new THREE.Color(),
+            fromPadEm: new THREE.Color(), toPadEm: new THREE.Color(),
+            fromAccentCol: new THREE.Color(), toAccentCol: new THREE.Color(),
+            fromAccentEm: new THREE.Color(), toAccentEm: new THREE.Color(),
             fromDirInt: 1.16, toDirInt: 1.16,
             fromAmbInt: 0.68, toAmbInt: 0.68,
             fromFogOp: 0.15, toFogOp: 0.15,
             fromIceOp: 0.0, toIceOp: 0.80,
+            fromPadOp: 1.0, toPadOp: 1.0,
             fromShoreY: 0, toShoreY: 0,
             fromPadY: 0, toPadY: 0
         });
@@ -10763,9 +11175,32 @@ startGame(diffMult) {
                 tr.fromShoreY = map.meshShoreFoam.position.y;
                 tr.toShoreY = spec.shoreY - (map.shoreInitialY || 0);
             }
-            if (map.meshPitPads) {
+            if (map.meshPitPads && window.GLOBAL_PIT_PAD_ASSETS && window.GLOBAL_PIT_PAD_ASSETS[targetThemeIdx]) {
+                const targetPadAsset = window.GLOBAL_PIT_PAD_ASSETS[targetThemeIdx];
+                map.meshPitPads.geometry = targetPadAsset.geo;
                 tr.fromPadY = map.meshPitPads.position.y;
-                tr.toPadY = spec.padY - (map.padInitialY || 0);
+                tr.toPadY = spec.padY;
+                if (map.meshPitPads.material) {
+                    tr.fromPadCol.copy(map.meshPitPads.material.color);
+                    tr.toPadCol.copy(targetPadAsset.mat.color);
+                    tr.fromPadEm.copy(map.meshPitPads.material.emissive);
+                    tr.toPadEm.copy(targetPadAsset.mat.emissive);
+                    tr.fromPadOp = map.meshPitPads.material.opacity !== undefined ? map.meshPitPads.material.opacity : 1.0;
+                    tr.toPadOp = (targetThemeIdx === 2) ? 0.82 : 1.0;
+                    map.meshPitPads.material.depthWrite = (targetThemeIdx !== 2);
+                    map.meshPitPads.material.emissiveIntensity = targetPadAsset.mat.emissiveIntensity || 0.45;
+                }
+            }
+            if (map.meshPitAccents && window.GLOBAL_PIT_ACCENT_ASSETS && window.GLOBAL_PIT_ACCENT_ASSETS[targetThemeIdx]) {
+                const targetAccentAsset = window.GLOBAL_PIT_ACCENT_ASSETS[targetThemeIdx];
+                map.meshPitAccents.geometry = targetAccentAsset.geo;
+                if (map.meshPitAccents.material) {
+                    tr.fromAccentCol.copy(map.meshPitAccents.material.color);
+                    tr.toAccentCol.copy(targetAccentAsset.mat.color);
+                    tr.fromAccentEm.copy(map.meshPitAccents.material.emissive);
+                    tr.toAccentEm.copy(targetAccentAsset.mat.emissive);
+                    map.meshPitAccents.material.emissiveIntensity = targetAccentAsset.mat.emissiveIntensity || 0.70;
+                }
             }
         }
 
@@ -10873,6 +11308,18 @@ startGame(diffMult) {
             }
             if (map.meshPitPads) {
                 map.meshPitPads.position.y = tr.fromPadY + (tr.toPadY - tr.fromPadY) * t;
+                if (map.meshPitPads.material) {
+                    map.meshPitPads.material.color.copy(tr.fromPadCol).lerp(tr.toPadCol, t);
+                    map.meshPitPads.material.emissive.copy(tr.fromPadEm).lerp(tr.toPadEm, t);
+                    map.meshPitPads.material.opacity = tr.fromPadOp + (tr.toPadOp - tr.fromPadOp) * t;
+                }
+            }
+            if (map.meshPitAccents) {
+                map.meshPitAccents.position.y = tr.fromPadY + (tr.toPadY - tr.fromPadY) * t;
+                if (map.meshPitAccents.material) {
+                    map.meshPitAccents.material.color.copy(tr.fromAccentCol).lerp(tr.toAccentCol, t);
+                    map.meshPitAccents.material.emissive.copy(tr.fromAccentEm).lerp(tr.toAccentEm, t);
+                }
             }
         }
 
@@ -14492,22 +14939,10 @@ class GameMap {
                             const wx = p.px + p.mx * padDist, wz = p.pz + p.mz * padDist;
                             if (isPitAt(Math.floor(wx / TILE_SIZE), Math.floor(wz / TILE_SIZE))) {
                                 padSpawns.push({ x: wx, z: wz, scale: 0.72 + h2 * 0.52, rot: h1 * Math.PI * 2 });
-                                if (themeIdx === 0 && h2 > 0.52) {
-                                    accentSpawns.push({ x: wx, y: -16.85, z: wz, scale: 0.78 + h1 * 0.38, rot: h2 * Math.PI * 2, tiltX: 0, tiltZ: 0 });
+                                if (h2 > 0.52) {
+                                    accentSpawns.push({ x: wx, y: 0.27, z: wz, scale: 0.78 + h1 * 0.38, rot: h2 * Math.PI * 2, tiltX: 0, tiltZ: 0 });
                                 }
                             }
-                        }
-
-                        if (themeIdx !== 0 && p.isCorner && h2 < 0.48) {
-                            accentSpawns.push({
-                                x: p.px + p.mx * 4.4,
-                                y: (themeIdx === 2) ? -4.4 : -7.8,
-                                z: p.pz + p.mz * 4.4,
-                                scale: 0.78 + h1 * 0.42,
-                                rot: Math.atan2(p.nx, p.nz),
-                                tiltX: 0.34,
-                                tiltZ: (h1 - 0.5) * 0.34
-                            });
                         }
                     }
                 }
@@ -14739,6 +15174,7 @@ class GameMap {
 
                 const meshShoreFoam = new THREE.Mesh(shoreGeo, shoreMat);
                 meshShoreFoam.renderOrder = 3;
+                this.shoreInitialY = (themeIdx === 2) ? -8.38 : (themeIdx === 0 ? -17.26 : -17.35);
                 this.meshShoreFoam = meshShoreFoam;
                 this.mapGroup.add(meshShoreFoam);
             }
@@ -14793,32 +15229,80 @@ class GameMap {
 
             const tempObj = new THREE.Object3D();
             const PropMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
-            if (padSpawns.length > 0) {
-                if (!window.GLOBAL_PIT_PAD_ASSETS) window.GLOBAL_PIT_PAD_ASSETS = {};
-                if (!window.GLOBAL_PIT_PAD_ASSETS[themeIdx]) {
+            if (!window.GLOBAL_PIT_PAD_ASSETS) {
+                window.GLOBAL_PIT_PAD_ASSETS = {};
+                for (let pIdx = 0; pIdx < 3; pIdx++) {
                     let padGeo, padMat;
-                    if (themeIdx === 0) {
+                    if (pIdx === 0) {
                         padGeo = new THREE.CylinderGeometry(8.5, 8.0, 0.6, 9, 1, false, 0.42, Math.PI * 2 - 0.84);
-                        padMat = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, roughness: 0.65, flatShading: true });
-                    } else if (themeIdx === 1) {
+                        padMat = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true });
+                    } else if (pIdx === 1) {
                         padGeo = new THREE.CylinderGeometry(7.0, 9.2, 1.3, 6);
-                        padMat = new PropMatClass({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.6, roughness: 0.9, flatShading: true });
+                        padMat = new PropMatClass({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.60, roughness: 0.9, flatShading: true });
                     } else {
                         padGeo = new THREE.CylinderGeometry(8.0, 8.5, 0.45, 6);
                         padMat = new PropMatClass({ color: 0x9ec4db, emissive: 0x103554, emissiveIntensity: 0.16, roughness: 0.42, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.82, depthWrite: false });
                     }
+                    padGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
                     padGeo._isGlobalCached = true;
                     padMat._isGlobalCached = true;
-                    window.GLOBAL_PIT_PAD_ASSETS[themeIdx] = { geo: padGeo, mat: padMat };
+                    window.GLOBAL_PIT_PAD_ASSETS[pIdx] = { geo: padGeo, mat: padMat };
                 }
-                const { geo: padGeo, mat: padMat } = window.GLOBAL_PIT_PAD_ASSETS[themeIdx];
-                const meshPitPads = new THREE.InstancedMesh(padGeo, padMat, padSpawns.length);
+                window.GLOBAL_PIT_PAD_DYNAMIC_MAT = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true, transparent: true, opacity: 1.0 });
+                window.GLOBAL_PIT_PAD_DYNAMIC_MAT._isGlobalCached = true;
+            }
+            if (!window.GLOBAL_PIT_ACCENT_ASSETS) {
+                window.GLOBAL_PIT_ACCENT_ASSETS = {};
+                for (let aIdx = 0; aIdx < 3; aIdx++) {
+                    let accentGeo, accentMat;
+                    if (aIdx === 0) {
+                        let petals = new THREE.ConeGeometry(3.6, 2.8, 5); petals.rotateX(Math.PI); petals.translate(0, 1.2, 0);
+                        let bud = new THREE.DodecahedronGeometry(1.7, 0); bud.translate(0, 1.7, 0);
+                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([petals.toNonIndexed(), bud.toNonIndexed()]);
+                        petals.dispose(); bud.dispose();
+                        accentMat = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
+                    } else if (aIdx === 1) {
+                        let s1 = new THREE.ConeGeometry(3.2, 11.5, 5); s1.translate(0, 5.0, 0); s1.rotateZ(0.18);
+                        let s2 = new THREE.ConeGeometry(2.2, 8.0, 5); s2.translate(-2.0, 3.4, 1.1); s2.rotateZ(-0.28);
+                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([s1.toNonIndexed(), s2.toNonIndexed()]);
+                        s1.dispose(); s2.dispose();
+                        accentMat = new PropMatClass({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
+                    } else {
+                        let c1 = new THREE.CylinderGeometry(0.3, 2.4, 11.5, 6); c1.translate(0, 5.0, 0); c1.rotateZ(0.16);
+                        let c2 = new THREE.CylinderGeometry(0.25, 1.8, 8.5, 6); c2.translate(-2.0, 3.6, 1.2); c2.rotateZ(-0.32); c2.rotateX(0.22);
+                        let c3 = new THREE.CylinderGeometry(0.25, 1.6, 7.5, 6); c3.translate(1.8, 3.2, -1.1); c3.rotateZ(0.35); c3.rotateX(-0.20);
+                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([c1.toNonIndexed(), c2.toNonIndexed(), c3.toNonIndexed()]);
+                        c1.dispose(); c2.dispose(); c3.dispose();
+                        accentMat = new PropMatClass({ color: 0x9ad8eb, emissive: 0x1499b8, emissiveIntensity: 0.45, roughness: 0.30, metalness: 0.2, flatShading: true });
+                    }
+                    accentGeo.computeVertexNormals();
+                    accentGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
+                    accentGeo._isGlobalCached = true;
+                    accentMat._isGlobalCached = true;
+                    window.GLOBAL_PIT_ACCENT_ASSETS[aIdx] = { geo: accentGeo, mat: accentMat };
+                }
+                window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
+                window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT._isGlobalCached = true;
+            }
+
+            const padY = (themeIdx === 2) ? -8.25 : -17.12;
+            this.padInitialY = padY;
+            if (padSpawns.length > 0) {
+                const { geo: padGeo, mat: refPadMat } = window.GLOBAL_PIT_PAD_ASSETS[themeIdx];
+                const dynPadMat = window.GLOBAL_PIT_PAD_DYNAMIC_MAT;
+                dynPadMat.color.copy(refPadMat.color);
+                dynPadMat.emissive.copy(refPadMat.emissive);
+                dynPadMat.emissiveIntensity = refPadMat.emissiveIntensity || 0.45;
+                dynPadMat.opacity = (themeIdx === 2) ? 0.82 : 1.0;
+                dynPadMat.depthWrite = (themeIdx !== 2);
+
+                const meshPitPads = new THREE.InstancedMesh(padGeo, dynPadMat, padSpawns.length);
                 meshPitPads.receiveShadow = true;
                 meshPitPads.renderOrder = 4;
-                const padY = (themeIdx === 2) ? -8.25 : -17.12;
+                meshPitPads.position.y = padY;
                 for (let i = 0; i < padSpawns.length; i++) {
                     const ps = padSpawns[i];
-                    tempObj.position.set(ps.x, padY, ps.z);
+                    tempObj.position.set(ps.x, 0, ps.z);
                     tempObj.rotation.set(0, ps.rot, 0);
                     tempObj.scale.set(ps.scale, 1, ps.scale);
                     tempObj.updateMatrix();
@@ -14830,39 +15314,17 @@ class GameMap {
             }
 
             if (accentSpawns.length > 0) {
-                if (!window.GLOBAL_PIT_ACCENT_ASSETS) window.GLOBAL_PIT_ACCENT_ASSETS = {};
-                if (!window.GLOBAL_PIT_ACCENT_ASSETS[themeIdx]) {
-                    let accentGeo, accentMat;
-                    if (themeIdx === 0) {
-                        let petals = new THREE.ConeGeometry(3.6, 2.8, 5); petals.rotateX(Math.PI); petals.translate(0, 1.2, 0);
-                        let bud = new THREE.DodecahedronGeometry(1.7, 0); bud.translate(0, 1.7, 0);
-                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([petals.toNonIndexed(), bud.toNonIndexed()]);
-                        petals.dispose(); bud.dispose();
-                        accentMat = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
-                    } else if (themeIdx === 1) {
-                        let s1 = new THREE.ConeGeometry(3.2, 14, 5); s1.translate(0, 6, 0); s1.rotateZ(0.18);
-                        let s2 = new THREE.ConeGeometry(2.2, 9.5, 5); s2.translate(-2.2, 4, 1.2); s2.rotateZ(-0.28);
-                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([s1.toNonIndexed(), s2.toNonIndexed()]);
-                        s1.dispose(); s2.dispose();
-                        accentMat = new PropMatClass({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
-                    } else {
-                        let c1 = new THREE.CylinderGeometry(0.3, 2.6, 15, 6); c1.translate(0, 6.5, 0); c1.rotateZ(0.16);
-                        let c2 = new THREE.CylinderGeometry(0.25, 1.9, 10.5, 6); c2.translate(-2.2, 4.5, 1.4); c2.rotateZ(-0.32); c2.rotateX(0.22);
-                        let c3 = new THREE.CylinderGeometry(0.25, 1.7, 9.0, 6); c3.translate(2.0, 3.8, -1.2); c3.rotateZ(0.35); c3.rotateX(-0.20);
-                        accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([c1.toNonIndexed(), c2.toNonIndexed(), c3.toNonIndexed()]);
-                        c1.dispose(); c2.dispose(); c3.dispose();
-                        accentMat = new PropMatClass({ color: 0x9ad8eb, emissive: 0x1499b8, emissiveIntensity: 0.45, roughness: 0.30, metalness: 0.2, flatShading: true });
-                    }
-                    accentGeo.computeVertexNormals();
-                    accentGeo._isGlobalCached = true;
-                    accentMat._isGlobalCached = true;
-                    window.GLOBAL_PIT_ACCENT_ASSETS[themeIdx] = { geo: accentGeo, mat: accentMat };
-                }
-                const { geo: accentGeo, mat: accentMat } = window.GLOBAL_PIT_ACCENT_ASSETS[themeIdx];
-                const meshPitAccents = new THREE.InstancedMesh(accentGeo, accentMat, accentSpawns.length);
+                const { geo: accentGeo, mat: refAccentMat } = window.GLOBAL_PIT_ACCENT_ASSETS[themeIdx];
+                const dynAccentMat = window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT;
+                dynAccentMat.color.copy(refAccentMat.color);
+                dynAccentMat.emissive.copy(refAccentMat.emissive);
+                dynAccentMat.emissiveIntensity = refAccentMat.emissiveIntensity || 0.70;
+
+                const meshPitAccents = new THREE.InstancedMesh(accentGeo, dynAccentMat, accentSpawns.length);
                 meshPitAccents.castShadow = AppSettings.shadowsEnabled;
                 meshPitAccents.receiveShadow = true;
                 meshPitAccents.renderOrder = 5;
+                meshPitAccents.position.y = padY;
                 for (let i = 0; i < accentSpawns.length; i++) {
                     const as = accentSpawns[i];
                     tempObj.position.set(as.x, as.y, as.z);
@@ -14872,6 +15334,7 @@ class GameMap {
                     meshPitAccents.setMatrixAt(i, tempObj.matrix);
                 }
                 meshPitAccents.instanceMatrix.needsUpdate = true;
+                this.meshPitAccents = meshPitAccents;
                 this.mapGroup.add(meshPitAccents);
             }
         }
