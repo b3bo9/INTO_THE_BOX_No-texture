@@ -971,269 +971,538 @@ body.colorblind-mode #opt-colorblind-text {
             overflow: hidden !important;
         }
 
-        /* --- DISPOSIZIONE TASTI E JOYSTICK IN MODALITÀ ORIZZONTALE (Stile Brawl Stars / Soul Knight) --- */
-        body.mobile-landscape #joy-left-zone {
-            bottom: 18px !important;
-            left: max(22px, env(safe-area-inset-left, 18px)) !important;
-            width: 108px !important;
-            height: 108px !important;
+        /* Posizionamento desktop PC (mouse/tastiera, non-touch) quando non in mobile-landscape */
+        @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+            body:not(.mobile-landscape) #hud #btn-dash {
+                bottom: 32px !important;
+                right: 176px !important;
+            }
+            body:not(.mobile-landscape) #hud #btn-shield {
+                bottom: 32px !important;
+                right: 104px !important;
+            }
+            body:not(.mobile-landscape) #hud #btn-ult {
+                bottom: 32px !important;
+                right: 32px !important;
+            }
         }
-        body.mobile-landscape #joy-right-zone {
-            bottom: 18px !important;
-            right: max(24px, env(safe-area-inset-right, 18px)) !important;
-            width: 108px !important;
-            height: 108px !important;
+
+        /* --- DISPOSIZIONE TASTI E JOYSTICK IN MODALITÀ ORIZZONTALE (Allineati al pixel, zero sovrapposizioni) --- */
+        html body.mobile-landscape #mobile-controls #joy-left-zone {
+            bottom: 16px !important;
+            left: 20px !important;
+            right: auto !important;
+            top: auto !important;
+            width: 100px !important;
+            height: 100px !important;
+            margin: 0 !important;
         }
-        /* Arco ergonomico attorno al pollice destro: Dash (basso-sx), Shield (diagonale alto-sx), Ultimate (alto) */
-        body.mobile-landscape #btn-dash {
-            bottom: 14px !important;
-            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 124px) !important;
-            width: 52px !important;
-            height: 52px !important;
+        html body.mobile-landscape #mobile-controls #joy-right-zone {
+            bottom: 16px !important;
+            right: 20px !important;
+            left: auto !important;
+            top: auto !important;
+            width: 100px !important;
+            height: 100px !important;
+            margin: 0 !important;
         }
-        body.mobile-landscape #btn-shield {
-            bottom: 76px !important;
-            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 110px) !important;
-            width: 52px !important;
-            height: 52px !important;
+        /* Griglia perfettamente allineata a sinistra del joystick destro (con ampio margine di sicurezza per l'escursione dello stick) */
+        html body.mobile-landscape #hud #btn-dash {
+            bottom: 16px !important;
+            right: 148px !important;
+            left: auto !important;
+            top: auto !important;
+            width: 46px !important;
+            height: 46px !important;
+            margin: 0 !important;
         }
-        body.mobile-landscape #btn-ult {
-            bottom: 132px !important;
-            right: calc(max(24px, env(safe-area-inset-right, 18px)) + 54px) !important;
-            width: 54px !important;
-            height: 54px !important;
+        html body.mobile-landscape #hud #btn-shield {
+            bottom: 70px !important;
+            right: 148px !important;
+            left: auto !important;
+            top: auto !important;
+            width: 46px !important;
+            height: 46px !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #hud #btn-ult {
+            bottom: 16px !important;
+            right: 202px !important;
+            left: auto !important;
+            top: auto !important;
+            width: 46px !important;
+            height: 46px !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #hud #btn-dash i,
+        html body.mobile-landscape #hud #btn-shield i,
+        html body.mobile-landscape #hud #btn-ult i {
+            font-size: 1.2rem !important;
         }
 
         /* --- HUD IN-GAME COMPATTO PER SCHERMO ORIZZONTALE --- */
-        body.mobile-landscape #hud > div:nth-child(2) {
+        html body.mobile-landscape #hud > div:nth-child(1) {
             top: 8px !important;
-            left: max(12px, env(safe-area-inset-left, 10px)) !important;
+            right: 14px !important;
+            left: auto !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #hud > div:nth-child(2) {
+            top: 8px !important;
+            left: 14px !important;
+            right: auto !important;
             flex-direction: row !important;
             align-items: stretch !important;
             width: auto !important;
-            max-width: 66% !important;
-            gap: 8px !important;
-        }
-        body.mobile-landscape #hud-vitals-card {
-            padding: 6px 10px !important;
-            gap: 8px !important;
-            min-width: 196px !important;
-        }
-        body.mobile-landscape #hud-level-badge {
-            width: 38px !important;
-            height: 38px !important;
-        }
-        body.mobile-landscape #ui-level {
-            font-size: 0.85rem !important;
-        }
-        body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2) {
-            width: 205px !important;
+            max-width: 62% !important;
             gap: 6px !important;
+            margin: 0 !important;
         }
-        body.mobile-landscape #hud > div:nth-child(1) {
-            top: 8px !important;
-            right: max(12px, env(safe-area-inset-right, 10px)) !important;
+        html body.mobile-landscape #hud-vitals-card {
+            padding: 5px 9px !important;
+            gap: 7px !important;
+            min-width: 184px !important;
         }
-        /* Sposta Combo ed Essenze in alto accanto a FPS/Pausa per non coprire mai il tasto Ultimate */
-        body.mobile-landscape #hud > div:nth-child(3) {
-            top: 8px !important;
-            right: calc(max(12px, env(safe-area-inset-right, 10px)) + 136px) !important;
-            flex-direction: row-reverse !important;
-            align-items: flex-start !important;
-            gap: 6px !important;
-            transform: scale(0.84) !important;
+        html body.mobile-landscape #hud-level-badge {
+            width: 36px !important;
+            height: 36px !important;
+        }
+        html body.mobile-landscape #ui-level {
+            font-size: 0.82rem !important;
+        }
+        html body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2) {
+            width: 192px !important;
+            gap: 5px !important;
+        }
+        /* Riquadro Combo ed Essenze disposto A DESTRA sotto i tasti FPS/Pausa, esattamente come sul verticale */
+        html body.mobile-landscape #hud > div:nth-child(3) {
+            top: 46px !important;
+            right: 14px !important;
+            left: auto !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            gap: 5px !important;
+            margin: 0 !important;
+            transform: scale(0.78) !important;
             transform-origin: top right !important;
         }
 
         /* --- MENU PRINCIPALE IN MODALITÀ ORIZZONTALE --- */
-        body.mobile-landscape #mainMenu > div.z-10 {
+        html body.mobile-landscape #mainMenu > div.z-10 {
             padding: 8px 18px !important;
         }
-        body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub {
-            font-size: 1.55rem !important;
+        html body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub {
+            font-size: 1.5rem !important;
         }
-        body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word {
-            font-size: 2.35rem !important;
+        html body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word {
+            font-size: 2.25rem !important;
             margin-top: 2px !important;
         }
-        body.mobile-landscape #mainMenu > div.z-10 > div:last-child {
-            max-width: 540px !important;
-            gap: 6px !important;
+        html body.mobile-landscape #mainMenu > div.z-10 > div:last-child {
+            max-width: 520px !important;
+            gap: 5px !important;
             margin-bottom: 2px !important;
         }
-        body.mobile-landscape #mainMenu #btn-menu-skins {
-            padding: 6px 10px !important;
+        html body.mobile-landscape #mainMenu #btn-menu-skins {
+            padding: 5px 10px !important;
         }
-        body.mobile-landscape #mainMenu #menu-skin-frame {
-            width: 34px !important;
+        html body.mobile-landscape #mainMenu #menu-skin-frame {
+            width: 32px !important;
+            height: 32px !important;
+        }
+        html body.mobile-landscape #mainMenu .anim-play-pulse {
+            padding-top: 7px !important;
+            padding-bottom: 7px !important;
+            font-size: 1.15rem !important;
+        }
+        html body.mobile-landscape #mainMenu .grid-cols-3 button {
             height: 34px !important;
-        }
-        body.mobile-landscape #mainMenu .anim-play-pulse {
-            padding-top: 8px !important;
-            padding-bottom: 8px !important;
-            font-size: 1.25rem !important;
-        }
-        body.mobile-landscape #mainMenu .grid-cols-3 button {
-            height: 36px !important;
         }
 
         /* --- MODALI (OPZIONI, INFO, SKIN, PAUSA, CLASSIFICA, RELIQUIE) IN MODALITÀ ORIZZONTALE --- */
-        body.mobile-landscape #optionsModal .modal-enter,
-        body.mobile-landscape #infoModal .modal-enter,
-        body.mobile-landscape #skinModal .modal-enter,
-        body.mobile-landscape #highScoreScreen .modal-enter,
-        body.mobile-landscape #collectedRelicsModal .modal-enter,
-        body.mobile-landscape #reforgeSelectModal .modal-enter {
+        html body.mobile-landscape #optionsModal .modal-enter,
+        html body.mobile-landscape #infoModal .modal-enter,
+        html body.mobile-landscape #skinModal .modal-enter,
+        html body.mobile-landscape #highScoreScreen .modal-enter,
+        html body.mobile-landscape #collectedRelicsModal .modal-enter,
+        html body.mobile-landscape #reforgeSelectModal .modal-enter {
             max-width: 650px !important;
             max-height: 94% !important;
-            padding: 10px 14px !important;
+            padding: 8px 14px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter {
+        html body.mobile-landscape #pauseModal .modal-enter {
             max-width: 460px !important;
-            padding: 12px 16px !important;
+            padding: 10px 16px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter > div:first-child {
-            margin-bottom: 10px !important;
+        html body.mobile-landscape #pauseModal .modal-enter > div:first-child {
+            margin-bottom: 8px !important;
             padding: 6px 12px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter > div:last-child {
+        html body.mobile-landscape #pauseModal .modal-enter > div:last-child {
             flex-direction: row !important;
             gap: 8px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter > div:last-child button {
+        html body.mobile-landscape #pauseModal .modal-enter > div:last-child button {
             margin-top: 0 !important;
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
+            padding-top: 9px !important;
+            padding-bottom: 9px !important;
         }
-        body.mobile-landscape #optionsModal .space-y-2.5 {
+        html body.mobile-landscape #optionsModal .space-y-2.5 {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 6px !important;
         }
-        body.mobile-landscape #optionsModal .space-y-2.5 > * {
+        html body.mobile-landscape #optionsModal .space-y-2.5 > * {
             margin-top: 0 !important;
-            padding-top: 7px !important;
-            padding-bottom: 7px !important;
-        }
-        body.mobile-landscape #optionsModal .modal-enter > button:last-child,
-        body.mobile-landscape #infoModal .modal-enter > button:last-child,
-        body.mobile-landscape #skinModal .modal-enter > button:last-child,
-        body.mobile-landscape #highScoreScreen .modal-enter > button:last-child {
-            margin-top: 8px !important;
-            padding-top: 8px !important;
-            padding-bottom: 8px !important;
-            min-height: 38px !important;
-        }
-        body.mobile-landscape #infoModal .space-y-2.5 {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 6px !important;
-        }
-        body.mobile-landscape #infoModal .space-y-2.5 > * {
-            margin-top: 0 !important;
-            padding: 6px 8px !important;
-        }
-        body.mobile-landscape #skinListContainer {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-        }
-        body.mobile-landscape #collectedRelicsGrid,
-        body.mobile-landscape #reforgeSelectGrid {
-            grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
-            max-height: 120px !important;
-        }
-
-        /* --- FORGIA DELL'ASCESA (#floorScreen) E RELIQUIE (#relicScreen) IN ORIZZONTALE --- */
-        body.mobile-landscape #shop-main-wrap,
-        body.mobile-landscape #relic-main-wrap {
-            max-width: 760px !important;
-            padding: 6px 14px !important;
-        }
-        body.mobile-landscape #shop-main-wrap > div:first-child,
-        body.mobile-landscape #relic-main-wrap > div:first-child > div > div {
-            padding: 5px 12px !important;
-        }
-        body.mobile-landscape #shop-inspector {
-            min-height: 44px !important;
-            padding: 5px 10px !important;
-            margin: 3px 0 !important;
-        }
-        body.mobile-landscape #shop-tree-container {
-            min-height: 135px !important;
-            max-height: 46vh !important;
-            margin: 2px 0 !important;
-        }
-        body.mobile-landscape #shop-main-wrap > div:last-child {
-            flex-direction: row !important;
-            align-items: stretch !important;
-            gap: 8px !important;
-            margin-top: 2px !important;
-        }
-        body.mobile-landscape #shop-main-wrap > div:last-child > div.grid {
-            flex: 1.1 !important;
-        }
-        body.mobile-landscape #shop-main-wrap > div:last-child > div.grid button,
-        body.mobile-landscape #btn-next-floor {
-            min-height: 38px !important;
             padding-top: 6px !important;
             padding-bottom: 6px !important;
         }
-        body.mobile-landscape #btn-next-floor {
-            flex: 1.4 !important;
+        html body.mobile-landscape #optionsModal .modal-enter > button:last-child,
+        html body.mobile-landscape #infoModal .modal-enter > button:last-child,
+        html body.mobile-landscape #skinModal .modal-enter > button:last-child,
+        html body.mobile-landscape #highScoreScreen .modal-enter > button:last-child {
+            margin-top: 6px !important;
+            padding-top: 7px !important;
+            padding-bottom: 7px !important;
+            min-height: 36px !important;
         }
-        body.mobile-landscape #relicCardsContainer .relic-card {
-            padding: 6px !important;
+        html body.mobile-landscape #infoModal .space-y-2.5 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
         }
-        body.mobile-landscape #relicCardsContainer .relic-icon-frame {
-            width: 42px !important;
-            height: 42px !important;
-            margin-bottom: 4px !important;
+        html body.mobile-landscape #infoModal .space-y-2.5 > * {
+            margin-top: 0 !important;
+            padding: 6px 8px !important;
         }
-        body.mobile-landscape #reforgeSection {
-            min-height: 62px !important;
-            padding: 6px 10px !important;
-            margin: 2px 0 !important;
-            gap: 4px !important;
+        html body.mobile-landscape #skinListContainer {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
         }
-        body.mobile-landscape #btn-select-reforge {
-            width: 42px !important;
-            height: 42px !important;
-        }
-        body.mobile-landscape #btn-proceed-relic {
-            min-height: 38px !important;
-            padding: 6px 12px !important;
+        html body.mobile-landscape #collectedRelicsGrid,
+        html body.mobile-landscape #reforgeSelectGrid {
+            grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+            max-height: 115px !important;
         }
 
-        /* --- SCHERMATA MORTE (#deathScreen) IN ORIZZONTALE --- */
-        body.mobile-landscape #deathScreen > div.z-10 {
+        /* --- FORGIA DELL'ASCESA (#floorScreen): 5 PERCORSI ORIZZONTALI SOLO NELLA VERSIONE ORIZZONTALE --- */
+        @keyframes bubble-rise-horiz {
+            0% { transform: translateX(0) scale(0.6); opacity: 0; }
+            20% { opacity: 0.95; }
+            80% { opacity: 0.85; }
+            100% { transform: translateX(150px) scale(1.2); opacity: 0; }
+        }
+        @keyframes pillar-surge-right {
+            0% { transform: translateX(-100%) scaleX(0.4); opacity: 1; }
+            100% { transform: translateX(120%) scaleX(1.6); opacity: 0; }
+        }
+        html body.mobile-landscape #shop-main-wrap {
+            display: grid !important;
+            grid-template-columns: 40% minmax(0, 1fr) !important;
+            grid-template-rows: auto minmax(0, 1fr) auto !important;
+            gap: 4px 8px !important;
+            max-width: 820px !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 6px 14px !important;
+            align-items: stretch !important;
+        }
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) {
+            grid-column: 1 / 2 !important;
+            grid-row: 1 / 2 !important;
+            padding: 4px 10px !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) h1 {
+            font-size: 0.95rem !important;
+            margin-top: 1px !important;
+        }
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(1) #shop-coins {
+            font-size: 1.05rem !important;
+        }
+        html body.mobile-landscape #shop-inspector {
+            grid-column: 2 / 3 !important;
+            grid-row: 1 / 2 !important;
+            min-height: 0 !important;
+            padding: 4px 10px !important;
+            margin: 0 !important;
+            gap: 8px !important;
+        }
+        html body.mobile-landscape #shop-insp-icon-wrap {
+            width: 32px !important;
+            height: 32px !important;
+        }
+        html body.mobile-landscape #shop-insp-title {
+            font-size: 11px !important;
+        }
+        html body.mobile-landscape #shop-insp-desc {
+            font-size: 9.5px !important;
+            line-height: 1.15 !important;
+            margin-top: 1px !important;
+        }
+        /* Contenitore dei 5 percorsi: disposti in 5 corsie orizzontali dall'alto al basso */
+        html body.mobile-landscape #shop-tree-container {
+            grid-column: 1 / -1 !important;
+            grid-row: 2 / 3 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            height: 100% !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #floorScreen .totem-pillar {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
             flex-direction: row !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 10px 20px !important;
-            gap: 14px !important;
+            padding: 2px 8px !important;
+            gap: 6px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(90deg, var(--c-bg-bot) 0%, rgba(15, 20, 36, 0.90) 50%, var(--c-bg-top) 100%) !important;
         }
-        body.mobile-landscape #deathScreen > div.z-10 > div:first-child {
-            max-width: 46% !important;
-            align-items: flex-start !important;
-            text-align: left !important;
+        /* 1. Etichetta statistica a sinistra */
+        html body.mobile-landscape #floorScreen .totem-label {
+            order: 1 !important;
+            width: 82px !important;
+            min-width: 82px !important;
+            justify-content: flex-start !important;
+            gap: 5px !important;
+            margin: 0 !important;
+            padding-left: 2px !important;
+            flex-shrink: 0 !important;
         }
-        body.mobile-landscape #deathTitle {
-            font-size: 2.8rem !important;
+        html body.mobile-landscape #floorScreen .totem-label i {
+            font-size: 12px !important;
         }
-        body.mobile-landscape #deathScreen > div.z-10 > div:nth-child(2) {
+        html body.mobile-landscape #floorScreen .totem-label span {
+            font-size: 10px !important;
+        }
+        /* 2. Condotto al plasma orizzontale al centro (da sinistra a destra) */
+        html body.mobile-landscape #floorScreen .pillar-chamber {
+            order: 2 !important;
+            flex: 1 1 0% !important;
+            width: auto !important;
+            height: 18px !important;
+            min-height: 18px !important;
+            max-height: 20px !important;
+            margin: 0 6px !important;
+        }
+        html body.mobile-landscape #floorScreen .chamber-inner-track {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+        }
+        html body.mobile-landscape #floorScreen .plasma-fill {
+            width: var(--fill-pct, 0%) !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, var(--c-main) 0%, var(--c-dark) 45%, var(--c-main) 86%, #ffffff 100%) !important;
+            background-size: 200% 100% !important;
+            transition: width 0.42s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        }
+        html body.mobile-landscape #floorScreen .plasma-fill::after {
+            top: 0 !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 4px !important;
+            height: 100% !important;
+        }
+        html body.mobile-landscape #floorScreen .plasma-bubble {
+            left: 2px !important;
+            bottom: auto !important;
+            top: var(--pos, 50%) !important;
+            animation-name: bubble-rise-horiz !important;
+        }
+        html body.mobile-landscape #floorScreen .surge-wave {
+            background: linear-gradient(90deg, transparent 0%, var(--c-main) 25%, #ffffff 55%, transparent 100%) !important;
+        }
+        html body.mobile-landscape #floorScreen .surge-wave.active {
+            animation: pillar-surge-right 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+        html body.mobile-landscape #floorScreen .chamber-steps-wrap {
+            flex-direction: row-reverse !important;
+        }
+        html body.mobile-landscape #floorScreen .chamber-step {
+            width: auto !important;
+            height: 100% !important;
+            flex: 1 1 0% !important;
+            border-bottom: none !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.16) !important;
+        }
+        html body.mobile-landscape #floorScreen .chamber-step.lit {
+            border-right-color: rgba(255, 255, 255, 0.45) !important;
+        }
+        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        html body.mobile-landscape #floorScreen .totem-mid-node .mastery-orb i {
+            font-size: 11px !important;
+        }
+        /* 3. Medaglione Grado 10 alla fine destra del condotto */
+        html body.mobile-landscape #floorScreen .totem-top-node {
+            order: 3 !important;
+            margin: 0 4px 0 -10px !important;
+            flex-shrink: 0 !important;
+        }
+        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb {
+            width: 29px !important;
+            height: 29px !important;
+        }
+        html body.mobile-landscape #floorScreen .totem-top-node .mastery-orb i {
+            font-size: 12px !important;
+        }
+        /* 4. Pulsante Acquisto allineato a destra */
+        html body.mobile-landscape #floorScreen .pillar-buy-btn {
+            order: 4 !important;
+            width: 72px !important;
+            min-width: 72px !important;
+            height: 29px !important;
+            padding: 0 8px !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+        }
+        /* Bottoni azione in basso nella Forgia in orizzontale (nessun taglio) */
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(4) {
+            grid-column: 1 / -1 !important;
+            grid-row: 3 / 4 !important;
+            flex-direction: row !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            margin: 0 !important;
+        }
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(4) > div.grid {
+            flex: 1.05 !important;
+        }
+        html body.mobile-landscape #shop-main-wrap > div:nth-child(4) > div.grid button {
+            min-height: 35px !important;
+            max-height: 38px !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+        }
+        html body.mobile-landscape #btn-next-floor {
+            flex: 1.35 !important;
+            min-height: 35px !important;
+            max-height: 38px !important;
+            padding: 4px 12px !important;
+            font-size: 0.85rem !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+        }
+        html body.mobile-landscape #btn-next-floor > span {
+            margin-top: 0 !important;
+            font-size: 9px !important;
+        }
+
+        /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE --- */
+        html body.mobile-landscape #relic-main-wrap {
+            max-width: 780px !important;
+            padding: 5px 14px !important;
+            gap: 4px !important;
+        }
+        html body.mobile-landscape #relic-main-wrap > div:first-child > div > div {
+            padding: 4px 12px !important;
+        }
+        html body.mobile-landscape #relicCardsContainer {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            margin: 2px 0 !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-card {
+            padding: 6px !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-icon-frame {
+            width: 38px !important;
+            height: 38px !important;
+            margin-bottom: 3px !important;
+        }
+        html body.mobile-landscape #reforgeSection {
+            min-height: 52px !important;
+            padding: 4px 10px !important;
+            margin: 1px 0 !important;
+            gap: 2px !important;
+        }
+        html body.mobile-landscape #reforgeSection > div:first-child {
+            padding-bottom: 2px !important;
+        }
+        html body.mobile-landscape #btn-select-reforge {
+            width: 38px !important;
+            height: 38px !important;
+        }
+        html body.mobile-landscape #btn-proceed-relic {
+            min-height: 34px !important;
+            padding: 5px 12px !important;
+        }
+
+        /* --- SCHERMATA SEI CADUTO / MORTE (#deathScreen) IN ORIZZONTALE --- */
+        html body.mobile-landscape #death-ui-wrap {
+            padding: 6px 18px !important;
+        }
+        html body.mobile-landscape #death-header-panel {
+            margin-top: 0 !important;
+            max-width: 720px !important;
+        }
+        html body.mobile-landscape #deathTitle {
+            font-size: 2.1rem !important;
+            margin-bottom: 2px !important;
+        }
+        html body.mobile-landscape #deathSubtitle {
+            margin-top: 2px !important;
+            padding: 2px 12px !important;
+            font-size: 10px !important;
+        }
+        html body.mobile-landscape #deathKillerBadge {
+            margin-top: 3px !important;
+            padding: 2px 10px !important;
+            font-size: 10px !important;
+        }
+        html body.mobile-landscape #deathQuote {
             display: none !important;
         }
-        body.mobile-landscape #deathScreen > div.z-10 > div:last-child {
-            max-width: 340px !important;
-            padding: 10px 12px !important;
-            gap: 6px !important;
+        html body.mobile-landscape #deathMatchStats {
+            margin-top: 3px !important;
+            padding: 3px 8px !important;
+            max-width: 420px !important;
         }
-        body.mobile-landscape #btn-restart,
-        body.mobile-landscape #btn-respawn {
-            min-height: 42px !important;
-            padding: 8px 12px !important;
-            font-size: 0.95rem !important;
+        html body.mobile-landscape #death-action-console {
+            max-width: 620px !important;
+            padding: 6px 10px !important;
+            gap: 6px !important;
+            margin-bottom: 0 !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            align-items: stretch !important;
+            justify-content: center !important;
+        }
+        html body.mobile-landscape #death-action-console #score-save-container {
+            width: 100% !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 0 !important;
+        }
+        html body.mobile-landscape #death-action-console #score-save-container p {
+            white-space: nowrap !important;
+        }
+        html body.mobile-landscape #death-action-console #btn-restart,
+        html body.mobile-landscape #death-action-console #btn-respawn {
+            flex: 1.35 !important;
+            min-height: 38px !important;
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+            width: auto !important;
+        }
+        html body.mobile-landscape #death-action-console > div.grid {
+            flex: 1 !important;
+            width: auto !important;
+        }
+        html body.mobile-landscape #death-action-console > div.grid button {
+            min-height: 38px !important;
+            padding: 6px 10px !important;
         }
     </style>
 </head>
@@ -1492,26 +1761,26 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
     </div>
 <!-- SCHERMATA MORTE (SFONDO NERO PROTETTO E BOTTONI SEMPRE VISIBILI ED ACCESSIBILI) -->
-    <div id="deathScreen" class="absolute inset-0 z-[150] hidden pointer-events-auto overflow-y-auto overflow-x-hidden bg-black select-none">
+    <div id="deathScreen" class="absolute inset-0 z-[150] hidden pointer-events-auto overflow-hidden bg-black select-none">
         <!-- CONTAINER 3D FULLSCREEN -->
-        <div id="death-3d-canvas-container" class="fixed inset-0 w-full h-full z-0 pointer-events-none bg-black"></div>
+        <div id="death-3d-canvas-container" class="absolute inset-0 w-full h-full z-0 pointer-events-none bg-black"></div>
 
         <!-- Vignettatura superiore e inferiore -->
-        <div class="fixed inset-x-0 top-0 h-32 sm:h-40 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-[1]"></div>
-        <div class="fixed inset-x-0 bottom-0 h-44 sm:h-56 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none z-[1]"></div>
+        <div class="absolute inset-x-0 top-0 h-28 sm:h-36 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none z-[1]"></div>
+        <div class="absolute inset-x-0 bottom-0 h-40 sm:h-52 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none z-[1]"></div>
 
         <!-- Alone Magico Rossastro Animato ai Bordi (Leggero, 60 FPS GPU) -->
-        <div class="death-magical-aura fixed inset-0 pointer-events-none z-[2]"></div>
-        <div class="death-magical-aura-pulse fixed inset-0 pointer-events-none z-[3]"></div>
+        <div class="death-magical-aura absolute inset-0 pointer-events-none z-[2]"></div>
+        <div class="death-magical-aura-pulse absolute inset-0 pointer-events-none z-[3]"></div>
 
-        <div class="w-full min-h-full flex flex-col justify-between items-center z-10 px-3 sm:px-6 py-3 sm:py-6 relative pointer-events-none">
-            <!-- HEADER COMPATTO IN ALTO -->
-            <div class="flex flex-col items-center text-center w-full max-w-[600px] shrink-0 mt-1 sm:mt-2 pointer-events-auto">
-                <h1 id="deathTitle" class="text-[11vw] sm:text-7xl md:text-8xl font-display font-black text-red-600 mb-1 drop-shadow-[0_0_30px_rgba(220,38,38,1)] tracking-tighter uppercase whitespace-nowrap leading-none">R I P</h1>
-                <p id="deathSubtitle" class="text-[9px] sm:text-xs md:text-sm font-display font-bold text-red-200 px-4 py-1.5 bg-black/75 rounded-full border border-red-900/60 drop-shadow-[0_0_12px_rgba(220,38,38,0.5)] tracking-widest mt-1.5"></p>
+        <div id="death-ui-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-3 sm:px-5 py-3 sm:py-5 relative pointer-events-none">
+            <!-- HEADER COMPATTO E BEN ADATTATO IN ALTO -->
+            <div id="death-header-panel" class="flex flex-col items-center text-center w-full max-w-[440px] shrink-0 mt-0.5 sm:mt-1 pointer-events-auto">
+                <h1 id="deathTitle" class="text-[8.2vw] sm:text-5xl md:text-6xl font-display font-black text-red-600 mb-0.5 drop-shadow-[0_0_26px_rgba(220,38,38,1)] tracking-wide uppercase whitespace-nowrap leading-none">R I P</h1>
+                <p id="deathSubtitle" class="text-[10px] sm:text-xs font-display font-bold text-red-100 px-3.5 py-1 bg-slate-950/85 rounded-full border border-red-500/55 shadow-[0_0_12px_rgba(220,38,38,0.4)] tracking-wider mt-1 max-w-[94vw] truncate"></p>
                 
                 <!-- BADGE COLPO FATALE & UCCISORE -->
-                <div id="deathKillerBadge" class="flex items-center justify-center gap-2 mt-2 px-3.5 py-1.5 bg-red-950/85 border border-red-600/70 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.45)] text-[10px] sm:text-xs font-bold tracking-wider text-red-100 hidden">
+                <div id="deathKillerBadge" class="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-1.5 px-3 py-1 bg-red-950/90 border border-red-500/65 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] text-[10px] sm:text-xs font-bold tracking-wider text-red-100 max-w-[92vw] hidden">
                     <span class="text-red-400 uppercase text-[9px] sm:text-[10px]"><i class="fa-solid fa-skull mr-1 text-red-500"></i>Colpo di grazia:</span>
                     <span id="deathKillerName" class="font-black text-white drop-shadow-sm"></span>
                     <span class="text-red-600">|</span>
@@ -1519,38 +1788,38 @@ body.colorblind-mode #opt-colorblind-text {
                     <span id="deathFatalDmg" class="font-black text-amber-300 drop-shadow-sm"></span>
                 </div>
 
-                <p id="deathQuote" class="text-[10px] sm:text-xs text-gray-300 italic mt-1.5 max-w-xs sm:max-w-md hidden px-3 drop-shadow-md font-semibold leading-tight"></p>
-                <div id="deathMatchStats" class="grid grid-cols-3 gap-1.5 mt-2 text-[9px] sm:text-[10px] text-gray-300 font-bold tracking-wider hidden bg-black/80 px-2.5 py-2 rounded-xl border border-red-900/40 w-full max-w-[380px]"></div>
+                <p id="deathQuote" class="text-[10px] sm:text-xs text-gray-300 italic mt-1 max-w-xs sm:max-w-md hidden px-2 drop-shadow-md font-semibold leading-tight"></p>
+                <div id="deathMatchStats" class="grid grid-cols-3 gap-1.5 mt-1.5 text-[9px] sm:text-[10px] text-gray-300 font-bold tracking-wider hidden bg-slate-950/90 px-2.5 py-1.5 rounded-xl border border-red-900/50 w-full max-w-[360px]"></div>
             </div>
 
-            <!-- FINESTRA CENTRALE LIBERA PER L'ANIMAZIONE 3D -->
-            <div class="flex-1 w-full min-h-[35px] sm:min-h-[70px] pointer-events-none"></div>
+            <!-- FINESTRA CENTRALE AMPIA E LIBERA PER L'ANIMAZIONE 3D -->
+            <div class="flex-1 w-full min-h-[60px] pointer-events-none"></div>
 
-            <!-- CONSOLE AZIONI IN BASSO (Pulsanti ad alto contrasto, nitidi e reattivi fin dal primo istante) -->
-            <div class="flex flex-col gap-2.5 items-center w-full max-w-[420px] shrink-0 p-3.5 sm:p-4 rounded-2xl border-2 border-red-500/65 bg-slate-950/92 shadow-[0_0_32px_rgba(239,68,68,0.38)] mb-1 sm:mb-2 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
-                <div id="score-save-container" class="w-full flex flex-col gap-1.5 mb-1 hidden">
+            <!-- CONSOLE AZIONI IN BASSO (Allineata, compatta, nessun tasto tagliato o a capo) -->
+            <div id="death-action-console" class="flex flex-col gap-2 items-center w-full max-w-[380px] shrink-0 p-2.5 sm:p-3.5 rounded-2xl border-2 border-red-500/65 bg-slate-950/92 shadow-[0_0_28px_rgba(239,68,68,0.38)] mb-0.5 sm:mb-1 pointer-events-auto" style="pointer-events: auto; opacity: 1; filter: none;">
+                <div id="score-save-container" class="w-full flex flex-col gap-1 mb-0.5 hidden">
                     <p class="text-[9px] sm:text-[10px] text-red-400 font-bold uppercase tracking-widest text-center m-0"><i class="fa-solid fa-pen-fancy"></i> Registra la tua fine</p>
                     <div class="flex gap-2 w-full">
-                        <input type="text" id="playerName" maxlength="10" placeholder="IL TUO NOME..." class="flex-1 min-w-0 bg-black/90 border-2 border-red-700 text-white font-bold text-center py-2.5 focus:outline-none focus:border-red-400 uppercase tracking-widest text-xs transition-all">
-                        <button id="btn-save-score" onclick="submitScore()" class="btn-cyber box-glow-red px-4 bg-red-900 hover:bg-red-700 text-white font-bold py-2.5 text-xs border-2 border-red-500 transition-colors uppercase tracking-wider shrink-0">Salva</button>
+                        <input type="text" id="playerName" maxlength="10" placeholder="IL TUO NOME..." class="flex-1 min-w-0 bg-black/90 border-2 border-red-700 text-white font-bold text-center py-2 rounded-lg focus:outline-none focus:border-red-400 uppercase tracking-widest text-xs transition-all">
+                        <button id="btn-save-score" onclick="submitScore()" class="btn-cyber box-glow-red px-4 bg-red-900 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs border-2 border-red-500 transition-colors uppercase tracking-wider shrink-0">Salva</button>
                     </div>
                 </div>
 
-                <button id="btn-restart" onclick="restartGame()" class="btn-cyber w-full min-h-[54px] sm:min-h-[58px] py-3.5 sm:py-4 rounded-xl text-base sm:text-lg font-display font-black text-white border-2 border-purple-400 bg-gradient-to-r from-purple-800 via-indigo-700 to-purple-800 hover:from-purple-700 hover:to-indigo-600 shadow-[0_0_24px_rgba(168,85,247,0.5)] group transition-all active:scale-95 cursor-pointer">
-                    <i class="fa-solid fa-rotate-right group-hover:animate-spin mr-1"></i> RIPROVA
+                <button id="btn-restart" onclick="restartGame()" class="btn-cyber w-full min-h-[48px] sm:min-h-[52px] py-2.5 sm:py-3 px-4 rounded-xl text-sm sm:text-base font-display font-black text-white border-2 border-purple-400 bg-gradient-to-r from-purple-800 via-indigo-700 to-purple-800 hover:from-purple-700 hover:to-indigo-600 shadow-[0_0_22px_rgba(168,85,247,0.5)] group transition-all tracking-wider whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right group-hover:animate-spin"></i> <span>RIPROVA</span>
                 </button>
 
-                <!-- TASTO RITORNA IN BATTAGLIA ROSSO E PIÙ GRANDE -->
-                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber w-full min-h-[58px] sm:min-h-[64px] py-4 rounded-xl text-lg sm:text-xl font-display font-black text-white border-2 border-red-400 bg-gradient-to-r from-red-800 via-rose-700 to-red-800 hover:from-red-700 hover:to-rose-600 shadow-[0_0_28px_rgba(239,68,68,0.7)] group transition-all tracking-wider active:scale-95 cursor-pointer">
-                    <i class="fa-solid fa-bolt mr-2 text-amber-300 animate-pulse"></i> RITORNA IN BATTAGLIA
+                <!-- TASTO RITORNA IN BATTAGLIA ROSSO BEN PROPORZIONATO SU RIGA SINGOLA -->
+                <button id="btn-respawn" onclick="respawnPlayer()" class="hidden btn-cyber w-full min-h-[48px] sm:min-h-[54px] py-2.5 sm:py-3.5 px-4 rounded-xl text-sm sm:text-base font-display font-black text-white border-2 border-red-400 bg-gradient-to-r from-red-800 via-rose-700 to-red-800 hover:from-red-700 hover:to-rose-600 shadow-[0_0_26px_rgba(239,68,68,0.7)] group transition-all tracking-wider whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-bolt text-amber-300 animate-pulse"></i> <span>RITORNA IN BATTAGLIA</span>
                 </button>
 
                 <div class="grid grid-cols-2 gap-2 w-full">
-                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber bg-slate-950/85 border-2 border-purple-400/60 hover:border-purple-300 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-purple-200 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.25)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-gem mr-1"></i> RELIQUIE
+                    <button onclick="UIManager.showCollectedRelics()" class="btn-cyber bg-slate-950/90 border-2 border-purple-400/65 hover:border-purple-300 w-full min-h-[42px] sm:min-h-[46px] py-2 sm:py-2.5 px-3 text-xs sm:text-sm font-display font-black text-purple-200 uppercase tracking-wider rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.25)] flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-gem text-purple-300"></i> <span>RELIQUIE</span>
                     </button>
-                    <button onclick="goToMainMenu()" class="btn-cyber bg-slate-950/85 border-2 border-gray-600/70 hover:border-gray-400 w-full min-h-[46px] sm:min-h-[48px] py-2.5 sm:py-3 text-xs sm:text-sm font-black text-gray-200 uppercase tracking-widest rounded-xl shadow-[0_0_12px_rgba(156,163,175,0.18)] flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-bars mr-1"></i> MENU
+                    <button onclick="goToMainMenu()" class="btn-cyber bg-slate-950/90 border-2 border-gray-500/70 hover:border-gray-300 w-full min-h-[42px] sm:min-h-[46px] py-2 sm:py-2.5 px-3 text-xs sm:text-sm font-display font-black text-gray-200 uppercase tracking-wider rounded-xl shadow-[0_0_12px_rgba(156,163,175,0.18)] flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-bars text-gray-300"></i> <span>MENU</span>
                     </button>
                 </div>
             </div>
@@ -1569,7 +1838,7 @@ body.colorblind-mode #opt-colorblind-text {
         <!-- Layer Particelle & Onde d'Urto -->
         <div id="shop-fx-layer" class="fixed inset-0 pointer-events-none z-[260] overflow-hidden"></div>
 
-        <div id="shop-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-3.5 sm:py-6 relative max-w-[470px] mx-auto">
+        <div id="shop-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-2.5 sm:py-5 relative max-w-[470px] mx-auto">
             
             <!-- 1. HEADER LUMINOSO & FORZIERE MONETE -->
             <div class="w-full flex items-center justify-between gap-3 bg-slate-950/85 border-2 border-cyan-400/50 rounded-xl px-4 py-2.5 shadow-[0_0_25px_rgba(34,211,238,0.25)] shrink-0">
@@ -1601,7 +1870,7 @@ body.colorblind-mode #opt-colorblind-text {
             </div>
 
             <!-- 3. I 5 REATTORI AL PLASMA (Dal basso verso l'alto) -->
-            <div id="shop-tree-container" class="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full flex-1 min-h-[265px] max-h-[54vh] my-1 items-stretch select-none">
+            <div id="shop-tree-container" class="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full flex-1 min-h-[200px] max-h-[54vh] my-1 items-stretch select-none">
                 <!-- Costruito e animato da ShopSystem -->
             </div>
 
@@ -1775,11 +2044,11 @@ body.colorblind-mode #opt-colorblind-text {
 <div id="blood-vignette" class="absolute inset-0 pointer-events-none opacity-0 z-[6]"></div>
     <!-- CONTROLLI MOBILE -->
     <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-50 hidden">
-        <div id="joy-left-zone" class="absolute bottom-8 left-6 sm:bottom-12 sm:left-12 landscape:bottom-6 landscape:left-12 w-28 h-28 sm:w-32 sm:h-32 bg-slate-950/60 rounded-full border-2 border-cyan-400/35 pointer-events-auto touch-none">
+        <div id="joy-left-zone" class="absolute bottom-8 left-6 sm:bottom-10 sm:left-10 w-28 h-28 sm:w-32 sm:h-32 bg-slate-950/60 rounded-full border-2 border-cyan-400/35 pointer-events-auto touch-none">
             <div class="absolute inset-2.5 rounded-full border border-dashed border-cyan-300/20 pointer-events-none"></div>
             <div id="joy-left-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-cyan-400/40 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 border-cyan-100 pointer-events-none transition-transform duration-75"></div>
         </div>
-        <div id="joy-right-zone" class="absolute bottom-8 right-6 sm:bottom-12 sm:right-12 landscape:bottom-6 landscape:right-12 w-28 h-28 sm:w-32 sm:h-32 bg-rose-950/60 rounded-full border-2 border-red-400/35 pointer-events-auto touch-none">
+        <div id="joy-right-zone" class="absolute bottom-8 right-6 sm:bottom-10 sm:right-10 w-28 h-28 sm:w-32 sm:h-32 bg-rose-950/60 rounded-full border-2 border-red-400/35 pointer-events-auto touch-none">
             <div class="absolute inset-2.5 rounded-full border border-dashed border-red-300/20 pointer-events-none"></div>
             <div id="joy-right-stick" class="absolute top-1/2 left-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-red-500/50 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 border-rose-100 pointer-events-none transition-transform duration-75"></div>
         </div>
@@ -1890,21 +2159,21 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
         
         <!-- Tasto Scatto (Dash) -->
-        <button id="btn-dash" onclick="if(Game.state === 'PLAYING') Game.player.dash();" class="hud-skill-btn absolute bottom-32 right-[8.5rem] landscape:bottom-6 landscape:right-48 lg:!bottom-8 lg:!right-[11rem] w-14 h-14 rounded-full border-2 border-slate-600 text-amber-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+        <button id="btn-dash" onclick="if(Game.state === 'PLAYING') Game.player.dash();" class="hud-skill-btn absolute bottom-32 right-[9.2rem] w-14 h-14 rounded-full border-2 border-slate-600 text-amber-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
             <div id="btn-dash-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-amber-600/75 to-yellow-300/75 h-0 transition-all duration-100 pointer-events-none"></div>
             <i class="fa-solid fa-bolt text-2xl relative z-10"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">SPAZIO</span>
         </button>
 
         <!-- Tasto Scudo (Shield) -->
-        <button id="btn-shield" onclick="if(Game.state === 'PLAYING') Game.player.activateShield();" class="hud-skill-btn absolute bottom-[12.5rem] right-[8.5rem] landscape:bottom-[6.5rem] landscape:right-48 lg:!bottom-8 lg:!right-[6.5rem] w-14 h-14 rounded-full border-2 border-slate-600 text-cyan-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+        <button id="btn-shield" onclick="if(Game.state === 'PLAYING') Game.player.activateShield();" class="hud-skill-btn absolute bottom-[12.5rem] right-[9.2rem] w-14 h-14 rounded-full border-2 border-slate-600 text-cyan-100 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
             <div id="btn-shield-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/75 to-cyan-300/75 h-0 transition-all duration-200 pointer-events-none"></div>
             <i class="fa-solid fa-shield text-2xl relative z-10"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">SHIFT</span>
         </button>
 
         <!-- Tasto Ultimate (Ult) -->
-        <button id="btn-ult" onclick="if(Game.state === 'PLAYING') Game.activateUltimate();" class="hud-skill-btn absolute bottom-[14rem] right-12 landscape:bottom-[8.5rem] landscape:right-40 lg:!bottom-8 lg:!right-8 w-14 h-14 rounded-full border-2 border-slate-600 text-purple-200 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
+        <button id="btn-ult" onclick="if(Game.state === 'PLAYING') Game.activateUltimate();" class="hud-skill-btn absolute bottom-[14.2rem] right-12 w-14 h-14 rounded-full border-2 border-slate-600 text-purple-200 hover:text-white font-black text-xs pointer-events-auto flex items-center justify-center touch-none overflow-hidden group">
             <div id="btn-ult-fill" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-purple-900/85 via-purple-600/80 to-fuchsia-400/85 h-0 transition-all duration-200 pointer-events-none"></div>
             <i class="fa-solid fa-angles-up text-2xl relative z-10 leading-none"></i>
             <span class="absolute -top-6 text-[10px] text-gray-400 font-bold hidden lg:block tracking-widest whitespace-nowrap">TASTO DX</span>
@@ -2019,8 +2288,8 @@ const AppSettings = {
         if (typeof TitleDiorama !== 'undefined' && TitleDiorama.initialized) {
             TitleDiorama.resize();
         }
-        if (typeof DeathScreen3D !== 'undefined' && DeathScreen3D.initialized) {
-            DeathScreen3D.resize();
+        if (typeof DeathSceneSystem !== 'undefined' && DeathSceneSystem.initialized) {
+            DeathSceneSystem.resize();
         }
     },
     
@@ -5288,10 +5557,10 @@ const DeathSceneSystem = {
         const aspect = this.camera.aspect || 0.56;
         const isPortrait = aspect < 0.78;
 
-        // Telecamera leggermente più ravvicinata per una vista più dettagliata e drammatica
-        const camHeight = isPortrait ? 510 : 395;
-        const camDist = isPortrait ? 340 : 265;
-        const lookY = (this.mode === 'fallen') ? 10 : 20;
+        // Telecamera più ravvicinata e ben centrata nella finestra libera tra header e pulsanti
+        const camHeight = isPortrait ? 430 : 325;
+        const camDist = isPortrait ? 285 : 220;
+        const lookY = (this.mode === 'fallen') ? 8 : 16;
 
         this.camera.position.set(
             Math.cos(this.camAngle) * camDist,
@@ -10033,24 +10302,26 @@ pushDebris(px, pz, radius, force) {
     },
   getMobileAspectScale() {
         let aspect = (this.width && this.height) ? (this.width / this.height) : 0.5;
+        let shortSide = Math.min(this.width || 390, this.height || 390);
+        // Avvicina ulteriormente su schermi di smartphone più compatti (< 385px lato corto) per massima leggibilità
+        let smallPhoneBoost = (isTouchDevice && shortSide < 385) ? 0.94 : 1.0;
         if (AppSettings.orientation === 'landscape' && aspect > 1.0) {
-            // In modalità orizzontale su smartphone, calibra l'altezza camera in stile action RPG mobile
-            // (Brawl Stars / Soul Knight): personaggi ben leggibili e ~9.5 tile verticali x ~16.5 tile orizzontali
-            return isTouchDevice ? 0.80 : 0.92;
+            // In modalità orizzontale su smartphone: inquadratura ravvicinata e nitida (~8 tile verticali x ~14.5 orizzontali)
+            return (isTouchDevice ? 0.66 : 0.82) * smallPhoneBoost;
         }
         if (!isTouchDevice) return 1.0;
-        // Sugli smartphone in verticale (aspect < 0.65) alza dolcemente la camera (fino a +18%)
-        // per garantire ~9 tile di visibilità orizzontale ed evitare attacchi fuori schermo
-        return aspect < 0.65 ? Math.min(1.20, 1.05 + (0.65 - aspect) * 0.65) : 1.0;
+        // In verticale su smartphone: telecamera più ravvicinata per leggere chiaramente personaggi, proiettili e telegrafi
+        let portScale = aspect < 0.65 ? Math.min(1.03, 0.91 + (0.65 - aspect) * 0.50) : 0.91;
+        return portScale * smallPhoneBoost;
     },
 
     snapCamera() {
         let mScale = this.getMobileAspectScale();
         let isLandMobile = (AppSettings.orientation === 'landscape' && this.width > this.height);
         let camY = (isTouchDevice ? 750 : 600) * mScale;
-        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
+        let distFactor = isLandMobile ? (mScale * 0.84) : mScale;
         let camZ = this.player.y + (isTouchDevice ? 500 : 400) * distFactor;
-        let lookZOff = isLandMobile ? -14 : 0;
+        let lookZOff = isLandMobile ? -12 : 0;
         this._camFocusX = this.player.x;
         this._camFocusZ = this.player.y;
         this._camLeadX = 0;
@@ -10179,10 +10450,10 @@ pushDebris(px, pz, radius, force) {
         this._camFocusZ += ((this.player.y + this._camLeadZ) - this._camFocusZ) * posSmooth;
 
         let mScale = this.getMobileAspectScale();
-        let distFactor = isLandMobile ? (mScale * 0.88) : mScale;
+        let distFactor = isLandMobile ? (mScale * 0.84) : mScale;
         let baseHeight = (isTouchDevice ? 750 : 600) * mScale * this._camZoom;
         let baseDist = (isTouchDevice ? 500 : 400) * distFactor * this._camZoom;
-        let lookZOff = isLandMobile ? -14 : 0;
+        let lookZOff = isLandMobile ? -12 : 0;
 
         this.camera.position.set(this._camFocusX + shakeX, baseHeight + shakeY, this._camFocusZ + baseDist + shakeZ);
         this.camera.lookAt(this._camFocusX + shakeX * 0.25, 0, this._camFocusZ + lookZOff + shakeZ * 0.25);
@@ -24273,9 +24544,14 @@ const ShopSystem = {
             let tx, ty, dur;
 
             if (mode === 'upward') {
-                // Getto di particelle che risale lungo la colonna
-                tx = MathUtils.randomRange(-22, 22);
-                ty = -MathUtils.randomRange(55, 165);
+                // Getto di particelle che scorre lungo il percorso (orizzontale in landscape, verticale in portrait)
+                if (AppSettings.orientation === 'landscape') {
+                    tx = -MathUtils.randomRange(45, 135);
+                    ty = MathUtils.randomRange(-16, 16);
+                } else {
+                    tx = MathUtils.randomRange(-22, 22);
+                    ty = -MathUtils.randomRange(55, 165);
+                }
                 dur = MathUtils.randomRange(0.45, 0.70);
             } else {
                 // Esplosione radiale a supernova per i Medaglioni 5 e 10
@@ -24320,7 +24596,7 @@ const ShopSystem = {
             const bubbleDelays = [0.0, 0.4, 0.9, 0.2, 1.1, 0.6];
             for (let i = 0; i < 6; i++) {
                 let sz = (i % 2 === 0) ? 5 : 4;
-                bubblesHtml += `<span class="plasma-bubble" style="left:${bubbleLefts[i]}%; width:${sz}px; height:${sz}px; --dur:${bubbleDurs[i]}s; --dly:${bubbleDelays[i]}s;"></span>`;
+                bubblesHtml += `<span class="plasma-bubble" style="left:${bubbleLefts[i]}%; --pos:${bubbleLefts[i]}%; width:${sz}px; height:${sz}px; --dur:${bubbleDurs[i]}s; --dly:${bubbleDelays[i]}s;"></span>`;
             }
 
             html += `
@@ -24331,7 +24607,7 @@ const ShopSystem = {
                     <div id="beam-${key}" class="mastery-beam rounded-xl"></div>
 
                     <!-- 1. MEDAGLIONE CIMA (GRADO 10) -->
-                    <div class="relative flex flex-col items-center z-20 -mb-2.5">
+                    <div class="totem-top-node relative flex flex-col items-center z-20 -mb-2.5">
                         <div id="node-${key}-2" data-node-id="${key}_2"
                              onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
                              ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 2, event)"
@@ -24343,23 +24619,24 @@ const ShopSystem = {
                     </div>
 
                     <!-- 2. CONDOTTO AL PLASMA CON LIQUIDO VIVO, BOLLE E MEDAGLIONE CENTRALE (GRADO 5) -->
-                    <div id="chamber-${key}" class="pillar-chamber w-full flex-1 flex flex-col justify-end my-1 relative overflow-hidden">
-                        
-                        <!-- Liquido continuo che sale con bolle di plasma -->
-                        <div id="plasma-fill-${key}" class="plasma-fill w-full h-0 relative overflow-hidden">
-                            ${bubblesHtml}
-                        </div>
+                    <div id="chamber-${key}" class="pillar-chamber w-full flex-1 flex flex-col justify-end my-1 relative overflow-visible">
+                        <div class="chamber-inner-track absolute inset-0 rounded-[8px] overflow-hidden flex flex-col justify-end">
+                            <!-- Liquido continuo che sale (o scorre a destra in orizzontale) con bolle di plasma -->
+                            <div id="plasma-fill-${key}" class="plasma-fill w-full h-0 relative overflow-hidden">
+                                ${bubblesHtml}
+                            </div>
 
-                        <!-- Onda d'impulso verticale a ogni acquisto -->
-                        <div id="surge-${key}" class="surge-wave"></div>
+                            <!-- Onda d'impulso a ogni acquisto -->
+                            <div id="surge-${key}" class="surge-wave"></div>
 
-                        <!-- Griglia delle 10 tacche sovrapposta -->
-                        <div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
-                            ${stepsHtml}
+                            <!-- Griglia delle 10 tacche sovrapposta -->
+                            <div class="chamber-steps-wrap absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
+                                ${stepsHtml}
+                            </div>
                         </div>
 
                         <!-- MEDAGLIONE META' BARRA (GRADO 5) -->
-                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                        <div class="totem-mid-node absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                             <div id="node-${key}-1" data-node-id="${key}_1"
                                  onmouseenter="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
                                  ontouchstart="AudioEngine.playHover(); ShopSystem.inspectMastery('${key}', 1, event)"
@@ -24371,7 +24648,7 @@ const ShopSystem = {
                     </div>
 
                     <!-- 3. ETICHETTA RAMO LUMINOSA -->
-                    <div class="flex items-center justify-center gap-1 my-1">
+                    <div class="totem-label flex items-center justify-center gap-1 my-1">
                         <i class="fa-solid ${b.icon} text-[10px] sm:text-xs" style="color:${b.color}; filter:drop-shadow(0 0 5px ${b.color});"></i>
                         <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white">${b.short}</span>
                     </div>
@@ -24417,10 +24694,11 @@ const ShopSystem = {
                 colEl.classList.toggle('mastery-maxed', lvl >= 10);
             }
 
-            // 1. Altezza fluida del plasma vivo (0% -> 50% al Grado 5 -> 100% al Grado 10)
+            // 1. Altezza/Larghezza fluida del plasma vivo (0% -> 50% al Grado 5 -> 100% al Grado 10)
             const fillEl = document.getElementById(`plasma-fill-${key}`);
             if (fillEl) {
                 const pct = Math.min(100, (lvl / 10) * 100);
+                fillEl.style.setProperty('--fill-pct', `${pct}%`);
                 fillEl.style.height = `${pct}%`;
             }
 
