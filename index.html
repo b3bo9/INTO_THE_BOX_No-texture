@@ -2833,23 +2833,21 @@ const PlayerGeometryBuilder = {
     },
 
     getWeaponGemOffset(skinId) {
-        if (skinId === 'cyber_phantom') return { y: 1.4, z: 24.0 };
-        if (skinId === 'void_walker') return { y: 4.0, z: 3.0 };
-        if (skinId === 'astral_arcanist') return { y: 29.5, z: 0.0 };
-        if (skinId === 'emerald_warden' || skinId === 'solar_archon') return { y: 28.5, z: 0.0 };
-        return { y: 29.0, z: 0.0 }; // dark_mage, crimson_inquisitor
+        if (skinId === 'cyber_phantom') return { y: 1.2, z: 22.5 };
+        if (skinId === 'void_walker') return { y: 14.0, z: 0.0 };
+        return { y: 28.0, z: 0.0 };
     },
 
     getRestPose(skinId) {
         switch (skinId) {
-            case 'dark_mage':          return { rx: 0.18, ry: 0.0,   rz: -0.06 };
-            case 'astral_arcanist':    return { rx: 0.15, ry: 0.0,   rz: -0.08 };
-            case 'emerald_warden':     return { rx: 0.82, ry: -0.08, rz: 0.0   };
-            case 'crimson_inquisitor': return { rx: 0.55, ry: -0.38, rz: -0.22 };
-            case 'void_walker':        return { rx: 0.42, ry: 0.18,  rz: 0.34  };
-            case 'solar_archon':       return { rx: 0.68, ry: -0.05, rz: -0.05 };
-            case 'cyber_phantom':      return { rx: 0.0,  ry: 0.0,   rz: 0.0   };
-            default:                   return { rx: 0.15, ry: 0.0,   rz: 0.0   };
+            case 'dark_mage':          return { rx: 0.10, ry: 0.0, rz: 0.0 };
+            case 'astral_arcanist':    return { rx: 0.10, ry: 0.0, rz: 0.0 };
+            case 'emerald_warden':     return { rx: 0.44, ry: 0.0, rz: 0.0 };
+            case 'crimson_inquisitor': return { rx: 0.36, ry: 0.0, rz: 0.0 };
+            case 'void_walker':        return { rx: 0.18, ry: 0.0, rz: 0.0 };
+            case 'solar_archon':       return { rx: 0.40, ry: 0.0, rz: 0.0 };
+            case 'cyber_phantom':      return { rx: 0.0,  ry: 0.0, rz: 0.0 };
+            default:                   return { rx: 0.10, ry: 0.0, rz: 0.0 };
         }
     },
 
@@ -2875,7 +2873,6 @@ const PlayerGeometryBuilder = {
         const robeFrustum = prims.robeFrustum;
         const robeHex = prims.robeHex;
         const robePyramid = prims.robePyramid;
-        const robeVoid = prims.robeVoid;
         const cone = SharedGeo.cone;
         const cone4 = prims.cone4;
         const octa = prims.octa;
@@ -2888,7 +2885,7 @@ const PlayerGeometryBuilder = {
 
         let bodyParts = [this.part(robeFrustum, 1, 24, 1, 0, 0, 0)];
         let headParts = [this.part(sphere, 6, 6, 6, 0, 0, 0)];
-        let scarfParts = [this.part(torus, 6.2, 6.2, 2.2, 0, 0, 0, Math.PI / 2, 0, 0)];
+        let scarfParts = [this.part(torus, 6.4, 6.4, 2.3, 0, 0, 0, Math.PI / 2, 0, 0)];
         let staffParts = [this.part(cyl, 2, 35, 2, 0, 10, 0)];
         let gemParts = [this.part(icosa, 4, 4, 4, 0, 0, 0)];
         let haloParts = [this.part(torus, 5, 5, 5, 0, 0, 0, Math.PI / 2, 0, 0)];
@@ -2896,239 +2893,162 @@ const PlayerGeometryBuilder = {
         let headAccentParts = [];
 
         if (skinId === 'dark_mage') {
-            // COMUNE 1: Mago Oscuro — Cappuccio arcano a punta, mantello stratificato, occhi mistici e bastone biforcuto d'ombra
-            bodyParts = [
-                this.part(robeFrustum, 1.05, 24, 1.05, 0, 0, 0),
-                this.part(robeFrustum, 0.92, 11.5, 0.96, 0, 6.2, -0.5)
-            ];
-            scarfParts = [
-                this.part(torus, 6.6, 6.6, 2.5, 0, 0.3, -0.3, Math.PI / 2 - 0.18, 0, 0),
-                this.part(cone4, 3.6, 8.5, 1.8, 0, -3.5, 5.2, Math.PI + 0.22, Math.PI / 4, 0)
-            ];
-            headParts = [
-                this.part(sphere, 5.6, 5.6, 5.6, 0, -0.3, 0),
-                this.part(cone, 7.6, 9.5, 8.2, 0, 2.8, 0.4, 0.18, 0, 0),
-                this.part(cone4, 4.8, 10.5, 5.2, 0, 6.5, -3.8, -0.78, Math.PI / 4, 0)
-            ];
-            headAccentParts = [
-                this.part(box, 1.9, 0.95, 1.4, -2.1, 0.2, 5.1, 0, 0.20, -0.22),
-                this.part(box, 1.9, 0.95, 1.4, 2.1, 0.2, 5.1, 0, -0.20, 0.22)
-            ];
-            staffParts = [
-                this.part(cyl, 1.8, 36, 1.8, 0, 10, 0),
-                this.part(octa, 3.2, 2.4, 3.2, 0, 24.0, 0),
-                this.part(cone4, 1.6, 8.5, 1.6, -3.8, 27.5, 0, 0, 0, 0.42),
-                this.part(cone4, 1.6, 8.5, 1.6, 3.8, 27.5, 0, 0, 0, -0.42)
-            ];
-            gemParts = [this.part(icosa, 4.2, 4.8, 4.2, 0, 0, 0)];
-            haloParts = [this.part(torus, 5.8, 5.8, 4.5, 0, 0, 0, Math.PI / 2, 0.35, 0)];
-        }
-        else if (skinId === 'astral_arcanist') {
-            // COMUNE 2: Arcanista Astrale — Cappello a tesa larga inclinato, spallacci stellari, Astrolabio dorsale e Scettro Giroscopico
-            bodyParts = [this.part(robeHex, 1.04, 24, 1.04, 0, 0, 0)];
-            scarfParts = [
-                this.part(torus, 6.4, 6.4, 2.2, 0, 0, 0, Math.PI / 2, 0, 0),
-                this.part(cone4, 4.2, 7.5, 3.6, -8.5, -0.5, 0, 0, Math.PI / 4, 1.15),
-                this.part(cone4, 4.2, 7.5, 3.6, 8.5, -0.5, 0, 0, Math.PI / 4, -1.15)
-            ];
+            // COMUNE 1: Mago Oscuro — Cappuccio arcano a punta pulito, occhi mistici luminosi e bastone runico
             headParts = [
                 this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0),
-                this.part(cyl, 13.0, 1.3, 13.0, 0, 3.6, -0.4, -0.14, 0, 0.08),
-                this.part(cone, 6.8, 8.5, 6.8, 0, 7.5, -0.8, -0.20, 0, 0.08),
-                this.part(cone, 4.6, 11.5, 4.6, 0.4, 13.5, -3.2, -0.52, 0, 0.14)
+                this.part(cone, 6.6, 11.0, 6.8, 0, 6.2, -1.0, -0.32, 0, 0)
             ];
             headAccentParts = [
-                this.part(octa, 1.6, 4.2, 1.2, 0, 6.2, 5.2, -0.18, 0, 0),
-                this.part(octa, 4.2, 1.6, 1.2, 0, 6.2, 5.2, -0.18, 0, 0),
-                this.part(box, 1.6, 0.9, 1.2, -2.0, 0.2, 5.3),
-                this.part(box, 1.6, 0.9, 1.2, 2.0, 0.2, 5.3)
-            ];
-            accentParts = [
-                this.part(torus, 11.5, 11.5, 2.2, 0, 9.5, -6.2, 0.15, 0, 0),
-                this.part(cone4, 1.8, 4.8, 1.4, 0, 22.0, -6.5),
-                this.part(cone4, 1.8, 4.8, 1.4, -12.5, 9.5, -6.5, 0, 0, Math.PI / 2),
-                this.part(cone4, 1.8, 4.8, 1.4, 12.5, 9.5, -6.5, 0, 0, -Math.PI / 2)
+                this.part(box, 1.8, 0.9, 1.2, -2.0, 0.3, 5.4, 0, 0.18, -0.18),
+                this.part(box, 1.8, 0.9, 1.2, 2.0, 0.3, 5.4, 0, -0.18, 0.18)
             ];
             staffParts = [
-                this.part(cyl, 1.8, 36, 1.8, 0, 10, 0),
-                this.part(torus, 3.8, 3.8, 2.5, 0, 22.5, 0, Math.PI / 2, 0, 0)
+                this.part(cyl, 1.9, 35, 1.9, 0, 10, 0),
+                this.part(octa, 3.0, 2.2, 3.0, 0, 23.0, 0)
             ];
-            gemParts = [this.part(octa, 4.2, 8.2, 4.2, 0, 0, 0)];
+            gemParts = [this.part(icosa, 4.2, 4.2, 4.2, 0, 0, 0)];
+            haloParts = [this.part(torus, 5.4, 5.4, 4.5, 0, 0, 0, Math.PI / 2, 0, 0)];
+        }
+        else if (skinId === 'astral_arcanist') {
+            // COMUNE 2: Arcanista Astrale — Grande cappello a tesa larga con fascia luminosa e scettro giroscopico
+            bodyParts = [this.part(robeHex, 1, 24, 1, 0, 0, 0)];
+            headParts = [
+                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0),
+                this.part(cyl, 11.5, 1.2, 11.5, 0, 3.8, 0),
+                this.part(cone, 6.0, 14.5, 6.0, 0, 11.0, -1.2, -0.22, 0, 0)
+            ];
+            headAccentParts = [
+                this.part(torus, 5.5, 5.5, 1.8, 0, 4.6, -0.2, Math.PI / 2 - 0.12, 0, 0)
+            ];
+            gemParts = [
+                this.part(cone4, 4.0, 7.2, 4.0, 0, 3.6, 0),
+                this.part(cone4, 4.0, 7.2, 4.0, 0, -3.6, 0, Math.PI, 0, 0)
+            ];
             haloParts = [
-                this.part(torus, 6.8, 6.8, 4.5, 0, 0, 0, Math.PI / 4, 0, 0),
-                this.part(torus, 6.8, 6.8, 4.5, 0, 0, 0, -Math.PI / 4, 0, 0)
+                this.part(torus, 6.2, 6.2, 4.8, 0, 0, 0, Math.PI / 4, 0, 0),
+                this.part(torus, 6.2, 6.2, 4.8, 0, 0, 0, -Math.PI / 4, 0, 0)
             ];
         }
         else if (skinId === 'emerald_warden') {
-            // COMUNE 3: Custode Silvano — Grandi Palchi Reali di Cervo, spallacci fogliari e Lancia Silvana in resta
+            // COMUNE 3: Custode Silvano — Palchi di cervo puliti, spallacci scolpiti e Lancia Silvana
             bodyParts = [
-                this.part(robeFrustum, 1.02, 24, 1.02, 0, 0, 0),
-                this.part(cone4, 5.2, 9.5, 5.8, -9.8, 9.2, 0, 0, Math.PI / 4, 0.85),
-                this.part(cone4, 5.2, 9.5, 5.8, 9.8, 9.2, 0, 0, Math.PI / 4, -0.85)
-            ];
-            scarfParts = [
-                this.part(torus, 6.8, 6.8, 2.8, 0, 0.2, 0, Math.PI / 2, 0, 0),
-                this.part(octa, 4.5, 4.5, 2.2, 0, -2.2, 5.5)
+                this.part(robeFrustum, 1, 24, 1, 0, 0, 0),
+                this.part(dodeca, 4.8, 3.6, 4.8, -9.4, 8.5, 0),
+                this.part(dodeca, 4.8, 3.6, 4.8, 9.4, 8.5, 0)
             ];
             headParts = [
-                this.part(dodeca, 6.2, 6.4, 6.4, 0, 0.2, 0),
-                this.part(cone4, 1.8, 13.5, 1.8, -6.5, 7.8, -0.5, -0.15, 0, 0.65),
-                this.part(cone4, 1.4, 9.5, 1.4, -10.8, 12.2, -1.2, -0.10, 0, 0.22),
-                this.part(cone4, 1.2, 7.0, 1.2, -6.2, 6.8, 3.2, 0.65, 0, 0.35),
-                this.part(cone4, 1.8, 13.5, 1.8, 6.5, 7.8, -0.5, -0.15, 0, -0.65),
-                this.part(cone4, 1.4, 9.5, 1.4, 10.8, 12.2, -1.2, -0.10, 0, -0.22),
-                this.part(cone4, 1.2, 7.0, 1.2, 6.2, 6.8, 3.2, 0.65, 0, -0.35)
+                this.part(sphere, 6.0, 6.0, 6.0, 0, 0, 0),
+                this.part(cone4, 1.6, 12.0, 1.6, -5.8, 7.8, 0, 0, 0, 0.58),
+                this.part(cone4, 1.2, 7.8, 1.2, -9.2, 11.2, 0.8, 0.22, 0, 0.18),
+                this.part(cone4, 1.6, 12.0, 1.6, 5.8, 7.8, 0, 0, 0, -0.58),
+                this.part(cone4, 1.2, 7.8, 1.2, 9.2, 11.2, 0.8, 0.22, 0, -0.18)
             ];
             headAccentParts = [
-                this.part(octa, 1.8, 3.4, 1.5, 0, 3.2, 5.6),
-                this.part(box, 1.8, 0.9, 1.2, -2.2, 0.4, 5.5, 0, 0.2, -0.15),
-                this.part(box, 1.8, 0.9, 1.2, 2.2, 0.4, 5.5, 0, -0.2, 0.15)
+                this.part(octa, 1.7, 3.2, 1.4, 0, 2.8, 5.5)
             ];
-            staffParts = [
-                this.part(cyl, 1.8, 38, 1.8, 0, 9.5, 0),
-                this.part(cone4, 7.5, 3.2, 2.8, 0, 26.5, 0, 0, Math.PI / 4, Math.PI)
-            ];
-            gemParts = [
-                this.part(cone4, 4.2, 16.5, 2.2, 0, 8.2, 0),
-                this.part(cone4, 4.2, 5.5, 2.2, 0, -2.5, 0, Math.PI, 0, 0)
-            ];
-            haloParts = [this.part(octa, 6.8, 2.2, 2.4, 0, -1.5, 0)];
+            gemParts = [this.part(cone4, 3.5, 18.5, 2.6, 0, 6.5, 0)];
+            haloParts = [this.part(box, 5.8, 1.8, 3.4, 0, -2.5, 0)];
         }
         else if (skinId === 'crimson_inquisitor') {
-            // RARA (Piano 5): Inquisitore Cremisi — Grande Elmo Cornuto con Visiera a Croce, Spallacci Gotici e Grande Falce da Mietitore
+            // RARA (Piano 5): Inquisitore Cremisi — Grande Elmo Cornuto, spallacci gotici e Falce Cremisi netta
             bodyParts = [
-                this.part(robeHex, 1.06, 24, 1.06, 0, 0, 0),
-                this.part(cone4, 5.2, 10.5, 5.2, -10.8, 9.2, 0, 0, Math.PI / 4, 0.62),
-                this.part(cone4, 5.2, 10.5, 5.2, 10.8, 9.2, 0, 0, Math.PI / 4, -0.62)
-            ];
-            scarfParts = [
-                this.part(torus, 6.8, 6.8, 2.8, 0, 0.4, 0, Math.PI / 2, 0, 0),
-                this.part(cone4, 2.4, 9.5, 2.0, -5.5, 4.5, -4.5, -0.25, 0, 0.25),
-                this.part(cone4, 2.4, 9.5, 2.0, 5.5, 4.5, -4.5, -0.25, 0, -0.25)
+                this.part(robeHex, 1, 24, 1, 0, 0, 0),
+                this.part(cone4, 4.6, 9.2, 4.6, -10.5, 9.0, 0, 0, Math.PI / 4, 0.52),
+                this.part(cone4, 4.6, 9.2, 4.6, 10.5, 9.0, 0, 0, Math.PI / 4, -0.52)
             ];
             headParts = [
-                this.part(cyl, 6.0, 8.2, 6.0, 0, 0.6, 0),
-                this.part(cone4, 2.5, 15.0, 2.5, -7.2, 8.2, 0.8, 0.38, Math.PI / 4, 0.58),
-                this.part(cone4, 2.5, 15.0, 2.5, 7.2, 8.2, 0.8, 0.38, Math.PI / 4, -0.58)
+                this.part(cyl, 5.8, 7.6, 5.8, 0, 0.5, 0),
+                this.part(cone, 2.3, 14.5, 2.3, -6.8, 8.5, -0.8, 0.26, 0, 0.56),
+                this.part(cone, 2.3, 14.5, 2.3, 6.8, 8.5, -0.8, 0.26, 0, -0.56)
             ];
             headAccentParts = [
-                this.part(box, 8.2, 1.6, 2.6, 0, 1.0, 4.9),
-                this.part(box, 1.6, 5.4, 2.6, 0, -0.2, 5.0)
+                this.part(box, 7.6, 1.6, 2.5, 0, 0.6, 4.8)
             ];
             staffParts = [
-                this.part(cyl, 2.0, 39, 2.0, 0, 11.0, 0),
-                this.part(box, 4.4, 4.5, 5.6, 0, 29.0, 0.5)
+                this.part(cyl, 2.0, 38, 2.0, 0, 11, 0),
+                this.part(box, 3.8, 3.8, 4.8, 0, 28, 0)
             ];
-            gemParts = [
-                this.part(box, 1.8, 3.6, 13.0, -1.2, 0.8, 7.0, 0.12, -0.22, 0),
-                this.part(cone4, 1.6, 14.5, 3.8, -5.8, -0.6, 17.5, Math.PI / 2 + 0.22, 0, 0.52)
-            ];
-            haloParts = [
-                this.part(cone4, 2.2, 7.5, 2.6, 0.5, 1.2, -5.2, -Math.PI / 2 + 0.15, 0, 0)
-            ];
+            gemParts = [this.part(cone4, 2.8, 20.5, 1.6, 0, 0.4, 10.2, Math.PI / 2 + 0.24, 0, 0)];
+            haloParts = [this.part(box, 4.2, 1.6, 5.4, 0, 0, 0)];
         }
         else if (skinId === 'void_walker') {
-            // EPICA (Piano 10): Viandante del Vuoto — Silhouette levitante rastremata, Corona del Vuoto, 3 Monoliti Orbitanti e Doppia Glaive Simmetrica
+            // EPICA (Piano 10): Viandante del Vuoto — Corona fluttuante, 3 cristalli orbitanti e Doppia Lama collineare
             bodyParts = [
-                this.part(robeVoid, 1.0, 22, 1.0, 0, 1.0, 0),
-                this.part(cone4, 5.5, 8.0, 5.5, 0, -10.5, 0, Math.PI, Math.PI / 4, 0),
-                this.part(cone4, 3.8, 11.5, 3.8, -11.5, 10.2, 0, 0, Math.PI / 4, 0.32),
-                this.part(cone4, 3.8, 11.5, 3.8, 11.5, 10.2, 0, 0, Math.PI / 4, -0.32)
+                this.part(robeHex, 0.96, 24, 0.96, 0, 0, 0),
+                this.part(cone4, 3.4, 9.2, 3.4, -11.2, 9.5, 0, 0, 0, 0.24),
+                this.part(cone4, 3.4, 9.2, 3.4, 11.2, 9.5, 0, 0, 0, -0.24)
             ];
-            scarfParts = [this.part(torus, 6.8, 6.8, 2.2, 0, 0.5, 0, Math.PI / 2, 0, 0)];
-            headParts = [this.part(icosa, 6.2, 7.4, 6.2, 0, 0.6, 0)];
+            headParts = [this.part(icosa, 6.0, 7.2, 6.0, 0, 0.5, 0)];
             headAccentParts = [
-                this.part(torus, 5.2, 5.2, 1.8, 0, 7.8, 0, Math.PI / 2, 0, 0),
-                this.part(octa, 1.6, 5.2, 1.4, 0, 9.5, 3.8, 0.15, 0, 0),
-                this.part(octa, 1.3, 4.2, 1.2, -3.8, 8.8, 2.2, 0.1, 0, 0.35),
-                this.part(octa, 1.3, 4.2, 1.2, 3.8, 8.8, 2.2, 0.1, 0, -0.35),
-                this.part(octa, 1.6, 4.2, 1.4, 0, 0.6, 5.6)
+                this.part(torus, 4.6, 4.6, 1.6, 0, 7.6, 0, Math.PI / 2, 0, 0)
             ];
             for (let i = 0; i < 3; i++) {
                 let a = (i * Math.PI * 2) / 3;
-                accentParts.push(this.part(octa, 3.2, 7.5, 3.2, Math.cos(a) * 16.5, 6.5, Math.sin(a) * 16.5));
+                accentParts.push(this.part(icosa, 2.8, 5.2, 2.8, Math.cos(a) * 15.8, 6.2, Math.sin(a) * 15.8));
             }
             staffParts = [
-                this.part(cyl, 2.0, 15.0, 2.0, 0, 4.0, 3.0, 0.50, 0, 0),
-                this.part(octa, 3.8, 3.8, 3.8, 0, 4.0, 3.0)
+                this.part(cyl, 2.0, 16, 2.0, 0, 14, 0, 0.45, 0, 0),
+                this.part(box, 3.4, 2.4, 3.6, 0, 14, 0, 0.45, 0, 0)
             ];
-            gemParts = [this.part(cone4, 3.6, 19.5, 2.0, 0, 13.0, 7.2, 0.50, 0, 0)];
-            haloParts = [
-                this.part(cone4, 3.6, 19.5, 2.0, 0, -13.0, -7.2, Math.PI + 0.50, 0, 0),
-                this.part(torus, 4.6, 4.6, 2.2, 0, 0, 0, 0, Math.PI / 2, 0)
-            ];
+            gemParts = [this.part(cone4, 3.2, 17.0, 2.2, 0, 13.8, 6.6, 0.45, 0, 0)];
+            haloParts = [this.part(cone4, 3.2, 17.0, 2.2, 0, -13.8, -6.6, Math.PI + 0.45, 0, 0)];
         }
         else if (skinId === 'solar_archon') {
-            // LEGGENDARIA 1 (Piano 15): Arconte Solare — Diadema Raggiato a 5 punte, 6 Ali Serafiche spiegate e Tridente Imperiale
+            // LEGGENDARIA 1 (Piano 15): Arconte Solare — Corona solare a 3 punte, 4 Ali Serafiche pulite e Tridente Solare
             bodyParts = [
-                this.part(robeHex, 1.06, 24, 1.06, 0, 0, 0),
-                this.part(box, 6.4, 3.4, 5.8, -10.5, 9.4, 0, 0, 0, 0.32),
-                this.part(box, 6.4, 3.4, 5.8, 10.5, 9.4, 0, 0, 0, -0.32)
+                this.part(robeHex, 1.02, 24, 1.02, 0, 0, 0),
+                this.part(box, 5.4, 3.0, 4.8, -10.0, 9.0, 0, 0, 0, 0.30),
+                this.part(box, 5.4, 3.0, 4.8, 10.0, 9.0, 0, 0, 0, -0.30)
             ];
-            scarfParts = [
-                this.part(torus, 6.6, 6.6, 2.5, 0, 0.2, 0, Math.PI / 2, 0, 0),
-                this.part(octa, 3.8, 3.8, 2.0, 0, -2.0, 5.6)
-            ];
-            headParts = [this.part(dodeca, 6.2, 6.6, 6.2, 0, 0.3, 0)];
             headAccentParts = [
-                this.part(torus, 5.2, 5.2, 1.8, 0, 7.5, 0, Math.PI / 2, 0, 0),
-                this.part(cone4, 1.5, 7.8, 1.2, 0, 9.2, 3.8, 0.18, 0, 0),
-                this.part(cone4, 1.2, 6.4, 1.0, -3.6, 8.2, 2.8, 0.18, 0, 0.42),
-                this.part(cone4, 1.2, 6.4, 1.0, 3.6, 8.2, 2.8, 0.18, 0, -0.42),
-                this.part(cone4, 1.1, 5.2, 1.0, -6.2, 6.2, 1.0, 0.12, 0, 0.85),
-                this.part(cone4, 1.1, 5.2, 1.0, 6.2, 6.2, 1.0, 0.12, 0, -0.85),
-                this.part(box, 7.2, 1.5, 2.2, 0, 0.8, 5.0)
+                this.part(torus, 4.8, 4.8, 1.6, 0, 7.5, 0, Math.PI / 2, 0, 0),
+                this.part(cone4, 1.3, 6.8, 1.0, 0, 8.6, 3.5, 0.2, 0, 0),
+                this.part(cone4, 1.0, 5.6, 1.0, -4.0, 7.6, 2.5, 0.2, 0, 0.45),
+                this.part(cone4, 1.0, 5.6, 1.0, 4.0, 7.6, 2.5, 0.2, 0, -0.45)
             ];
             accentParts = [
-                this.part(cone4, 3.4, 24.0, 1.2, -15.5, 14.5, -5.8, -0.18, 0, 0.72),
-                this.part(cone4, 3.4, 24.0, 1.2, 15.5, 14.5, -5.8, -0.18, 0, -0.72),
-                this.part(cone4, 2.8, 19.0, 1.2, -16.0, 8.0, -5.8, -0.12, 0, 1.15),
-                this.part(cone4, 2.8, 19.0, 1.2, 16.0, 8.0, -5.8, -0.12, 0, -1.15),
-                this.part(cone4, 2.2, 14.0, 1.1, -13.0, 2.5, -5.8, -0.08, 0, 1.52),
-                this.part(cone4, 2.2, 14.0, 1.1, 13.0, 2.5, -5.8, -0.08, 0, -1.52)
+                this.part(cone4, 2.8, 21.0, 1.0, -14.2, 13.2, -5.5, -0.15, 0, 0.75),
+                this.part(cone4, 2.8, 21.0, 1.0, 14.2, 13.2, -5.5, -0.15, 0, -0.75),
+                this.part(cone4, 2.3, 15.5, 1.0, -12.8, 6.0, -5.5, -0.10, 0, 1.25),
+                this.part(cone4, 2.3, 15.5, 1.0, 12.8, 6.0, -5.5, -0.10, 0, -1.25)
             ];
             staffParts = [
-                this.part(cyl, 2.0, 37, 2.0, 0, 10.0, 0),
-                this.part(box, 15.5, 2.6, 2.8, 0, 26.5, 0)
+                this.part(cyl, 2.0, 36, 2.0, 0, 10, 0),
+                this.part(box, 14.2, 2.3, 2.5, 0, 26.5, 0)
             ];
-            gemParts = [this.part(cone4, 3.0, 18.5, 2.4, 0, 7.2, 0)];
+            gemParts = [this.part(cone4, 2.7, 17.5, 2.6, 0, 6.6, 0)];
             haloParts = [
-                this.part(cone4, 2.2, 14.5, 2.0, -6.5, 5.2, 0, 0, 0, 0.08),
-                this.part(cone4, 2.2, 14.5, 2.0, 6.5, 5.2, 0, 0, 0, -0.08)
+                this.part(cone4, 2.0, 13.8, 2.0, -6.0, 4.6, 0),
+                this.part(cone4, 2.0, 13.8, 2.0, 6.0, 4.6, 0)
             ];
         }
         else if (skinId === 'cyber_phantom') {
-            // LEGGENDARIA 2 (Piano 20): Spettro Cibernetico — Cappello Kasa Cyber-Ronin largo, Stabilizzatori X-Wing e Railgun Pesante
+            // LEGGENDARIA 2 (Piano 20): Spettro Cibernetico — Cappello Kasa Cyber-Ronin, Stabilizzatori X-Wing e Fucile Railgun
             bodyParts = [
-                this.part(robePyramid, 1.05, 24, 1.05, 0, 0, 0, 0, Math.PI / 4, 0),
-                this.part(box, 4.8, 8.2, 6.8, -10.5, 8.8, -1.5, 0.25, 0, 0.25),
-                this.part(box, 4.8, 8.2, 6.8, 10.5, 8.8, -1.5, 0.25, 0, -0.25)
+                this.part(robePyramid, 1, 24, 1, 0, 0, 0, 0, Math.PI / 4, 0),
+                this.part(box, 4.4, 7.6, 6.5, -10.0, 8.5, -2.0, 0.25, 0, 0.22),
+                this.part(box, 4.4, 7.6, 6.5, 10.0, 8.5, -2.0, 0.25, 0, -0.22)
             ];
-            scarfParts = [this.part(torus, 6.6, 6.6, 2.4, 0, 0.3, 0, Math.PI / 2, 0, 0)];
             headParts = [
-                this.part(box, 5.8, 6.0, 5.8, 0, 0, 0, 0, Math.PI / 4, 0),
-                this.part(cone, 13.8, 4.2, 13.8, 0, 4.6, 0)
+                this.part(box, 5.8, 5.8, 5.8, 0, 0, 0),
+                this.part(cone, 12.4, 3.6, 12.4, 0, 4.8, 0)
             ];
             headAccentParts = [
-                this.part(box, 8.2, 1.9, 3.2, 0, 0.6, 4.4),
-                this.part(torus, 11.2, 11.2, 1.4, 0, 3.0, 0, Math.PI / 2, 0, 0)
+                this.part(box, 7.8, 1.8, 2.8, 0, 0.5, 4.2),
+                this.part(torus, 7.0, 7.0, 1.5, 0, 3.8, 0, Math.PI / 2, 0, 0)
             ];
             accentParts = [
-                this.part(box, 16.5, 2.2, 1.2, -14.0, 13.0, -6.0, 0, -0.15, -0.48),
-                this.part(box, 16.5, 2.2, 1.2, 14.0, 13.0, -6.0, 0, 0.15, 0.48),
-                this.part(box, 13.5, 1.8, 1.2, -12.0, 4.5, -6.0, 0, -0.15, 0.45),
-                this.part(box, 13.5, 1.8, 1.2, 12.0, 4.5, -6.0, 0, 0.15, -0.45)
+                this.part(box, 14.5, 1.9, 1.0, -13.2, 12.0, -5.8, 0, 0, -0.45),
+                this.part(box, 14.5, 1.9, 1.0, 13.2, 12.0, -5.8, 0, 0, 0.45),
+                this.part(box, 12.2, 1.6, 1.0, -11.5, 5.0, -5.8, 0, 0, 0.45),
+                this.part(box, 12.2, 1.6, 1.0, 11.5, 5.0, -5.8, 0, 0, -0.45)
             ];
             staffParts = [
-                this.part(box, 3.4, 5.0, 14.0, 0, 0.5, -2.5),
-                this.part(box, 2.6, 3.2, 20.0, 0, 1.3, 14.0),
-                this.part(box, 2.2, 3.2, 6.5, 0, -1.8, 6.5, 0.25, 0, 0)
+                this.part(box, 3.2, 4.6, 13.2, 0, 0.5, -2.0),
+                this.part(box, 2.4, 3.0, 18.2, 0, 1.2, 13.0)
             ];
-            gemParts = [this.part(box, 1.5, 1.4, 22.0, 0, 1.3, -10.0)];
-            haloParts = [
-                this.part(box, 3.0, 2.6, 2.8, 0, 0, 0),
-                this.part(torus, 1.8, 1.8, 1.6, 0, 3.2, -18.5)
-            ];
+            gemParts = [this.part(box, 1.4, 1.3, 19.2, 0, 1.2, -9.0)];
+            haloParts = [this.part(box, 2.6, 2.3, 2.5, 0, 0, 0)];
         }
 
         // --- PARTICELLARE AURA SOFFICE GPU A COSTO 0 (Solo bagliori GLOW_TEX, nessuna geometria solida) ---
@@ -4216,16 +4136,10 @@ const SkinSystem = {
                 let swing = Math.sin(prog * Math.PI);
                 if (curSkin === 'cyber_phantom') {
                     this.heroParts.weaponGroup.rotation.set(-swing * 0.55, 0, 0);
-                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 1.5, 8 - swing * 11.0);
-                } else if (curSkin === 'crimson_inquisitor') {
-                    this.heroParts.weaponGroup.rotation.set(rest.rx + swing * 0.70, rest.ry + swing * 2.0, rest.rz - swing * 0.45);
-                    this.heroParts.weaponGroup.position.set(12 - swing * 8.0, 16 + swing * 2.0, 8 + swing * 9.5);
-                } else if (curSkin === 'void_walker') {
-                    this.heroParts.weaponGroup.rotation.set(rest.rx + prog * Math.PI * 2, rest.ry, rest.rz + swing * 0.5);
-                    this.heroParts.weaponGroup.position.set(12 - swing * 4.0, 16 + swing * 2.5, 8 + swing * 8.0);
+                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 1.2, 8 - swing * 11.0);
                 } else {
-                    this.heroParts.weaponGroup.rotation.set(rest.rx + swing * 0.72, rest.ry, rest.rz);
-                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 3.5, 8 + swing * 11.0);
+                    this.heroParts.weaponGroup.rotation.set(rest.rx + swing * 0.85, 0, 0);
+                    this.heroParts.weaponGroup.position.set(12, 16 + swing * 2.5, 8 + swing * 9.0);
                 }
             } else {
                 this.heroParts.weaponGroup.position.set(12, 16 + Math.cos(this.time * 2.8) * 0.8, 8);
@@ -5921,7 +5835,7 @@ function createCharacterTexture() {
 }
 const CHAR_GRUNGE_TEX = createCharacterTexture();
 
-// --- TEXTURE E MATERIALI PROCEDURALI COERENTI PER OGNI SKIN (Low-Poly Miniature Style) ---
+// --- TEXTURE E MATERIALI PROCEDURALI COERENTI PER OGNI SKIN (Stile Miniatura/Materico Coerente) ---
 const SKIN_TEX_CACHE = {};
 function getSkinTexture(skinId) {
     if (!skinId) return CHAR_GRUNGE_TEX;
@@ -5931,124 +5845,64 @@ function getSkinTexture(skinId) {
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
-    // Base luminosa neutra per preservare la saturazione e la leggibilità dei colori su smartphone
-    ctx.fillStyle = '#f2f2f2';
+    // Sfondo BIANCO PURO (come CHAR_GRUNGE_TEX) per mantenere colori vibranti e mai spenti
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 128, 128);
 
-    if (skinId === 'dark_mage') {
-        // Tessuto Arcano Oscuro: drappeggi verticali profondi, trama occulta incrociata e orlo runico
-        for (let x = 0; x < 128; x += 16) {
-            ctx.fillStyle = (x % 32 === 0) ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.65)';
-            ctx.fillRect(x, 0, 6, 128);
-            ctx.fillStyle = 'rgba(0,0,0,0.42)';
-            ctx.fillRect(x + 6, 0, 2, 128);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.22)';
-        ctx.lineWidth = 2;
-        for (let y = 8; y < 128; y += 16) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y + 8); ctx.stroke();
-        }
-        // Simboli/graffi runici sull'orlo
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        for (let x = 8; x < 128; x += 24) {
-            ctx.fillRect(x, 106, 8, 3);
-            ctx.fillRect(x + 3, 100, 2, 14);
-        }
-    } else if (skinId === 'astral_arcanist') {
-        // Seta Celestiale: reticolo geometrico a losanghe stellari e nodi argentei
-        for (let x = 0; x < 128; x += 16) {
-            ctx.fillStyle = 'rgba(0,0,0,0.16)';
-            ctx.fillRect(x, 0, 4, 128);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.34)';
-        ctx.lineWidth = 2;
-        for (let i = -128; i < 128; i += 32) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 128, 128); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(i + 128, 0); ctx.lineTo(i, 128); ctx.stroke();
-        }
+    // Generatore deterministico leggero per pattern materici omogenei e senza cuciture UV
+    let seed = 1337;
+    for (let c = 0; c < skinId.length; c++) seed = (seed * 31 + skinId.charCodeAt(c)) | 0;
+    const rand = () => {
+        seed = (seed * 1664525 + 1013904223) | 0;
+        return ((seed >>> 0) / 4294967296);
+    };
+
+    const presets = {
+        dark_mage:          { dark: 'rgba(18,10,34,0.42)',  accent: 'rgba(168,85,247,0.22)', scratch: 'rgba(15,8,28,0.48)',  grainCount: 680, scratchCount: 45, verticalGrain: true },
+        astral_arcanist:    { dark: 'rgba(14,32,68,0.34)',  accent: 'rgba(125,211,252,0.35)', scratch: 'rgba(30,58,138,0.38)', grainCount: 620, scratchCount: 38, starDots: true },
+        emerald_warden:     { dark: 'rgba(10,36,18,0.42)',  accent: 'rgba(110,231,183,0.28)', scratch: 'rgba(20,45,24,0.50)',  grainCount: 720, scratchCount: 52, verticalGrain: true },
+        crimson_inquisitor: { dark: 'rgba(36,8,12,0.46)',   accent: 'rgba(248,113,113,0.24)', scratch: 'rgba(20,5,8,0.58)',    grainCount: 780, scratchCount: 64, battleWear: true },
+        void_walker:        { dark: 'rgba(28,8,48,0.42)',   accent: 'rgba(216,180,254,0.36)', scratch: 'rgba(59,7,100,0.48)',  grainCount: 650, scratchCount: 46, starDots: true },
+        solar_archon:       { dark: 'rgba(56,28,6,0.34)',   accent: 'rgba(253,224,71,0.38)',  scratch: 'rgba(120,53,15,0.40)', grainCount: 640, scratchCount: 40, starDots: true },
+        cyber_phantom:      { dark: 'rgba(12,22,38,0.42)',  accent: 'rgba(103,232,249,0.32)', scratch: 'rgba(15,23,42,0.52)',  grainCount: 700, scratchCount: 48, techMicro: true }
+    };
+    const p = presets[skinId] || presets.dark_mage;
+
+    // 1. Porosità materica stile miniatura (scaglie chiare, ombreggiature e micro-riflessi tematici)
+    for (let i = 0; i < p.grainCount; i++) {
+        let r = rand();
+        ctx.fillStyle = r < 0.52 ? p.dark : (r < 0.80 ? '#ffffff' : p.accent);
+        let w = rand() * 3 + 1;
+        let h = p.verticalGrain ? (rand() * 5 + 1.5) : w;
+        ctx.fillRect(rand() * 128, rand() * 128, w, h);
+    }
+
+    // 2. Micro-dettagli di superficie isotropi (non creano mai righe storte sulle cuciture dei coni/cilindri)
+    if (p.starDots) {
         ctx.fillStyle = '#ffffff';
-        for (let y = 16; y < 128; y += 32) {
-            for (let x = 16; x < 128; x += 32) {
-                ctx.fillRect(x - 2, y - 2, 5, 5);
-            }
+        for (let i = 0; i < 45; i++) {
+            let sx = rand() * 124 + 2, sy = rand() * 124 + 2;
+            ctx.fillRect(sx, sy, 2, 2);
         }
-    } else if (skinId === 'emerald_warden') {
-        // Corteccia Antica e Scaglie Fogliari: venature lignee verticali e piastre a chevron
-        for (let x = 0; x < 128; x += 8) {
-            ctx.fillStyle = (x % 16 === 0) ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.55)';
-            ctx.fillRect(x, 0, 3, 128);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-        ctx.lineWidth = 2.5;
-        for (let y = 12; y < 128; y += 24) {
-            ctx.beginPath();
-            for (let x = 0; x <= 128; x += 32) {
-                ctx.lineTo(x, y);
-                ctx.lineTo(x + 16, y + 10);
-            }
-            ctx.stroke();
-        }
-    } else if (skinId === 'crimson_inquisitor') {
-        // Corazza Gotica e Gambeson Trapuntato: losanghe pesanti, rivetti in ferro e sfregi da battaglia
-        ctx.strokeStyle = 'rgba(0,0,0,0.52)';
-        ctx.lineWidth = 3;
-        for (let i = -128; i < 128; i += 24) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 128, 128); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(i + 128, 0); ctx.lineTo(i, 128); ctx.stroke();
-        }
-        ctx.fillStyle = '#ffffff';
-        for (let y = 12; y < 128; y += 24) {
-            for (let x = 12; x < 128; x += 24) {
-                ctx.fillRect(x - 2, y - 2, 4, 4);
-            }
-        }
-        ctx.fillStyle = 'rgba(0,0,0,0.38)';
-        ctx.fillRect(0, 58, 128, 6);
-    } else if (skinId === 'void_walker') {
-        // Cristallo Abissale: sfaccettature spigolose del Vuoto e fessure energetiche chiare
-        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-        ctx.lineWidth = 2.5;
-        const pts = [[0,20],[42,0],[88,28],[128,12],[24,68],[72,60],[116,74],[16,118],[64,110],[108,124]];
-        for (let i = 0; i < pts.length; i++) {
-            let p1 = pts[i], p2 = pts[(i + 1) % pts.length], p3 = pts[(i + 3) % pts.length];
-            ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.stroke();
-        }
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < 128; i += 32) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo((i + 48) % 128, 128); ctx.stroke();
-        }
-    } else if (skinId === 'solar_archon') {
-        // Piastre Solari Scanalate: rilievi imperiali verticali e fregi dorati a raggiera
-        for (let x = 0; x < 128; x += 16) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(x, 0, 7, 128);
-            ctx.fillStyle = 'rgba(0,0,0,0.38)';
-            ctx.fillRect(x + 7, 0, 3, 128);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0, 32, 128, 8);
-        ctx.strokeRect(0, 92, 128, 8);
-    } else if (skinId === 'cyber_phantom') {
-        // Fibra di Carbonio Esagonale e Pannelli Tattici Stealth
-        ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    } else if (p.techMicro) {
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
         for (let y = 0; y < 128; y += 8) {
             let shift = (y % 16 === 0) ? 0 : 4;
             for (let x = shift; x < 128; x += 8) {
-                ctx.fillRect(x, y, 4, 4);
+                ctx.fillRect(x, y, 2, 2);
             }
         }
-        ctx.strokeStyle = 'rgba(0,0,0,0.68)';
-        ctx.lineWidth = 3;
+    }
+
+    // 3. Graffi e segni d'usura da combattimento coerenti col resto del gioco
+    ctx.lineWidth = p.battleWear ? 2.0 : 1.6;
+    for (let i = 0; i < p.scratchCount; i++) {
+        ctx.strokeStyle = (i % 5 === 0) ? 'rgba(255,255,255,0.75)' : p.scratch;
+        let x = rand() * 128, y = rand() * 128;
         ctx.beginPath();
-        ctx.moveTo(0, 32); ctx.lineTo(44, 32); ctx.lineTo(64, 52); ctx.lineTo(128, 52);
-        ctx.moveTo(0, 96); ctx.lineTo(64, 96); ctx.lineTo(84, 76); ctx.lineTo(128, 76);
-        ctx.moveTo(64, 0); ctx.lineTo(64, 128);
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + rand() * 14 - 7, y + rand() * 14 - 7);
         ctx.stroke();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(4, 4, 120, 120);
     }
 
     const tex = new THREE.CanvasTexture(canvas);
@@ -6061,23 +5915,24 @@ function getSkinTexture(skinId) {
 }
 
 function getSkinMatConfig(skinId) {
+    // Metalness mantenuto basso (0.08 - 0.22) sul corpo/testa per evitare l'oscuramento del colore base in assenza di HDRI
     switch (skinId) {
         case 'dark_mage':
-            return { bodyRough: 0.78, bodyMetal: 0.08, headRough: 0.65, headMetal: 0.10, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.45, staffMetal: 0.55, bumpScale: 0.06 };
+            return { bodyRough: 0.72, bodyMetal: 0.08, headRough: 0.65, headMetal: 0.08, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.45, staffMetal: 0.60, bumpScale: 0.07 };
         case 'astral_arcanist':
-            return { bodyRough: 0.52, bodyMetal: 0.25, headRough: 0.50, headMetal: 0.20, scarfRough: 0.60, scarfMetal: 0.18, staffRough: 0.25, staffMetal: 0.85, bumpScale: 0.05 };
+            return { bodyRough: 0.60, bodyMetal: 0.12, headRough: 0.58, headMetal: 0.10, scarfRough: 0.70, scarfMetal: 0.08, staffRough: 0.35, staffMetal: 0.70, bumpScale: 0.06 };
         case 'emerald_warden':
-            return { bodyRough: 0.70, bodyMetal: 0.14, headRough: 0.55, headMetal: 0.18, scarfRough: 0.75, scarfMetal: 0.12, staffRough: 0.60, staffMetal: 0.28, bumpScale: 0.07 };
+            return { bodyRough: 0.68, bodyMetal: 0.10, headRough: 0.60, headMetal: 0.10, scarfRough: 0.80, scarfMetal: 0.06, staffRough: 0.55, staffMetal: 0.35, bumpScale: 0.07 };
         case 'crimson_inquisitor':
-            return { bodyRough: 0.46, bodyMetal: 0.45, headRough: 0.30, headMetal: 0.78, scarfRough: 0.65, scarfMetal: 0.25, staffRough: 0.26, staffMetal: 0.88, bumpScale: 0.08 };
+            return { bodyRough: 0.56, bodyMetal: 0.18, headRough: 0.42, headMetal: 0.22, scarfRough: 0.75, scarfMetal: 0.10, staffRough: 0.35, staffMetal: 0.75, bumpScale: 0.08 };
         case 'void_walker':
-            return { bodyRough: 0.38, bodyMetal: 0.50, headRough: 0.22, headMetal: 0.68, scarfRough: 0.42, scarfMetal: 0.40, staffRough: 0.22, staffMetal: 0.82, bumpScale: 0.06 };
+            return { bodyRough: 0.52, bodyMetal: 0.16, headRough: 0.45, headMetal: 0.18, scarfRough: 0.65, scarfMetal: 0.12, staffRough: 0.35, staffMetal: 0.70, bumpScale: 0.06 };
         case 'solar_archon':
-            return { bodyRough: 0.28, bodyMetal: 0.68, headRough: 0.24, headMetal: 0.78, scarfRough: 0.42, scarfMetal: 0.45, staffRough: 0.18, staffMetal: 0.92, bumpScale: 0.06 };
+            return { bodyRough: 0.48, bodyMetal: 0.20, headRough: 0.42, headMetal: 0.18, scarfRough: 0.60, scarfMetal: 0.14, staffRough: 0.30, staffMetal: 0.75, bumpScale: 0.06 };
         case 'cyber_phantom':
-            return { bodyRough: 0.26, bodyMetal: 0.74, headRough: 0.22, headMetal: 0.82, scarfRough: 0.38, scarfMetal: 0.50, staffRough: 0.20, staffMetal: 0.90, bumpScale: 0.07 };
+            return { bodyRough: 0.46, bodyMetal: 0.22, headRough: 0.40, headMetal: 0.22, scarfRough: 0.58, scarfMetal: 0.15, staffRough: 0.30, staffMetal: 0.78, bumpScale: 0.07 };
         default:
-            return { bodyRough: 0.70, bodyMetal: 0.10, headRough: 0.60, headMetal: 0.10, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.35, staffMetal: 0.80, bumpScale: 0.06 };
+            return { bodyRough: 0.70, bodyMetal: 0.10, headRough: 0.60, headMetal: 0.10, scarfRough: 0.85, scarfMetal: 0.05, staffRough: 0.40, staffMetal: 0.70, bumpScale: 0.07 };
     }
 }
 
@@ -7180,6 +7035,7 @@ const ModelFactory = {
         scarf.position.y = 24;
 
         let weaponGroup = new THREE.Group();
+        weaponGroup.rotation.order = 'YXZ';
         weaponGroup.position.set(12, 16, 8);
         let rest = PlayerGeometryBuilder.getRestPose(skin.id);
         weaponGroup.rotation.set(rest.rx, rest.ry, rest.rz);
@@ -16706,7 +16562,7 @@ class Player extends Entity {
         // Regola il bagliore sulla punta dell'arma mantenendo dimensioni compatte e leggibili
         if (this.fakeBloom) {
             if (skin.id === 'crimson_inquisitor') {
-                this.fakeBloom.position.set(-2.5, 0.5, 10.5);
+                this.fakeBloom.position.set(0, 0, 9.0);
                 this.fakeBloom.scale.set(20, 20, 1);
             } else if (skin.id === 'solar_archon' || skin.id === 'emerald_warden') {
                 this.fakeBloom.position.set(0, 6.5, 0);
@@ -17890,11 +17746,10 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             let targetY = 16 + Math.abs(Math.cos(this.swingPhase)) * (isMoving ? 1.4 : 0.3);
             let targetRotZ = restPose.rz + Math.sin(this.swingPhase) * (isMoving ? 0.12 : 0.03);
 
+            this.modelParts.weaponGroup.position.x += (targetX - this.modelParts.weaponGroup.position.x) * dt * 12;
+            this.modelParts.weaponGroup.position.y += (targetY - this.modelParts.weaponGroup.position.y) * dt * 12;
             if (!this.isAttacking) {
-                this.modelParts.weaponGroup.position.x += (targetX - this.modelParts.weaponGroup.position.x) * dt * 12;
-                this.modelParts.weaponGroup.position.y += (targetY - this.modelParts.weaponGroup.position.y) * dt * 12;
                 this.modelParts.weaponGroup.position.z += (8 - this.modelParts.weaponGroup.position.z) * dt * 12;
-                this.modelParts.weaponGroup.rotation.x += (restPose.rx - this.modelParts.weaponGroup.rotation.x) * dt * 12;
                 this.modelParts.weaponGroup.rotation.y += (restPose.ry - this.modelParts.weaponGroup.rotation.y) * dt * 12;
                 this.modelParts.weaponGroup.rotation.z += (targetRotZ - this.modelParts.weaponGroup.rotation.z) * dt * 12;
             }
@@ -18018,57 +17873,63 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         if (isShooting && this.attackTimer <= 0 && !this.isDashing && !(this.overdrive && this.essence === 'red')) this.attack();
         let restPose = PlayerGeometryBuilder.getRestPose(curSkin);
         if (this.isAttacking) { 
-            this.attackSwing += dt * 15.0; 
+            this.attackSwing += dt * 14.5; 
             if (this.attackSwing >= Math.PI) { 
                 this.isAttacking = false; 
-                this.modelParts.weaponGroup.rotation.set(restPose.rx, restPose.ry, restPose.rz);
-                this.modelParts.weaponGroup.position.set(12, 16, 8);
+                this.modelParts.weaponGroup.rotation.x = restPose.rx;
+                this.modelParts.weaponGroup.rotation.y = restPose.ry;
+                this.modelParts.weaponGroup.position.z = 8;
                 this.modelParts.body.rotation.y = 0;
             } else {
                 let prog = this.attackSwing / Math.PI; // 0 -> 1
                 let sinSwing = Math.max(0, Math.sin(this.attackSwing));
-                let punch = Math.pow(sinSwing, 0.72);
+                let windup = Math.sin(prog * Math.PI * 2.0); // + all'inizio, - sul finale
                 let wg = this.modelParts.weaponGroup;
 
                 if (curSkin === 'cyber_phantom') {
-                    // FUCILE RAILGUN: Rinculo balistico netto (amplificato al 5° colpo Laser)
+                    // FUCILE RAILGUN: Rinculo balistico lineare indietro (amplificato al 5° colpo Laser)
                     let isLaserShot = (this.cyberShotCount === 0);
-                    let kick = Math.sqrt(sinSwing) * (isLaserShot ? 1.32 : 1.0);
-                    wg.rotation.set(-kick * 0.52, 0, 0);
-                    wg.position.set(12, 16 + kick * 1.8, 8 - kick * 13.0);
-                    this.modelParts.body.rotation.y = -kick * 0.14;
+                    let kick = Math.sqrt(sinSwing) * (isLaserShot ? 1.25 : 1.0);
+                    wg.rotation.x = -kick * 0.55;
+                    wg.rotation.y = 0;
+                    wg.position.z = 8 - kick * 13.5;
+                    this.modelParts.body.rotation.y = -kick * 0.10;
                 } else if (curSkin === 'emerald_warden') {
-                    // LANCIA SILVANA: Affondo vipereo profondo in avanti con torsione del busto
-                    wg.rotation.set(restPose.rx + punch * 0.62, restPose.ry - punch * 0.10, restPose.rz);
-                    wg.position.set(12 - punch * 3.2, 16 - punch * 1.2, 8 + punch * 16.5);
-                    this.modelParts.body.rotation.y = punch * 0.28;
-                } else if (curSkin === 'crimson_inquisitor') {
-                    // GRANDE FALCE CREMISI: Ampia mietitura orizzontale da destra a sinistra
-                    wg.rotation.set(restPose.rx + punch * 0.72, restPose.ry + sinSwing * 2.15, restPose.rz - punch * 0.52);
-                    wg.position.set(12 - sinSwing * 9.5, 16 - punch * 1.0, 8 + punch * 11.5);
-                    this.modelParts.body.rotation.y = -0.18 + sinSwing * 0.56;
-                } else if (curSkin === 'void_walker') {
-                    // DOPPIA GLAIVE DEL VUOTO: Vortice acrobatico a 360° attorno all'impugnatura
-                    wg.rotation.set(restPose.rx + prog * Math.PI * 2.0, restPose.ry + sinSwing * 0.35, restPose.rz + sinSwing * 0.55);
-                    wg.position.set(12 - sinSwing * 4.5, 16 + sinSwing * 2.0, 8 + punch * 9.5);
-                    this.modelParts.body.rotation.y = sinSwing * 0.32;
-                } else if (curSkin === 'solar_archon') {
-                    // TRIDENTE SOLARE: Affondo imperiale dall'alto con apertura delle ali serafiche
-                    wg.rotation.set(restPose.rx + punch * 0.70, restPose.ry - punch * 0.08, restPose.rz);
-                    wg.position.set(12 - punch * 2.5, 16 + Math.sin(prog * Math.PI * 2.0) * 2.8, 8 + punch * 14.5);
-                    this.modelParts.body.rotation.y = punch * 0.25;
-                } else if (curSkin === 'astral_arcanist') {
-                    // SCETTRO ASTRALE: Evocazione cosmica ad arco con sollevamento del cristallo stellare
-                    wg.rotation.set(restPose.rx + punch * 0.78, -sinSwing * 0.28, restPose.rz - sinSwing * 0.32);
-                    wg.position.set(12 - sinSwing * 2.8, 16 + sinSwing * 4.2, 8 + punch * 9.0);
-                    this.modelParts.body.rotation.y = sinSwing * 0.20;
-                } else {
-                    // MAGO OSCURO: Kanalizzazione arcana in avanti con spinta del bastone d'ombra
-                    wg.rotation.set(restPose.rx + punch * 0.82, -sinSwing * 0.22, restPose.rz - sinSwing * 0.18);
-                    wg.position.set(12 - sinSwing * 2.2, 16 + sinSwing * 3.4, 8 + punch * 9.5);
+                    // LANCIA SILVANA: Affondo lineare diretto in avanti senza oscillazioni laterali
+                    wg.rotation.x = restPose.rx + sinSwing * 0.72;
+                    wg.rotation.y = 0;
+                    wg.position.z = 8 + sinSwing * 14.0;
                     this.modelParts.body.rotation.y = sinSwing * 0.18;
+                } else if (curSkin === 'crimson_inquisitor') {
+                    // FALCE CREMISI: Fendente diagonale pulito in avanti (con ordine YXZ non ruota mai su se stessa!)
+                    wg.rotation.x = restPose.rx - windup * 0.25 + sinSwing * 0.88;
+                    wg.rotation.y = sinSwing * 0.28;
+                    wg.rotation.z = -sinSwing * 0.25;
+                    wg.position.z = 8 + sinSwing * 8.5;
+                    this.modelParts.body.rotation.y = sinSwing * 0.22;
+                } else if (curSkin === 'void_walker') {
+                    // DOPPIA LAMA DEL VUOTO: Fendente fluido diagonale in avanti
+                    wg.rotation.x = restPose.rx - windup * 0.22 + sinSwing * 0.92;
+                    wg.rotation.y = sinSwing * 0.20;
+                    wg.rotation.z = sinSwing * 0.24;
+                    wg.position.z = 8 + sinSwing * 8.0;
+                    this.modelParts.body.rotation.y = sinSwing * 0.20;
+                } else if (curSkin === 'solar_archon') {
+                    // TRIDENTE SOLARE: Colpo imperiale in avanti con apertura delle ali
+                    wg.rotation.x = restPose.rx - windup * 0.18 + sinSwing * 0.78;
+                    wg.rotation.y = 0;
+                    wg.position.z = 8 + sinSwing * 11.5;
+                    this.modelParts.body.rotation.y = sinSwing * 0.18;
+                } else {
+                    // MAGO OSCURO & ARCANISTA ASTRALE: Lancio arcano morbido in avanti senza scatti
+                    wg.rotation.x = restPose.rx - windup * 0.25 + sinSwing * 0.82;
+                    wg.rotation.y = 0;
+                    wg.position.z = 8 + sinSwing * 7.0;
+                    this.modelParts.body.rotation.y = sinSwing * 0.15;
                 }
             }
+        } else {
+            this.modelParts.weaponGroup.rotation.x = restPose.rx;
         }
 
         let stackBonus = (this.essenceList ? this.essenceList.length : 0) * 0.20;
