@@ -21360,7 +21360,7 @@ class Enemy extends Entity {
                 let dSqToP = Game.player ? MathUtils.distanceSq(this, Game.player) : 999999;
                 // Ricarica più rapida se il giocatore gli è addosso (< 190 unità)
                 this.blinkCooldown -= dt * (dSqToP < 36100 ? 1.85 : 1.0);
-                if (this.blinkCooldown <= 0 && this.telegraphTimer <= 0 && this.state === 'chasing' && dSqToP < 360000) {
+                if (this.blinkCooldown <= 0 && this.telegraphTimer <= 0 && this.state === 'walk' && dSqToP < 360000) {
                     this.blinkAnimTimer = 0.38;
                     this.blinkTeleported = false;
                     this.blinkCooldown = MathUtils.randomRange(4.2, 6.2);
@@ -21414,7 +21414,7 @@ class Enemy extends Entity {
                 let baseScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
                 this.mesh.scale.set(baseScale * sx, baseScale * sy, baseScale * sx);
                 if (Game.player) {
-                    let angToP = MathUtils.angle(this, Game.player);
+                    let angToP = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                     this.mesh.rotation.y = -angToP + Math.PI / 2;
                 }
                 this.syncFakeShadow(this.mesh.position.y);
@@ -22552,8 +22552,8 @@ class Enemy extends Entity {
         for (let attempt = 0; attempt < 14; attempt++) {
             let ang = Math.random() * Math.PI * 2;
             let dist = MathUtils.randomRange(230, 390);
-            let candX = MathUtils.clamp(Game.player.x + Math.cos(ang) * dist, mapMin, mapMaxX);
-            let candY = MathUtils.clamp(Game.player.y + Math.sin(ang) * dist, mapMin, mapMaxY);
+           let candX = Math.max(mapMin, Math.min(mapMaxX, Game.player.x + Math.cos(ang) * dist));
+            let candY = Math.max(mapMin, Math.min(mapMaxY, Game.player.y + Math.sin(ang) * dist));
 
             let moveDistSq = (candX - oldX) * (candX - oldX) + (candY - oldY) * (candY - oldY);
             if (moveDistSq < 19600) continue; // Almeno 140 unità di spostamento
@@ -22800,7 +22800,8 @@ class Enemy extends Entity {
         if (source === Game.player && Game.matchStats) Game.matchStats.dmgDealt += amount;
 
         // Esplode se ucciso in qualsiasi momento mentre è vulnerabile (sia in carica sia post-sparo finché la gabbia non è chiusa)
-       if (this.type === 'mage' && this.blinkAnimTimer <= 0 && this.blinkCooldown > 0.45) {
+        let wasVulnerableFireDemon = (this.type === 'fire_demon' && ((this.telegraphTimer || 0) > 0 || (this.coreExposedTimer || 0) > 0));
+        if (this.type === 'mage' && this.blinkAnimTimer <= 0 && this.blinkCooldown > 0.45) {
             this.blinkCooldown = Math.max(0.35, this.blinkCooldown * 0.45);
         }
         super.takeDamage(amount, source, isCrit);
