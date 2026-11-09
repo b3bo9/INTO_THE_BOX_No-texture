@@ -8207,17 +8207,107 @@ const ModelFactory = {
             let teeth = new THREE.Mesh(SharedGeo.cone, SharedMat.leaperTeeth); teeth.scale.set(size*0.8, size*3.0, size*0.8); teeth.position.set(0, size*1.2, size); teeth.rotation.x = Math.PI/2;
             group.add(body); group.add(teeth);
        } else if (type === 'fire_demon') {
-            let torso = new THREE.Mesh(SharedGeo.box, darkMat); torso.scale.set(size*1.5, size*1.5, size*1.5); torso.position.y = size*1.5;
-            let core = new THREE.Mesh(SharedGeo.icosahedron, mat); core.scale.set(size*0.9, size*0.9, size*0.9); core.position.set(0, size*1.5, size*0.18);
-            let head = new THREE.Mesh(SharedGeo.box, darkMat); head.scale.set(size*0.6, size*0.6, size*0.6); head.position.set(0, size*2.8, 0);
-            let hornL = new THREE.Mesh(SharedGeo.cone, mat); hornL.scale.set(size*0.3, size*2.0, size*0.3); hornL.position.set(-size*0.4, size*3.2, 0); hornL.rotation.z = Math.PI/4;
-            let hornR = new THREE.Mesh(SharedGeo.cone, mat); hornR.scale.set(size*0.3, size*2.0, size*0.3); hornR.position.set(size*0.4, size*3.2, 0); hornR.rotation.z = -Math.PI/4;
+            // 1. Bacino e Colonna Vertebrale Dorsale (nessuna compenetrazione col vano centrale)
+            let pelvis = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            pelvis.scale.set(size * 0.68, size * 0.36, size * 0.52);
+            pelvis.position.set(0, size * 0.36, 0);
+
+            let spine = new THREE.Mesh(SharedGeo.box, darkMat);
+            spine.scale.set(size * 0.32, size * 1.96, size * 0.28);
+            spine.position.set(0, size * 1.52, -size * 0.68);
+
+            let collar = new THREE.Mesh(SharedGeo.box, darkMat);
+            collar.scale.set(size * 1.44, size * 0.24, size * 0.46);
+            collar.position.set(0, size * 2.54, -size * 0.40);
+
+            // 2. Torso a Gabbia Toracica Scheletrica Cava (2 semigabbie incernierate che si aprono)
+            let torso = new THREE.Group();
+            torso.position.set(0, size * 1.50, 0);
+
+            const buildRibHalf = (side) => {
+                // side: -1 = Sinistra, +1 = Destra
+                let half = new THREE.Group();
+                half.position.set(side * size * 0.72, 0, -size * 0.50);
+
+                // Montante verticale posteriore (cardine)
+                let post = new THREE.Mesh(SharedGeo.box, darkMat);
+                post.scale.set(size * 0.22, size * 1.56, size * 0.22);
+                post.position.set(0, 0, 0);
+                half.add(post);
+
+                // 3 Costole scheletriche arcuato-angolate ( lasciano il centro cavo )
+                const ribLevels = [size * 0.56, 0, -size * 0.56];
+                for (let r = 0; r < 3; r++) {
+                    let ry = ribLevels[r];
+                    let sideRib = new THREE.Mesh(SharedGeo.box, darkMat);
+                    sideRib.scale.set(size * 0.18, size * 0.18, size * 0.68);
+                    sideRib.position.set(0, ry, size * 0.45);
+
+                    let frontRib = new THREE.Mesh(SharedGeo.box, darkMat);
+                    frontRib.scale.set(size * 0.52, size * 0.17, size * 0.17);
+                    frontRib.position.set(-side * size * 0.28, ry, size * 0.88);
+                    frontRib.rotation.y = side * 0.40;
+
+                    half.add(sideRib, frontRib);
+                }
+
+                // Sbarra sternale anteriore di chiusura
+                let sternumBar = new THREE.Mesh(SharedGeo.box, darkMat);
+                sternumBar.scale.set(size * 0.16, size * 1.38, size * 0.16);
+                sternumBar.position.set(-side * size * 0.52, 0, size * 0.98);
+                half.add(sternumBar);
+
+                // Spuntone omerale demoniaco sopra la gabbia
+                let spike = new THREE.Mesh(SharedGeo.cone, mat);
+                spike.scale.set(size * 0.24, size * 0.72, size * 0.24);
+                spike.position.set(-side * size * 0.08, size * 1.02, size * 0.10);
+                spike.rotation.z = -side * 0.42;
+                half.add(spike);
+
+                return half;
+            };
+
+            let cageL = buildRibHalf(-1);
+            let cageR = buildRibHalf(1);
+            torso.add(cageL, cageR);
+
+            // 3. Proiettile / Nucleo Magmatico ospitato dentro la gabbia cava
+            let core = new THREE.Mesh(SharedGeo.energyOrb, mat);
+            core.scale.setScalar(size * 0.44);
+            core.position.set(0, size * 1.50, 0);
+
             let coreGlow = new THREE.Sprite(SharedMat.spriteYellow);
-            coreGlow.scale.set(size * 4.2, size * 4.2, 1);
-            coreGlow.position.set(0, size * 1.5, size * 0.55);
+            coreGlow.scale.set(size * 3.8, size * 3.8, 1);
+            coreGlow.position.set(0, size * 1.50, size * 0.45);
             coreGlow.visible = false;
-            group.add(torso, core, head, hornL, hornR, coreGlow);
+
+            // 4. Cranio e Corna (appoggiati sul collare senza compenetrazioni)
+            let head = new THREE.Mesh(SharedGeo.box, darkMat);
+            head.scale.set(size * 0.66, size * 0.60, size * 0.62);
+            head.position.set(0, size * 2.96, -size * 0.18);
+
+            let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeL.scale.set(size * 0.16, size * 0.11, size * 0.06);
+            eyeL.position.set(-size * 0.17, size * 2.98, size * 0.16);
+
+            let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeR.scale.set(size * 0.16, size * 0.11, size * 0.06);
+            eyeR.position.set(size * 0.17, size * 2.98, size * 0.16);
+
+            let hornL = new THREE.Mesh(SharedGeo.cone, mat);
+            hornL.scale.set(size * 0.22, size * 1.35, size * 0.22);
+            hornL.position.set(-size * 0.54, size * 3.40, -size * 0.18);
+            hornL.rotation.z = 0.52;
+
+            let hornR = new THREE.Mesh(SharedGeo.cone, mat);
+            hornR.scale.set(size * 0.22, size * 1.35, size * 0.22);
+            hornR.position.set(size * 0.54, size * 3.40, -size * 0.18);
+            hornR.rotation.z = -0.52;
+
+            group.add(pelvis, spine, collar, torso, core, head, eyeL, eyeR, hornL, hornR, coreGlow);
             parts.torso = torso;
+            parts.cageL = cageL;
+            parts.cageR = cageR;
             parts.core = core;
             parts.coreGlow = coreGlow;
         } else if (type === 'crystal') {
@@ -17367,20 +17457,21 @@ class Entity {
                 }
             }
         }
-        // Squash & Stretch + Rinculo Fisico all'indietro sui danni
+        // Squash & Stretch + Rinculo Fisico all'indietro sui danni (preserva l'ingrandimento del Fire Demon)
+        let chargeMult = this.demonChargeScale || 1.0;
         if (this.hitSquashTimer > 0) {
             this.hitSquashTimer -= dt;
             if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-                let visualScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
+                let visualScale = (this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0)) * chargeMult;
                 let squash = 1.0 + (this.hitSquashTimer * 1.8); 
                 let stretch = 1.0 - (this.hitSquashTimer * 1.2); 
                 this.mesh.scale.set(visualScale * squash, visualScale * stretch, visualScale * squash);
                 if (this !== Game.player && this.state !== 'leaping') {
-                    this.mesh.rotation.x = -this.hitSquashTimer * 2.5; // Piega il nemico all'indietro per l'impatto
+                    this.mesh.rotation.x = -this.hitSquashTimer * 2.5;
                 }
             }
         } else if (this.type !== 'crystal' && this.type !== 'slime' && this.type !== 'slime_mini') {
-            let visualScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
+            let visualScale = (this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0)) * chargeMult;
             this.mesh.scale.setScalar(visualScale);
             if (this !== Game.player && this.state !== 'leaping' && this.type !== 'goblin') {
                 this.mesh.rotation.x = 0;
@@ -20729,9 +20820,12 @@ class Enemy extends Entity {
             }
             if (this.type === 'fire_demon' && this.modelParts.torso) {
                 let bs = baseModelSize;
-                this.modelParts.torso.scale.set(bs * 1.5, bs * 1.5, bs * 1.5);
-                this.modelParts.core.scale.setScalar(bs * 0.9);
-                this.modelParts.core.position.set(0, bs * 1.5, bs * 0.18);
+                this.demonChargeScale = 1.0;
+                this.modelParts.torso.scale.set(1, 1, 1);
+                if (this.modelParts.cageL) this.modelParts.cageL.rotation.y = 0;
+                if (this.modelParts.cageR) this.modelParts.cageR.rotation.y = 0;
+                this.modelParts.core.scale.setScalar(bs * 0.44);
+                this.modelParts.core.position.set(0, bs * 1.50, 0);
                 if (this.modelParts.coreGlow) this.modelParts.coreGlow.visible = false;
             }
             if (this.type === 'goblin' && this.modelParts.pivot) {
@@ -21090,33 +21184,54 @@ class Enemy extends Entity {
             }
         }
 
-        // --- FIRE DEMON: GABBIA CHIUSA (-60% DANNI) / NUCLEO ESPOSTO (0.8s POST-SPARO) ---
+        // --- FIRE DEMON: GABBIA SCHELETRICA CHIUSA (-80% DANNI) / APERTA E VULNERABILE IN CARICA E POST-SPARO ---
         if (this.type === 'fire_demon' && this.modelParts && this.modelParts.core) {
             let bs = this.baseModelSize || 14;
             if (this.coreExposedTimer > 0) this.coreExposedTimer = Math.max(0, this.coreExposedTimer - dt);
             let isExposed = (this.telegraphTimer > 0 || this.coreExposedTimer > 0);
-            let rotSpd = isExposed ? 14.0 : 3.0;
+            let rotSpd = isExposed ? 14.0 : 3.2;
             this.modelParts.core.rotation.x += dt * rotSpd;
             this.modelParts.core.rotation.y += dt * (rotSpd * 1.3);
 
             if (isExposed) {
-                let openAmt = this.telegraphTimer > 0 ? Math.min(1.0, 1.0 - (this.telegraphTimer / 0.70)) : Math.min(1.0, this.coreExposedTimer / 0.25);
-                this.modelParts.torso.scale.set(bs * (1.5 + openAmt * 0.42), bs * (1.5 - openAmt * 0.42), bs * (1.5 + openAmt * 0.42));
-                this.modelParts.core.scale.setScalar(bs * (0.95 + openAmt * 0.42 + Math.sin(Game.playTime * 35) * 0.10));
-                this.modelParts.core.position.z = bs * (0.18 + openAmt * 0.38);
+                let openAmt = 0;
+                let coreGrow = 0;
+                if (this.telegraphTimer > 0) {
+                    // Fase di Carica: la gabbia si spalanca, il demone e il proiettile crescono di dimensioni
+                    let chargeProg = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.70));
+                    openAmt = Math.min(1.0, chargeProg * 1.35);
+                    coreGrow = chargeProg;
+                    this.demonChargeScale = 1.0 + chargeProg * 0.28;
+                } else {
+                    // Fase Post-Sparo: rimane vulnerabile a gabbia aperta, poi le costole si richiudono negli ultimi 0.45s
+                    openAmt = Math.min(1.0, this.coreExposedTimer / 0.45);
+                    coreGrow = openAmt * 0.35;
+                    this.demonChargeScale = 1.0 + openAmt * 0.22;
+                }
+
+                if (this.modelParts.cageL) this.modelParts.cageL.rotation.y = -openAmt * 1.15;
+                if (this.modelParts.cageR) this.modelParts.cageR.rotation.y = openAmt * 1.15;
+
+                let pulse = Math.sin(Game.playTime * 35) * 0.08 * openAmt;
+                let cScale = bs * (0.44 + coreGrow * 0.68 + pulse);
+                this.modelParts.core.scale.setScalar(cScale);
+                this.modelParts.core.position.z = bs * (0.32 * coreGrow);
+
                 if (this.modelParts.coreGlow) {
                     this.modelParts.coreGlow.visible = true;
-                    let gs = bs * (3.6 + Math.sin(Game.playTime * 30) * 0.7);
+                    let gs = bs * (2.6 + coreGrow * 2.2 + Math.sin(Game.playTime * 30) * 0.5);
                     this.modelParts.coreGlow.scale.set(gs, gs, 1);
                 }
                 if (this.flashTimer <= 0 && !this.isProphetBuffed) {
-                    this.mat.emissive.setHex(0xffdd00);
-                    this.mat.emissiveIntensity = 1.6 + openAmt * 1.2;
+                    this.mat.emissive.setHex(0xffaa00);
+                    this.mat.emissiveIntensity = 1.2 + openAmt * 1.4;
                 }
             } else {
-                this.modelParts.torso.scale.set(bs * 1.5, bs * 1.5, bs * 1.5);
-                this.modelParts.core.scale.setScalar(bs * 0.90);
-                this.modelParts.core.position.z = bs * 0.18;
+                this.demonChargeScale = 1.0;
+                if (this.modelParts.cageL) this.modelParts.cageL.rotation.y = 0;
+                if (this.modelParts.cageR) this.modelParts.cageR.rotation.y = 0;
+                this.modelParts.core.scale.setScalar(bs * 0.44);
+                this.modelParts.core.position.z = 0;
                 if (this.modelParts.coreGlow) this.modelParts.coreGlow.visible = false;
                 if (this.flashTimer <= 0 && !this.isProphetBuffed && this.slowedTimer <= 0) {
                     this.mat.emissive.setHex(defaultEmissive);
@@ -21921,18 +22036,21 @@ class Enemy extends Entity {
                     return;
                 }
 
-                // 4. FIRE DEMON: La gabbia scura (torso) è già dilatata col nucleo giallo vivo; evita il flash bianco generico
+                // 4. FIRE DEMON: Gabbia spalancata, crescita dimensioni e rilascio proiettile con finestra vulnerabile post-sparo
                 if (this.type === 'fire_demon') {
                     let prog = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.70));
-                    this.mesh.rotation.x = -(prog * prog) * 0.22;
+                    this.mesh.rotation.x = -(prog * prog) * 0.20;
+                    let vScale = (this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0)) * (this.demonChargeScale || 1.0);
+                    this.mesh.scale.setScalar(vScale);
+
                     if (Game.frameCount % (isTouchDevice ? 5 : 3) === 0 && !AppSettings.isLow) {
                         let cp = Game.getParticle();
-                        cp.spawn(this.x + MathUtils.randomRange(-10, 10), this.radius * 1.6, this.y + MathUtils.randomRange(-10, 10), SharedMat.spriteYellow, 'spark');
+                        cp.spawn(this.x + MathUtils.randomRange(-10, 10), this.radius * 1.5, this.y + MathUtils.randomRange(-10, 10), SharedMat.spriteYellow, 'spark');
                         cp.baseSize = 12;
                     }
                     if (this.telegraphTimer <= 0) {
                         this.mesh.rotation.x = 0;
-                        this.coreExposedTimer = 0.80; // Nucleo resta esposto per altri 0.8s dopo lo sparo!
+                        this.coreExposedTimer = 1.25; // Rimane vulnerabile dopo lo sparo finché la gabbia non si richiude completamente!
                         this.hitSquashTimer = 0.12;
                         this.executeAttack();
                     }
@@ -22215,12 +22333,14 @@ class Enemy extends Entity {
 
         if (this.type === 'fire_demon') {
             if ((this.telegraphTimer || 0) <= 0 && (this.coreExposedTimer || 0) <= 0) {
-                amount *= (hasJudgment ? 0.70 : 0.40) * shieldBreaker;
+                // Gabbia chiusa: lo scudo osseo assorbe l'80% dei danni ricevuti (subisce solo il 20%)
+                amount *= (hasJudgment ? 0.50 : 0.20) * shieldBreaker;
                 if (!hasJudgment) isCrit = false;
                 this._shieldClang = true;
                 if (Game.frameCount % 3 === 0) Game.getParticle().spawn(this.x, this.radius * 1.5, this.y, SharedMat.spriteWhite, 'spark');
             } else {
-                amount *= 1.35;
+                // Gabbia aperta (in carica o post-sparo prima della chiusura): vulnerabile (+50% danni subiti)
+                amount *= 1.50;
             }
         }
 
@@ -22261,9 +22381,10 @@ class Enemy extends Entity {
         if (this.fireDebuffTimer > 0 && Game.player && Game.player.modifiers.fireTrailDebuff) amount *= 1.20;
         if (source === Game.player && Game.matchStats) Game.matchStats.dmgDealt += amount;
 
-        let wasChargingCore = (this.type === 'fire_demon' && (this.telegraphTimer || 0) > 0);
+        // Esplode se ucciso in qualsiasi momento mentre è vulnerabile (sia in carica sia post-sparo finché la gabbia non è chiusa)
+        let wasVulnerableFireDemon = (this.type === 'fire_demon' && ((this.telegraphTimer || 0) > 0 || (this.coreExposedTimer || 0) > 0));
         super.takeDamage(amount, source, isCrit);
-        if (this.dead && wasChargingCore) {
+        if (this.dead && wasVulnerableFireDemon) {
             this._detonateCoreOnDeath = true;
         }
 
@@ -22367,11 +22488,31 @@ class Enemy extends Entity {
         AudioEngine.playEnemyDeath();
         Game.player.gainXp(this.xpValue);
 
-        // --- INNESCO NUCLEO INSTABILE FIRE DEMON (Se ucciso mentre carica il colpo!) ---
+        // --- DETONAZIONE NUCLEO FIRE DEMON (Se ucciso mentre la gabbia è aperta/vulnerabile) ---
         if (this._detonateCoreOnDeath) {
             this._detonateCoreOnDeath = false;
+            let expRadius = 195;
+            let expRadSq = expRadius * expRadius;
             let detDmg = this.stats.maxHp * 1.25 + this.stats.maxDmg * 3.0;
-            Game.getHazard().spawn(this.x, this.y, 195, 0.38, detDmg, 0xffcc00, 'nova_ring');
+
+            // Danneggia e sbalza immediatamente tutti i nemici circostanti nel raggio dell'esplosione
+            let nearby = Game.enemyGrid.findNearby(this, expRadius);
+            for (let i = 0; i < nearby.length; i++) {
+                let other = nearby[i];
+                if (other !== this && !other.dead && other.type !== 'crystal') {
+                    let dx = other.x - this.x;
+                    let dy = other.y - this.y;
+                    let dSq = dx * dx + dy * dy;
+                    if (dSq <= expRadSq) {
+                        other.takeDamage(detDmg, Game.player, true, false);
+                        let pushAng = Math.atan2(dy, dx);
+                        other.push(Math.cos(pushAng), Math.sin(pushAng), 110);
+                    }
+                }
+            }
+
+            // Onda d'urto visiva 3D + flash + bruciatura a terra
+            Game.getHazard().spawn(this.x, this.y, expRadius, 0.38, 0, 0xffaa00, 'nova_ring');
             Game.spawnLightFlash(this.x, this.y, 0xffaa00, 9.5, 520, 0.32);
             Game.spawnDecal(this.x, this.y, 'scorch');
             Game.addTrauma(0.85);
