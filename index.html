@@ -7058,6 +7058,36 @@ const SharedGeo = {
     })(),
     auraDome: new THREE.SphereGeometry(1, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
     auraRing: new THREE.RingGeometry(0.97, 1.0, 48),
+    arcanePrisonCage: (function() {
+        const parts = [];
+        const numPillars = 8;
+        for (let i = 0; i < numPillars; i++) {
+            const a = (i / numPillars) * Math.PI * 2;
+            const px = Math.cos(a) * 0.98;
+            const pz = Math.sin(a) * 0.98;
+            // Pilastro runico verticale
+            const pil = new THREE.CylinderGeometry(0.022, 0.038, 1.0, 5);
+            pil.translate(px, 0.5, pz);
+            // Punta cristallina in cima al pilastro
+            const tip = new THREE.ConeGeometry(0.048, 0.24, 5);
+            tip.translate(px, 1.12, pz);
+            parts.push(pil.index ? pil.toNonIndexed() : pil, tip.index ? tip.toNonIndexed() : tip);
+        }
+        // 2 Anelli energetici orizzontali che incatenano i pilastri
+        const ringMid = new THREE.TorusGeometry(0.98, 0.016, 5, 32);
+        ringMid.rotateX(Math.PI / 2);
+        ringMid.translate(0, 0.42, 0);
+        const ringTop = new THREE.TorusGeometry(0.98, 0.022, 5, 32);
+        ringTop.rotateX(Math.PI / 2);
+        ringTop.translate(0, 0.88, 0);
+        parts.push(ringMid.index ? ringMid.toNonIndexed() : ringMid, ringTop.index ? ringTop.toNonIndexed() : ringTop);
+
+        parts.forEach(g => g.clearGroups());
+        const merged = THREE.BufferGeometryUtils.mergeBufferGeometries(parts, false);
+        merged.computeVertexNormals();
+        parts.forEach(g => g.dispose());
+        return merged;
+    })(),
     box: new THREE.BoxGeometry(1, 1, 1), sphere: new THREE.SphereGeometry(1, 8, 8), cylinder: new THREE.CylinderGeometry(1, 1, 1, 8), 
     cone: new THREE.ConeGeometry(1, 1, 8), icosahedron: new THREE.IcosahedronGeometry(1, 0), torus: new THREE.TorusGeometry(1, 0.1, 8, 24),
     tetrahedron: new THREE.TetrahedronGeometry(1, 0), bloodPlane: new THREE.PlaneGeometry(40, 40), rockDebris: new THREE.DodecahedronGeometry(1.5, 0),
@@ -7838,6 +7868,7 @@ const GLOBAL_ALPHA_TEX = createOrganicAlphaMap();
     leaperTeeth: new THREE.MeshBasicMaterial({color: 0xffffff}),
     archerGlint: new THREE.SpriteMaterial({color: 0xffcc55, map: GLOW_TEX, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false}),
     ringWalkerEdge: new THREE.MeshBasicMaterial({color: 0xff2a1a, wireframe: true, transparent: true, opacity: 0.45}),
+    arcanePrisonBars: new THREE.MeshBasicMaterial({color: 0x00f0ff, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide}),
     dashLine: new THREE.MeshBasicMaterial({color: 0x00ffff, blending: THREE.AdditiveBlending, transparent: true}),
     auraBlueDome: new THREE.MeshBasicMaterial({color: 0x0088ff, transparent: true, opacity: 0.04, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending}),
     auraBlueRing: new THREE.MeshBasicMaterial({color: 0x00aaff, transparent: true, opacity: 0.8, depthWrite: false}),
@@ -8310,6 +8341,67 @@ const ModelFactory = {
             parts.cageR = cageR;
             parts.core = core;
             parts.coreGlow = coreGlow;
+        } else if (type === 'trapper') {
+            // 1. Veste inferire e busto corazzato separati (zero compenetrazione)
+            let skirt = new THREE.Mesh(SharedGeo.cone, darkMat);
+            skirt.scale.set(size * 1.15, size * 1.65, size * 1.15);
+            skirt.position.y = size * 0.82;
+
+            let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
+            torso.scale.set(size * 0.72, size * 1.15, size * 0.62);
+            torso.position.y = size * 1.95;
+
+            // 2. Spallacci Runici Inclinati e Collare Alto
+            let paulL = new THREE.Mesh(SharedGeo.box, darkMat);
+            paulL.scale.set(size * 0.58, size * 0.24, size * 0.68);
+            paulL.position.set(-size * 0.92, size * 2.38, 0);
+            paulL.rotation.z = 0.38;
+
+            let paulR = new THREE.Mesh(SharedGeo.box, darkMat);
+            paulR.scale.set(size * 0.58, size * 0.24, size * 0.68);
+            paulR.position.set(size * 0.92, size * 2.38, 0);
+            paulR.rotation.z = -0.38;
+
+            // 3. Testa Incappucciata con Visore Arcano Ciano
+            let head = new THREE.Mesh(SharedGeo.icosahedron, darkMat);
+            head.scale.set(size * 0.58, size * 0.68, size * 0.58);
+            head.position.set(0, size * 2.95, 0);
+
+            let visor = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead);
+            visor.scale.set(size * 0.62, size * 0.16, size * 0.22);
+            visor.position.set(0, size * 2.95, size * 0.48);
+
+            let crownFin = new THREE.Mesh(SharedGeo.cone, mat);
+            crownFin.scale.set(size * 0.22, size * 0.85, size * 0.42);
+            crownFin.position.set(0, size * 3.65, -size * 0.10);
+
+            // 4. Astrolabio-Gabbia Arcana Fluttuante (davanti al Trapper, ospita il sigillo della prigione)
+            let cageFocus = new THREE.Group();
+            cageFocus.position.set(0, size * 1.95, size * 1.18);
+
+            let ringOuter = new THREE.Mesh(SharedGeo.torus, mat);
+            ringOuter.scale.set(size * 0.72, size * 0.72, size * 0.95);
+
+            let ringInner = new THREE.Mesh(SharedGeo.torus, SharedMat.golemHead);
+            ringInner.scale.set(size * 0.52, size * 0.52, size * 0.85);
+            ringInner.rotation.y = Math.PI / 2;
+
+            let prisonCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.golemHead);
+            prisonCore.scale.setScalar(size * 0.28);
+
+            let focusGlow = new THREE.Sprite(SharedMat.spriteBlue);
+            focusGlow.scale.set(size * 2.8, size * 2.8, 1);
+
+            cageFocus.add(ringOuter, ringInner, prisonCore, focusGlow);
+            group.add(skirt, torso, paulL, paulR, head, visor, crownFin, cageFocus);
+
+            parts.cageFocus = cageFocus;
+            parts.ringOuter = ringOuter;
+            parts.ringInner = ringInner;
+            parts.prisonCore = prisonCore;
+            parts.focusGlow = focusGlow;
+            parts.paulL = paulL;
+            parts.paulR = paulR;
         } else if (type === 'crystal') {
             let base = new THREE.Mesh(SharedGeo.cylinder, darkMat); base.scale.set(size, size*0.5, size); base.position.y = size*0.25;
             let gem = new THREE.Mesh(SharedGeo.icosahedron, mat); gem.scale.set(size*0.8, size*2.5, size*0.8); gem.position.y = size*1.8;
@@ -8637,7 +8729,7 @@ class Hazard {
         this.active = false; this.updateOffset = Math.floor(Math.random() * 6);
         this.hitCooldown = new Map();
         this.group = new THREE.Group();
-       this.planeMat = new THREE.MeshBasicMaterial({color: 0x33ff00, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false});
+        this.planeMat = new THREE.MeshBasicMaterial({color: 0x33ff00, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false});
         this.ringMat = createNovaRingMaterial(0xaaffaa);
 
         this.plane = new THREE.Mesh(SharedGeo.cylinder, this.planeMat); this.plane.position.y = 1;
@@ -8655,8 +8747,15 @@ class Hazard {
         this.fireWallMesh.renderOrder = 6;
         this.fireWallGlow.renderOrder = 5;
 
+        // Gabbia 3D per la Prigione Magica del Trapper
+        this.prisonCageMat = SharedMat.arcanePrisonBars.clone();
+        this.prisonCageMesh = new THREE.Mesh(SharedGeo.arcanePrisonCage, this.prisonCageMat);
+        this.prisonCageMesh.matrixAutoUpdate = false;
+        this.prisonCageMesh.visible = false;
+        this.prisonCageMesh.renderOrder = 6;
+
         this.group.matrixAutoUpdate = false; this.plane.matrixAutoUpdate = false; this.ring.matrixAutoUpdate = false; this.plane.renderOrder = 5; this.ring.renderOrder = 5;
-        this.group.add(this.plane, this.ring, this.fireWallMesh, this.fireWallGlow);
+        this.group.add(this.plane, this.ring, this.fireWallMesh, this.fireWallGlow, this.prisonCageMesh);
         this.group.visible = false;
         Game.scene.add(this.group);
     }
@@ -8666,9 +8765,118 @@ class Hazard {
         this.damage = damage; this.type = type;
         this.dirAngle = dirAngle;
         this.sourceEnemy = sourceEnemy;
+        this.playerTrapped = false;
         this.hitCooldown.clear();
         this.activationTimer = (type === 'enemy_fire') ? 1.0 : (type === 'snake_fire' ? 0.6 : 0.0);
         this.group.position.set(x, 0, z);
+        this.prisonCageMesh.visible = false;
+
+        if (type === 'enemy_firewall') {
+            this.arcHalfAngle = 0.68;
+            this.maxRadius = radius;
+            this.radius = 20;
+            this.expansionSpeed = Math.max(40, (radius - 20) / Math.max(0.1, duration));
+            this.plane.visible = false;
+            this.ring.visible = false;
+            this.fireWallMesh.visible = true;
+            this.fireWallGlow.visible = true;
+            this.fireWallMat.opacity = 0.95;
+            this.fireWallGlowMat.opacity = 0.55;
+            this.group.rotation.set(0, -dirAngle, 0);
+            this.fireWallMesh.scale.set(this.radius, 18, this.radius);
+            this.fireWallGlow.scale.set(this.radius, 1, this.radius);
+            this.fireWallMesh.updateMatrix();
+            this.fireWallGlow.updateMatrix();
+            this.group.updateMatrix();
+            this.group.visible = true;
+            return;
+        }
+
+        this.group.rotation.set(0, 0, 0);
+        this.fireWallMesh.visible = false;
+        this.fireWallGlow.visible = false;
+        this.planeMat.color.setHex(colorHex);
+        this.ringMat.color.setHex(colorHex);
+
+        this.ring.rotation.set(-Math.PI / 2, 0, 0);
+        if (type === 'arcane_prison') {
+            this.radius = radius;
+            this.plane.visible = true;
+            this.ring.visible = true;
+            this.prisonCageMesh.visible = true;
+            this.prisonCageMat.color.setHex(colorHex);
+            this.prisonCageMat.opacity = 0.90;
+            this.planeMat.opacity = 0.16;
+            this.plane.scale.set(this.radius, 0.1, this.radius);
+            this.ring.scale.set(this.radius, this.radius, 14.0);
+            this.prisonCageMesh.scale.set(this.radius, 1, this.radius);
+            this.prisonCageMesh.updateMatrix();
+            if (Game.player && !Game.player.dead) {
+                let dx = Game.player.x - x, dy = Game.player.y - z;
+                if (dx * dx + dy * dy <= (radius + Game.player.radius) * (radius + Game.player.radius)) {
+                    this.playerTrapped = true;
+                    Game.player.activePrison = this;
+                }
+            }
+        } else if (type === 'nova_ring' || type === 'crystal_nova_ring' || type === 'seismic_nova_ring') {
+            this.maxRadius = radius;
+            this.radius = 12;
+            this.expansionSpeed = (radius - 12) / Math.max(0.05, duration);
+            this.ring.visible = true;
+            this.plane.visible = false;
+            this.ring.scale.set(this.radius, this.radius, 22);
+        } else {
+            this.radius = radius;
+            this.plane.visible = true;
+            this.ring.visible = true;
+            this.plane.scale.set(this.radius, 0.1, this.radius);
+            this.ring.scale.set(this.radius, this.radius, 7.5);
+        }
+
+        this.plane.updateMatrix(); this.ring.updateMatrix(); this.group.updateMatrix();
+        this.group.visible = true;
+    }
+
+    breakPrisonByDash() {
+        if (!this.active || this.type !== 'arcane_prison') return;
+        this.active = false;
+        this.prisonCageMesh.visible = false;
+        this.group.visible = false;
+        if (Game.player && Game.player.activePrison === this) {
+            Game.player.activePrison = null;
+        }
+
+        // Effetto visivo e sonoro della frantumazione della gabbia
+        AudioEngine.playShoot('chain_lightning');
+        Game.addTrauma(0.45);
+        Game.spawnLightFlash(this.x, this.y, 0x00f0ff, 6.5, 420, 0.25);
+        let bNova = Game.getParticle();
+        bNova.spawn(this.x, 18, this.y, SharedMat.spriteBlue, 'nova');
+        bNova.baseSize = this.radius * 1.5;
+
+        let spCount = AppSettings.isLow ? 6 : 14;
+        for (let i = 0; i < spCount; i++) {
+            let a = (Math.PI * 2 / spCount) * i;
+            let p = Game.getParticle();
+            p.spawn(this.x + Math.cos(a) * (this.radius * 0.85), 18, this.y + Math.sin(a) * (this.radius * 0.85), i % 2 === 0 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'spark', a);
+            p.baseSize = 18;
+        }
+
+        // STORDISCE IL TRAPPER PER 1,5 SECONDI!
+        if (this.sourceEnemy && this.sourceEnemy.active && !this.sourceEnemy.dead) {
+            this.sourceEnemy.frozenTimer = Math.max(this.sourceEnemy.frozenTimer || 0, 1.5);
+            this.sourceEnemy.telegraphTimer = 0;
+            let dx = this.sourceEnemy.x - this.x;
+            let dy = this.sourceEnemy.y - this.y;
+            let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            let ang = Math.atan2(dy, dx);
+            // Raggio di contraccolpo arcano dalla gabbia infranta al Trapper
+            Game.getDashLine().spawn(this.x + dx * 0.5, this.y + dy * 0.5, dist, ang, 0x00f0ff, 7.5, 0.24);
+            Game.getFloatingText().spawn(this.sourceEnemy.x, this.sourceEnemy.y + 28, "PRIGIONE INFRANTA! STORDITO 1.5s", '#00f0ff', 28, true);
+        } else if (Game.player) {
+            Game.getFloatingText().spawn(Game.player.x, Game.player.y + 24, "EVASIONE ARCANA!", '#00f0ff', 26, true);
+        }
+    }
 
         if (type === 'enemy_firewall') {
             this.arcHalfAngle = 0.68; // ~78 gradi totali
@@ -8720,6 +8928,66 @@ class Hazard {
     update(dt) {
         if (!this.active || dt === 0) return;
         this.life -= dt;
+        // --- LOGICA PRIGIONE MAGICA ARCANA DEL TRAPPER (5s, rallenta e blocca, evasione con Dash/Sblink stordisce il Trapper) ---
+        if (this.type === 'arcane_prison') {
+            let elapsed = this.maxLife - this.life;
+            let rise = Math.min(1.0, elapsed / 0.18); // Le sbarre salgono dal terreno in 0.18s
+            let fadeOut = this.life < 0.35 ? Math.max(0, this.life / 0.35) : 1.0;
+            let cageH = 34.0 * rise * (0.85 + 0.15 * fadeOut);
+
+            this.prisonCageMesh.rotation.y += dt * 0.65;
+            this.prisonCageMesh.scale.set(this.radius, Math.max(0.1, cageH), this.radius);
+            this.prisonCageMesh.updateMatrix();
+            this.ring.rotation.z -= dt * 1.5;
+            this.ring.updateMatrix();
+
+            this.prisonCageMat.opacity = (0.78 + Math.sin(Game.playTime * 12) * 0.12) * fadeOut;
+            this.planeMat.opacity = (0.14 + Math.sin(Game.playTime * 8) * 0.04) * fadeOut;
+            this.ringMat.opacity = 0.85 * fadeOut;
+
+            if (Game.player && !Game.player.dead) {
+                let dx = Game.player.x - this.x;
+                let dy = Game.player.y - this.y;
+                let distSq = dx * dx + dy * dy;
+                let maxInRad = Math.max(16, this.radius - Game.player.radius - 2);
+                let isPlayerDashing = Game.player.isDashing || (Game.playTime - (Game.player.lastDashTime || -99) <= 0.28);
+
+                if (distSq <= this.radius * this.radius) {
+                    this.playerTrapped = true;
+                    Game.player.activePrison = this;
+                }
+
+                if (this.playerTrapped) {
+                    if (isPlayerDashing && distSq > (maxInRad * 0.82) * (maxInRad * 0.82)) {
+                        // Il giocatore ha usato lo Scatto o lo Sblink Blu per evadere dalla prigione!
+                        this.breakPrisonByDash();
+                        return;
+                    } else if (!isPlayerDashing && distSq > maxInRad * maxInRad) {
+                        // Tentativo di uscire a piedi: la barriera arcana trattiene il giocatore all'interno!
+                        let dist = Math.sqrt(distSq) || 1;
+                        let nx = dx / dist, ny = dy / dist;
+                        Game.player.x = this.x + nx * maxInRad;
+                        Game.player.y = this.y + ny * maxInRad;
+                        Game.player.mesh.position.x = Game.player.x;
+                        Game.player.mesh.position.z = Game.player.y;
+                        Game.player.mesh.updateMatrix();
+                        if (Game.frameCount % 5 === 0) {
+                            Game.getParticle().spawn(Game.player.x + nx * 10, 16, Game.player.y + ny * 10, SharedMat.spriteBlue, 'spark');
+                        }
+                    }
+                }
+            }
+
+            if (this.life <= 0) {
+                this.active = false;
+                this.prisonCageMesh.visible = false;
+                this.group.visible = false;
+                if (Game.player && Game.player.activePrison === this) {
+                    Game.player.activePrison = null;
+                }
+            }
+            return;
+        }
 
         // --- LOGICA MURO DI FUOCO AD ARCO (Neutralizza proiettili player e danneggia al contatto) ---
         if (this.type === 'enemy_firewall') {
@@ -10673,6 +10941,11 @@ pushDebris(px, pz, radius, force) {
             if (r > 0.81) type = 'golem';
             if (r > 0.89) type = 'pyromancer';
             if (r > 0.94) type = 'fire_demon';
+        }
+
+       // Spawn del Trapper (Carceriere Arcano) dal Piano 4 in poi (max 2 attivi contemporaneamente)
+        if (f >= 4 && type === 'mage' && Math.random() < 0.42 && countAlive('trapper') < 2) {
+            type = 'trapper';
         }
 
         // Tetti massimi contemporanei a schermo per evitare muri impenetrabili di scudi
@@ -19055,8 +19328,13 @@ class Player extends Entity {
         // La mesh 3D invece usa la scala eroica maggiorata
         let massScale = logicMassScale * heroVisualMult;
 
-let buffMovMult = this.shortBuffs.movSpeed > 0 ? 1.10 : 1.0; 
-let currentSpeed = this.baseSpeed * (1 + Math.min(Game.combo * 0.008, 0.35 * flowCapMult)) * this.modifiers.speedMult * shockSpdMult * dashSpdMult * miserSpdBonus * (1.0 + (this.essenceSpeedBonus || 0)) * auraSpdMult * buffMovMult * greenSpdMult;
+let buffMovMult = this.shortBuffs.movSpeed > 0 ? 1.10 : 1.0;
+// Rallentamento del 30% se il giocatore è intrappolato nella Prigione Magica del Trapper
+let isTrappedInPrison = (this.activePrison && this.activePrison.active && this.activePrison.type === 'arcane_prison' && MathUtils.distanceSq(this, this.activePrison) <= this.activePrison.radius * this.activePrison.radius);
+if (!isTrappedInPrison && this.activePrison && !this.activePrison.active) this.activePrison = null;
+let prisonSlowMult = isTrappedInPrison ? 0.7 : 1.0;
+
+let currentSpeed = this.baseSpeed * (1 + Math.min(Game.combo * 0.008, 0.35 * flowCapMult)) * this.modifiers.speedMult * shockSpdMult * dashSpdMult * miserSpdBonus * (1.0 + (this.essenceSpeedBonus || 0)) * auraSpdMult * buffMovMult * greenSpdMult * prisonSlowMult;
 currentSpeed *= massSpeedPenalty; // Applica il rallentamento della massa
 if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSpeed, Game.ultimateActive ? 600 : 460);
         
@@ -19228,7 +19506,21 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
             if (isMoving) {
                 this.speed = currentSpeed; 
-                this.move(dx, dy, dt); 
+                this.move(dx, dy, dt);
+                // Mantiene il giocatore confinato senza jitter se cammina contro le sbarre della Prigione Magica
+                if (this.activePrison && this.activePrison.active && this.activePrison.playerTrapped) {
+                    let pdx = this.x - this.activePrison.x;
+                    let pdy = this.y - this.activePrison.y;
+                    let pDistSq = pdx * pdx + pdy * pdy;
+                    let maxR = Math.max(16, this.activePrison.radius - this.radius - 2);
+                    if (pDistSq > maxR * maxR) {
+                        let pDist = Math.sqrt(pDistSq) || 1;
+                        this.x = this.activePrison.x + (pdx / pDist) * maxR;
+                        this.y = this.activePrison.y + (pdy / pDist) * maxR;
+                        this.mesh.position.x = this.x;
+                        this.mesh.position.z = this.y;
+                    }
+                }
                 
                 // --- EFFETTI VISIVI CAMMINATA E REAZIONE DEI LIQUIDI ---
                 let hasRelicStep = (this.modifiers.miserPact || this.modifiers.fireTrail || this.modifiers.dashLightning || this.modifiers.explosiveShield);
@@ -20019,7 +20311,8 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             this.dashAngle = this.angle;
         }
 
-        this.isDashing = true; this.dashTimer = 0.25; 
+       this.isDashing = true; this.dashTimer = 0.25; 
+        this.lastDashTime = Game.playTime; // Rileva sia lo Scatto normale sia lo Sblink istantaneo dell'Essenza Blu!
         this.dashCooldown = perfectDodge ? 0.5 : 2.0 * this.modifiers.dashCooldownMult;
         if (this.modifiers.dashCritsEnabled) this.modifiers.dashCritsStacks = 2;
         if (typeof UI !== 'undefined' && UI.triggerPulseClass && UI.els.btnDash) {
@@ -20067,8 +20360,16 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 dl.spawn(this.x + dx*(dist/2), this.y + dy*(dist/2), dist, this.dashAngle);
             }
 
-            this.x = endX; this.y = endY; this.dashTimer = 0; this.isDashing = false;
-        }
+           this.x = endX; this.y = endY; this.dashTimer = 0; this.isDashing = false;
+            // Se il giocatore usa lo Sblink Blu per uscire dalla Prigione Arcana, la rompe all'istante e stordisce il Trapper!
+            if (this.activePrison && this.activePrison.active && this.activePrison.playerTrapped) {
+                let bDx = this.x - this.activePrison.x, bDy = this.y - this.activePrison.y;
+                let maxIn = Math.max(16, this.activePrison.radius - this.radius * 0.5);
+                if (bDx * bDx + bDy * bDy > maxIn * maxIn) {
+                    this.activePrison.breakPrisonByDash();
+                }
+            }
+        }
         if (this.modifiers.dashInvul) {
             this.invincibilityTimer = Math.max(this.invincibilityTimer, 0.4); // 0.4s di invincibilità post-scatto
         }
@@ -20406,7 +20707,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     goblin: 0xffcc00, orc: 0x5c4033, skeleton_archer: 0x888888,
                     slime: 0xaa00ff, slime_mini: 0xcc33ff, leaper: 0xaa00ff,
                     crystal: 0xff00ff, pyromancer: 0xff3300, fire_demon: 0xff4400,
-                    mage: 0x00aaff, golem: 0x00aaff, ring_walker: 0x141418,
+                    mage: 0x00aaff, trapper: 0x00e5ff, golem: 0x00aaff, ring_walker: 0x141418,
                     dark_prophet: 0xff5500, boss: 0x550000
                 };
                 const enemyNamesIT = {
@@ -20420,6 +20721,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     pyromancer: 'Piromante',
                     fire_demon: 'Demone del Fuoco',
                     mage: 'Mago Arcano',
+                    trapper: 'Carceriere Arcano',
                     golem: 'Golem di Pietra',
                     ring_walker: 'Dominatore degli Anelli',
                     dark_prophet: 'Profeta Oscuro',
@@ -20643,6 +20945,7 @@ class Enemy extends Entity {
         else if (type === 'pyromancer') { color = 0xff3300; size = 12; spdMod = 0.65; hpMod = 0.85; dmgMod = 1.20; this.aggroRange = 650; this.attackRange = 450; }
         else if (type === 'fire_demon') { color = 0xff4400; size = 14; spdMod = 0.95; hpMod = 1.35; dmgMod = 1.85; this.aggroRange = 800; this.attackRange = 560; }
         else if (type === 'mage') { color = 0x00aaff; size = 12; spdMod = 0.65; hpMod = 0.75; dmgMod = 1.30; this.aggroRange = 700; this.attackRange = 450; }
+        else if (type === 'trapper') { color = 0x00e5ff; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
         else if (type === 'golem') { color = 0x00aaff; size = 20; spdMod = 0.45; hpMod = 3.50; dmgMod = 1.65; this.aggroRange = 600; this.attackRange = 60; }
         else if (type === 'ring_walker') { color = 0x141418; size = 15; spdMod = 0.78; hpMod = 1.40; dmgMod = 1.45; this.aggroRange = 680; this.attackRange = 360; }
         else if (type === 'dark_prophet') { color = 0xff5500; size = 12; spdMod = 0.35; hpMod = 1.25; dmgMod = 0.80; this.aggroRange = 800; this.attackRange = 0; }
@@ -21092,6 +21395,17 @@ class Enemy extends Entity {
             this.mesh.position.y = Game.animFloat;
             if (this.modelParts.crystals) this.modelParts.crystals.rotation.y += dt * 2;
             this.mesh.updateMatrix();
+        }
+        if (this.type === 'trapper' && this.modelParts && this.modelParts.cageFocus) {
+            this.mesh.position.y = Game.animFloat * 0.8;
+            let spinMult = this.telegraphTimer > 0 ? 10.0 : 2.2;
+            this.modelParts.ringOuter.rotation.x += dt * spinMult;
+            this.modelParts.ringOuter.rotation.y += dt * (spinMult * 0.7);
+            this.modelParts.ringInner.rotation.y -= dt * (spinMult * 1.3);
+            this.modelParts.ringInner.rotation.z += dt * spinMult;
+            this.modelParts.prisonCore.rotation.x -= dt * (spinMult * 1.5);
+            let fScale = (this.telegraphTimer > 0) ? (1.0 + (1.0 - this.telegraphTimer / 0.65) * 0.45) : 1.0;
+            this.modelParts.cageFocus.scale.setScalar(fScale);
         }
 
         // --- BUFF DEL PROFETA ---
@@ -21699,7 +22013,7 @@ class Enemy extends Entity {
         if (this.type === 'ring_walker' || this.type === 'skeleton_archer' || (this.type === 'orc' && !this.isBerserk)) {
             let faceAngle = (this.telegraphTimer > 0 && this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
             this.mesh.rotation.y = -faceAngle + Math.PI / 2;
-        } else if (this.type === 'goblin' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
+       } else if (this.type === 'goblin' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
             this.mesh.rotation.y = -this.angle + Math.PI / 2;
         } else if (this.type === 'golem') {
             let targetRot = -this.angle + Math.PI / 2;
@@ -22210,7 +22524,7 @@ class Enemy extends Entity {
         if (aura === 'blue') cdMult /= 0.6;
         else if (aura === 'red') cdMult /= 1.2;
 
-        let isRanged = (this.type === 'skeleton_archer' || this.type === 'mage' || this.type === 'pyromancer' || this.type === 'fire_demon' || this.type === 'ring_walker');
+       let isRanged = (this.type === 'skeleton_archer' || this.type === 'mage' || this.type === 'pyromancer' || this.type === 'fire_demon' || this.type === 'ring_walker' || this.type === 'trapper');
         if (Game.isCorrupted && Game.corruptedType === 'darkness' && isRanged) {
             cdMult *= 0.82;
         }
@@ -22228,6 +22542,17 @@ class Enemy extends Entity {
         else if (this.type === 'mage') {
             Game.getProjectile().spawn(this.x, this.y, this.angle, 195 * spdMult, actualDmg * 1.10, 'enemy', 'enemy_bolt', false, false, this);
             this.attackCooldown = 1.25 * cdMult;
+        }
+            else if (this.type === 'trapper') {
+            if (Game.player && !Game.player.dead) {
+                let prisonRad = 95; // Prigione ampia centrata sul giocatore
+                let prisonDur = 5.0; // Dura 5 secondi prima di svanire
+                Game.getHazard().spawn(Game.player.x, Game.player.y, prisonRad, prisonDur, 0, 0x00e5ff, 'arcane_prison', 0, this);
+                Game.spawnLightFlash(Game.player.x, Game.player.y, 0x00e5ff, 5.0, 360, 0.25);
+                AudioEngine.playShoot('chain_lightning');
+                Game.getFloatingText().spawn(Game.player.x, Game.player.y + 24, "PRIGIONE ARCANA!", '#00f0ff', 28, true);
+            }
+            this.attackCooldown = Math.max(5.8, 6.8 * cdMult);
         }
         else if (this.type === 'fire_demon') {
             Game.getProjectile().spawn(this.x, this.y, this.angle, 135 * spdMult, actualDmg * 1.30, 'enemy', 'enemy_fireball', false, false, this);
