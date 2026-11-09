@@ -716,16 +716,14 @@
         transition: opacity 0.3s;
     }
 
+        @media (hover: none) and (pointer: coarse) {
         .vignette-low-hp-active {
-        opacity: 1 !important;
-        animation: pulse-blood-opacity 0.8s infinite ease-in-out;
-        /* Desaturazione e contrasto localizzati tramite backdrop-filter */
-        backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
-        -webkit-backdrop-filter: grayscale(1) contrast(1.25) brightness(0.9);
-        /* Distorsione: pattern scanline CRT + gradiente sangue concentrato ai bordi */
-        background: 
-            repeating-linear-gradient(rgba(18, 16, 16, 0) 0px, rgba(18, 16, 16, 0) 2px, rgba(0, 0, 0, 0.35) 3px, rgba(0, 0, 0, 0.35) 4px),
-            radial-gradient(circle at center, transparent 20%, rgba(220, 0, 0, 0.35) 70%, rgba(255, 0, 0, 0.75) 100%) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            webkit-mask-image: none !important;
+            mask-image: none !important;
+            background: radial-gradient(circle at center, transparent 35%, rgba(200, 0, 0, 0.28) 75%, rgba(255, 0, 0, 0.65) 100%) !important;
+        }
     }
         
     .death-fade-active {
@@ -944,6 +942,29 @@ body.colorblind-mode #opt-colorblind-text {
 
             .drop-shadow-md, .drop-shadow-lg {
                 filter: none !important;
+            }
+            /* FIX WEBVIEW ANDROID: Sostituisce i pesantissimi blur-3xl/blur-2xl con trasparenze leggere e ferma il repaint CPU dello Shop */
+            #floorScreen .blur-3xl,
+            #relicScreen .blur-3xl,
+            #mainMenu .blur-2xl {
+                filter: none !important;
+                -webkit-filter: none !important;
+                animation: none !important;
+                background: radial-gradient(circle, rgba(34, 211, 238, 0.14) 0%, transparent 70%) !important;
+            }
+            #floorScreen .plasma-fill {
+                animation: none !important;
+                box-shadow: 0 0 10px var(--c-main) !important;
+            }
+            #floorScreen .plasma-bubble {
+                box-shadow: none !important;
+            }
+            #floorScreen . plasma-bubble:nth-child(even) {
+                display: none !important; /* Dimezza le bolle su WebView mantenendo l'effetto fluido a 60fps */
+            }
+            #floorScreen .surge-wave,
+            #floorScreen .mastery-beam {
+                mix-blend-mode: normal !important;
             }
         }
 
@@ -2611,7 +2632,7 @@ const AppSettings = {
     getTargetUiDpr() {
         const dpr = window.devicePixelRatio || 1;
         if (!isTouchDevice) return dpr;
-        return this.mode === 0 ? 1.0 : (this.mode === 1 ? Math.min(dpr, 1.25) : Math.min(dpr, 1.5));
+        return 1.0; // Mantiene il Canvas 2D leggero e riduce il consumo di banda memoria su Android
     },
     detectHardwareTier() {
         if (!isTouchDevice) return 1;
@@ -7028,8 +7049,8 @@ const RelicSystem = {
         // Passa direttamente allo Shop (l'animazione è già avvenuta sotto il portale)
         Game.state = 'FLOOR_TRANSITION'; 
         window.prepareFloorScreen(); 
-        document.getElementById('floorScreen').classList.remove('hidden'); 
         ShopSystem.updateUI();
+        document.getElementById('floorScreen').classList.remove('hidden');
     },
 
     skipRelic() {
@@ -7038,8 +7059,8 @@ const RelicSystem = {
         
         Game.state = 'FLOOR_TRANSITION'; 
         window.prepareFloorScreen(); 
-        document.getElementById('floorScreen').classList.remove('hidden'); 
         ShopSystem.updateUI();
+        document.getElementById('floorScreen').classList.remove('hidden');
     }
 };
 
@@ -10248,7 +10269,7 @@ const UI = {
             this.cache.isLowHp = isLowHp;
         }
 
-        if (isLowHp) {
+        if (isLowHp && !isTouchDevice) {
             let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
             let inner = Math.round(55 - t * 33);
             let outer = Math.round(85 - t * 37);
@@ -10404,7 +10425,14 @@ getEnemy() {
     },
 
    init() {
-        UI.init(); TouchControls.init(); const container = document.getElementById('game-container');
+        UI.init(); TouchControls.init();
+
+    // Pre-costruisce il DOM dello Shop all'avvio così Tailwind CDN compila le classi prima di entrare in partita
+        const shopTreeEl = document.getElementById('shop-tree-container');
+        if (shopTreeEl && !ShopSystem._domBuilt) {
+            ShopSystem.buildDOM(shopTreeEl);
+        }
+       const container = document.getElementById('game-container');
         this.scene = new THREE.Scene(); this.scene.fog = new THREE.Fog(0x050508, 400, 1800); 
         this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 100, 3000);
         
@@ -10412,7 +10440,9 @@ getEnemy() {
         this.renderer = new THREE.WebGLRenderer({ 
             antialias: !isTouchDevice, 
             alpha: false, 
-           powerPreference: isTouchDevice ? "default" : "high-performance" 
+            stencil: false,
+            preserveDrawingBuffer: false,
+            powerPreference: isTouchDevice ? "default" : "high-performance" 
         });
         const pixelRatio = AppSettings.getTargetPixelRatio(); this.renderer.setPixelRatio(pixelRatio); this.renderer.setSize(this.width, this.height); this.frameInterval = 1000 / AppSettings.fpsCap;
        this.renderer.outputEncoding = THREE.sRGBEncoding; 
@@ -10820,7 +10850,7 @@ this.debris = Array.from({length: maxDynamicDebris}, (_, i) => new Debris(i));
 
 if (!this._dummyDebris) this._dummyDebris = new THREE.Object3D();
 
-const debrisMat = new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0.2});
+const debrisMat = isTouchDevice ? new THREE.MeshLambertMaterial() : new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0.2});
         
         // Geometrie: 0 = Triangoli, 1 = Cubi, 2 = Sfere (Dodecaedri Low Poly per massime performance)
         const geos = [SharedGeo.tetrahedron, SharedGeo.box, new THREE.DodecahedronGeometry(0.8, 0)];
@@ -10859,12 +10889,14 @@ const debrisMat = new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0.2
         this.decoys = Array.from({length: 10}, () => new Decoy());
        this.dashLines = Array.from({length: 30}, () => new DashLine());     
 
-        // POOL LUCI ESPLOSIVE (Max 3 simultanee per non fondere la GPU)
+        // POOL LUCI ESPLOSIVE: Creato solo su PC! Su mobile evita che Three.js calcoli 4 PointLight per pixel su tutta la mappa
         this.flashLights = [];
-        for(let i=0; i<3; i++) {
-            let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
-            Game.scene.add(l);
-            this.flashLights.push({ light: l, life: 0, maxLife: 0 });
+        if (!isTouchDevice) {
+            for(let i=0; i<3; i++) {
+                let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
+                Game.scene.add(l);
+                this.flashLights.push({ light: l, life: 0, maxLife: 0 });
+            }
         }
         this._flashLightIdx = 0;
     },
@@ -10910,7 +10942,7 @@ pushDebris(px, pz, radius, force) {
         }
     },
     spawnLightFlash(x, z, colorHex, intensity, distance, duration = 0.2) {
-        if (AppSettings.isLow) return; // Disattiva sui telefoni scarsi per salvare batteria
+        if (isTouchDevice || AppSettings.isLow || !this.flashLights || this.flashLights.length === 0) return;
         let fl = this.flashLights[this._flashLightIdx];
         this._flashLightIdx = (this._flashLightIdx + 1) % (isTouchDevice && AppSettings.isBalanced ? 2 : 3);
         if (isTouchDevice && AppSettings.isBalanced) distance *= 0.85;
@@ -11847,9 +11879,9 @@ loop(timestamp) {
                             Game.getFloatingText().spawn(this.player.x, this.player.y, "+50 MONETE (RELIQUIE ESAURITE)!", '#fbbf24', 40, true);
                         }
                     }
-                    window.prepareFloorScreen();
-                    document.getElementById('floorScreen').classList.remove('hidden');
-                    ShopSystem.updateUI();
+                    window.prepareFloorScreen(); 
+        ShopSystem.updateUI();
+        document.getElementById('floorScreen').classList.remove('hidden');
                 }
             }
             this.draw();
@@ -13873,6 +13905,13 @@ startGame(diffMult) {
         if(!this.scene || !this.uiCtx) return;
         if (this.camera) InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
         
+        if (isTouchDevice && AppSettings.shadowsEnabled) {
+            this.renderer.shadowMap.autoUpdate = false;
+            if (this.frameCount % 2 === 0) this.renderer.shadowMap.needsUpdate = true;
+        } else {
+            this.renderer.shadowMap.autoUpdate = true;
+        }
+
         if (!AppSettings.isLow && !isTouchDevice && this.composer) {
             this.composer.render();
         } else {
@@ -13965,9 +14004,11 @@ startGame(diffMult) {
                                 this.uiCtx.beginPath();
                                 this.uiCtx.arc(pPos.x, pPos.y - 24, 21, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct));
                                 this.uiCtx.strokeStyle = arcColor;
-                                this.uiCtx.lineWidth = 2.8;
-                                this.uiCtx.shadowColor = arcColor;
-                                this.uiCtx.shadowBlur = 8;
+                                this.uiCtx.lineWidth = 3.2;
+                                if (!isTouchDevice) {
+                                    this.uiCtx.shadowColor = arcColor;
+                                    this.uiCtx.shadowBlur = 8;
+                                }
                                 this.uiCtx.stroke();
                                 this.uiCtx.restore();
                             }
@@ -16707,7 +16748,8 @@ class GameMap {
         if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
         
       // MATERIALE OBELISCO: Pietra antica monolitica con supporto colore per-istanza (setColorAt) per obelischi multicolore
-        this.obeliskMat = new THREE.MeshStandardMaterial({
+       const ObeliskMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
+     this.obeliskMat = new ObeliskMatClass({
             color: 0x383840, // Base grigia neutra modulata dal colore individuale dell'obelisco
             emissive: 0x0c0c12, 
             emissiveIntensity: 0.25,
@@ -25873,7 +25915,12 @@ const Preloader = {
             this.textures['rock' + v] = loadTerrainTex(`${pref}_rock.png`, () => this.createCanvasNoise(p.rock, 'rgba(0,0,0,0.5)', 350));
             this.textures['wall' + v] = this.textures['rock' + v].clone();
         });
-
+// Pre-decodifica bg_piano.png e smoke.png in VRAM per eliminare il flash all'apertura dello Shop su Android WebView
+        ['bg_piano.png', 'smoke.png'].forEach(src => {
+            const img = new Image();
+            img.src = src;
+            if (img.decode) img.decode().catch(() => {});
+        });
         setTimeout(() => finishLoading(), 6000);
     }
 };
@@ -26140,8 +26187,8 @@ const ShopSystem = {
                         <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white">${b.short}</span>
                     </div>
 
-                    <!-- 4. PULSANTE COMPRA CON PREZZO GIGANTE -->
-                    <button id="totem-btn-${key}" onclick="ShopSystem.buy('${key}')"
+                    <!-- 4. PULSANTE COMPRA CON PREZZO GIGANTE (Risposta istantanea su Android WebView) -->
+                    <button id="totem-btn-${key}" onpointerdown="event.preventDefault(); ShopSystem.buy('${key}')"
                             class="pillar-buy-btn can-afford w-full py-2.5 px-1 flex items-center justify-center gap-1.5">
                         <i id="totem-coin-icon-${key}" class="fa-solid fa-coins text-yellow-300 text-xs sm:text-sm drop-shadow-[0_0_6px_rgba(250,204,21,0.8)]"></i>
                         <span id="totem-cost-${key}" class="font-display font-black text-sm sm:text-base text-yellow-200 leading-none">5</span>
