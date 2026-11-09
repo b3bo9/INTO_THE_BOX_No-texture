@@ -20866,6 +20866,9 @@ class Enemy extends Entity {
         this._lastAuraType = null;
         this.ringRecoverTimer = 0;
         this.coreExposedTimer = 0;
+        this.blinkCooldown = MathUtils.randomRange(2.8, 4.5);
+        this.blinkAnimTimer = 0;
+        this.blinkTeleported = false;
         this._detonateCoreOnDeath = false;
         this.clubRecoveryTimer = 0;
         this.goblinTimer = 0;
@@ -21344,10 +21347,80 @@ class Enemy extends Entity {
         }
 
         if (this.type === 'mage' || this.type === 'pyromancer' || this.type === 'dark_prophet') {
-            this.mesh.rotation.y += dt;
             this.mesh.position.y = Game.animFloat;
-            if (this.modelParts.crystals) this.modelParts.crystals.rotation.y += dt * 2;
-            this.mesh.updateMatrix();
+            if (this.modelParts.crystals) {
+                let cSpin = (this.type === 'mage' && this.blinkAnimTimer > 0) ? 16.0 : 2.0;
+                this.modelParts.crystals.rotation.y += dt * cSpin;
+            }
+        }
+
+        // --- SBLINK DEL MAGO ARCANO CON SQUASH & STRETCH ---
+        if (this.type === 'mage') {
+            if (this.blinkCooldown > 0 && this.blinkAnimTimer <= 0) {
+                let dSqToP = Game.player ? MathUtils.distanceSq(this, Game.player) : 999999;
+                // Ricarica più rapida se il giocatore gli è addosso (< 190 unità)
+                this.blinkCooldown -= dt * (dSqToP < 36100 ? 1.85 : 1.0);
+                if (this.blinkCooldown <= 0 && this.telegraphTimer <= 0 && this.state === 'chasing' && dSqToP < 360000) {
+                    this.blinkAnimTimer = 0.38;
+                    this.blinkTeleported = false;
+                    this.blinkCooldown = MathUtils.randomRange(4.2, 6.2);
+                    if (!AppSettings.isLow) {
+                        for (let i = 0; i < 4; i++) {
+                            Game.getParticle().spawn(this.x, 18, this.y, SharedMat.spriteBlue, 'spark');
+                        }
+                    }
+                }
+            }
+
+            if (this.blinkAnimTimer > 0) {
+                this.blinkAnimTimer = Math.max(0, this.blinkAnimTimer - dt);
+                let p = 1.0 - (this.blinkAnimTimer / 0.38); // Progresso 0.0 -> 1.0
+                let sx = 1.0, sy = 1.0;
+
+                if (p < 0.28) {
+                    // Fase 1: Squash di caricamento (si schiaccia e si allarga)
+                    let t = p / 0.28;
+                    let ease = Math.sin(t * Math.PI * 0.5);
+                    sx = 1.0 + 0.50 * ease;
+                    sy = 1.0 - 0.48 * ease;
+                    this.mesh.position.y = Game.animFloat * (1.0 - ease * 0.7);
+                } else if (p < 0.52) {
+                    // Fase 2: Stretch estremo verso l'alto (si assottiglia come un raggio prima di sparire)
+                    let t = (p - 0.28) / 0.24;
+                    sx = 1.50 - 1.32 * t;
+                    sy = 0.52 + 2.15 * t;
+                    this.mesh.position.y = Game.animFloat + t * 18.0;
+                } else {
+                    // Istante esatto del teletrasporto all'apice dello stretch!
+                    if (!this.blinkTeleported) {
+                        this.blinkTeleported = true;
+                        this.performMageBlink();
+                    }
+                    if (p < 0.78) {
+                        // Fase 3: Arrivo sottile e alto -> Squash d'impatto a terra
+                        let t = (p - 0.52) / 0.26;
+                        sx = 0.18 + 1.28 * t;
+                        sy = 2.67 - 2.10 * t;
+                        this.mesh.position.y = Game.animFloat + (1.0 - t) * 14.0;
+                    } else {
+                        // Fase 4: Rimbalzo elastico di ritorno alla forma normale
+                        let t = (p - 0.78) / 0.22;
+                        sx = 1.46 - 0.46 * t;
+                        sy = 0.57 + 0.43 * t;
+                        this.mesh.position.y = Game.animFloat;
+                    }
+                }
+
+                let baseScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
+                this.mesh.scale.set(baseScale * sx, baseScale * sy, baseScale * sx);
+                if (Game.player) {
+                    let angToP = MathUtils.angle(this, Game.player);
+                    this.mesh.rotation.y = -angToP + Math.PI / 2;
+                }
+                this.syncFakeShadow(this.mesh.position.y);
+                this.mesh.updateMatrix();
+                return;
+            }
         }
         if (this.type === 'trapper' && this.modelParts && this.modelParts.cageFocus) {
             this.mesh.position.y = Game.animFloat * 0.8;
@@ -22463,6 +22536,73 @@ class Enemy extends Entity {
             this.attackCooldown = 99;
         }
     }
+    performMageBlink() {
+        if (!Game.player || !Game.map) return;
+        let oldX = this.x;
+        let oldY = this.y;
+        let bestX = this.x;
+        let bestY = this.y;
+        let found = false;
+
+        let mapMin = TILE_SIZE * 2.2;
+        let mapMaxX = (Game.map.width - 2.2) * TILE_SIZE;
+        let mapMaxY = (Game.map.height - 2.2) * TILE_SIZE;
+
+        // Cerca una posizione tattica attorno al giocatore (tra 230 e 390 unità di distanza)
+        for (let attempt = 0; attempt < 14; attempt++) {
+            let ang = Math.random() * Math.PI * 2;
+            let dist = MathUtils.randomRange(230, 390);
+            let candX = MathUtils.clamp(Game.player.x + Math.cos(ang) * dist, mapMin, mapMaxX);
+            let candY = MathUtils.clamp(Game.player.y + Math.sin(ang) * dist, mapMin, mapMaxY);
+
+            let moveDistSq = (candX - oldX) * (candX - oldX) + (candY - oldY) * (candY - oldY);
+            if (moveDistSq < 19600) continue; // Almeno 140 unità di spostamento
+
+            if (!Game.map.isSolid(candX, candY) &&
+                !Game.map.isSolid(candX + this.radius, candY) &&
+                !Game.map.isSolid(candX - this.radius, candY) &&
+                !Game.map.isSolid(candX, candY + this.radius) &&
+                !Game.map.isSolid(candX, candY - this.radius)) {
+                bestX = candX;
+                bestY = candY;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) return;
+
+        // Scia luminosa di Sblink tra partenza e arrivo (come lo Sblink Blu del giocatore)
+        let dx = bestX - oldX;
+        let dy = bestY - oldY;
+        let blinkDist = Math.sqrt(dx * dx + dy * dy);
+        let blinkAngle = Math.atan2(dy, dx);
+        Game.getDashLine().spawn(oldX + dx * 0.5, oldY + dy * 0.5, blinkDist, blinkAngle, 0x00ccff, 5.5, 0.20);
+
+        let startNova = Game.getParticle();
+        startNova.spawn(oldX, 18, oldY, SharedMat.spriteBlue, 'nova');
+        startNova.baseSize = 42;
+
+        // Sposta il Mago nella nuova posizione
+        this.x = bestX;
+        this.y = bestY;
+        this.mesh.position.x = this.x;
+        this.mesh.position.z = this.y;
+        Game.enemyGrid.updateClient(this);
+
+        let endNova = Game.getParticle();
+        endNova.spawn(this.x, 18, this.y, SharedMat.spriteBlue, 'nova');
+        endNova.baseSize = 48;
+
+        if (!AppSettings.isLow) {
+            let pCount = isTouchDevice ? 5 : 10;
+            for (let i = 0; i < pCount; i++) {
+                Game.getParticle().spawn(this.x, 18, this.y, i % 2 === 0 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'spark');
+            }
+        }
+        AudioEngine.playDash();
+    }
+
 
     executeAttack() {
         let cdMult = Math.max(0.52, Math.min(1.35, 1.05 / Math.sqrt(Game.difficultyMult)));
@@ -22660,7 +22800,9 @@ class Enemy extends Entity {
         if (source === Game.player && Game.matchStats) Game.matchStats.dmgDealt += amount;
 
         // Esplode se ucciso in qualsiasi momento mentre è vulnerabile (sia in carica sia post-sparo finché la gabbia non è chiusa)
-        let wasVulnerableFireDemon = (this.type === 'fire_demon' && ((this.telegraphTimer || 0) > 0 || (this.coreExposedTimer || 0) > 0));
+       if (this.type === 'mage' && this.blinkAnimTimer <= 0 && this.blinkCooldown > 0.45) {
+            this.blinkCooldown = Math.max(0.35, this.blinkCooldown * 0.45);
+        }
         super.takeDamage(amount, source, isCrit);
         if (this.dead && wasVulnerableFireDemon) {
             this._detonateCoreOnDeath = true;
