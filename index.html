@@ -2303,7 +2303,7 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
 
         <!-- TOP-LEFT: VITALS, PIANO E MONETE -->
-        <div class="absolute top-3 left-3 sm:top-5 sm:left-5 flex flex-col gap-2 pointer-events-none w-[240px] sm:w-[320px] z-50" style="margin-top: env(safe-area-inset-top); margin-left: env(safe-area-inset-left);">
+        <div class="absolute top-3 left-3 sm:top-5 sm:left-5 flex flex-col gap-2 pointer-events-none w-[285px] sm:w-[380px] z-50" style="margin-top: env(safe-area-inset-top); margin-left: env(safe-area-inset-left);">
             
             <!-- MAIN VITALS PANEL -->
             <div id="hud-vitals-card" class="hud-panel p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3.5 overflow-hidden">
@@ -2324,9 +2324,9 @@ body.colorblind-mode #opt-colorblind-text {
 
                 <!-- HP & LIVES CONTAINER -->
                 <div class="flex flex-col flex-1 gap-1.5 min-w-0">
-                    <div class="flex justify-between items-center">
-                        <span id="ui-hp-text" class="text-xs sm:text-sm font-black text-white tracking-wider font-display">100/100</span>
-                        <div id="ui-lives" class="flex gap-1 items-center text-[11px] sm:text-xs"></div>
+                    <div class="flex justify-between items-center gap-2">
+                        <span id="ui-hp-text" class="text-xs sm:text-sm font-black text-white tracking-wider font-display shrink-0">100/100</span>
+                        <div id="ui-lives" class="flex gap-1 items-center text-[11px] sm:text-xs shrink-0 flex-wrap justify-end"></div>
                     </div>
                     <!-- HEALTH BAR CONDOTTO PLASMA -->
                     <div class="w-full h-3.5 sm:h-4 hud-bar-track">
@@ -6961,21 +6961,40 @@ function createAuraIcon(type) {
     ctx.lineJoin = 'miter';
 
     if (type === 'blue') {
-        // Clessidra Cyber-Arcana con cristalli interni
-        ctx.fillRect(28, 22, 40, 5);
-        ctx.fillRect(28, 69, 40, 5);
-        ctx.beginPath();
-        ctx.moveTo(32, 27); ctx.lineTo(64, 27); ctx.lineTo(52, 48);
-        ctx.lineTo(64, 69); ctx.lineTo(32, 69); ctx.lineTo(44, 48);
-        ctx.closePath();
-        ctx.stroke();
+        // Cristallo Glaciale Runico (Ghiaccio, Congelamento & Ministun)
+        ctx.strokeStyle = palette.main;
+        ctx.fillStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        for (let a = 0; a < 6; a++) {
+            let rad = (Math.PI / 3) * a;
+            let cos = Math.cos(rad), sin = Math.sin(rad);
+            ctx.beginPath();
+            ctx.moveTo(48, 48);
+            ctx.lineTo(48 + cos * 26, 48 + sin * 26);
+            ctx.stroke();
+            let p1x = 48 + cos * 16, p1y = 48 + sin * 16;
+            let leftCos = Math.cos(rad - Math.PI / 4), leftSin = Math.sin(rad - Math.PI / 4);
+            let rightCos = Math.cos(rad + Math.PI / 4), rightSin = Math.sin(rad + Math.PI / 4);
+            ctx.beginPath();
+            ctx.moveTo(p1x + leftCos * 6, p1y + leftSin * 6);
+            ctx.lineTo(p1x, p1y);
+            ctx.lineTo(p1x + rightCos * 6, p1y + rightSin * 6);
+            ctx.stroke();
+        }
         ctx.fillStyle = palette.main;
         ctx.beginPath();
-        ctx.moveTo(38, 32); ctx.lineTo(58, 32); ctx.lineTo(48, 45); ctx.closePath();
-        ctx.moveTo(48, 52); ctx.lineTo(59, 65); ctx.lineTo(37, 65); ctx.closePath();
+        for (let a = 0; a < 6; a++) {
+            let rad = (Math.PI / 3) * a;
+            let px = 48 + Math.cos(rad) * 9, py = 48 + Math.sin(rad) * 9;
+            if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
         ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.arc(48, 48, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(48, 48, 3.5, 0, Math.PI * 2); ctx.fill();
     } else if (type === 'green') {
         // Egida Brutalista con Croce Vitale
         ctx.beginPath();
@@ -6995,24 +7014,31 @@ function createAuraIcon(type) {
         ctx.fillRect(45, 33, 6, 24);
         ctx.fillRect(36, 42, 24, 6);
     } else if (type === 'red') {
-        // Lama Cremisi / Spada Runica
+        // Fiamma Runica Ardente (Bruciatura, Esplosione & Respinta)
+        ctx.fillStyle = palette.main;
         ctx.beginPath();
-        ctx.moveTo(48, 17);
-        ctx.lineTo(56, 34);
-        ctx.lineTo(53, 54);
-        ctx.lineTo(43, 54);
-        ctx.lineTo(40, 34);
+        ctx.moveTo(48, 18);
+        ctx.bezierCurveTo(58, 30, 68, 44, 68, 58);
+        ctx.bezierCurveTo(68, 72, 59, 78, 48, 78);
+        ctx.bezierCurveTo(37, 78, 28, 72, 28, 58);
+        ctx.bezierCurveTo(28, 44, 38, 30, 48, 18);
         ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.0;
         ctx.stroke();
-        // Elsa e pomolo
-        ctx.fillStyle = palette.main;
-        ctx.fillRect(32, 54, 32, 5);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(45, 59, 6, 11);
         ctx.beginPath();
-        ctx.moveTo(48, 76); ctx.lineTo(54, 70); ctx.lineTo(48, 66); ctx.lineTo(42, 70);
+        ctx.moveTo(48, 36);
+        ctx.bezierCurveTo(55, 46, 58, 54, 58, 62);
+        ctx.bezierCurveTo(58, 71, 53, 74, 48, 74);
+        ctx.bezierCurveTo(43, 74, 38, 71, 38, 62);
+        ctx.bezierCurveTo(38, 54, 41, 46, 48, 36);
         ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(48, 62, 4, 0, Math.PI * 2);
         ctx.fill();
     } else if (type === 'corrupted') {
         // Stella del Vuoto / Cristallo Corrotto
@@ -12480,6 +12506,51 @@ startGame(diffMult) {
                         let pCount = AppSettings.isLow ? 5 : 12;
                         for(let p=0; p<pCount; p++) this.getParticle().spawn(a.x, 20, a.y, SharedMat.spriteWhite, 'nova');
 
+                        // --- EFFETTI ESPLOSIONE OBELISCO SUI NEMICI VICINI (Raggio 250) ---
+                        if (this.enemies && this.player) {
+                            let expRadSq = 250 * 250;
+                            let basePlayerAtk = ((this.player.stats.minDmg + this.player.stats.maxDmg) * 0.5) * this.player.modifiers.dmgMult;
+                            for (let k = 0; k < this.enemies.length; k++) {
+                                let e = this.enemies[k];
+                                if (e && !e.dead && e.active && e.type !== 'crystal') {
+                                    let edx = e.x - a.x;
+                                    let edy = e.y - a.y;
+                                    let edistSq = edx * edx + edy * edy;
+                                    if (edistSq <= expRadSq) {
+                                        let dist = Math.sqrt(edistSq) || 1;
+                                        let nx = edx / dist;
+                                        let ny = edy / dist;
+                                        if (a.type === 'red') {
+                                            // Danneggia e brucia (20% danno dell'arma ogni sec per 5 sec)
+                                            e.takeDamage(basePlayerAtk, this.player, false, false);
+                                            let burnDps = basePlayerAtk * 0.20;
+                                            if (e.addBurn) e.addBurn(burnDps, 5.0);
+                                            e.obeliskBurnDps = (e.obeliskBurnDps || 0) + burnDps;
+                                            e.obeliskBurnTimer = 5.0;
+                                            let p = Game.getParticle();
+                                            p.spawn(e.x, 20, e.y, SharedMat.spriteRed, 'flame');
+                                        } else if (a.type === 'blue') {
+                                            // Danneggia lievemente e congela per 4 sec
+                                            e.takeDamage(basePlayerAtk * 0.35, this.player, false, false);
+                                            e.frozenTimer = 4.0;
+                                            let p = Game.getParticle();
+                                            p.spawn(e.x, 20, e.y, SharedMat.spriteBlue, 'spark');
+                                        } else if (a.type === 'green') {
+                                            // Respinge, danneggia lievemente e rallenta per 5 sec
+                                            e.takeDamage(basePlayerAtk * 0.35, this.player, false, false);
+                                            let pushDist = e.isBoss ? 15 : (e.type === 'golem' ? 30 : 70);
+                                            e.push(nx, ny, pushDist);
+                                            e.slowedTimer = Math.max(e.slowedTimer || 0, 5.0);
+                                            e.slowMult = 0.50;
+                                            e.slowType = 'green';
+                                            let p = Game.getParticle();
+                                            p.spawn(e.x, 20, e.y, SharedMat.spriteGreen, 'dust');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // --- CAMBIO TEMA DINAMICO ALLA CATTURA DELL'OBELISCO (Gli obelischi corrotti non cambiano il tema) ---
                         if (a.type !== 'corrupted') {
                             let targetThemeIdx = (a.type === 'green') ? 0 : ((a.type === 'red') ? 1 : 2);
@@ -12566,32 +12637,37 @@ startGame(diffMult) {
                                 
                                 this.getFloatingText().spawn(a.x, a.y + 40, "OBELISCO PROSCIUGATO!", '#00DDFF', 40, true);
 
-                               // --- EFFETTI SPECIFICI PER TIPO DI OBELISCO (8s base, 11s per Custode Silvano) ---
-                                let obDur = (SkinSystem.selectedId === 'emerald_warden') ? 11.0 : 8.0;
+                               // --- EFFETTI SPECIFICI PER TIPO DI OBELISCO (10s base, 13s per Custode Silvano) ---
+                                let obDur = (SkinSystem.selectedId === 'emerald_warden') ? 13.0 : 10.0;
                                 if (a.type === 'corrupted') {
                                     Game.addUltimateCharge(50);
                                     Game.player.obeliskDmgTimer = obDur; Game.player.obeliskDmgVal = 1.10;
                                     Game.player.obeliskSpdTimer = obDur; Game.player.obeliskSpdVal = 1.10;
                                     Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+40% ULT`, '#aa00ff', 25, true);
-                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `+10% ATK/VEL ${obDur}s`, '#ff3300', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `+10% ATK/VEL ${Math.round(obDur)}s`, '#ff3300', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spritePink, 'spark');
                                 } else if (a.type === 'red') {
                                     Game.addUltimateCharge(25);
                                     Game.player.obeliskBurnTimer = obDur;
                                     Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
-                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `BRUCIATURA ${obDur}s`, '#ff3300', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `FUOCO & RESPINTA ${Math.round(obDur)}s`, '#ff3300', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteRed, 'spark');
                                 } else if (a.type === 'blue') {
                                     Game.addUltimateCharge(25);
                                     Game.player.obeliskSlowTimer = obDur;
                                     Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
-                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `COLPI GELIDI ${obDur}s`, '#00aaff', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `GELIDITÀ & STUN ${Math.round(obDur)}s`, '#00aaff', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteBlue, 'spark');
                                 } else if (a.type === 'green') {
                                     Game.addUltimateCharge(25);
                                     Game.player.obeliskHealTimer = obDur;
+                                    Game.player.tempHp = Math.max(Game.player.tempHp || 0, Game.player.stats.maxHp * 0.20);
+                                    if (Game.player.glacialShieldMesh) {
+                                        Game.player.glacialShieldMesh.material.color.setHex(0x22ff44);
+                                        Game.player.glacialShieldMesh.visible = true;
+                                    }
                                     Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
-                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `CURA ${obDur}s`, '#33ff00', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `RIGENERAZIONE & SCUDO ${Math.round(obDur)}s`, '#33ff00', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteGreen, 'spark');
                                 }
                                 Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteWhite, 'spark');
@@ -13118,6 +13194,8 @@ startGame(diffMult) {
                     e.mesh.matrixAutoUpdate = false;
                     if (e.auraRingMesh) e.auraRingMesh.visible = false;
                     if (e.auraGlow) e.auraGlow.visible = false;
+                    if (e.trapperAuraRing) e.trapperAuraRing.visible = false;
+                    if (e.trapperAuraGlow) e.trapperAuraGlow.visible = false;
                 } else {
                     e.mesh.matrixAutoUpdate = true;
                 }
@@ -13525,13 +13603,25 @@ startGame(diffMult) {
                         if (pIconTex && pIconTex.image) {
                             this.uiCtx.drawImage(pIconTex.image, pPos.x - 18, pPos.y - 42, 36, 36);
                             if (pBuff) {
-                                let maxDur = (SkinSystem.selectedId === 'emerald_warden') ? 11.0 : 8.0;
+                                let maxDur = (SkinSystem.selectedId === 'emerald_warden') ? 13.0 : 10.0;
                                 let pct = Math.max(0, Math.min(1, remTime / maxDur));
+                                let arcColor = activeIconType === 'blue' ? '#00ddff' : (activeIconType === 'green' ? '#33ff00' : (activeIconType === 'corrupted' ? '#e879f9' : '#ff1133'));
+                                this.uiCtx.save();
+                                // Traccia circolare di fondo coerente
                                 this.uiCtx.beginPath();
-                                this.uiCtx.arc(pPos.x, pPos.y - 24, 20, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct));
-                                this.uiCtx.strokeStyle = activeIconType === 'blue' ? '#00ddff' : (activeIconType === 'green' ? '#33ff00' : (activeIconType === 'corrupted' ? '#e879f9' : '#ff1133'));
-                                this.uiCtx.lineWidth = 2.5;
+                                this.uiCtx.arc(pPos.x, pPos.y - 24, 21, 0, Math.PI * 2);
+                                this.uiCtx.strokeStyle = 'rgba(5, 7, 15, 0.75)';
+                                this.uiCtx.lineWidth = 4;
                                 this.uiCtx.stroke();
+                                // Anello radiale di durata con glow
+                                this.uiCtx.beginPath();
+                                this.uiCtx.arc(pPos.x, pPos.y - 24, 21, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct));
+                                this.uiCtx.strokeStyle = arcColor;
+                                this.uiCtx.lineWidth = 2.8;
+                                this.uiCtx.shadowColor = arcColor;
+                                this.uiCtx.shadowBlur = 8;
+                                this.uiCtx.stroke();
+                                this.uiCtx.restore();
                             }
                         }
                     }
@@ -17499,6 +17589,8 @@ class Entity {
         this.shadowMesh.visible = false;
         if (this.megaAuraRing) this.megaAuraRing.visible = false;
         if (this.megaAuraGlow) this.megaAuraGlow.visible = false;
+        if (this.trapperAuraRing) this.trapperAuraRing.visible = false;
+        if (this.trapperAuraGlow) this.trapperAuraGlow.visible = false;
     }
     
     move(dx, dy, dt) {
@@ -19196,8 +19288,8 @@ class Player extends Entity {
         if (this.obeliskSlowTimer > 0) this.obeliskSlowTimer -= dt;
         if (this.obeliskHealTimer > 0) {
             this.obeliskHealTimer -= dt;
-            // Cura il 30% in 8 secondi
-            let healAmount = this.stats.maxHp * (0.30 / 8.0) * dt;
+            // Cura il 30% in 10 secondi
+            let healAmount = this.stats.maxHp * (0.30 / 10.0) * dt;
             this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + healAmount);
             if (Game.frameCount % 15 === 0) {
                 Game.getParticle().spawn(this.x + MathUtils.randomRange(-10, 10), 25, this.y + MathUtils.randomRange(-10, 10), SharedMat.spriteGreen, 'spark');
@@ -20859,7 +20951,9 @@ class Enemy extends Entity {
         this.solarBurnDps = 0;
         this.obeliskBurnTimer = 0;
         this.obeliskBurnDps = 0;
+        this.burnInstances = [];
         this.slowedTimer = 0;
+        this.slowMult = undefined;
         this.permafrostTimer = 0;
         this.infected = false;
         this.isBerserk = false;
@@ -21146,6 +21240,55 @@ class Enemy extends Entity {
         } else if (this.isGolden) {
             Game.getFloatingText().spawn(this.x, this.y + 20, "ELITE DORATO", '#fbbf24', 32, true);
         }
+
+        if (this.type === 'trapper') {
+            this.trapperAuraRadius = Math.round(this.radius * 2.1 + 10);
+            if (!this.trapperAuraGlow) {
+                if (!SharedMat.trapperAuraGlow) {
+                    SharedMat.trapperAuraGlow = new THREE.MeshBasicMaterial({
+                        map: GLOW_TEX,
+                        color: 0x00c8ff,
+                        transparent: true,
+                        opacity: 0.55,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    });
+                }
+                this.trapperAuraGlow = new THREE.Mesh(window.GLOBAL_TELEGRAPH_GEO, SharedMat.trapperAuraGlow);
+                this.trapperAuraGlow.matrixAutoUpdate = false;
+                this.trapperAuraGlow.renderOrder = -2;
+                Game.scene.add(this.trapperAuraGlow);
+            }
+            if (!this.trapperAuraRing) {
+                if (!SharedMat.trapperAuraRing) {
+                    SharedMat.trapperAuraRing = new THREE.MeshBasicMaterial({
+                        color: 0x00f0ff,
+                        transparent: true,
+                        opacity: 0.85,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    });
+                }
+                this.trapperAuraRing = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperAuraRing);
+                this.trapperAuraRing.rotation.x = -Math.PI / 2;
+                this.trapperAuraRing.matrixAutoUpdate = false;
+                this.trapperAuraRing.renderOrder = -1;
+                Game.scene.add(this.trapperAuraRing);
+            }
+            let dScale = this.trapperAuraRadius * 2.2;
+            this.trapperAuraGlow.position.set(x, 0.46, y);
+            this.trapperAuraGlow.scale.set(dScale, 1, dScale);
+            this.trapperAuraGlow.updateMatrix();
+            this.trapperAuraGlow.visible = true;
+
+            this.trapperAuraRing.position.set(x, 0.52, y);
+            this.trapperAuraRing.scale.set(this.trapperAuraRadius, this.trapperAuraRadius, 0.22);
+            this.trapperAuraRing.updateMatrix();
+            this.trapperAuraRing.visible = true;
+        } else {
+            if (this.trapperAuraGlow) this.trapperAuraGlow.visible = false;
+            if (this.trapperAuraRing) this.trapperAuraRing.visible = false;
+        }
     }
 
     updateMegaAura(dt) {
@@ -21204,6 +21347,41 @@ class Enemy extends Entity {
         }
     }
 
+    updateTrapperAura(dt) {
+        if (this.type !== 'trapper' || this.dead || !this.active) return;
+        let auraRad = this.trapperAuraRadius || 36;
+        if (this.trapperAuraGlow && this.trapperAuraGlow.visible) {
+            let pulse = 1.0 + Math.sin(Game.playTime * 4.5 + (this.thinkOffset || 0)) * 0.06;
+            let dScale = auraRad * 2.2 * pulse;
+            this.trapperAuraGlow.position.set(this.x, 0.46, this.y);
+            this.trapperAuraGlow.rotation.y += dt * 0.6;
+            this.trapperAuraGlow.scale.set(dScale, 1, dScale);
+            this.trapperAuraGlow.updateMatrix();
+        }
+        if (this.trapperAuraRing && this.trapperAuraRing.visible) {
+            let rPulse = 1.0 + Math.sin(Game.playTime * 4.5 + (this.thinkOffset || 0)) * 0.04;
+            this.trapperAuraRing.position.set(this.x, 0.52, this.y);
+            this.trapperAuraRing.rotation.z -= dt * 1.0;
+            this.trapperAuraRing.scale.set(auraRad * rPulse, auraRad * rPulse, 0.22);
+            this.trapperAuraRing.updateMatrix();
+        }
+        if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 12 : 8) === 0) {
+            let a = Math.random() * Math.PI * 2;
+            let r = auraRad * (0.35 + Math.random() * 0.6);
+            let sp = Game.getParticle();
+            sp.spawn(this.x + Math.cos(a) * r, 5, this.y + Math.sin(a) * r, SharedMat.spriteBlue, 'trail');
+            sp.baseSize = 7;
+            sp.vy = 22;
+            sp.life = 0.32;
+            sp.maxLife = 0.32;
+        }
+    }
+
+    addBurn(dps, duration = 5.0) {
+        if (!this.burnInstances) this.burnInstances = [];
+        this.burnInstances.push({ dps: dps, timer: duration });
+    }
+
     syncFakeShadow(heightOffset = 0) {
         if (this.isMegaElite && this.megaAuraRing && this.megaAuraRing.visible) {
             this.megaAuraRing.position.set(this.x, 0.56, this.y);
@@ -21211,6 +21389,14 @@ class Enemy extends Entity {
             if (this.megaAuraGlow) {
                 this.megaAuraGlow.position.set(this.x, 0.48, this.y);
                 this.megaAuraGlow.updateMatrix();
+            }
+        }
+        if (this.type === 'trapper' && this.trapperAuraRing && this.trapperAuraRing.visible) {
+            this.trapperAuraRing.position.set(this.x, 0.52, this.y);
+            this.trapperAuraRing.updateMatrix();
+            if (this.trapperAuraGlow) {
+                this.trapperAuraGlow.position.set(this.x, 0.46, this.y);
+                this.trapperAuraGlow.updateMatrix();
             }
         }
         if (!this.shadowMesh || !this.shadowMesh.visible) return;
@@ -21228,6 +21414,7 @@ class Enemy extends Entity {
     update(dt) {
         if (!this.active || this.dead || dt === 0) return;
         if (this.isMegaElite) this.updateMegaAura(dt);
+        if (this.type === 'trapper') this.updateTrapperAura(dt);
 
         if (this.isPursuer) {
             this.frozenTimer = 0;
@@ -21632,7 +21819,7 @@ class Enemy extends Entity {
 
         if (this.slowedTimer > 0) {
             this.slowedTimer -= dt;
-            this.speed = this.baseSpeed * 0.5;
+            this.speed = this.baseSpeed * (this.slowMult !== undefined ? this.slowMult : 0.5);
             this._wasSlowed = true;
             let glowColor = this.slowType === 'blue' ? 0x0044aa : 0x004400;
             for (let i = 0; i < this.flashMats.length; i++) this.flashMats[i].emissive.setHex(glowColor);
@@ -21640,6 +21827,7 @@ class Enemy extends Entity {
                 Game.getParticle().spawn(this.x, 2, this.y, SharedMat.spriteBlue, 'dust');
             }
         } else {
+            this.slowMult = undefined;
             if (!this.isProphetBuffed) this.speed = this.baseSpeed;
             if (this._wasSlowed) {
                 this._wasSlowed = false;
@@ -21691,10 +21879,21 @@ class Enemy extends Entity {
         }
         if (this.fireDebuffTimer > 0) this.fireDebuffTimer -= dt;
 
-        if ((this.solarBurnTimer > 0 || this.obeliskBurnTimer > 0) && !this.dead && this.type !== 'crystal' && !this.isPursuer) {
+        if ((this.solarBurnTimer > 0 || this.obeliskBurnTimer > 0 || (this.burnInstances && this.burnInstances.length > 0)) && !this.dead && this.type !== 'crystal' && !this.isPursuer) {
             let totalBurnDps = 0;
             if (this.solarBurnTimer > 0) { this.solarBurnTimer -= dt; totalBurnDps += (this.solarBurnDps || 2); }
             if (this.obeliskBurnTimer > 0) { this.obeliskBurnTimer -= dt; totalBurnDps += (this.obeliskBurnDps || 2); }
+            if (this.burnInstances && this.burnInstances.length > 0) {
+                for (let i = this.burnInstances.length - 1; i >= 0; i--) {
+                    let b = this.burnInstances[i];
+                    b.timer -= dt;
+                    if (b.timer <= 0) {
+                        this.burnInstances.splice(i, 1);
+                    } else {
+                        totalBurnDps += b.dps;
+                    }
+                }
+            }
             this.solarBurnTick = (this.solarBurnTick || 0) + dt;
             if (this.solarBurnTick >= 0.5) {
                 this.solarBurnTick -= 0.5;
@@ -22816,11 +23015,19 @@ class Enemy extends Entity {
                 let baseAtk = ((Game.player.stats.minDmg + Game.player.stats.maxDmg) * 0.5) * Game.player.modifiers.dmgMult;
                 if (Game.player.obeliskDmgTimer > 0) baseAtk *= Game.player.obeliskDmgVal;
                 if (isArchon) { this.solarBurnDps = baseAtk / 5.0; this.solarBurnTimer = 5.0; }
-                if (hasObeliskBurn) { this.obeliskBurnDps = baseAtk / 5.0; this.obeliskBurnTimer = 5.0; }
+                if (hasObeliskBurn) {
+                    let burnDps = baseAtk * 0.20;
+                    this.addBurn(burnDps, 5.0);
+                    let pushAng = Math.atan2(this.y - Game.player.y, this.x - Game.player.x);
+                    let pushDist = this.isBoss ? 8 : (this.type === 'golem' ? 12 : 28);
+                    this.push(Math.cos(pushAng), Math.sin(pushAng), pushDist);
+                }
             }
             if (Game.player.obeliskSlowTimer > 0) {
                 this.slowedTimer = Math.max(this.slowedTimer || 0, 2.5);
+                this.slowMult = 0.70;
                 this.slowType = 'blue';
+                this.frozenTimer = Math.max(this.frozenTimer || 0, 0.5);
             }
             if (typeof ShopSystem !== 'undefined' && ShopSystem.hasMastery('speed', 2)) {
                 this.permafrostTimer = Math.max(this.permafrostTimer || 0, 2.5);
