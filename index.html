@@ -10559,36 +10559,44 @@ const UI = {
         let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
         let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state === 'PLAYING';
         
-        if (this.cache.isLowHp !== isLowHp) {
-            if (this.els.lowHpOverlay) {
-                this.els.lowHpOverlay.classList.toggle('active', isLowHp);
+        if (!isLowHp) {
+            if (this.els.lowHpOverlay && this.els.lowHpOverlay.classList.contains('active')) {
+                this.els.lowHpOverlay.classList.remove('active');
             }
-            document.body.classList.toggle('crt-active', isLowHp);
-            this.cache.isLowHp = isLowHp;
-        }
+            if (this.els.bloodVignette && this.els.bloodVignette.classList.contains('vignette-low-hp-active')) {
+                this.els.bloodVignette.classList.remove('vignette-low-hp-active');
+            }
+            if (document.body.classList.contains('crt-active')) {
+                document.body.classList.remove('crt-active');
+            }
+            this.cache.isLowHp = false;
+        } else {
+            if (this.els.lowHpOverlay && !this.els.lowHpOverlay.classList.contains('active')) {
+                this.els.lowHpOverlay.classList.add('active');
+            }
+            if (!document.body.classList.contains('crt-active')) {
+                document.body.classList.add('crt-active');
+            }
+            this.cache.isLowHp = true;
 
-        if (isLowHp && this.els.lowHpTunnel && this.els.lowHpCrt) {
-            // t va da 0.0 (a 30% HP) fino a 1.0 (a 0% HP)
-            let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
-            // Battito cardiaco sincronizzato con AudioEngine.playHeartbeat (ogni 0.8s)
-            let pulseWave = Math.sin(Game.playTime * 7.85);
-            let beat = Math.pow(Math.max(0, pulseWave), 4) * (0.045 + t * 0.055);
+            if (this.els.lowHpTunnel && this.els.lowHpCrt) {
+                let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
+                let pulseWave = Math.sin(Game.playTime * 7.85);
+                let beat = Math.pow(Math.max(0, pulseWave), 4) * (0.045 + t * 0.055);
+                let tunnelScale = Math.max(0.42, (1.38 - t * 0.88) - beat);
 
-            // Il cerchio si stringe progressivamente sul personaggio al calare della vita (da 1.38x fino a 0.48x)
-            let tunnelScale = Math.max(0.42, (1.38 - t * 0.88) - beat);
-
-            // Segue le coordinate reali a schermo del personaggio
-            let offX = 0, offY = 0;
-            if (typeof Game.toScreenPosition === 'function' && Game.camera) {
-                let sp = Game.toScreenPosition(Game.player.x, 14, Game.player.y);
-                if (sp && Number.isFinite(sp.x) && Number.isFinite(sp.y)) {
-                    offX = Math.round(sp.x - Game.width * 0.5);
-                    offY = Math.round(sp.y - Game.height * 0.5);
+                let offX = 0, offY = 0;
+                if (typeof Game.toScreenPosition === 'function' && Game.camera) {
+                    let sp = Game.toScreenPosition(Game.player.x, 14, Game.player.y);
+                    if (sp && Number.isFinite(sp.x) && Number.isFinite(sp.y)) {
+                        offX = Math.round(sp.x - Game.width * 0.5);
+                        offY = Math.round(sp.y - Game.height * 0.5);
+                    }
                 }
-            }
 
-            this.els.lowHpTunnel.style.transform = `translate3d(${offX}px, ${offY}px, 0) scale3d(${tunnelScale.toFixed(3)}, ${tunnelScale.toFixed(3)}, 1)`;
-            this.els.lowHpCrt.style.opacity = Math.min(1, 0.55 + t * 0.45 + beat * 1.6).toFixed(2);
+                this.els.lowHpTunnel.style.transform = `translate3d(${offX}px, ${offY}px, 0) scale3d(${tunnelScale.toFixed(3)}, ${tunnelScale.toFixed(3)}, 1)`;
+                this.els.lowHpCrt.style.opacity = Math.min(1, 0.55 + t * 0.45 + beat * 1.6).toFixed(2);
+            }
         }
 
         if (isLowHp !== AudioEngine.isLowHp) {
@@ -19381,8 +19389,19 @@ class Player extends Entity {
             gemColor = 0xc084fc;
         }
 
-        // Corpo e testa mantengono i colori della skin; l'asta dell'arma si infonde leggermente del bagliore dell'essenza
-        this.modelParts.body.material.color.setHex(skin.colors.body);
+        // Prime due skin più economiche: tunica e cappello viola scuro + sciarpa rossa
+        let isStarterPurpleSkin = (SkinSystem.skins && (
+            skin.id === SkinSystem.skins[0]?.id ||
+            skin.id === SkinSystem.skins[1]?.id
+        ));
+        let robeColor = isStarterPurpleSkin ? 0x3b1561 : skin.colors.body;
+        let baseScarfColor = isStarterPurpleSkin ? 0xdc2626 : skin.colors.scarf;
+
+        // Corpo, cappello e testa mantengono i colori della skin
+        this.modelParts.body.material.color.setHex(robeColor);
+        if (this.modelParts.headAccentMesh && this.modelParts.headAccentMesh.material && isStarterPurpleSkin) {
+            this.modelParts.headAccentMesh.material.color.setHex(robeColor);
+        }
         this.modelParts.head.material.color.setHex(skin.colors.head);
         this.modelParts.head.material.emissive.setHex(0x222222);
         this.modelParts.head.material.emissiveIntensity = 1.0;
@@ -19397,10 +19416,10 @@ class Player extends Entity {
             this.modelParts.scarf.material.color.setHex(gemColor);
             this.modelParts.scarf.material.emissive.setHex(gemColor);
             this.modelParts.scarf.material.emissiveIntensity = (this.overdrive || Game.ultimateActive) ? 0.50 : 0.30;
-        } else {
-            this.modelParts.scarf.material.color.setHex(skin.colors.scarf);
-            this.modelParts.scarf.material.emissive.setHex(0x000000);
-            this.modelParts.scarf.material.emissiveIntensity = 0.0;
+       } else {
+            this.modelParts.scarf.material.color.setHex(baseScarfColor);
+            this.modelParts.scarf.material.emissive.setHex(isStarterPurpleSkin ? 0x330505 : 0x000000);
+            this.modelParts.scarf.material.emissiveIntensity = isStarterPurpleSkin ? 0.25 : 0.0;
         }
 
         this.light.color.setHex(lColor);
