@@ -4109,15 +4109,13 @@ const PlayerGeometryBuilder = {
         let accentParts = [];
         let headAccentParts = [];
 
-        if (skinId === 'dark_mage') {
-            // COMUNE 1: Mago Oscuro — Cappuccio arcano a punta pulito, occhi mistici luminosi e bastone runico
+       if (skinId === 'dark_mage') {
+            // COMUNE 1: Mago Oscuro — Sfera viso in headParts, Cappello a punta in headAccentParts (viola scuro)
             headParts = [
-                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0),
-                this.part(cone, 6.6, 11.0, 6.8, 0, 6.2, -1.0, -0.32, 0, 0)
+                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0)
             ];
             headAccentParts = [
-                this.part(box, 1.8, 0.9, 1.2, -2.0, 0.3, 5.4, 0, 0.18, -0.18),
-                this.part(box, 1.8, 0.9, 1.2, 2.0, 0.3, 5.4, 0, -0.18, 0.18)
+                this.part(cone, 6.6, 11.0, 6.8, 0, 6.2, -1.0, -0.32, 0, 0)
             ];
             staffParts = [
                 this.part(cyl, 1.9, 35, 1.9, 0, 10, 0),
@@ -4127,15 +4125,18 @@ const PlayerGeometryBuilder = {
             haloParts = [this.part(torus, 5.4, 5.4, 4.5, 0, 0, 0, Math.PI / 2, 0, 0)];
         }
         else if (skinId === 'astral_arcanist') {
-            // COMUNE 2: Arcanista Astrale — Grande cappello a tesa larga con fascia luminosa e scettro giroscopico
+            // COMUNE 2: Arcanista Astrale — Sfera viso in headParts, Cappello a tesa larga in headAccentParts (viola scuro)
             bodyParts = [this.part(robeHex, 1, 24, 1, 0, 0, 0)];
             headParts = [
-                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0),
-                this.part(cyl, 11.5, 1.2, 11.5, 0, 3.8, 0),
-                this.part(cone, 6.0, 14.5, 6.0, 0, 11.0, -1.2, -0.22, 0, 0)
+                this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0)
+            ];
+            scarfParts = [
+                this.part(torus, 6.4, 6.4, 2.3, 0, 0, 0, Math.PI / 2, 0, 0),
+                this.part(torus, 5.5, 5.5, 1.8, 0, 9.1, -0.2, Math.PI / 2 - 0.12, 0, 0) // Fascia rossa sul cappello
             ];
             headAccentParts = [
-                this.part(torus, 5.5, 5.5, 1.8, 0, 4.6, -0.2, Math.PI / 2 - 0.12, 0, 0)
+                this.part(cyl, 11.5, 1.2, 11.5, 0, 3.8, 0),
+                this.part(cone, 6.0, 14.5, 6.0, 0, 11.0, -1.2, -0.22, 0, 0)
             ];
             gemParts = [
                 this.part(cone4, 4.0, 7.2, 4.0, 0, 3.6, 0),
@@ -7390,6 +7391,11 @@ function applySkinMaterials(parts, skin) {
         m.roughness = cfg.staffRough;
         m.metalness = cfg.staffMetal;
         m.needsUpdate = true;
+    }
+    if (skin.id === 'dark_mage' || skin.id === 'astral_arcanist') {
+        if (parts.body && parts.body.material) parts.body.material.color.setHex(0x3b1561);
+        if (parts.scarf && parts.scarf.material) parts.scarf.material.color.setHex(0xdc2626);
+        if (parts.headAccentMesh && parts.body) parts.headAccentMesh.material = parts.body.material;
     }
 }
 
@@ -19389,22 +19395,41 @@ class Player extends Entity {
             gemColor = 0xc084fc;
         }
 
-        // Prime due skin più economiche: tunica e cappello viola scuro + sciarpa rossa
-        let isStarterPurpleSkin = (SkinSystem.skins && (
-            skin.id === SkinSystem.skins[0]?.id ||
-            skin.id === SkinSystem.skins[1]?.id
-        ));
+        // Rileva le prime due skin più economiche
+        let isStarterPurpleSkin = (
+            skin.id === 'dark_mage' ||
+            skin.id === 'emerald_warden' ||
+            (SkinSystem.skins && (skin.id === SkinSystem.skins[0]?.id || skin.id === SkinSystem.skins[1]?.id))
+        );
         let robeColor = isStarterPurpleSkin ? 0x3b1561 : skin.colors.body;
         let baseScarfColor = isStarterPurpleSkin ? 0xdc2626 : skin.colors.scarf;
 
-        // Corpo, cappello e testa mantengono i colori della skin
-        this.modelParts.body.material.color.setHex(robeColor);
-        if (this.modelParts.headAccentMesh && this.modelParts.headAccentMesh.material && isStarterPurpleSkin) {
-            this.modelParts.headAccentMesh.material.color.setHex(robeColor);
-        }
+        // 1. Testa bianca (separata dal materiale del cappello)
         this.modelParts.head.material.color.setHex(skin.colors.head);
         this.modelParts.head.material.emissive.setHex(0x222222);
         this.modelParts.head.material.emissiveIntensity = 1.0;
+
+        // 2. Tunica viola scuro
+        this.modelParts.body.material.color.setHex(robeColor);
+
+        // 3. Cappello (headAccentMesh + eventuale figlio di head): nelle prime 2 skin usa il materiale viola della tunica
+        let hatMesh = this.modelParts.headAccentMesh || (this.modelParts.head && this.modelParts.head.children[0]);
+        if (hatMesh && hatMesh !== this.bloodHaloGroup) {
+            if (!this._origHatMat && hatMesh.material !== this.modelParts.body.material) {
+                this._origHatMat = hatMesh.material;
+            }
+            if (isStarterPurpleSkin) {
+                hatMesh.material = this.modelParts.body.material;
+                if (this.deadHead && this.deadHead.children[0]) {
+                    this.deadHead.children[0].material = this.modelParts.body.material;
+                }
+            } else if (this._origHatMat) {
+                hatMesh.material = this._origHatMat;
+                if (this.deadHead && this.deadHead.children[0]) {
+                    this.deadHead.children[0].material = this._origHatMat;
+                }
+            }
+        }
         if (this.modelParts.staff) {
             this.modelParts.staff.material.color.setHex(skin.colors.staff);
             this.modelParts.staff.material.emissive.setHex(hasActiveEssence ? gemColor : 0x332200);
