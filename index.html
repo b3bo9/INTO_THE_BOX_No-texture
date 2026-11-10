@@ -8768,152 +8768,174 @@ const ModelFactory = {
             parts.nockedArrow = nockedArrow;
             parts.tipGlint = tipGlint;
         } else if (type === 'pyromancer') {
-            // --- MOSTRO "FAUCE PIROCLASTICA" (Gargoyle/Salamandra Magmatica Low-Poly, Zero Compenetrazioni) ---
+            // --- PYROMANCER REWORK: SIGNORE DELLE CENERI (Solido, Massiccio e Carismatico) ---
             if (!SharedMat.pyroObsidian) {
                 SharedMat.pyroObsidian = isTouchDevice
-                    ? new THREE.MeshLambertMaterial({ color: 0x1a0c0a, emissive: 0x240600 })
-                    : new THREE.MeshPhongMaterial({ color: 0x1a0c0a, emissive: 0x240600, shininess: 45, flatShading: true });
+                    ? new THREE.MeshLambertMaterial({ color: 0x1c0f0d, emissive: 0x220500, map: CHAR_GRUNGE_TEX })
+                    : new THREE.MeshPhongMaterial({ color: 0x1c0f0d, emissive: 0x220500, shininess: 40, map: CHAR_GRUNGE_TEX, flatShading: true });
                 SharedMatSet.add(SharedMat.pyroObsidian);
             }
             if (!SharedMat.pyroMagma) {
-                SharedMat.pyroMagma = new THREE.MeshBasicMaterial({ color: 0xffae00 });
+                SharedMat.pyroMagma = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
                 SharedMatSet.add(SharedMat.pyroMagma);
             }
-
-            // 1. Coda/Base piramidale vulcanica sospesa (distaccata dal torso)
-            let tail = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-            tail.scale.set(size * 0.42, size * 0.56, size * 0.42);
-            tail.position.set(0, size * 0.36, -size * 0.30);
-            tail.rotation.x = Math.PI - 0.32;
-
-            // 2. Torso incurvato da bestia magmatica
-            let torso = new THREE.Mesh(SharedGeo.octahedron, mat);
-            torso.scale.set(size * 0.80, size * 0.70, size * 0.74);
-            torso.position.set(0, size * 1.34, -size * 0.08);
-            torso.rotation.x = 0.22;
-
-            // Nucleo di brace incandescente incastonato davanti al petto (esterno alla superficie del torso)
-            let bellyCore = new THREE.Mesh(SharedGeo.octahedron, SharedMat.pyroMagma);
-            bellyCore.scale.set(size * 0.30, size * 0.34, size * 0.16);
-            bellyCore.position.set(0, size * 1.18, size * 0.64);
-            bellyCore.rotation.x = 0.22;
-
-            // 3. Cresta dorsale di 3 aculei vulcanici (staccati lungo la schiena)
-            let dorsalSpines = new THREE.Group();
-            const spineConfigs = [
-                { y: size * 2.04, z: -size * 0.52, sx: size * 0.16, sy: size * 0.48, rx: -0.60 },
-                { y: size * 1.50, z: -size * 0.80, sx: size * 0.14, sy: size * 0.40, rx: -1.05 },
-                { y: size * 0.96, z: -size * 0.76, sx: size * 0.11, sy: size * 0.30, rx: -1.40 }
-            ];
-            for (let i = 0; i < spineConfigs.length; i++) {
-                let sc = spineConfigs[i];
-                let sp = new THREE.Mesh(SharedGeo.cone, i === 0 ? SharedMat.pyroMagma : SharedMat.pyroObsidian);
-                sp.scale.set(sc.sx, sc.sy, sc.sx * 1.2);
-                sp.position.set(0, sc.y, sc.z);
-                sp.rotation.x = sc.rx;
-                dorsalSpines.add(sp);
+            if (!SharedMat.pyroFlame) {
+                SharedMat.pyroFlame = new THREE.MeshBasicMaterial({ color: 0xff3b00 });
+                SharedMatSet.add(SharedMat.pyroFlame);
             }
 
-            // 4. Testa mostruosa con Fauce Articolata (nozzleGroup)
+            // 1. Base Solida: Veste Corazzata Lavica + Cintura d'Ossidiana
+            let robeBase = new THREE.Mesh(SharedGeo.cylinder, SharedMat.pyroObsidian);
+            robeBase.scale.set(size * 0.95, size * 1.35, size * 1.25);
+            robeBase.position.set(0, size * 0.68, 0);
+
+            let belt = new THREE.Mesh(SharedGeo.cylinder, mat);
+            belt.scale.set(size * 1.08, size * 0.34, size * 0.95);
+            belt.position.set(0, size * 1.35, 0);
+
+            // 2. Torso Massiccio con Fornace Magmatica nel Petto
+            let torso = new THREE.Mesh(SharedGeo.box, mat);
+            torso.scale.set(size * 1.65, size * 1.35, size * 1.05);
+            torso.position.set(0, size * 2.05, 0);
+
+            let chestFrame = new THREE.Mesh(SharedGeo.torus, SharedMat.pyroObsidian);
+            chestFrame.scale.set(size * 0.48, size * 0.48, size * 1.2);
+            chestFrame.position.set(0, size * 2.05, size * 0.54);
+
+            let bellyCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.pyroMagma);
+            bellyCore.scale.set(size * 0.44, size * 0.50, size * 0.28);
+            bellyCore.position.set(0, size * 2.05, size * 0.52);
+
+            // 3. Spallacci Vulcanici Imponenti
+            let paulL = new THREE.Group();
+            paulL.position.set(-size * 1.18, size * 2.48, 0);
+            let paulLPlate = new THREE.Mesh(SharedGeo.box, SharedMat.pyroObsidian);
+            paulLPlate.scale.set(size * 0.72, size * 0.48, size * 0.88);
+            paulLPlate.rotation.z = 0.28;
+            let paulLSpike = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
+            paulLSpike.scale.set(size * 0.24, size * 0.75, size * 0.24);
+            paulLSpike.position.set(-size * 0.12, size * 0.45, 0);
+            paulLSpike.rotation.z = 0.35;
+            paulL.add(paulLPlate, paulLSpike);
+
+            let paulR = new THREE.Group();
+            paulR.position.set(size * 1.18, size * 2.48, 0);
+            let paulRPlate = new THREE.Mesh(SharedGeo.box, SharedMat.pyroObsidian);
+            paulRPlate.scale.set(size * 0.72, size * 0.48, size * 0.88);
+            paulRPlate.rotation.z = -0.28;
+            let paulRSpike = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
+            paulRSpike.scale.set(size * 0.24, size * 0.75, size * 0.24);
+            paulRSpike.position.set(size * 0.12, size * 0.45, 0);
+            paulRSpike.rotation.z = -0.35;
+            paulR.add(paulRPlate, paulRSpike);
+
+            // 4. Aureola / Braciere Solare Dorsale (Rende la silhouette inconfondibile dall'alto)
+            let dorsalSpines = new THREE.Group();
+            dorsalSpines.position.set(0, size * 2.65, -size * 0.55);
+            let backRing = new THREE.Mesh(SharedGeo.torus, SharedMat.pyroObsidian);
+            backRing.scale.set(size * 1.05, size * 1.05, size * 0.9);
+            dorsalSpines.add(backRing);
+            for (let i = -2; i <= 2; i++) {
+                let a = i * 0.42;
+                let ray = new THREE.Mesh(SharedGeo.cone, (i % 2 === 0) ? SharedMat.pyroMagma : SharedMat.pyroFlame);
+                ray.scale.set(size * 0.18, size * 0.68, size * 0.16);
+                ray.position.set(-Math.sin(a) * size * 1.25, Math.cos(a) * size * 1.25, 0);
+                ray.rotation.z = a;
+                dorsalSpines.add(ray);
+            }
+
+            // 5. Testa Carismatica con Elmo Reale, Corna e Mascella Articolata
             let nozzleGroup = new THREE.Group();
-            nozzleGroup.position.set(0, size * 1.65, size * 0.55);
+            nozzleGroup.position.set(0, size * 2.85, size * 0.18);
 
-            // Cranio superiore + Occhi + Corna + Zanne superiori
             let upperHead = new THREE.Group();
-            let skull = new THREE.Mesh(SharedGeo.octahedron, mat);
-            skull.scale.set(size * 0.58, size * 0.32, size * 0.64);
-            skull.position.set(0, size * 0.24, size * 0.10);
+            let skull = new THREE.Mesh(SharedGeo.cylinder, SharedMat.pyroObsidian);
+            skull.scale.set(size * 0.68, size * 0.72, size * 0.68);
+            skull.position.set(0, size * 0.32, 0);
 
-            let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
-            eyeL.scale.set(size * 0.16, size * 0.08, size * 0.14);
-            eyeL.position.set(-size * 0.30, size * 0.32, size * 0.44);
-            eyeL.rotation.set(0.2, 0.25, -0.28);
+            // Corona di Fiamme frontale
+            let crownMid = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
+            crownMid.scale.set(size * 0.20, size * 0.70, size * 0.18);
+            crownMid.position.set(0, size * 0.82, size * 0.38);
+            crownMid.rotation.x = 0.22;
 
-            let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
-            eyeR.scale.set(size * 0.16, size * 0.08, size * 0.14);
-            eyeR.position.set(size * 0.30, size * 0.32, size * 0.44);
-            eyeR.rotation.set(0.2, -0.25, 0.28);
+            let hornL = new THREE.Mesh(SharedGeo.cone, mat);
+            hornL.scale.set(size * 0.24, size * 1.15, size * 0.24);
+            hornL.position.set(-size * 0.58, size * 0.75, -size * 0.05);
+            hornL.rotation.set(-0.25, 0, 0.48);
 
-            // Corna d'ossidiana piegate all'indietro (esterne alle tempie)
-            let hornL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-            hornL.scale.set(size * 0.14, size * 0.58, size * 0.14);
-            hornL.position.set(-size * 0.48, size * 0.48, -size * 0.14);
-            hornL.rotation.set(-0.88, 0, 0.36);
+            let hornR = new THREE.Mesh(SharedGeo.cone, mat);
+            hornR.scale.set(size * 0.24, size * 1.15, size * 0.24);
+            hornR.position.set(size * 0.58, size * 0.75, -size * 0.05);
+            hornR.rotation.set(-0.25, 0, -0.48);
 
-            let hornR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-            hornR.scale.set(size * 0.14, size * 0.58, size * 0.14);
-            hornR.position.set(size * 0.48, size * 0.48, -size * 0.14);
-            hornR.rotation.set(-0.88, 0, -0.36);
+            // Visiera ardente
+            let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.pyroMagma);
+            eyeL.scale.set(size * 0.26, size * 0.13, size * 0.18);
+            eyeL.position.set(-size * 0.24, size * 0.36, size * 0.56);
+            eyeL.rotation.z = -0.18;
 
-            // Zanne superiori appuntite
-            let fangUL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-            fangUL.scale.set(size * 0.08, size * 0.22, size * 0.08);
-            fangUL.position.set(-size * 0.24, size * 0.02, size * 0.48);
-            fangUL.rotation.x = Math.PI;
+            let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.pyroMagma);
+            eyeR.scale.set(size * 0.26, size * 0.13, size * 0.18);
+            eyeR.position.set(size * 0.24, size * 0.36, size * 0.56);
+            eyeR.rotation.z = 0.18;
 
-            let fangUR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-            fangUR.scale.set(size * 0.08, size * 0.22, size * 0.08);
-            fangUR.position.set(size * 0.24, size * 0.02, size * 0.48);
-            fangUR.rotation.x = Math.PI;
+            upperHead.add(skull, crownMid, hornL, hornR, eyeL, eyeR);
 
-            upperHead.add(skull, eyeL, eyeR, hornL, hornR, fangUL, fangUR);
-
-            // Mascella inferiore articolata (si spalanca durante carica e fiammata)
+            // Mascella inferiore pesante (si spalanca durante carica e fiammata)
             let lowerJaw = new THREE.Group();
-            lowerJaw.position.set(0, -size * 0.08, -size * 0.04);
-            lowerJaw.rotation.x = 0.28;
+            lowerJaw.position.set(0, size * 0.02, 0);
+            let jawBone = new THREE.Mesh(SharedGeo.box, mat);
+            jawBone.scale.set(size * 0.76, size * 0.28, size * 0.78);
+            jawBone.position.set(0, -size * 0.08, size * 0.18);
+            lowerJaw.add(jawBone);
 
-            let jawBone = new THREE.Mesh(SharedGeo.octahedron, SharedMat.pyroObsidian);
-            jawBone.scale.set(size * 0.44, size * 0.16, size * 0.52);
-            jawBone.position.set(0, -size * 0.08, size * 0.26);
-
-            let fangLL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
-            fangLL.scale.set(size * 0.07, size * 0.18, size * 0.07);
-            fangLL.position.set(-size * 0.19, size * 0.06, size * 0.44);
-
-            let fangLR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
-            fangLR.scale.set(size * 0.07, size * 0.18, size * 0.07);
-            fangLR.position.set(size * 0.19, size * 0.06, size * 0.44);
-
-            lowerJaw.add(jawBone, fangLL, fangLR);
-
-            // Globo di fuoco vivo in fondo alla gola spalancata
+            // Nucleo incandescente nella gola
             let pilotCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.pyroMagma);
-            pilotCore.scale.setScalar(size * 0.22);
-            pilotCore.position.set(0, size * 0.04, size * 0.24);
+            pilotCore.scale.setScalar(size * 0.28);
+            pilotCore.position.set(0, size * 0.12, size * 0.35);
 
             let pilotGlow = new THREE.Sprite(SharedMat.spriteYellow);
-            pilotGlow.scale.set(size * 1.8, size * 1.8, 1);
-            pilotGlow.position.set(0, size * 0.04, size * 0.32);
+            pilotGlow.scale.set(size * 2.4, size * 2.4, 1);
+            pilotGlow.position.set(0, size * 0.12, size * 0.45);
 
             nozzleGroup.add(upperHead, lowerJaw, pilotCore, pilotGlow);
 
-            // 5. Artigli fluttuanti laterali (distaccati dal corpo, zero intersezioni)
-            const buildClawArm = (side) => {
+            // 6. Braccia Solide con Guanti-Cannone Piroclastici
+            const buildPyroArm = (side) => {
                 let armGroup = new THREE.Group();
-                armGroup.position.set(side * size * 0.96, size * 1.32, size * 0.16);
+                armGroup.position.set(side * size * 1.15, size * 2.05, size * 0.15);
 
-                let bracer = new THREE.Mesh(SharedGeo.octahedron, mat);
-                bracer.scale.set(size * 0.22, size * 0.38, size * 0.26);
-                bracer.rotation.z = side * -0.25;
+                let upperArm = new THREE.Mesh(SharedGeo.cylinder, SharedMat.pyroObsidian);
+                upperArm.scale.set(size * 0.32, size * 0.85, size * 0.32);
+                upperArm.position.set(0, -size * 0.25, size * 0.15);
+                upperArm.rotation.x = 0.55;
 
-                let claw1 = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-                claw1.scale.set(size * 0.07, size * 0.26, size * 0.07);
-                claw1.position.set(-side * size * 0.06, -size * 0.34, size * 0.16);
-                claw1.rotation.x = Math.PI * 0.72;
+                let gauntlet = new THREE.Mesh(SharedGeo.box, mat);
+                gauntlet.scale.set(size * 0.52, size * 0.52, size * 0.95);
+                gauntlet.position.set(0, -size * 0.48, size * 0.55);
 
-                let claw2 = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
-                claw2.scale.set(size * 0.07, size * 0.26, size * 0.07);
-                claw2.position.set(side * size * 0.08, -size * 0.34, size * 0.16);
-                claw2.rotation.x = Math.PI * 0.72;
+                let muzzle = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.pyroMagma);
+                muzzle.scale.setScalar(size * 0.24);
+                muzzle.position.set(0, -size * 0.48, size * 1.02);
 
-                armGroup.add(bracer, claw1, claw2);
+                armGroup.add(upperArm, gauntlet, muzzle);
                 return armGroup;
             };
-            let armL = buildClawArm(-1);
-            let armR = buildClawArm(1);
+            let armL = buildPyroArm(-1);
+            let armR = buildPyroArm(1);
 
-            group.add(tail, torso, bellyCore, dorsalSpines, nozzleGroup, armL, armR);
+            // 7. Scudo di Fuoco 3D (Attivo mentre spara il getto: -80% danni subiti)
+            let fireShield = new THREE.Group();
+            fireShield.position.set(0, size * 1.85, 0);
+            let shieldSphere = new THREE.Mesh(SharedGeo.sphere, SharedMat.prophetShield);
+            shieldSphere.scale.setScalar(size * 2.35);
+            let shieldCage = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.ringWalkerEdge);
+            shieldCage.scale.setScalar(size * 2.48);
+            fireShield.add(shieldSphere, shieldCage);
+            fireShield.visible = false;
+
+            group.add(robeBase, belt, torso, chestFrame, bellyCore, paulL, paulR, dorsalSpines, nozzleGroup, armL, armR, fireShield);
             parts.torso = torso;
             parts.nozzleGroup = nozzleGroup;
             parts.upperHead = upperHead;
@@ -8923,6 +8945,7 @@ const ModelFactory = {
             parts.pilotGlow = pilotGlow;
             parts.armL = armL;
             parts.armR = armR;
+            parts.fireShield = fireShield;
         } else if (type === 'mage' || type === 'dark_prophet') {
             let robe = new THREE.Mesh(SharedGeo.cone, darkMat); robe.scale.set(size*1.2, size*3.6, size*1.2); robe.position.y = size*1.8;
             let hood = new THREE.Mesh(SharedGeo.sphere, mat); hood.scale.set(size*0.8, size*0.8, size*0.8); hood.position.y = size*2.8;
@@ -9068,58 +9091,153 @@ const ModelFactory = {
             parts.core = core;
             parts.coreGlow = coreGlow;
         } else if (type === 'trapper') {
-            // 1. Veste inferire e busto corazzato separati (zero compenetrazione)
+            // --- TRAPPER REWORK: CINTURA DI SPUNCIONI GHIACCIATI, CORONA DI SPINI COMPATTA E MANO CHE MESCOLA ---
+            if (!SharedMat.trapperIceSpike) {
+                SharedMat.trapperIceSpike = isTouchDevice
+                    ? new THREE.MeshLambertMaterial({ color: 0x99f6ff, emissive: 0x0088cc })
+                    : new THREE.MeshPhongMaterial({ color: 0x99f6ff, emissive: 0x0088cc, shininess: 90, flatShading: true });
+                SharedMatSet.add(SharedMat.trapperIceSpike);
+            }
+            if (!SharedMat.trapperThornMat) {
+                SharedMat.trapperThornMat = new THREE.MeshLambertMaterial({ color: 0x1a1615, emissive: 0x0a1820 });
+                SharedMatSet.add(SharedMat.trapperThornMat);
+            }
+
+            // 1. Veste inferiore e Busto solido
             let skirt = new THREE.Mesh(SharedGeo.cone, darkMat);
             skirt.scale.set(size * 1.15, size * 1.65, size * 1.15);
             skirt.position.y = size * 0.82;
 
             let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
-            torso.scale.set(size * 0.72, size * 1.15, size * 0.62);
-            torso.position.y = size * 1.95;
+            torso.scale.set(size * 0.76, size * 1.20, size * 0.68);
+            torso.position.y = size * 1.98;
 
-            // 2. Spallacci Runici Inclinati e Collare Alto
+            // 2. CINTURA SPESSA DI SPUNCIONI GHIACCIATI VERSO L'ESTERNO (Compatta e bilanciata in vita)
+            let iceBelt = new THREE.Group();
+            iceBelt.position.set(0, size * 1.36, 0);
+
+            let beltRing = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperIceSpike);
+            beltRing.rotation.x = Math.PI / 2;
+            beltRing.scale.set(size * 0.84, size * 0.84, size * 2.1);
+            iceBelt.add(beltRing);
+
+            const numIceSpikes = 8;
+            for (let i = 0; i < numIceSpikes; i++) {
+                let a = (i / numIceSpikes) * Math.PI * 2 + (Math.PI / numIceSpikes);
+                let isBig = (i % 2 === 0);
+                let spikeHolder = new THREE.Group();
+                spikeHolder.rotation.y = -a;
+
+                let iceSpike = new THREE.Mesh(SharedGeo.cone, SharedMat.trapperIceSpike);
+                let spLen = isBig ? size * 0.44 : size * 0.32;
+                let spRad = isBig ? size * 0.17 : size * 0.13;
+                iceSpike.scale.set(spRad, spLen, spRad);
+                // Spuncioni corti e tozzi che sporgono dalla cintura senza creare confusione
+                iceSpike.position.set(size * 0.84 + spLen * 0.38, 0, 0);
+                iceSpike.rotation.z = -Math.PI / 2 + 0.12;
+                spikeHolder.add(iceSpike);
+                iceBelt.add(spikeHolder);
+            }
+
+            // 3. Spallacci e Collare scuro pulito
             let paulL = new THREE.Mesh(SharedGeo.box, darkMat);
-            paulL.scale.set(size * 0.58, size * 0.24, size * 0.68);
-            paulL.position.set(-size * 0.92, size * 2.38, 0);
-            paulL.rotation.z = 0.38;
+            paulL.scale.set(size * 0.50, size * 0.22, size * 0.58);
+            paulL.position.set(-size * 0.86, size * 2.34, 0);
+            paulL.rotation.z = 0.32;
 
             let paulR = new THREE.Mesh(SharedGeo.box, darkMat);
-            paulR.scale.set(size * 0.58, size * 0.24, size * 0.68);
-            paulR.position.set(size * 0.92, size * 2.38, 0);
-            paulR.rotation.z = -0.38;
+            paulR.scale.set(size * 0.50, size * 0.22, size * 0.58);
+            paulR.position.set(size * 0.86, size * 2.34, 0);
+            paulR.rotation.z = -0.32;
 
-            // 3. Testa Incappucciata con Visore Arcano Ciano
+            let neckCollar = new THREE.Mesh(SharedGeo.torus, darkMat);
+            neckCollar.rotation.x = Math.PI / 2;
+            neckCollar.scale.set(size * 0.56, size * 0.56, size * 1.4);
+            neckCollar.position.set(0, size * 2.54, 0);
+
+            // 4. Testa e CORONA DI SPINI COMPATTA
             let head = new THREE.Mesh(SharedGeo.icosahedron, darkMat);
-            head.scale.set(size * 0.58, size * 0.68, size * 0.58);
-            head.position.set(0, size * 2.95, 0);
+            head.scale.set(size * 0.60, size * 0.68, size * 0.60);
+            head.position.set(0, size * 3.04, 0);
 
             let visor = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead);
-            visor.scale.set(size * 0.62, size * 0.16, size * 0.22);
-            visor.position.set(0, size * 2.95, size * 0.48);
+            visor.scale.set(size * 0.58, size * 0.15, size * 0.20);
+            visor.position.set(0, size * 3.02, size * 0.46);
 
-            let crownFin = new THREE.Mesh(SharedGeo.cone, mat);
-            crownFin.scale.set(size * 0.22, size * 0.85, size * 0.42);
-            crownFin.position.set(0, size * 3.65, -size * 0.10);
+            let thornCrown = new THREE.Group();
+            thornCrown.position.set(0, size * 3.38, 0);
 
-            // 4. Astrolabio-Gabbia Arcana Fluttuante (davanti al Trapper, ospita il sigillo della prigione)
+            let thornBand1 = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperThornMat);
+            thornBand1.rotation.x = Math.PI / 2 + 0.06;
+            thornBand1.scale.set(size * 0.54, size * 0.54, size * 1.0);
+
+            let thornBand2 = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperThornMat);
+            thornBand2.rotation.x = Math.PI / 2 - 0.06;
+            thornBand2.scale.set(size * 0.52, size * 0.52, size * 0.95);
+            thornCrown.add(thornBand1, thornBand2);
+
+            const numThorns = 8;
+            for (let i = 0; i < numThorns; i++) {
+                let a = (i / numThorns) * Math.PI * 2;
+                let tHolder = new THREE.Group();
+                tHolder.rotation.y = -a;
+
+                let thorn = new THREE.Mesh(SharedGeo.cone, (i % 2 === 0) ? mat : SharedMat.trapperThornMat);
+                let tH = (i % 2 === 0) ? size * 0.28 : size * 0.20;
+                thorn.scale.set(size * 0.08, tH, size * 0.08);
+                thorn.position.set(size * 0.52, size * 0.10, 0);
+                thorn.rotation.z = -0.22;
+                tHolder.add(thorn);
+                thornCrown.add(tHolder);
+            }
+
+            // 5. Braccio Sinistro + Braccio/Mano Destra che "MESCOLA" in cerchio
+            let armL = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            armL.scale.set(size * 0.22, size * 0.90, size * 0.22);
+            armL.position.set(-size * 0.90, size * 1.88, size * 0.32);
+            armL.rotation.set(0.75, 0, 0.25);
+
+            // Pivot del movimento circolare ("mescolamento") ben staccato davanti al busto
+            let stirCenter = new THREE.Group();
+            stirCenter.position.set(0, size * 2.02, size * 1.24);
+
+            let stirArmPivot = new THREE.Group();
+            let forearmR = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            forearmR.scale.set(size * 0.20, size * 0.82, size * 0.20);
+            forearmR.position.set(size * 0.38, size * 0.24, -size * 0.34);
+            forearmR.rotation.set(1.15, 0, -0.36);
+
+            let stirHand = new THREE.Mesh(SharedGeo.icosahedron, mat);
+            stirHand.scale.set(size * 0.30, size * 0.22, size * 0.34);
+            stirHand.position.set(size * 0.34, 0, 0);
+
+            let stirClaw = new THREE.Mesh(SharedGeo.cone, SharedMat.trapperIceSpike);
+            stirClaw.scale.set(size * 0.12, size * 0.42, size * 0.12);
+            stirClaw.position.set(size * 0.34, -size * 0.24, 0);
+            stirClaw.rotation.x = Math.PI;
+
+            stirArmPivot.add(forearmR, stirHand, stirClaw);
+            stirCenter.add(stirArmPivot);
+
+            // 6. Focus Runico della Trappola sotto la mano che mescola
             let cageFocus = new THREE.Group();
-            cageFocus.position.set(0, size * 1.95, size * 1.18);
+            cageFocus.position.set(0, size * 1.48, size * 1.24);
 
             let ringOuter = new THREE.Mesh(SharedGeo.torus, mat);
-            ringOuter.scale.set(size * 0.72, size * 0.72, size * 0.95);
+            ringOuter.rotation.x = Math.PI / 2;
+            ringOuter.scale.set(size * 0.65, size * 0.65, size * 0.90);
 
             let ringInner = new THREE.Mesh(SharedGeo.torus, SharedMat.golemHead);
-            ringInner.scale.set(size * 0.52, size * 0.52, size * 0.85);
-            ringInner.rotation.y = Math.PI / 2;
+            ringInner.scale.set(size * 0.46, size * 0.46, size * 0.80);
 
             let prisonCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.golemHead);
-            prisonCore.scale.setScalar(size * 0.28);
+            prisonCore.scale.setScalar(size * 0.24);
 
             let focusGlow = new THREE.Sprite(SharedMat.spriteBlue);
-            focusGlow.scale.set(size * 2.8, size * 2.8, 1);
+            focusGlow.scale.set(size * 2.5, size * 2.5, 1);
 
             cageFocus.add(ringOuter, ringInner, prisonCore, focusGlow);
-            group.add(skirt, torso, paulL, paulR, head, visor, crownFin, cageFocus);
+            group.add(skirt, torso, iceBelt, paulL, paulR, neckCollar, head, visor, thornCrown, armL, stirCenter, cageFocus);
 
             parts.cageFocus = cageFocus;
             parts.ringOuter = ringOuter;
@@ -9128,6 +9246,12 @@ const ModelFactory = {
             parts.focusGlow = focusGlow;
             parts.paulL = paulL;
             parts.paulR = paulR;
+            parts.iceBelt = iceBelt;
+            parts.iceNecklace = iceBelt;
+            parts.thornCrown = thornCrown;
+            parts.stirArmPivot = stirArmPivot;
+            parts.stirHand = stirHand;
+            parts.armL = armL;
         } else if (type === 'crystal') {
             let base = new THREE.Mesh(SharedGeo.cylinder, darkMat); base.scale.set(size, size*0.5, size); base.position.y = size*0.25;
             let gem = new THREE.Mesh(SharedGeo.icosahedron, mat); gem.scale.set(size*0.8, size*2.5, size*0.8); gem.position.y = size*1.8;
@@ -21871,10 +21995,10 @@ class Enemy extends Entity {
         else if (type === 'slime_mini') { color = 0xcc33ff; size = 8; spdMod = 1.42; hpMod = 0.32; dmgMod = 0.55; this.aggroRange = 600; this.attackRange = 30; }
         else if (type === 'leaper') { color = 0xaa00ff; size = 12; spdMod = 0.78; hpMod = 1.05; dmgMod = 1.45; this.aggroRange = 600; this.attackRange = 250; this.leapCooldown = 0; }
         else if (type === 'crystal') { color = 0xff00ff; size = 12; this.aggroRange = 0; this.speed = 0; hpMod = 0.001; }
-       else if (type === 'pyromancer') { color = 0xff3300; size = 13; spdMod = 0.75; hpMod = 1.05; dmgMod = 1.15; this.aggroRange = 650; this.attackRange = 215; }
+       else if (type === 'pyromancer') { color = 0xff3300; size = 16.5; spdMod = 0.75; hpMod = 1.15; dmgMod = 1.15; this.aggroRange = 650; this.attackRange = 215; }
         else if (type === 'fire_demon') { color = 0xff4400; size = 14; spdMod = 0.95; hpMod = 1.35; dmgMod = 1.85; this.aggroRange = 800; this.attackRange = 560; }
         else if (type === 'mage') { color = 0x00aaff; size = 12; spdMod = 0.65; hpMod = 0.75; dmgMod = 1.30; this.aggroRange = 700; this.attackRange = 450; }
-        else if (type === 'trapper') { color = 0x00e5ff; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
+        else if (type === 'trapper') { color = 0x00e5ff; size = 14.5; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
         else if (type === 'golem') { color = 0x00aaff; size = 20; spdMod = 0.45; hpMod = 3.50; dmgMod = 1.65; this.aggroRange = 600; this.attackRange = 60; }
         else if (type === 'ring_walker') { color = 0x141418; size = 15; spdMod = 0.78; hpMod = 1.40; dmgMod = 1.45; this.aggroRange = 680; this.attackRange = 360; }
         else if (type === 'dark_prophet') { color = 0xff5500; size = 12; spdMod = 0.35; hpMod = 1.25; dmgMod = 0.80; this.aggroRange = 800; this.attackRange = 0; }
@@ -22038,23 +22162,33 @@ class Enemy extends Entity {
         }
 
         // Reset arti e parti speciali per modelli riciclati dal Pool
+        this.stirAngle = 0;
+        this.trapperMaxTelegraph = 1.10;
         if (this.modelParts) {
-            if (this.modelParts.armL) {
-                this.modelParts.armL.rotation.set(0, 0, 0);
-                this.modelParts.armR.rotation.set(0, 0, 0);
-            }
+            if (this.modelParts.armL) this.modelParts.armL.rotation.set(0, 0, 0);
+            if (this.modelParts.armR) this.modelParts.armR.rotation.set(0, 0, 0);
             if (this.type === 'orc' && this.modelParts.club) {
                 this.modelParts.club.visible = true;
             }
             if (this.type === 'pyromancer' && this.modelParts.nozzleGroup) {
                 this.modelParts.nozzleGroup.scale.set(1, 1, 1);
-                this.modelParts.nozzleGroup.position.set(0, baseModelSize * 1.65, baseModelSize * 0.55);
+                this.modelParts.nozzleGroup.position.set(0, baseModelSize * 2.85, baseModelSize * 0.18);
                 this.modelParts.nozzleGroup.rotation.set(0, 0, 0);
-                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28;
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.06;
                 if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = 0;
+                if (this.modelParts.dorsalSpines) this.modelParts.dorsalSpines.rotation.set(0, 0, 0);
                 if (this.modelParts.pilotGlow) {
-                    this.modelParts.pilotGlow.scale.set(baseModelSize * 1.8, baseModelSize * 1.8, 1);
+                    this.modelParts.pilotGlow.scale.set(baseModelSize * 2.4, baseModelSize * 2.4, 1);
                 }
+                if (this.modelParts.fireShield) {
+                    this.modelParts.fireShield.visible = false;
+                }
+            }
+            if (this.type === 'trapper' && this.modelParts.stirArmPivot) {
+                this.modelParts.stirArmPivot.position.set(0, 0, 0);
+                this.modelParts.stirArmPivot.rotation.set(0, 0, 0);
+                if (this.modelParts.cageFocus) this.modelParts.cageFocus.scale.setScalar(1.0);
+                if (this.modelParts.armL) this.modelParts.armL.rotation.set(0.75, 0, 0.25);
             }
            if (this.type === 'skeleton_archer' && this.modelParts.nockedArrow) {
                 this.modelParts.nockedArrow.visible = false;
@@ -22357,9 +22491,10 @@ class Enemy extends Entity {
             }
             if (this.flameStreamTimer > 0) {
                 this.flameStreamTimer = 0;
-                if (this.modelParts && this.modelParts.pilotGlow) {
-                    let bs = this.baseModelSize || 13;
-                    this.modelParts.pilotGlow.scale.set(bs * 1.8, bs * 1.8, 1);
+                if (this.modelParts) {
+                    let bs = this.baseModelSize || 16.5;
+                    if (this.modelParts.pilotGlow) this.modelParts.pilotGlow.scale.set(bs * 2.4, bs * 2.4, 1);
+                    if (this.modelParts.fireShield) this.modelParts.fireShield.visible = false;
                 }
             }
             let intensity = 1.5 + Math.sin(Game.playTime * 15) * 1.0;
@@ -22442,16 +22577,17 @@ class Enemy extends Entity {
         }
 
         if (this.type === 'mage' || this.type === 'pyromancer' || this.type === 'dark_prophet') {
-            this.mesh.position.y = Game.animFloat;
+            this.mesh.position.y = (this.type === 'pyromancer') ? (Game.animFloat * 0.45) : Game.animFloat;
             if (this.modelParts.crystals) {
                 let cSpin = (this.type === 'mage' && this.blinkAnimTimer > 0) ? 16.0 : 2.0;
                 this.modelParts.crystals.rotation.y += dt * cSpin;
             }
             if (this.type === 'pyromancer' && this.telegraphTimer <= 0 && this.flameStreamTimer <= 0 && this.modelParts) {
-                let breath = Math.sin(Game.playTime * 6.5 + (this.animPhase || 0));
-                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.26 + breath * 0.10;
-                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -breath * 0.05;
+                let breath = Math.sin(Game.playTime * 5.5 + (this.animPhase || 0));
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.08 + Math.max(0, breath) * 0.12;
+                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -breath * 0.04;
                 if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.y += dt * 4.0;
+                if (this.modelParts.dorsalSpines) this.modelParts.dorsalSpines.rotation.z = Math.sin(Game.playTime * 2.2 + (this.animPhase || 0)) * 0.08;
             }
         }
 
@@ -22524,15 +22660,50 @@ class Enemy extends Entity {
             }
         }
         if (this.type === 'trapper' && this.modelParts && this.modelParts.cageFocus) {
-            this.mesh.position.y = Game.animFloat * 0.8;
-            let spinMult = this.telegraphTimer > 0 ? 10.0 : 2.2;
-            this.modelParts.ringOuter.rotation.x += dt * spinMult;
-            this.modelParts.ringOuter.rotation.y += dt * (spinMult * 0.7);
-            this.modelParts.ringInner.rotation.y -= dt * (spinMult * 1.3);
-            this.modelParts.ringInner.rotation.z += dt * spinMult;
-            this.modelParts.prisonCore.rotation.x -= dt * (spinMult * 1.5);
-            let fScale = (this.telegraphTimer > 0) ? (1.0 + (1.0 - this.telegraphTimer / 0.65) * 0.45) : 1.0;
+            this.mesh.position.y = Game.animFloat * 0.7;
+            let bs = this.baseModelSize || 14.5;
+            let isCharging = this.telegraphTimer > 0;
+            let maxT = this.trapperMaxTelegraph || 1.10;
+            // Progresso da 0.0 (inizio carica) a 1.0 (trappola castata)
+            let chargeProg = isCharging ? Math.min(1.0, Math.max(0, 1.0 - (this.telegraphTimer / maxT))) : 0;
+
+            // La velocità di mescolamento aumenta esponenzialmente man mano che la trappola si carica
+            let stirSpeed = isCharging ? (4.0 + chargeProg * chargeProg * 34.0) : 2.0;
+            this.stirAngle = (this.stirAngle || 0) + dt * stirSpeed;
+
+            if (this.modelParts.stirArmPivot) {
+                let stirRad = bs * (isCharging ? (0.18 + chargeProg * 0.22) : 0.08);
+                let ca = Math.cos(this.stirAngle);
+                let sa = Math.sin(this.stirAngle);
+                this.modelParts.stirArmPivot.position.set(
+                    ca * stirRad,
+                    Math.sin(this.stirAngle * 2.0) * (bs * 0.04),
+                    sa * stirRad
+                );
+                // Inclinazione conica del braccio per dare il gesto naturale del "mescolare"
+                this.modelParts.stirArmPivot.rotation.set(
+                    sa * (isCharging ? 0.35 : 0.12),
+                    -ca * 0.25,
+                    -ca * (isCharging ? 0.35 : 0.12)
+                );
+                if (this.modelParts.stirHand) {
+                    this.modelParts.stirHand.rotation.y = -this.stirAngle;
+                }
+            }
+
+            // Il sigillo sottostante accelera insieme alla mano
+            let spinMult = isCharging ? (3.0 + chargeProg * chargeProg * 22.0) : 2.2;
+            this.modelParts.ringOuter.rotation.z += dt * spinMult;
+            this.modelParts.ringInner.rotation.x += dt * (spinMult * 1.2);
+            this.modelParts.ringInner.rotation.y -= dt * (spinMult * 0.9);
+            this.modelParts.prisonCore.rotation.y += dt * (spinMult * 1.5);
+
+            let fScale = isCharging ? (1.0 + chargeProg * 0.55 + Math.sin(this.stirAngle * 2) * 0.06) : 1.0;
             this.modelParts.cageFocus.scale.setScalar(fScale);
+
+            if (this.modelParts.thornCrown) {
+                this.modelParts.thornCrown.rotation.y = isCharging ? (Math.sin(this.stirAngle) * 0.12) : 0;
+            }
         }
 
         // --- BUFF DEL PROFETA ---
@@ -22850,7 +23021,7 @@ class Enemy extends Entity {
             if (this.modelParts.armR) this.modelParts.armR.rotation.x = swingAngle;
             if (this.modelParts.armL) this.modelParts.armL.rotation.x = swingAngle * 0.5;
             if (this.type !== 'goblin') this.mesh.rotation.x = Math.sin(swingProg * Math.PI) * 0.35;
-        } else if (this.modelParts.armL && this.speed > 0 && this.state !== 'leaping' && this.telegraphTimer <= 0) {
+        } else if (this.modelParts.armL && this.modelParts.armR && this.speed > 0 && this.state !== 'leaping' && this.telegraphTimer <= 0 && this.flameStreamTimer <= 0) {
             this.modelParts.armL.rotation.x = Game.animArm;
             this.modelParts.armR.rotation.x = -Game.animArm;
         }
@@ -22941,6 +23112,23 @@ class Enemy extends Entity {
                     } else { this.moveX = 0; this.moveY = 0; }
                 } else {
                     this.moveX = -this.moveX; this.moveY = -this.moveY;
+                }
+            } else if (this.type === 'trapper' && this.telegraphTimer <= 0) {
+                // Il Trapper scappa e si riposiziona lontano dal giocatore finché la trappola è in ricarica (o se il player è troppo vicino)
+                if (!this.orbitDir) this.orbitDir = (this.thinkOffset % 2 === 0) ? 1 : -1;
+                if (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220) {
+                    let awayAngle = this.angle + Math.PI;
+                    if (this.distToTargetSq < 380 * 380) {
+                        // Scappa allontanandosi in diagonale per non chiudersi da solo negli angoli
+                        let fleeAng = awayAngle + (this.orbitDir * 0.42);
+                        this.moveX = Math.cos(fleeAng);
+                        this.moveY = Math.sin(fleeAng);
+                    } else {
+                        // A distanza di sicurezza (~380-460) continua a riposizionarsi lateralmente restando pronto a lanciare
+                        let kiteAng = this.angle + (Math.PI * 0.55 * this.orbitDir);
+                        this.moveX = Math.cos(kiteAng);
+                        this.moveY = Math.sin(kiteAng);
+                    }
                 }
             }
 
@@ -23224,15 +23412,23 @@ class Enemy extends Entity {
             // Fauce spalancata che vibra per la potenza del getto + artigli protesi all'indietro
             if (this.modelParts && this.modelParts.nozzleGroup) {
                 let vibe = Math.sin(Game.playTime * 55) * 0.06;
-                this.modelParts.nozzleGroup.position.z = bs * 0.68 + vibe * 1.5;
-                this.modelParts.nozzleGroup.rotation.x = 0.08 + vibe * 0.5;
-                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.88 + vibe * 1.2;
-                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -0.18 + vibe * 0.5;
-                if (this.modelParts.armL) { this.modelParts.armL.rotation.x = 0.55; this.modelParts.armL.rotation.z = -0.35; }
-                if (this.modelParts.armR) { this.modelParts.armR.rotation.x = 0.55; this.modelParts.armR.rotation.z = 0.35; }
+                this.modelParts.nozzleGroup.position.set(0, bs * 2.85, bs * 0.26 + vibe * 1.2);
+                this.modelParts.nozzleGroup.rotation.x = 0.06 + vibe * 0.4;
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.58 + vibe * 0.9;
+                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -0.15 + vibe * 0.4;
+                if (this.modelParts.dorsalSpines) this.modelParts.dorsalSpines.rotation.z += dt * 6.0;
+                if (this.modelParts.armL) { this.modelParts.armL.rotation.x = -0.75 + vibe; this.modelParts.armL.rotation.z = 0.18; }
+                if (this.modelParts.armR) { this.modelParts.armR.rotation.x = -0.75 - vibe; this.modelParts.armR.rotation.z = -0.18; }
                 if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.z += dt * 20;
+                if (this.modelParts.fireShield) {
+                    this.modelParts.fireShield.visible = true;
+                    this.modelParts.fireShield.rotation.y += dt * 4.5;
+                    this.modelParts.fireShield.rotation.x += dt * 2.2;
+                    let sPulse = 1.0 + Math.sin(Game.playTime * 25) * 0.05;
+                    this.modelParts.fireShield.scale.setScalar(sPulse);
+                }
                 if (this.modelParts.pilotGlow) {
-                    let gScale = bs * (3.2 + Math.sin(Game.playTime * 40) * 0.5);
+                    let gScale = bs * (3.4 + Math.sin(Game.playTime * 40) * 0.5);
                     this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
                 }
             }
@@ -23327,21 +23523,25 @@ class Enemy extends Entity {
 
             if (this.flameStreamTimer <= 0) {
                 if (this.modelParts && this.modelParts.nozzleGroup) {
-                    this.modelParts.nozzleGroup.position.z = bs * 0.55;
+                    this.modelParts.nozzleGroup.position.set(0, bs * 2.85, bs * 0.18);
                     this.modelParts.nozzleGroup.rotation.set(0, 0, 0);
                     this.modelParts.nozzleGroup.scale.set(1, 1, 1);
-                    if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28;
+                    if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.06;
                     if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = 0;
+                    if (this.modelParts.dorsalSpines) this.modelParts.dorsalSpines.rotation.set(0, 0, 0);
                     if (this.modelParts.armL) this.modelParts.armL.rotation.set(0, 0, 0);
                     if (this.modelParts.armR) this.modelParts.armR.rotation.set(0, 0, 0);
                     if (this.modelParts.pilotGlow) {
-                        this.modelParts.pilotGlow.scale.set(bs * 1.8, bs * 1.8, 1);
+                        this.modelParts.pilotGlow.scale.set(bs * 2.4, bs * 2.4, 1);
                     }
                 }
                 for (let i = 0; i < this.flashMats.length; i++) {
                     this.flashMats[i].emissive.setHex(defaultEmissive);
                     this.flashMats[i].emissiveIntensity = defaultIntensity;
                 }
+                if (this.modelParts.fireShield) {
+                        this.modelParts.fireShield.visible = false;
+                    }
             }
 
             this.syncFakeShadow(0);
@@ -23659,21 +23859,48 @@ class Enemy extends Entity {
                     this.mesh.updateMatrix();
                     return;
                 }
-if (this.type === 'pyromancer') {
+if (this.type === 'trapper') {
+                    let maxT = this.trapperMaxTelegraph || 1.10;
+                    let progT = Math.min(1.0, 1.0 - (this.telegraphTimer / maxT));
+                    if (Game.player && !Game.player.dead) {
+                        this.angle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                        this.mesh.rotation.y = -this.angle + Math.PI / 2;
+                    }
+                    // Emette scintille glaciali sempre più frequenti mentre la mano accelera il mescolamento
+                    if (!AppSettings.isLow && Game.frameCount % Math.max(2, Math.floor(8 - progT * 6)) === 0) {
+                        let spX = this.x + Math.cos(this.angle) * (this.radius * 1.1);
+                        let spY = this.y + Math.sin(this.angle) * (this.radius * 1.1);
+                        let sp = Game.getParticle();
+                        sp.spawn(spX + MathUtils.randomRange(-8, 8), this.radius * 1.5, spY + MathUtils.randomRange(-8, 8), progT > 0.6 ? SharedMat.spriteWhite : SharedMat.spriteBlue, 'spark');
+                        sp.baseSize = 10 + progT * 8;
+                    }
+                    if (this.telegraphTimer <= 0) {
+                        if (this.modelParts && this.modelParts.stirArmPivot) {
+                            this.modelParts.stirArmPivot.position.set(0, 0, 0);
+                            this.modelParts.stirArmPivot.rotation.set(0, 0, 0);
+                        }
+                        this.hitSquashTimer = 0.12;
+                        this.executeAttack();
+                    }
+                    this.syncFakeShadow(0);
+                    this.mesh.updateMatrix();
+                    return;
+                }
+                if (this.type === 'pyromancer') {
                     if (this.telegraphTimer > 0.15 && Game.player && !Game.player.dead) {
                         this.lockedAttackAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                         this.angle = this.lockedAttackAngle;
                     }
                     if (this.modelParts) {
-                        let bs = this.baseModelSize || 13;
+                        let bs = this.baseModelSize || 16.5;
                         let progP = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.60));
-                        // Inspira profondamente: spalanca la mascella, piega la testa indietro e allarga gli artigli
-                        if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28 + progP * 0.62;
-                        if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -progP * 0.25;
-                        if (this.modelParts.armL) { this.modelParts.armL.rotation.x = -progP * 0.65; this.modelParts.armL.rotation.z = -progP * 0.45; }
-                        if (this.modelParts.armR) { this.modelParts.armR.rotation.x = -progP * 0.65; this.modelParts.armR.rotation.z = progP * 0.45; }
+                        if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.08 + progP * 0.55;
+                        if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -progP * 0.20;
+                        if (this.modelParts.dorsalSpines) this.modelParts.dorsalSpines.rotation.z += dt * (2.0 + progP * 8.0);
+                        if (this.modelParts.armL) { this.modelParts.armL.rotation.x = -progP * 0.80; this.modelParts.armL.rotation.z = progP * 0.25; }
+                        if (this.modelParts.armR) { this.modelParts.armR.rotation.x = -progP * 0.80; this.modelParts.armR.rotation.z = -progP * 0.25; }
                         if (this.modelParts.pilotGlow) {
-                            let gScale = bs * (1.8 + progP * 2.6);
+                            let gScale = bs * (2.4 + progP * 2.2);
                             this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
                         }
                     }
@@ -23714,8 +23941,13 @@ if (this.type === 'pyromancer') {
                 return;
             }
 
-            if (this.distToTargetSq > this.attackRangeSq) {
+            let trapperRepositioning = (this.type === 'trapper' && this.telegraphTimer <= 0 && (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220));
+            if (this.distToTargetSq > this.attackRangeSq || trapperRepositioning) {
                 this.move(this.moveX, this.moveY, dt);
+                if (trapperRepositioning) {
+                    this.angle = Math.atan2(this.moveY, this.moveX);
+                    this.mesh.rotation.y = -this.angle + Math.PI / 2;
+                }
                 let walkPhase = (Game.playTime * 10.0) + (this.thinkOffset * 2.1);
                 if (this.type === 'ring_walker') {
                     this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 3.2;
@@ -23729,7 +23961,7 @@ if (this.type === 'pyromancer') {
                     this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 4.5;
                     this.mesh.rotation.z = Math.cos(walkPhase) * 0.11;
                 }
-                if (this.modelParts.armL) {
+                if (this.modelParts.armL && this.modelParts.armR) {
                     let armSwing = Math.sin(walkPhase) * 0.65;
                     this.modelParts.armL.rotation.x = armSwing;
                     this.modelParts.armR.rotation.x = -armSwing;
@@ -23810,7 +24042,8 @@ if (this.type === 'pyromancer') {
         if (isMelee) {
             this.executeAttack();
         } else {
-            this.telegraphTimer = (this.type === 'ring_walker') ? 0.75 : (this.type === 'fire_demon' ? 0.70 : 0.60);
+            this.trapperMaxTelegraph = 1.10;
+            this.telegraphTimer = (this.type === 'trapper') ? this.trapperMaxTelegraph : ((this.type === 'ring_walker') ? 0.75 : (this.type === 'fire_demon' ? 0.70 : 0.60));
             this.lockedAttackAngle = Game.player ? Math.atan2(Game.player.y - this.y, Game.player.x - this.x) : this.angle;
             this.attackCooldown = 99;
         }
@@ -24046,6 +24279,14 @@ if (this.type === 'pyromancer') {
                 // Gabbia aperta (in carica o post-sparo prima della chiusura): vulnerabile (+50% danni subiti)
                 amount *= 1.50;
             }
+        }
+
+        if (this.type === 'pyromancer' && (this.flameStreamTimer || 0) > 0) {
+            // Scudo di Fuoco attivo durante il getto: riduce il danno subito dell'80% (subisce solo il 20%)
+            amount *= (hasJudgment ? 0.50 : 0.20) * shieldBreaker;
+            if (!hasJudgment) isCrit = false;
+            this._shieldClang = true;
+            if (Game.frameCount % 3 === 0) Game.getParticle().spawn(this.x, this.radius * 1.6, this.y, SharedMat.spriteRed, 'spark');
         }
 
         if (this.type === 'goblin' && (this.goblinStunTimer || 0) > 0) {
