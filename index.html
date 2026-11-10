@@ -1087,7 +1087,7 @@ body.colorblind-mode #opt-colorblind-text {
             font-size: 1.28rem !important;
         }
 
-        /* --- HUD IN-GAME CALIBRATO E STABILE PER SCHERMO ORIZZONTALE --- */
+       /* --- HUD IN-GAME CALIBRATO E ALLINEATO PER SCHERMO ORIZZONTALE --- */
         body.mobile-landscape #hud > div:nth-child(1),
         body.force-rotate-landscape #hud > div:nth-child(1) {
             top: 8px !important;
@@ -1109,41 +1109,88 @@ body.colorblind-mode #opt-colorblind-text {
             gap: 6px !important;
             margin: 0 !important;
         }
-        /* Rettangolo Barra della Vita: larghezza fissa capace di ospitare tutti i 6 cuori massimi su 1 riga */
+        /* Rettangolo Barra della Vita: layout simmetrico capace di ospitare 6 cuori su 1 riga */
         body.mobile-landscape #hud-vitals-card,
         body.force-rotate-landscape #hud-vitals-card {
-            padding: 4px 10px !important;
-            gap: 8px !important;
-            width: 246px !important;
-            min-width: 246px !important;
-            max-width: 246px !important;
+            padding: 5px 11px !important;
+            gap: 9px !important;
+            width: 262px !important;
+            min-width: 262px !important;
+            max-width: 262px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            align-items: center !important;
             flex-shrink: 0 !important;
+            box-sizing: border-box !important;
         }
+        /* Medaglione Livello proporzionato senza sovrapposizioni sul cerchio XP */
         body.mobile-landscape #hud-level-badge,
         body.force-rotate-landscape #hud-level-badge {
-            width: 34px !important;
-            height: 34px !important;
+            width: 36px !important;
+            height: 36px !important;
+            flex-shrink: 0 !important;
+        }
+        body.mobile-landscape #hud-level-badge > div,
+        body.force-rotate-landscape #hud-level-badge > div {
+            margin-top: 0 !important;
+            gap: 0px !important;
+        }
+        body.mobile-landscape #hud-level-badge > div > span:first-child,
+        body.force-rotate-landscape #hud-level-badge > div > span:first-child {
+            font-size: 6px !important;
+            letter-spacing: 0.12em !important;
+            margin-bottom: 1px !important;
+            line-height: 1 !important;
         }
         body.mobile-landscape #ui-level,
         body.force-rotate-landscape #ui-level {
-            font-size: 0.80rem !important;
+            font-size: 0.78rem !important;
+            line-height: 1 !important;
+        }
+        /* Colonna interna destra (Testo HP + Cuori sopra, Barra Plasma sotto) */
+        body.mobile-landscape #hud-vitals-card > div:last-child,
+        body.force-rotate-landscape #hud-vitals-card > div:last-child {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            height: 100% !important;
+        }
+        body.mobile-landscape #hud-vitals-card > div:last-child > div:first-child,
+        body.force-rotate-landscape #hud-vitals-card > div:last-child > div:first-child {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            line-height: 1 !important;
+            margin: 0 !important;
         }
         body.mobile-landscape #ui-hp-text,
         body.force-rotate-landscape #ui-hp-text {
-            font-size: 11px !important;
+            font-size: 11.5px !important;
+            line-height: 1 !important;
             font-variant-numeric: tabular-nums !important;
         }
         body.mobile-landscape #ui-lives,
         body.force-rotate-landscape #ui-lives {
+            display: flex !important;
             flex-wrap: nowrap !important;
+            align-items: center !important;
             gap: 3px !important;
             font-size: 10.5px !important;
+            line-height: 1 !important;
         }
-        /* Rettangolo Piano + Monete: largo abbastanza da leggere sempre Piano + Etichetta Corruzione */
+        body.mobile-landscape #hud-vitals-card .hud-bar-track,
+        body.force-rotate-landscape #hud-vitals-card .hud-bar-track {
+            height: 11px !important;
+            border-radius: 6px !important;
+        }
+        /* Rettangolo Piano + Monete: stessa altezza (48px) e allineamento della Barra HP */
         body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2),
         body.force-rotate-landscape #hud > div:nth-child(2) > div:nth-child(2) {
             width: auto !important;
             min-width: 266px !important;
+            height: 48px !important;
+            min-height: 48px !important;
             gap: 6px !important;
             flex-shrink: 0 !important;
         }
@@ -1151,12 +1198,22 @@ body.colorblind-mode #opt-colorblind-text {
         body.force-rotate-landscape #hud > div:nth-child(2) > div:nth-child(2) > div:first-child {
             min-width: 202px !important;
             width: auto !important;
-            padding: 4px 10px !important;
+            height: 100% !important;
+            padding: 5px 11px !important;
+            justify-content: center !important;
+            gap: 5px !important;
             flex-shrink: 0 !important;
+            box-sizing: border-box !important;
+        }
+        body.mobile-landscape #hud > div:nth-child(2) > div:nth-child(2) > div:first-child > div:first-child,
+        body.force-rotate-landscape #hud > div:nth-child(2) > div:nth-child(2) > div:first-child > div:first-child {
+            margin-bottom: 0 !important;
+            line-height: 1 !important;
         }
         body.mobile-landscape #ui-floor-text,
         body.force-rotate-landscape #ui-floor-text {
             font-size: 10.5px !important;
+            line-height: 1 !important;
             white-space: nowrap !important;
             overflow: visible !important;
             text-overflow: clip !important;
@@ -1165,15 +1222,18 @@ body.colorblind-mode #opt-colorblind-text {
         body.mobile-landscape #ui-corruption-label,
         body.force-rotate-landscape #ui-corruption-label {
             font-size: 8.5px !important;
-            padding: 1px 5px !important;
+            line-height: 1 !important;
+            padding: 2px 5px !important;
             margin-left: 6px !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
         }
         body.mobile-landscape #hud-coins-card,
         body.force-rotate-landscape #hud-coins-card {
-            min-width: 58px !important;
-            padding: 0 9px !important;
+            min-width: 60px !important;
+            height: 100% !important;
+            padding: 0 10px !important;
+            box-sizing: border-box !important;
         }
         /* Riquadro Combo ed Essenze più grande (scale 0.78) e ben staccato dal counter FPS/Pausa superiore */
         body.mobile-landscape #hud > div:nth-child(3),
@@ -1695,13 +1755,13 @@ body.colorblind-mode #opt-colorblind-text {
             font-size: 9px !important;
         }
 
-        /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE: BOX TESTO COMPATTI E ICONE GRANDI PROTAGONISTE --- */
+       /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE: ZERO SPAZI VUOTI E ICONE GRANDI --- */
         html body.mobile-landscape #relic-main-wrap,
         html body.force-rotate-landscape #relic-main-wrap {
             display: grid !important;
             grid-template-columns: 1.25fr 0.95fr !important;
-            grid-template-rows: auto minmax(0, 1fr) auto !important;
-            gap: 4px 10px !important;
+            grid-template-rows: auto minmax(0, 1fr) 42px !important;
+            gap: 5px 10px !important;
             max-width: 860px !important;
             width: 100% !important;
             height: 100% !important;
@@ -1709,7 +1769,7 @@ body.colorblind-mode #opt-colorblind-text {
             align-items: stretch !important;
             box-sizing: border-box !important;
         }
-        /* Riga 1: Header snello a tutta larghezza */
+        /* Riga 1: Header compatto a tutta larghezza */
         html body.mobile-landscape #relic-main-wrap > div:first-child,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child {
             grid-column: 1 / -1 !important;
@@ -1718,14 +1778,14 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child > div > div,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child > div > div {
-            padding: 3px 12px !important;
+            padding: 4px 12px !important;
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child h2,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child h2 {
             font-size: 1rem !important;
             margin-top: 1px !important;
         }
-        /* Riga 2: Le 3 Carte Reliquia */
+        /* Riga 2: Contenitore delle 3 Carte Reliquia */
         html body.mobile-landscape #relicCardsContainer,
         html body.force-rotate-landscape #relicCardsContainer {
             grid-column: 1 / -1 !important;
@@ -1736,98 +1796,122 @@ body.colorblind-mode #opt-colorblind-text {
             gap: 10px !important;
             align-items: stretch !important;
         }
+        /* Carta Reliquia: distribuzione compatta senza buchi vuoti */
         html body.mobile-landscape #relicCardsContainer .relic-card,
         html body.force-rotate-landscape #relicCardsContainer .relic-card {
-            padding: 5px 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            gap: 3px !important;
+            padding: 6px 9px !important;
             min-height: 0 !important;
             height: 100% !important;
-            justify-content: space-between !important;
+            box-sizing: border-box !important;
         }
-        /* Blocco superiore (Badge + Immagine + Titolo) che sfrutta lo spazio verticale recuperato */
+        /* Blocco superiore (Badge + Icona Grande + Titolo) che occupa tutto lo spazio nobile della carta */
         html body.mobile-landscape #relicCardsContainer .relic-card > div:first-child,
         html body.force-rotate-landscape #relicCardsContainer .relic-card > div:first-child {
             flex: 1 1 auto !important;
-            justify-content: space-evenly !important;
+            min-height: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 3px !important;
         }
-        /* Immagini Reliquie GRANDI e protagoniste (76px-98px adattivi) */
+        /* Immagine Reliquia GRANDE, quadrata e ben visibile (80px-102px adattivi) */
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame {
-            width: clamp(74px, 24vh, 98px) !important;
-            height: clamp(74px, 24vh, 98px) !important;
-            margin: 2px 0 !important;
+            width: clamp(78px, 25vh, 102px) !important;
+            height: clamp(78px, 25vh, 102px) !important;
+            margin: 1px 0 !important;
             border-radius: 12px !important;
             border-width: 2px !important;
+            flex-shrink: 0 !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame i,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame i {
-            font-size: 2.1rem !important;
+            font-size: 2.15rem !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-card h3,
         html body.force-rotate-landscape #relicCardsContainer .relic-card h3 {
             font-size: 11px !important;
             line-height: 1.12 !important;
-            margin-top: 1px !important;
+            margin: 0 !important;
         }
-        /* Riquadro descrizione compatto: niente più espansione verticale superflua */
+        /* Riquadro descrizione aderente al testo: rimuove il min-h-[64px]/sm:min-h-[72px] di Tailwind */
         html body.mobile-landscape #relicCardsContainer .relic-desc-box,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box {
             flex: 0 0 auto !important;
             height: auto !important;
-            min-height: 28px !important;
-            padding: 3px 7px !important;
-            margin: 2px 0 !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            padding: 4px 8px !important;
+            margin: 0 !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-desc-box p,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box p {
             font-size: 9.5px !important;
-            line-height: 1.15 !important;
+            line-height: 1.16 !important;
+            margin: 0 !important;
         }
+        /* Pill "Scegli" sottile alla base della carta */
         html body.mobile-landscape #relicCardsContainer [id^="relic-pick-pill-"],
         html body.force-rotate-landscape #relicCardsContainer [id^="relic-pick-pill-"] {
+            flex: 0 0 auto !important;
             padding: 2.5px 0 !important;
+            margin: 0 !important;
             font-size: 8.5px !important;
+            line-height: 1.1 !important;
         }
-        /* Riga 3 Sinistra: Forgia Cosmica compatta */
+        /* Riga 3 Sinistra: Forgia Cosmica su singola linea orizzontale (42px) */
         html body.mobile-landscape #reforgeSection,
         html body.force-rotate-landscape #reforgeSection {
             grid-column: 1 / 2 !important;
             grid-row: 3 / 4 !important;
-            min-height: 44px !important;
-            padding: 3px 10px !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            max-height: 42px !important;
+            padding: 4px 10px !important;
             margin: 0 !important;
-            gap: 1px !important;
-            justify-content: center !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
         }
+        /* Nasconde l'intestazione superiore ridondante della Forgia in orizzontale per guadagnare spazio verticale */
         html body.mobile-landscape #reforgeSection > div:first-child,
         html body.force-rotate-landscape #reforgeSection > div:first-child {
-            padding-bottom: 1px !important;
+            display: none !important;
         }
-        html body.mobile-landscape #reforgeSection > div:first-child span:first-child,
-        html body.force-rotate-landscape #reforgeSection > div:first-child span:first-child {
-            font-size: 9px !important;
-        }
-        html body.mobile-landscape #reforge-status-badge,
-        html body.force-rotate-landscape #reforge-status-badge {
-            font-size: 8px !important;
-            padding: 1px 6px !important;
+        html body.mobile-landscape #reforgeSection > div:last-child,
+        html body.force-rotate-landscape #reforgeSection > div:last-child {
+            padding-top: 0 !important;
+            gap: 8px !important;
+            width: 100% !important;
+            height: 100% !important;
+            align-items: center !important;
         }
         html body.mobile-landscape #btn-select-reforge,
         html body.force-rotate-landscape #btn-select-reforge {
-            width: 34px !important;
-            height: 34px !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
         }
         html body.mobile-landscape #btn-select-reforge i,
         html body.force-rotate-landscape #btn-select-reforge i {
-            font-size: 1.05rem !important;
+            font-size: 1rem !important;
         }
         html body.mobile-landscape #reforge-desc-title,
         html body.force-rotate-landscape #reforge-desc-title {
             font-size: 10px !important;
+            line-height: 1.1 !important;
         }
         html body.mobile-landscape #reforge-desc-text,
         html body.force-rotate-landscape #reforge-desc-text {
             font-size: 8.5px !important;
-            line-height: 1.12 !important;
+            line-height: 1.1 !important;
+            margin-top: 1px !important;
             display: -webkit-box !important;
             -webkit-line-clamp: 1 !important;
             -webkit-box-orient: vertical !important;
@@ -1837,17 +1921,20 @@ body.colorblind-mode #opt-colorblind-text {
         html body.force-rotate-landscape #btn-do-reforge {
             padding: 5px 10px !important;
             font-size: 9.5px !important;
+            height: 30px !important;
         }
-        /* Riga 3 Destra: Pulsante Conferma e Procedi affiancato alla Forgia */
+        /* Riga 3 Destra: Pulsante Conferma e Procedi alto esattamente 42px come la Forgia */
         html body.mobile-landscape #btn-proceed-relic,
         html body.force-rotate-landscape #btn-proceed-relic {
             grid-column: 2 / 3 !important;
             grid-row: 3 / 4 !important;
-            height: 100% !important;
-            min-height: 44px !important;
-            padding: 5px 14px !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            max-height: 42px !important;
+            padding: 0 14px !important;
             margin: 0 !important;
             font-size: 11.5px !important;
+            box-sizing: border-box !important;
         }
         /* --- SCHERMATA SEI CADUTO / MORTE (#deathScreen) IN ORIZZONTALE --- */
         html body.mobile-landscape #death-ui-wrap {
