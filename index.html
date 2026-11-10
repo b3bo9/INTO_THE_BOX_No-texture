@@ -4083,6 +4083,14 @@ const PlayerGeometryBuilder = {
         return merged;
     },
 
+    getCenterOffset(geo) {
+        if (!geo) return { x: 0, y: 0, z: 0 };
+        if (!geo.boundingBox) geo.computeBoundingBox();
+        const c = new THREE.Vector3();
+        geo.boundingBox.getCenter(c);
+        return { x: c.x, y: c.y, z: c.z };
+    },
+
     getGeometries(skinId) {
         if (this.cache[skinId]) return this.cache[skinId];
 
@@ -4108,6 +4116,7 @@ const PlayerGeometryBuilder = {
         let haloParts = [this.part(torus, 5, 5, 5, 0, 0, 0, Math.PI / 2, 0, 0)];
         let accentParts = [];
         let headAccentParts = [];
+        let hatBandParts = [];
 
        if (skinId === 'dark_mage') {
             // COMUNE 1: Mago Oscuro — Sfera viso in headParts, Cappello a punta in headAccentParts (viola scuro)
@@ -4131,8 +4140,10 @@ const PlayerGeometryBuilder = {
                 this.part(sphere, 5.8, 5.8, 5.8, 0, 0, 0)
             ];
             scarfParts = [
-                this.part(torus, 6.4, 6.4, 2.3, 0, 0, 0, Math.PI / 2, 0, 0),
-                this.part(torus, 5.5, 5.5, 1.8, 0, 9.1, -0.2, Math.PI / 2 - 0.12, 0, 0) // Fascia rossa sul cappello
+                this.part(torus, 6.4, 6.4, 2.3, 0, 0, 0, Math.PI / 2, 0, 0)
+            ];
+            hatBandParts = [
+                this.part(torus, 5.5, 5.5, 1.8, 0, 4.1, -0.2, Math.PI / 2 - 0.12, 0, 0) // Fascia rossa solidale al cappello
             ];
             headAccentParts = [
                 this.part(cyl, 11.5, 1.2, 11.5, 0, 3.8, 0),
@@ -4286,6 +4297,7 @@ const PlayerGeometryBuilder = {
             scarf: this.merge(scarfParts),
             accent: this.merge(accentParts),
             headAccent: this.merge(headAccentParts),
+            hatBand: this.merge(hatBandParts),
             staff: this.merge(staffParts),
             gem: this.merge(gemParts),
             halo: this.merge(haloParts),
@@ -5932,6 +5944,7 @@ const DeathSceneSystem = {
         const headMat = this.playerParts.head.material;
         const scarfMat = this.playerParts.scarf.material;
         const staffMat = this.playerParts.staff.material;
+        const starterHat = isStarterHatSkin(skin.id);
 
         const pBody = new THREE.Mesh(geos.body, bodyMat);
         if (geos.accent) {
@@ -5940,9 +5953,25 @@ const DeathSceneSystem = {
         }
 
         const pHead = new THREE.Mesh(geos.head, headMat);
+        let pHat = null;
+        let hatCenter = null;
         if (geos.headAccent) {
-            const hAcc = new THREE.Mesh(geos.headAccent, gemMat);
-            pHead.add(hAcc);
+            if (starterHat) {
+                hatCenter = PlayerGeometryBuilder.getCenterOffset(geos.headAccent);
+                pHat = new THREE.Group();
+                const hatMesh = new THREE.Mesh(geos.headAccent, bodyMat);
+                hatMesh.position.set(-hatCenter.x, -hatCenter.y, -hatCenter.z);
+                pHat.add(hatMesh);
+                if (geos.hatBand) {
+                    const bandMesh = new THREE.Mesh(geos.hatBand, scarfMat);
+                    bandMesh.position.set(-hatCenter.x, -hatCenter.y, -hatCenter.z);
+                    pHat.add(bandMesh);
+                }
+            } else {
+                const headAccMat = (this.playerParts && this.playerParts.headAccentMesh) ? this.playerParts.headAccentMesh.material : gemMat;
+                const hAcc = new THREE.Mesh(geos.headAccent, headAccMat);
+                pHead.add(hAcc);
+            }
         }
 
         const pScarf = new THREE.Mesh(geos.scarf, scarfMat);
@@ -5962,6 +5991,9 @@ const DeathSceneSystem = {
             { mesh: pScarf,  ox: 0,   oy: 24, oz: 0,  floorY: 2.5 },
             { mesh: pWeapon, ox: -12, oy: 16, oz: -8, floorY: 3.0 }
         ];
+        if (pHat && hatCenter) {
+            rawList.push({ mesh: pHat, ox: -hatCenter.x, oy: 29 + hatCenter.y, oz: -hatCenter.z, floorY: 4.5, isHat: true });
+        }
 
         this.breakPieces = [];
         for (let i = 0; i < rawList.length; i++) {
@@ -5973,6 +6005,7 @@ const DeathSceneSystem = {
                 mesh: item.mesh,
                 ox: item.ox, oy: item.oy, oz: item.oz,
                 floorY: item.floorY,
+                isHat: !!item.isHat,
                 vx: 0, vy: 0, vz: 0,
                 rx: 0, ry: 0, rz: 0,
                 resting: false
@@ -5986,7 +6019,7 @@ const DeathSceneSystem = {
         if (this.attackProjGroup) this.attackProjGroup.visible = false;
 
         const baseZ = this.playerGroup ? this.playerGroup.position.z : 26;
-        const dirAngles = [0.0, -0.45, 0.52, -0.95];
+        const dirAngles = [0.0, -0.45, 0.52, -0.95, 0.88];
 
         // Fisica più morbida e lenta per far apprezzare il distacco e i rimbalzi dei singoli pezzi
         for (let i = 0; i < this.breakPieces.length; i++) {
@@ -5996,11 +6029,11 @@ const DeathSceneSystem = {
             p.mesh.position.set(p.ox, p.oy, baseZ + p.oz);
             p.mesh.rotation.set(0, Math.PI, 0);
 
-            const spreadAng = dirAngles[i] + MathUtils.randomRange(-0.18, 0.18);
+            const spreadAng = dirAngles[i % dirAngles.length] + MathUtils.randomRange(-0.18, 0.18);
             const horizSpd = MathUtils.randomRange(38, 78);
             p.vx = Math.sin(spreadAng) * horizSpd;
             p.vz = Math.cos(spreadAng) * horizSpd + MathUtils.randomRange(30, 62);
-            p.vy = MathUtils.randomRange(130, 210);
+            p.vy = p.isHat ? MathUtils.randomRange(175, 245) : MathUtils.randomRange(130, 210);
 
             p.rx = MathUtils.randomRange(-4.5, 4.5);
             p.ry = MathUtils.randomRange(-3.5, 3.5);
@@ -6055,10 +6088,13 @@ const DeathSceneSystem = {
 
         // 2. FANTASMINO DEL PERSONAGGIO (CON SKIN EQUIPAGGIATA) CHE NASCE DALLA TOMBA E SALE ONDEGGIANDO
         const skin = SkinSystem.getCurrentSkin();
+        const starterHat = isStarterHatSkin(skin.id);
+        const bodyHex = starterHat ? 0x3b1561 : skin.colors.body;
+        const scarfHex = starterHat ? 0xdc2626 : skin.colors.scarf;
         const ghostTint = new THREE.Color(0x93c5fd);
-        const cBody = new THREE.Color(skin.colors.body).lerp(ghostTint, 0.45);
+        const cBody = new THREE.Color(bodyHex).lerp(ghostTint, 0.45);
         const cHead = new THREE.Color(skin.colors.head).lerp(new THREE.Color(0xe0f2fe), 0.55);
-        const cScarf = new THREE.Color(skin.colors.scarf).lerp(new THREE.Color(0xc084fc), 0.35);
+        const cScarf = new THREE.Color(scarfHex).lerp(new THREE.Color(0xc084fc), 0.35);
         const cStaff = new THREE.Color(skin.colors.staff).lerp(ghostTint, 0.45);
 
         const gBodyMat = new THREE.MeshPhongMaterial({
@@ -6085,7 +6121,11 @@ const DeathSceneSystem = {
         this.ghostGroup = this.ghostParts.group;
         this.ghostParts.head.material = gHeadMat;
         this.ghostParts.scarf.material = gScarfMat;
+        if (this.ghostParts.hatBandMesh) this.ghostParts.hatBandMesh.material = gScarfMat;
         if (this.ghostParts.staff) this.ghostParts.staff.material = gStaffMat;
+        if (this.ghostParts.headAccentMesh) {
+            this.ghostParts.headAccentMesh.material = starterHat ? gBodyMat : gGemMat;
+        }
         if (this.ghostParts.auraMesh) this.ghostParts.auraMesh.visible = false;
 
         const tailGeo = new THREE.ConeGeometry(8.5, 15, 8);
@@ -7354,6 +7394,11 @@ function getSkinMatConfig(skinId) {
     }
 }
 
+function isStarterHatSkin(skinOrId) {
+    const id = (typeof skinOrId === 'string') ? skinOrId : (skinOrId && skinOrId.id);
+    return id === 'dark_mage' || id === 'astral_arcanist';
+}
+
 function applySkinMaterials(parts, skin) {
     if (!parts || !skin) return;
     const tex = getSkinTexture(skin.id);
@@ -7392,10 +7437,15 @@ function applySkinMaterials(parts, skin) {
         m.metalness = cfg.staffMetal;
         m.needsUpdate = true;
     }
-    if (skin.id === 'dark_mage' || skin.id === 'astral_arcanist') {
+    if (isStarterHatSkin(skin)) {
         if (parts.body && parts.body.material) parts.body.material.color.setHex(0x3b1561);
         if (parts.scarf && parts.scarf.material) parts.scarf.material.color.setHex(0xdc2626);
         if (parts.headAccentMesh && parts.body) parts.headAccentMesh.material = parts.body.material;
+    } else {
+        if (parts.headAccentMesh && parts.staffGem) parts.headAccentMesh.material = parts.staffGem.material;
+    }
+    if (parts.hatBandMesh && parts.scarf) {
+        parts.hatBandMesh.material = parts.scarf.material;
     }
 }
 
@@ -8533,10 +8583,15 @@ const ModelFactory = {
         accentMesh.visible = !!geos.accent;
         body.add(accentMesh);
 
-        // Accessori luminosi sulla testa (Visori, Corone fluttuanti)
+        // Accessori luminosi sulla testa (Visori, Corone fluttuanti, Cappelli)
         let headAccentMesh = new THREE.Mesh(geos.headAccent || SharedGeo.box, gemMat);
         headAccentMesh.visible = !!geos.headAccent;
         head.add(headAccentMesh);
+
+        // Fascia solidale al cappello (es. Arcanista Astrale)
+        let hatBandMesh = new THREE.Mesh(geos.hatBand || SharedGeo.box, scarfMat);
+        hatBandMesh.visible = !!geos.hatBand;
+        headAccentMesh.add(hatBandMesh);
 
         group.add(body, head, scarf, weaponGroup);
         this.setupShadows(group);
@@ -8605,7 +8660,7 @@ const ModelFactory = {
         auraMesh.visible = !!geos.aura;
         body.add(auraMesh);
 
-        return { group, staffGem, halo, weaponGroup, body, head, scarf, staff, accentMesh, headAccentMesh, auraMesh, auraMat };
+        return { group, staffGem, halo, weaponGroup, body, head, scarf, staff, accentMesh, headAccentMesh, hatBandMesh, auraMesh, auraMat };
     },
     buildEnemy(type, size, mat) {
         let group = new THREE.Group(); let parts = {}; 
@@ -18579,6 +18634,8 @@ class Player extends Entity {
             new THREE.MeshPhongMaterial({color: 0xffff00, emissive: 0xffff00})
         );
         this.mesh = this.modelParts.group; this.staffGemMat = this.modelParts.staffGem.material;
+        this._origHatMat = this.staffGemMat;
+        this._tmpHatOffset = new THREE.Vector3();
         
        // Esclude le parti dell'arma dal generare ombre su se stesse così la PointLight sulla punta proietta ombre pulite a 360°
         if (this.modelParts.staff) this.modelParts.staff.castShadow = false;
@@ -18591,7 +18648,7 @@ class Player extends Entity {
         this.light.position.set(12, 34, 16);
         
         this.mesh.add(this.light); this.mesh.position.set(this.x, 0, this.y); Game.scene.add(this.mesh);
-        this.mesh.traverse(c => { if(c.material && c.material.emissive && c !== this.modelParts.staffGem && c !== this.modelParts.halo) this.flashMats.push(c.material); });
+        this.mesh.traverse(c => { if(c.material && c.material.emissive && c !== this.modelParts.staffGem && c !== this.modelParts.halo && c !== this.modelParts.accentMesh && c !== this.modelParts.headAccentMesh && c !== this.modelParts.hatBandMesh) this.flashMats.push(c.material); });
         // --- SCUDO CINETICO 3D MULTI-STRATO AD ALTA VISIBILITÀ ---
         this.shieldMesh = new THREE.Mesh(
             SharedGeo.icosahedron,
@@ -18656,22 +18713,34 @@ class Player extends Entity {
         this.shadowMesh.visible = !AppSettings.shadowsEnabled;
         
        // --- PRE-ALLOCAZIONE SMEMBRAMENTO GIOCATORE (Zero-Allocation Death) ---
-        this.deadBody = new THREE.Mesh(this.modelParts.body.geometry, this.mesh.children[0].material);
+        this.deadBody = new THREE.Mesh(this.modelParts.body.geometry, this.modelParts.body.material);
         this.deadBody.matrixAutoUpdate = false;
         
-        this.deadHead = this.mesh.children[1].clone();
+        this.deadHead = new THREE.Mesh(this.modelParts.head.geometry, this.modelParts.head.material);
         this.deadHead.matrixAutoUpdate = false;
+        this.deadHeadAccent = new THREE.Mesh(this.modelParts.headAccentMesh.geometry, this.staffGemMat);
+        this.deadHeadAccent.visible = false;
+        this.deadHead.add(this.deadHeadAccent);
+
+        this.deadHat = new THREE.Group();
+        this.deadHat.matrixAutoUpdate = false;
+        this.deadHatMesh = new THREE.Mesh(this.modelParts.headAccentMesh.geometry, this.modelParts.body.material);
+        this.deadHatBandMesh = new THREE.Mesh(SharedGeo.box, this.modelParts.scarf.material);
+        this.deadHatBandMesh.visible = false;
+        this.deadHat.add(this.deadHatMesh, this.deadHatBandMesh);
         
-        this.deadWeapon = this.mesh.children[3].clone();
+        this.deadWeapon = this.modelParts.weaponGroup.clone();
         this.deadWeapon.matrixAutoUpdate = false;
         
-        this.deadBody.visible = false; this.deadHead.visible = false; this.deadWeapon.visible = false;
-        Game.scene.add(this.deadBody); Game.scene.add(this.deadHead); Game.scene.add(this.deadWeapon);
+        this.deadBody.visible = false; this.deadHead.visible = false; this.deadHat.visible = false; this.deadWeapon.visible = false;
+        Game.scene.add(this.deadBody); Game.scene.add(this.deadHead); Game.scene.add(this.deadHat); Game.scene.add(this.deadWeapon);
         
+        this.deadHatPart = { mesh: this.deadHat, original: this.modelParts.head, isHat: true, hatOffset: new THREE.Vector3(), vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, floorY: 4.5 };
         this.deadPhysicsParts = [
-            { mesh: this.deadBody, original: this.mesh.children[0], vx: 0, vy: 0, vz: 0, rx: 0, rz: 0 },
-            { mesh: this.deadHead, original: this.mesh.children[1], vx: 0, vy: 0, vz: 0, rx: 0, rz: 0 },
-            { mesh: this.deadWeapon, original: this.mesh.children[3], vx: 0, vy: 0, vz: 0, rx: 0, rz: 0 }
+            { mesh: this.deadBody, original: this.modelParts.body, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, floorY: 2 },
+            { mesh: this.deadHead, original: this.modelParts.head, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, floorY: 2 },
+            this.deadHatPart,
+            { mesh: this.deadWeapon, original: this.modelParts.weaponGroup, vx: 0, vy: 0, vz: 0, rx: 0, rz: 0, floorY: 2 }
         ];
 
         // --- PRE-ALLOCAZIONE SCIA OLOGRAFICA DI SCATTO (Zero-Allocation Afterimages) ---
@@ -19277,6 +19346,15 @@ class Player extends Entity {
             }
         }
 
+        if (this.modelParts.hatBandMesh) {
+            if (geos.hatBand) {
+                this.modelParts.hatBandMesh.geometry = geos.hatBand;
+                this.modelParts.hatBandMesh.visible = true;
+            } else {
+                this.modelParts.hatBandMesh.visible = false;
+            }
+        }
+
         if (this.modelParts.auraMesh) {
             if (geos.aura) {
                 this.modelParts.auraMesh.geometry = geos.aura;
@@ -19289,12 +19367,38 @@ class Player extends Entity {
        if (this.deadBody) this.deadBody.geometry = geos.body;
         if (this.deadHead) {
             this.deadHead.geometry = geos.head;
-            if (this.deadHead.children[0]) {
-                if (geos.headAccent) {
-                    this.deadHead.children[0].geometry = geos.headAccent;
-                    this.deadHead.children[0].visible = true;
-                } else {
-                    this.deadHead.children[0].visible = false;
+            const starterHat = isStarterHatSkin(skin.id);
+            if (starterHat && geos.headAccent) {
+                if (this.deadHeadAccent) this.deadHeadAccent.visible = false;
+                if (this.deadHat && this.deadHatMesh) {
+                    const hc = PlayerGeometryBuilder.getCenterOffset(geos.headAccent);
+                    this.deadHatMesh.geometry = geos.headAccent;
+                    this.deadHatMesh.position.set(-hc.x, -hc.y, -hc.z);
+                    this.deadHatMesh.material = this.modelParts.body.material;
+                    if (this.deadHatBandMesh) {
+                        if (geos.hatBand) {
+                            this.deadHatBandMesh.geometry = geos.hatBand;
+                            this.deadHatBandMesh.position.set(-hc.x, -hc.y, -hc.z);
+                            this.deadHatBandMesh.material = this.modelParts.scarf.material;
+                            this.deadHatBandMesh.visible = true;
+                        } else {
+                            this.deadHatBandMesh.visible = false;
+                        }
+                    }
+                    if (this.deadHatPart && this.deadHatPart.hatOffset) {
+                        this.deadHatPart.hatOffset.set(hc.x, hc.y, hc.z);
+                    }
+                }
+            } else {
+                if (this.deadHat) this.deadHat.visible = false;
+                if (this.deadHeadAccent) {
+                    if (geos.headAccent) {
+                        this.deadHeadAccent.geometry = geos.headAccent;
+                        this.deadHeadAccent.material = this._origHatMat || this.staffGemMat;
+                        this.deadHeadAccent.visible = true;
+                    } else {
+                        this.deadHeadAccent.visible = false;
+                    }
                 }
             }
         }
@@ -19395,12 +19499,8 @@ class Player extends Entity {
             gemColor = 0xc084fc;
         }
 
-        // Rileva le prime due skin più economiche
-        let isStarterPurpleSkin = (
-            skin.id === 'dark_mage' ||
-            skin.id === 'emerald_warden' ||
-            (SkinSystem.skins && (skin.id === SkinSystem.skins[0]?.id || skin.id === SkinSystem.skins[1]?.id))
-        );
+        // Rileva le prime due skin col cappello (Mago Oscuro e Arcanista Astrale)
+        let isStarterPurpleSkin = isStarterHatSkin(skin.id);
         let robeColor = isStarterPurpleSkin ? 0x3b1561 : skin.colors.body;
         let baseScarfColor = isStarterPurpleSkin ? 0xdc2626 : skin.colors.scarf;
 
@@ -19412,23 +19512,23 @@ class Player extends Entity {
         // 2. Tunica viola scuro
         this.modelParts.body.material.color.setHex(robeColor);
 
-        // 3. Cappello (headAccentMesh + eventuale figlio di head): nelle prime 2 skin usa il materiale viola della tunica
-        let hatMesh = this.modelParts.headAccentMesh || (this.modelParts.head && this.modelParts.head.children[0]);
+        // 3. Cappello (headAccentMesh): nelle prime 2 skin usa il materiale viola della tunica
+        let hatMesh = this.modelParts.headAccentMesh;
         if (hatMesh && hatMesh !== this.bloodHaloGroup) {
-            if (!this._origHatMat && hatMesh.material !== this.modelParts.body.material) {
-                this._origHatMat = hatMesh.material;
+            if (!this._origHatMat) {
+                this._origHatMat = this.staffGemMat;
             }
             if (isStarterPurpleSkin) {
                 hatMesh.material = this.modelParts.body.material;
-                if (this.deadHead && this.deadHead.children[0]) {
-                    this.deadHead.children[0].material = this.modelParts.body.material;
-                }
+                if (this.deadHatMesh) this.deadHatMesh.material = this.modelParts.body.material;
+                if (this.deadHatBandMesh) this.deadHatBandMesh.material = this.modelParts.scarf.material;
             } else if (this._origHatMat) {
                 hatMesh.material = this._origHatMat;
-                if (this.deadHead && this.deadHead.children[0]) {
-                    this.deadHead.children[0].material = this._origHatMat;
-                }
+                if (this.deadHeadAccent) this.deadHeadAccent.material = this._origHatMat;
             }
+        }
+        if (this.modelParts.hatBandMesh) {
+            this.modelParts.hatBandMesh.material = this.modelParts.scarf.material;
         }
         if (this.modelParts.staff) {
             this.modelParts.staff.material.color.setHex(skin.colors.staff);
@@ -19558,8 +19658,9 @@ class Player extends Entity {
                 p.mesh.rotation.x += p.rx * dt;
                 p.mesh.rotation.z += p.rz * dt;
                 
-                if (p.mesh.position.y <= 2) {
-                    p.mesh.position.y = 2;
+                let floorY = p.floorY || 2;
+                if (p.mesh.position.y <= floorY) {
+                    p.mesh.position.y = floorY;
                     p.vy *= -0.4; p.vx *= 0.6; p.vz *= 0.6; p.rx *= 0.6; p.rz *= 0.6;
                     if (Math.abs(p.vy) < 25) { p.vy = 0; p.vx = 0; p.vz = 0; }
                 }
@@ -21445,18 +21546,30 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.mesh.updateMatrixWorld(true); // FONDAMENTALE: calcola le matrici globali corrette dei figli
 
                 // Usa i pezzi pre-allocati all'avvio!
+                const useSeparateHat = isStarterHatSkin(SkinSystem.selectedId);
                 for (let i = 0; i < this.deadPhysicsParts.length; i++) {
                     let part = this.deadPhysicsParts[i];
+                    if (part.isHat && !useSeparateHat) {
+                        part.mesh.visible = false;
+                        part.vx = 0; part.vy = 0; part.vz = 0;
+                        continue;
+                    }
                     
                     // Copia istantaneamente le coordinate dalla mesh "viva" al pezzo "morto"
                     part.original.getWorldPosition(Game._vec3);
                     part.original.getWorldQuaternion(Game._dummyQuat);
                     part.original.getWorldScale(Game._dummyScale);
 
+                    if (part.isHat && part.hatOffset) {
+                        this._tmpHatOffset.copy(part.hatOffset).multiply(Game._dummyScale).applyQuaternion(Game._dummyQuat);
+                        Game._vec3.add(this._tmpHatOffset);
+                    }
+
                     part.mesh.position.copy(Game._vec3);
                     part.mesh.quaternion.copy(Game._dummyQuat);
                     part.mesh.scale.copy(Game._dummyScale);
                     part.mesh.visible = true;
+                    part.mesh.updateMatrix();
 
                     // Assegna la Spinta Inerziale
                     let da = Math.random() * Math.PI * 2;
@@ -21464,7 +21577,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     
                     part.vx = (Math.cos(da) * dSpeed) + (momentumX * 0.18);
                     part.vz = (Math.sin(da) * dSpeed) + (momentumZ * 0.18);
-                    part.vy = MathUtils.randomRange(250, 500); 
+                    part.vy = part.isHat ? MathUtils.randomRange(320, 560) : MathUtils.randomRange(250, 500); 
                     part.rx = Math.random() * 8 - 4;
                     part.rz = Math.random() * 8 - 4;
                 }
