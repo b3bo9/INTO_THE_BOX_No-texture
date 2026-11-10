@@ -8562,41 +8562,109 @@ const ModelFactory = {
             parts.bowGroup = bowGroup;
             parts.nockedArrow = nockedArrow;
             parts.tipGlint = tipGlint;
-        } else if (type === 'mage' || type === 'pyromancer' || type === 'dark_prophet') {
-           let robe = new THREE.Mesh(SharedGeo.cone, darkMat); robe.scale.set(size*1.2, size*3.6, size*1.2); robe.position.y = size*1.8;
+        } else if (type === 'pyromancer') {
+            // 1. Veste inferiore pesante e busto corazzato
+            let skirt = new THREE.Mesh(SharedGeo.cone, darkMat);
+            skirt.scale.set(size * 1.15, size * 1.65, size * 1.15);
+            skirt.position.y = size * 0.82;
+
+            let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
+            torso.scale.set(size * 0.78, size * 1.15, size * 0.68);
+            torso.position.y = size * 1.90;
+
+            // 2. Doppia bombola di magma sulla schiena con nucleo incandescente
+            let tankGroup = new THREE.Group();
+            tankGroup.position.set(0, size * 1.95, -size * 0.72);
+
+            let tankL = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            tankL.scale.set(size * 0.34, size * 1.35, size * 0.34);
+            tankL.position.set(-size * 0.36, 0, 0);
+
+            let tankR = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            tankR.scale.set(size * 0.34, size * 1.35, size * 0.34);
+            tankR.position.set(size * 0.36, 0, 0);
+
+            let tankCore = new THREE.Mesh(SharedGeo.cylinder, mat);
+            tankCore.scale.set(size * 0.28, size * 0.95, size * 0.28);
+            tankCore.position.set(0, 0, -size * 0.10);
+
+            tankGroup.add(tankL, tankR, tankCore);
+
+            // 3. Testa con elmo scuro, visiera ignifuga e cresta di fuoco
+            let head = new THREE.Mesh(SharedGeo.sphere, darkMat);
+            head.scale.set(size * 0.66, size * 0.66, size * 0.66);
+            head.position.set(0, size * 2.85, 0);
+
+            let visor = new THREE.Mesh(SharedGeo.box, mat);
+            visor.scale.set(size * 0.66, size * 0.26, size * 0.36);
+            visor.position.set(0, size * 2.80, size * 0.44);
+
+            let crest = new THREE.Mesh(SharedGeo.cone, mat);
+            crest.scale.set(size * 0.36, size * 0.95, size * 0.45);
+            crest.position.set(0, size * 3.45, -size * 0.10);
+            crest.rotation.x = -0.25;
+
+            // 4. Cannone Lanciafiamme frontale con fiammella pilota sulla bocca di fuoco
+            let nozzleGroup = new THREE.Group();
+            nozzleGroup.position.set(0, size * 1.65, size * 0.55);
+
+            let barrel = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            barrel.scale.set(size * 0.28, size * 1.60, size * 0.28);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.z = size * 0.65;
+
+            let shroud = new THREE.Mesh(SharedGeo.cylinder, mat);
+            shroud.scale.set(size * 0.38, size * 0.55, size * 0.38);
+            shroud.rotation.x = Math.PI / 2;
+            shroud.position.z = size * 1.25;
+
+            let muzzleRing = new THREE.Mesh(SharedGeo.torus, darkMat);
+            muzzleRing.scale.set(size * 0.38, size * 0.38, size * 0.65);
+            muzzleRing.position.z = size * 1.48;
+
+            let pilotCore = new THREE.Mesh(SharedGeo.icosahedron, mat);
+            pilotCore.scale.setScalar(size * 0.26);
+            pilotCore.position.z = size * 1.58;
+
+            let pilotGlow = new THREE.Sprite(SharedMat.spriteYellow);
+            pilotGlow.scale.set(size * 1.8, size * 1.8, 1);
+            pilotGlow.position.z = size * 1.65;
+
+            nozzleGroup.add(barrel, shroud, muzzleRing, pilotCore, pilotGlow);
+            group.add(skirt, torso, tankGroup, head, visor, crest, nozzleGroup);
+
+            parts.nozzleGroup = nozzleGroup;
+            parts.pilotCore = pilotCore;
+            parts.pilotGlow = pilotGlow;
+            parts.tankGroup = tankGroup;
+        } else if (type === 'mage' || type === 'dark_prophet') {
+            let robe = new THREE.Mesh(SharedGeo.cone, darkMat); robe.scale.set(size*1.2, size*3.6, size*1.2); robe.position.y = size*1.8;
             let hood = new THREE.Mesh(SharedGeo.sphere, mat); hood.scale.set(size*0.8, size*0.8, size*0.8); hood.position.y = size*2.8;
             let crystals = new THREE.Group(); crystals.position.y = size*1.5;
             
-      if (type === 'dark_prophet') {
-                // FIX BUG SCALATURA: Usiamo un Gruppo per evitare che la palla erediti lo stretch del cilindro
+            if (type === 'dark_prophet') {
                 let staffGroup = new THREE.Group();
                 staffGroup.position.set(-size, size*1.5, size*0.5);
                 staffGroup.rotation.x = Math.PI/4;
                 
-                // Il bastone vero e proprio
                 let staff = new THREE.Mesh(SharedGeo.cylinder, darkMat); 
                 staff.scale.set(size*0.2, size*3, size*0.2); 
                 
-               // NUOVA ESTETICA: Palla arancione incandescente (Rimpicciolita, Zero-Allocation)
                 let staffGem = new THREE.Mesh(SharedGeo.sphere, SharedMat.prophetGem);
-                staffGem.scale.set(size*0.35, size*0.35, size*0.35); // Dimensione sfera ridotta
-                staffGem.position.set(0, size*1.5, 0); // Sulla punta
+                staffGem.scale.set(size*0.35, size*0.35, size*0.35);
+                staffGem.position.set(0, size*1.5, 0);
                 
                 let staffGlow = new THREE.Sprite(SharedMat.prophetSpriteGlow);
-                staffGlow.scale.set(size*2.5, size*2.5, 1); // Bagliore ridotto di conseguenza
+                staffGlow.scale.set(size*2.5, size*2.5, 1);
                 staffGlow.position.set(0, size*1.5, 0);
                 
-                // Assembliamo il bastone nel gruppo
                 staffGroup.add(staff);
                 staffGroup.add(staffGem);
                 staffGroup.add(staffGlow);
 
                 let book = new THREE.Mesh(SharedGeo.box, mat); book.scale.set(size*0.8, size*0.2, size*0.6); book.position.set(size, size*1.5, size*0.8); book.rotation.z = Math.PI/4;
-                
-                // Aggiungiamo il gruppo (invece della singola mesh) ai cristalli del mago
                 crystals.add(staffGroup); crystals.add(book);
                 
-               // EFFETTO VISIVO: Aggiungiamo un alone Arancio Eldritch persistente attorno al Profeta
                 let selfGlow = new THREE.Sprite(SharedMat.prophetSpriteGlow);
                 selfGlow.scale.set(size * 6, size * 6, 1);
                 selfGlow.position.y = size * 1.5;
@@ -21360,6 +21428,9 @@ class Enemy extends Entity {
         this.blinkTeleported = false;
         this._detonateCoreOnDeath = false;
         this.clubRecoveryTimer = 0;
+      this.flameStreamTimer = 0;
+        this.flameHitTick = 0;
+        this.flamePoolTick = 0;
         this.goblinTimer = 0;
         this.goblinStunTimer = 0;
         this.goblinHitPlayer = false;
@@ -21387,7 +21458,7 @@ class Enemy extends Entity {
         else if (type === 'slime_mini') { color = 0xcc33ff; size = 8; spdMod = 1.42; hpMod = 0.32; dmgMod = 0.55; this.aggroRange = 600; this.attackRange = 30; }
         else if (type === 'leaper') { color = 0xaa00ff; size = 12; spdMod = 0.78; hpMod = 1.05; dmgMod = 1.45; this.aggroRange = 600; this.attackRange = 250; this.leapCooldown = 0; }
         else if (type === 'crystal') { color = 0xff00ff; size = 12; this.aggroRange = 0; this.speed = 0; hpMod = 0.001; }
-        else if (type === 'pyromancer') { color = 0xff3300; size = 12; spdMod = 0.65; hpMod = 0.85; dmgMod = 1.20; this.aggroRange = 650; this.attackRange = 450; }
+        else if (type === 'pyromancer') { color = 0xff3300; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.15; this.aggroRange = 650; this.attackRange = 310; }
         else if (type === 'fire_demon') { color = 0xff4400; size = 14; spdMod = 0.95; hpMod = 1.35; dmgMod = 1.85; this.aggroRange = 800; this.attackRange = 560; }
         else if (type === 'mage') { color = 0x00aaff; size = 12; spdMod = 0.65; hpMod = 0.75; dmgMod = 1.30; this.aggroRange = 700; this.attackRange = 450; }
         else if (type === 'trapper') { color = 0x00e5ff; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
@@ -21553,6 +21624,13 @@ class Enemy extends Entity {
             }
             if (this.type === 'orc' && this.modelParts.club) {
                 this.modelParts.club.visible = true;
+            }
+            if (this.type === 'pyromancer' && this.modelParts.nozzleGroup) {
+                this.modelParts.nozzleGroup.scale.set(1, 1, 1);
+                this.modelParts.nozzleGroup.position.set(0, baseModelSize * 1.65, baseModelSize * 0.55);
+                if (this.modelParts.pilotGlow) {
+                    this.modelParts.pilotGlow.scale.set(baseModelSize * 1.8, baseModelSize * 1.8, 1);
+                }
             }
            if (this.type === 'skeleton_archer' && this.modelParts.nockedArrow) {
                 this.modelParts.nockedArrow.visible = false;
@@ -21852,6 +21930,13 @@ class Enemy extends Entity {
                 this._archerLaser.active = false;
                 this._archerLaser.mesh.visible = false;
                 this._archerLaser = null;
+            }
+            if (this.flameStreamTimer > 0) {
+                this.flameStreamTimer = 0;
+                if (this.modelParts && this.modelParts.pilotGlow) {
+                    let bs = this.baseModelSize || 13;
+                    this.modelParts.pilotGlow.scale.set(bs * 1.8, bs * 1.8, 1);
+                }
             }
             let intensity = 1.5 + Math.sin(Game.playTime * 15) * 1.0;
             for (let i = 0; i < this.flashMats.length; i++) {
@@ -22634,8 +22719,8 @@ class Enemy extends Entity {
         }
 
         // Rotazione visiva fluida
-        if (this.type === 'ring_walker' || this.type === 'skeleton_archer' || (this.type === 'orc' && !this.isBerserk)) {
-            let faceAngle = (this.telegraphTimer > 0 && this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
+        if (this.type === 'ring_walker' || this.type === 'skeleton_archer' || this.type === 'pyromancer' || (this.type === 'orc' && !this.isBerserk)) {
+            let faceAngle = ((this.telegraphTimer > 0 || this.flameStreamTimer > 0) && this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
             this.mesh.rotation.y = -faceAngle + Math.PI / 2;
        } else if (this.type === 'goblin' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
             this.mesh.rotation.y = -this.angle + Math.PI / 2;
@@ -22684,7 +22769,142 @@ class Enemy extends Entity {
                 return;
             }
         }
+// --- PIROMANTE: GETTO LANCIAFIAMME LINEARE A LUNGA GITTATA CON REDIREZIONE LENTA ---
+        if (this.type === 'pyromancer' && this.flameStreamTimer > 0) {
+            this.flameStreamTimer -= dt;
+            let bs = this.baseModelSize || 13;
 
+            // 1. Redirezione ad angolo rallentato verso il giocatore (permette il counterplay girandogli attorno)
+            if (Game.player && !Game.player.dead) {
+                let targetAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                let diff = targetAngle - this.lockedAttackAngle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                // Velocità angolare ridotta (~1.15 rad/s base, modificata da rallentamenti o buff)
+                let turnRate = 1.15 * (this.isProphetBuffed ? 1.35 : 1.0) * (aura === 'blue' ? 0.6 : 1.0) * (this.slowedTimer > 0 ? 0.55 : 1.0);
+                let maxStep = turnRate * dt;
+                if (Math.abs(diff) <= maxStep) this.lockedAttackAngle = targetAngle;
+                else this.lockedAttackAngle += Math.sign(diff) * maxStep;
+            }
+
+            this.angle = this.lockedAttackAngle;
+            this.mesh.rotation.y = -this.lockedAttackAngle + Math.PI / 2;
+            this.mesh.position.y = 0;
+
+            // Rinculo e vibrazione dell'ugello durante l'erogazione del fuoco
+            if (this.modelParts && this.modelParts.nozzleGroup) {
+                let vibe = Math.sin(Game.playTime * 55) * 0.08;
+                this.modelParts.nozzleGroup.position.z = bs * 0.45 + vibe * 2.0;
+                this.modelParts.nozzleGroup.scale.set(1.0 + vibe, 1.0 + vibe, 1.08);
+                if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.z += dt * 18;
+                if (this.modelParts.pilotGlow) {
+                    let gScale = bs * (3.6 + Math.sin(Game.playTime * 40) * 0.6);
+                    this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
+                }
+            }
+
+            // 2. Calcolo portata effettiva della linea di fuoco (si ferma contro muri e obelischi)
+            let cosA = Math.cos(this.lockedAttackAngle);
+            let sinA = Math.sin(this.lockedAttackAngle);
+            let muzzleDist = this.radius * 1.25;
+            let startX = this.x + cosA * muzzleDist;
+            let startY = this.y + sinA * muzzleDist;
+
+            let maxStreamLen = 370;
+            let streamLen = maxStreamLen;
+            for (let d = 24; d <= maxStreamLen; d += 24) {
+                if (Game.map.isSolid(startX + cosA * d, startY + sinA * d, true)) {
+                    streamLen = d;
+                    break;
+                }
+            }
+
+            // 3. Particelle del getto lineare (stile Inferno del giocatore ma stretto e lungo)
+            if (Game.frameCount % (isTouchDevice ? 2 : 1) === 0) {
+                let pCount = AppSettings.isLow ? 2 : (isTouchDevice ? 3 : 6);
+                for (let i = 0; i < pCount; i++) {
+                    let spread = MathUtils.randomRange(-0.11, 0.11);
+                    let pAngle = this.lockedAttackAngle + spread;
+                    let isCore = Math.abs(spread) < 0.045 && Math.random() > 0.45;
+                    let pMat = isCore ? SharedMat.spriteYellow : SharedMat.spriteRed;
+
+                    let p = Game.getParticle();
+                    p.spawn(startX, 16 + MathUtils.randomRange(-4, 4), startY, pMat, 'flame', pAngle);
+
+                    // Velocità calibrata per coprire esattamente streamLen prima di svanire
+                    let spd = MathUtils.randomRange(680, 920);
+                    let maxReachLife = (streamLen / spd) * MathUtils.randomRange(0.85, 1.05);
+                    p.vx = Math.cos(pAngle) * spd;
+                    p.vz = Math.sin(pAngle) * spd;
+                    p.vy = MathUtils.randomRange(-10, 18);
+                    p.life = Math.min(0.42, Math.max(0.08, maxReachLife));
+                    p.maxLife = p.life;
+                    p.baseSize = MathUtils.randomRange(18, 30);
+                }
+            }
+            if (Game.frameCount % 8 === 0) AudioEngine.playShoot('flame');
+
+            // 4. Collisione e Danno lungo la linea di fuoco
+            this.flameHitTick -= dt;
+            if (Game.player && !Game.player.dead && !Game.player.isDashing) {
+                let relX = Game.player.x - startX;
+                let relY = Game.player.y - startY;
+                // Proiezione longitudinale e distanza ortogonale dalla linea del getto
+                let proj = relX * cosA + relY * sinA;
+                let perp = Math.abs(-relX * sinA + relY * cosA);
+                let streamHalfWidth = 14 + Math.max(0, proj / maxStreamLen) * 18;
+
+                if (proj >= -8 && proj <= streamLen + Game.player.radius && perp <= streamHalfWidth + Game.player.radius) {
+                    if (Game.player.activeShieldTimer > 0) {
+                        // Lo Scudo Cinetico assorbe la fiammata e rigenera come sulle pozze/muri di fuoco
+                        Game.player.isHealingFromShield = true;
+                        if (this.flameHitTick <= 0) {
+                            this.flameHitTick = 0.22;
+                            Game.player.shieldAbsorbed++;
+                            Game.getParticle().spawn(Game.player.x, 16, Game.player.y, SharedMat.spriteBlue, 'spark');
+                        }
+                    } else if (this.flameHitTick <= 0) {
+                        this.flameHitTick = 0.20;
+                        let buffMult = this.isProphetBuffed ? 1.75 : 1.0;
+                        let tickDmg = MathUtils.randomRange(this.stats.minDmg, this.stats.maxDmg) * 0.34 * buffMult * (aura === 'red' ? 1.3 : 1.0);
+                        Game.player.takeDamage(tickDmg, this);
+                        Game.player.push(cosA, sinA, 7);
+                        Game.getParticle().spawn(Game.player.x, 18, Game.player.y, SharedMat.spriteRed, 'flame');
+                    }
+                }
+            }
+
+            // 5. Piccole braci residue a terra lungo la spazzata
+            this.flamePoolTick += dt;
+            if (this.flamePoolTick >= 0.65 && streamLen > 90) {
+                this.flamePoolTick = 0;
+                let dropDist = MathUtils.randomRange(90, streamLen * 0.88);
+                let px = startX + cosA * dropDist;
+                let py = startY + sinA * dropDist;
+                if (!Game.map.isSolid(px, py)) {
+                    Game.getHazard().spawn(px, py, 26, 2.2, this.stats.maxDmg * 0.45, 0xff3300, 'enemy_fire');
+                }
+            }
+
+            if (this.flameStreamTimer <= 0) {
+                if (this.modelParts && this.modelParts.nozzleGroup) {
+                    this.modelParts.nozzleGroup.position.z = bs * 0.55;
+                    this.modelParts.nozzleGroup.scale.set(1, 1, 1);
+                    if (this.modelParts.pilotGlow) {
+                        this.modelParts.pilotGlow.scale.set(bs * 1.8, bs * 1.8, 1);
+                    }
+                }
+                for (let i = 0; i < this.flashMats.length; i++) {
+                    this.flashMats[i].emissive.setHex(defaultEmissive);
+                    this.flashMats[i].emissiveIntensity = defaultIntensity;
+                }
+            }
+
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
         // --- GOBLIN: CARICAMENTO EVIDENTE IN ARIA (0.42s) E PICCHIATA RETTILINEA ---
         if (this.state === 'goblin_windup') {
             this.goblinTimer -= dt;
@@ -22996,7 +23216,18 @@ class Enemy extends Entity {
                     this.mesh.updateMatrix();
                     return;
                 }
-
+if (this.type === 'pyromancer') {
+                    if (this.telegraphTimer > 0.15 && Game.player && !Game.player.dead) {
+                        this.lockedAttackAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                        this.angle = this.lockedAttackAngle;
+                    }
+                    if (this.modelParts && this.modelParts.pilotGlow) {
+                        let bs = this.baseModelSize || 13;
+                        let progP = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.60));
+                        let gScale = bs * (1.8 + progP * 2.6);
+                        this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
+                    }
+                }
                 // Caricamento standard (Mage, Pyromancer)
                 let prog = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.6));
                 let baseHex = this.isGolden ? 0xffaa00 : (this.isMegaElite ? 0x77001a : (this.isElite ? 0x440000 : 0x000000));
@@ -23250,8 +23481,15 @@ class Enemy extends Entity {
             this.attackCooldown = Math.max(1.5, 2.5 * cdMult);
         }
         else if (this.type === 'pyromancer') {
-            Game.getProjectile().spawn(this.x, this.y, this.angle, 150 * spdMult, actualDmg * 1.05, 'enemy', 'fire_shape', false, false, this);
-            this.attackCooldown = 2.0 * cdMult;
+            // Avvia una gettata continua di lanciafiamme di 2.6 secondi (3.2s se Elite/MegaElite)
+            let streamDuration = this.isMegaElite ? 3.4 : (this.isElite ? 3.0 : 2.6);
+            this.flameStreamTimer = streamDuration;
+            this.flameHitTick = 0;
+            this.flamePoolTick = 0;
+            this.lockedAttackAngle = (this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
+            AudioEngine.playShoot('flame');
+            // Cooldown calcolato a partire dalla fine della gettata
+            this.attackCooldown = streamDuration + (2.2 * cdMult);
         }
         else if (this.type === 'ring_walker') {
             let fireAngle = (this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
