@@ -716,10 +716,12 @@
         transition: opacity 0.3s;
     }
 
-    /* --- EFFETTO LOW HP HARDWARE-ACCELERATED (TUNNEL DESATURO + VECCHIO MONITOR CRT) --- */
+   /* --- EFFETTO LOW HP HARDWARE-ACCELERATED (UNIFICATO E SENZA BORDI SCOPERTI SU MOBILE) --- */
     #low-hp-overlay {
-        position: fixed;
+        position: absolute;
         inset: 0;
+        width: 100%;
+        height: 100%;
         pointer-events: none;
         z-index: 6;
         overflow: hidden;
@@ -729,51 +731,44 @@
     #low-hp-overlay.active {
         opacity: 1;
     }
-    /* Layer 1: Tunnel circolare che segue il personaggio e si chiude su di lui via GPU (scale3d) */
+    /* Layer 1: Tunnel unico sovradimensionato (380vmax) così anche pulsando al minimo copre sempre il 100% degli angoli */
     #low-hp-tunnel {
         position: absolute;
         left: 50%;
         top: 50%;
-        width: 220vmax;
-        height: 220vmax;
-        margin-left: -110vmax;
-        margin-top: -110vmax;
+        width: 380vmax;
+        height: 380vmax;
+        margin-left: -190vmax;
+        margin-top: -190vmax;
         pointer-events: none;
-        will-change: transform, opacity;
-        /* Foro centrale nitido -> Anello grigio-ardesia desaturo -> Corona sangue -> Bordo tubo catodico */
+        will-change: transform;
         background: radial-gradient(
             circle at center,
             transparent 0%,
-            transparent 14%,
-            rgba(34, 38, 46, 0.48) 17.5%,
-            rgba(20, 22, 28, 0.82) 22.5%,
-            rgba(115, 10, 22, 0.88) 30%,
-            rgba(18, 3, 7, 0.96) 42%,
-            rgba(4, 2, 4, 0.99) 100%
+            transparent 7.5%,
+            rgba(34, 38, 46, 0.45) 10.5%,
+            rgba(115, 10, 22, 0.78) 14.5%,
+            rgba(32, 4, 10, 0.94) 20%,
+            rgba(6, 2, 4, 0.98) 28%,
+            rgba(4, 2, 4, 1) 100%
         );
-        transform: translate3d(0px, 0px, 0px) scale3d(1.4, 1.4, 1);
+        transform: translate3d(0px, 0px, 0px) scale3d(1.25, 1.25, 1);
     }
-    /* Layer 2: Scanline Vecchio Monitor CRT + Vignettatura fosforica statica */
+    /* Layer 2: Solo Scanline CRT uniformi (nessun secondo cerchio che si sdoppia sul cellulare) */
     #low-hp-crt {
         position: absolute;
         inset: 0;
+        width: 100%;
+        height: 100%;
         pointer-events: none;
         will-change: opacity;
-        background:
-            repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0) 0px,
-                rgba(0, 0, 0, 0) 2px,
-                rgba(10, 12, 16, 0.44) 3px,
-                rgba(0, 0, 0, 0.56) 4px
-            ),
-            radial-gradient(
-                circle at center,
-                transparent 32%,
-                rgba(28, 30, 36, 0.34) 64%,
-                rgba(190, 12, 28, 0.45) 86%,
-                rgba(0, 0, 0, 0.82) 100%
-            );
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 2px,
+            rgba(10, 12, 16, 0.38) 3px,
+            rgba(0, 0, 0, 0.50) 4px
+        );
     }
     /* Su PC desktop aggiunge anche la desaturazione hardware sul layer CRT; su Android resta a costo 0 */
     @media (hover: hover) and (pointer: fine) {
@@ -9091,90 +9086,102 @@ const ModelFactory = {
             parts.core = core;
             parts.coreGlow = coreGlow;
         } else if (type === 'trapper') {
-            // --- TRAPPER REWORK: CINTURA DI SPUNCIONI GHIACCIATI, CORONA DI SPINI COMPATTA E MANO CHE MESCOLA ---
+            // --- TRAPPER: GONNA LEVITANTE E APERTA DI SPINE AZZURRE LUMINESCENTI ---
             if (!SharedMat.trapperIceSpike) {
                 SharedMat.trapperIceSpike = isTouchDevice
-                    ? new THREE.MeshLambertMaterial({ color: 0x99f6ff, emissive: 0x0088cc })
-                    : new THREE.MeshPhongMaterial({ color: 0x99f6ff, emissive: 0x0088cc, shininess: 90, flatShading: true });
+                    ? new THREE.MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.85 })
+                    : new THREE.MeshPhongMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.85, shininess: 95, flatShading: true });
                 SharedMatSet.add(SharedMat.trapperIceSpike);
+            }
+            if (!SharedMat.trapperIceBright) {
+                SharedMat.trapperIceBright = isTouchDevice
+                    ? new THREE.MeshLambertMaterial({ color: 0xbae6fd, emissive: 0x38bdf8, emissiveIntensity: 1.0 })
+                    : new THREE.MeshPhongMaterial({ color: 0xbae6fd, emissive: 0x38bdf8, emissiveIntensity: 1.0, shininess: 110, flatShading: true });
+                SharedMatSet.add(SharedMat.trapperIceBright);
             }
             if (!SharedMat.trapperThornMat) {
                 SharedMat.trapperThornMat = new THREE.MeshLambertMaterial({ color: 0x1a1615, emissive: 0x0a1820 });
                 SharedMatSet.add(SharedMat.trapperThornMat);
             }
 
-            // 1. Veste inferiore e Busto solido
-            let skirt = new THREE.Mesh(SharedGeo.cone, darkMat);
-            skirt.scale.set(size * 1.15, size * 1.65, size * 1.15);
-            skirt.position.y = size * 0.82;
+            // 1. GONNA LEVITANTE E APERTA DI SPINE AZZURRE (Staccata dal busto, svasata a 45° verso l'esterno)
+            let spikeSkirt = new THREE.Group();
+            spikeSkirt.position.set(0, size * 1.38, 0);
 
-            let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
-            torso.scale.set(size * 0.76, size * 1.20, size * 0.68);
-            torso.position.y = size * 1.98;
+            // Piccolo nucleo energetico sospeso al centro della gonna (non tocca le spine: zero Z-fighting)
+            let skirtCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.trapperIceBright);
+            skirtCore.scale.set(size * 0.42, size * 0.32, size * 0.42);
+            skirtCore.position.y = -size * 0.08;
+            spikeSkirt.add(skirtCore);
 
-            // 2. CINTURA SPESSA DI SPUNCIONI GHIACCIATI VERSO L'ESTERNO (Compatta e bilanciata in vita)
-            let iceBelt = new THREE.Group();
-            iceBelt.position.set(0, size * 1.36, 0);
+            const numSkirtSpikes = 10;
+            const flareAngle = 0.78; // ~45 gradi di apertura verso l'esterno
+            const sinF = Math.sin(flareAngle);
+            const cosF = Math.cos(flareAngle);
 
-            let beltRing = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperIceSpike);
-            beltRing.rotation.x = Math.PI / 2;
-            beltRing.scale.set(size * 0.84, size * 0.84, size * 2.1);
-            iceBelt.add(beltRing);
+            for (let i = 0; i < numSkirtSpikes; i++) {
+                let a = (i / numSkirtSpikes) * Math.PI * 2;
+                let isPrimary = (i % 2 === 0);
+                let sHolder = new THREE.Group();
+                sHolder.rotation.y = -a;
 
-            const numIceSpikes = 8;
-            for (let i = 0; i < numIceSpikes; i++) {
-                let a = (i / numIceSpikes) * Math.PI * 2 + (Math.PI / numIceSpikes);
-                let isBig = (i % 2 === 0);
-                let spikeHolder = new THREE.Group();
-                spikeHolder.rotation.y = -a;
+                let spikeMat = isPrimary ? SharedMat.trapperIceSpike : SharedMat.trapperIceBright;
+                let spike = new THREE.Mesh(SharedGeo.cone, spikeMat);
+                let spLen = isPrimary ? size * 1.18 : size * 0.96;
+                let spW = isPrimary ? size * 0.26 : size * 0.20;
+                spike.scale.set(spW, spLen, spW * 0.82);
 
-                let iceSpike = new THREE.Mesh(SharedGeo.cone, SharedMat.trapperIceSpike);
-                let spLen = isBig ? size * 0.44 : size * 0.32;
-                let spRad = isBig ? size * 0.17 : size * 0.13;
-                iceSpike.scale.set(spRad, spLen, spRad);
-                // Spuncioni corti e tozzi che sporgono dalla cintura senza creare confusione
-                iceSpike.position.set(size * 0.84 + spLen * 0.38, 0, 0);
-                iceSpike.rotation.z = -Math.PI / 2 + 0.12;
-                spikeHolder.add(iceSpike);
-                iceBelt.add(spikeHolder);
+                // Base ancorata in cerchio (size * 0.56) e punta proiettata in basso e verso l'esterno (+X)
+                let baseR = size * 0.56;
+                spike.position.set(
+                    baseR + (spLen * 0.5) * sinF,
+                    -(spLen * 0.5) * cosF,
+                    0
+                );
+                // Math.PI + flareAngle orienta la punta del cono verso il basso (-Y) e verso l'esterno (+X)
+                spike.rotation.z = Math.PI + flareAngle;
+
+                sHolder.add(spike);
+                spikeSkirt.add(sHolder);
             }
+
+            // 2. Busto solido sospeso sopra la gonna levitante (con stacco visivo netto)
+            let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
+            torso.scale.set(size * 0.68, size * 1.05, size * 0.62);
+            torso.position.y = size * 2.22;
 
             // 3. Spallacci e Collare scuro pulito
             let paulL = new THREE.Mesh(SharedGeo.box, darkMat);
             paulL.scale.set(size * 0.50, size * 0.22, size * 0.58);
-            paulL.position.set(-size * 0.86, size * 2.34, 0);
+            paulL.position.set(-size * 0.84, size * 2.54, 0);
             paulL.rotation.z = 0.32;
 
             let paulR = new THREE.Mesh(SharedGeo.box, darkMat);
             paulR.scale.set(size * 0.50, size * 0.22, size * 0.58);
-            paulR.position.set(size * 0.86, size * 2.34, 0);
+            paulR.position.set(size * 0.84, size * 2.54, 0);
             paulR.rotation.z = -0.32;
 
             let neckCollar = new THREE.Mesh(SharedGeo.torus, darkMat);
             neckCollar.rotation.x = Math.PI / 2;
-            neckCollar.scale.set(size * 0.56, size * 0.56, size * 1.4);
-            neckCollar.position.set(0, size * 2.54, 0);
+            neckCollar.scale.set(size * 0.54, size * 0.54, size * 1.30);
+            neckCollar.position.set(0, size * 2.74, 0);
 
             // 4. Testa e CORONA DI SPINI COMPATTA
             let head = new THREE.Mesh(SharedGeo.icosahedron, darkMat);
-            head.scale.set(size * 0.60, size * 0.68, size * 0.60);
-            head.position.set(0, size * 3.04, 0);
+            head.scale.set(size * 0.58, size * 0.66, size * 0.58);
+            head.position.set(0, size * 3.22, 0);
 
             let visor = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead);
-            visor.scale.set(size * 0.58, size * 0.15, size * 0.20);
-            visor.position.set(0, size * 3.02, size * 0.46);
+            visor.scale.set(size * 0.56, size * 0.15, size * 0.20);
+            visor.position.set(0, size * 3.20, size * 0.45);
 
             let thornCrown = new THREE.Group();
-            thornCrown.position.set(0, size * 3.38, 0);
+            thornCrown.position.set(0, size * 3.54, 0);
 
-            let thornBand1 = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperThornMat);
-            thornBand1.rotation.x = Math.PI / 2 + 0.06;
-            thornBand1.scale.set(size * 0.54, size * 0.54, size * 1.0);
-
-            let thornBand2 = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperThornMat);
-            thornBand2.rotation.x = Math.PI / 2 - 0.06;
-            thornBand2.scale.set(size * 0.52, size * 0.52, size * 0.95);
-            thornCrown.add(thornBand1, thornBand2);
+            let thornBand = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperThornMat);
+            thornBand.rotation.x = Math.PI / 2;
+            thornBand.scale.set(size * 0.52, size * 0.52, size * 1.0);
+            thornCrown.add(thornBand);
 
             const numThorns = 8;
             for (let i = 0; i < numThorns; i++) {
@@ -9182,24 +9189,23 @@ const ModelFactory = {
                 let tHolder = new THREE.Group();
                 tHolder.rotation.y = -a;
 
-                let thorn = new THREE.Mesh(SharedGeo.cone, (i % 2 === 0) ? mat : SharedMat.trapperThornMat);
-                let tH = (i % 2 === 0) ? size * 0.28 : size * 0.20;
+                let thorn = new THREE.Mesh(SharedGeo.cone, (i % 2 === 0) ? SharedMat.trapperIceSpike : SharedMat.trapperThornMat);
+                let tH = (i % 2 === 0) ? size * 0.26 : size * 0.18;
                 thorn.scale.set(size * 0.08, tH, size * 0.08);
                 thorn.position.set(size * 0.52, size * 0.10, 0);
-                thorn.rotation.z = -0.22;
+                thorn.rotation.z = -0.28;
                 tHolder.add(thorn);
                 thornCrown.add(tHolder);
             }
 
             // 5. Braccio Sinistro + Braccio/Mano Destra che "MESCOLA" in cerchio
             let armL = new THREE.Mesh(SharedGeo.cylinder, darkMat);
-            armL.scale.set(size * 0.22, size * 0.90, size * 0.22);
-            armL.position.set(-size * 0.90, size * 1.88, size * 0.32);
+            armL.scale.set(size * 0.22, size * 0.88, size * 0.22);
+            armL.position.set(-size * 0.88, size * 2.08, size * 0.32);
             armL.rotation.set(0.75, 0, 0.25);
 
-            // Pivot del movimento circolare ("mescolamento") ben staccato davanti al busto
             let stirCenter = new THREE.Group();
-            stirCenter.position.set(0, size * 2.02, size * 1.24);
+            stirCenter.position.set(0, size * 2.20, size * 1.24);
 
             let stirArmPivot = new THREE.Group();
             let forearmR = new THREE.Mesh(SharedGeo.cylinder, darkMat);
@@ -9211,7 +9217,7 @@ const ModelFactory = {
             stirHand.scale.set(size * 0.30, size * 0.22, size * 0.34);
             stirHand.position.set(size * 0.34, 0, 0);
 
-            let stirClaw = new THREE.Mesh(SharedGeo.cone, SharedMat.trapperIceSpike);
+            let stirClaw = new THREE.Mesh(SharedGeo.cone, SharedMat.trapperIceBright);
             stirClaw.scale.set(size * 0.12, size * 0.42, size * 0.12);
             stirClaw.position.set(size * 0.34, -size * 0.24, 0);
             stirClaw.rotation.x = Math.PI;
@@ -9219,35 +9225,30 @@ const ModelFactory = {
             stirArmPivot.add(forearmR, stirHand, stirClaw);
             stirCenter.add(stirArmPivot);
 
-            // 6. Focus Runico della Trappola sotto la mano che mescola
+            // 6. Focus Runico della Trappola sotto la mano che mescola (senza Sprite gigante che lampeggia)
             let cageFocus = new THREE.Group();
-            cageFocus.position.set(0, size * 1.48, size * 1.24);
+            cageFocus.position.set(0, size * 1.66, size * 1.24);
 
             let ringOuter = new THREE.Mesh(SharedGeo.torus, mat);
             ringOuter.rotation.x = Math.PI / 2;
-            ringOuter.scale.set(size * 0.65, size * 0.65, size * 0.90);
+            ringOuter.scale.set(size * 0.62, size * 0.62, size * 0.90);
 
             let ringInner = new THREE.Mesh(SharedGeo.torus, SharedMat.golemHead);
-            ringInner.scale.set(size * 0.46, size * 0.46, size * 0.80);
+            ringInner.scale.set(size * 0.44, size * 0.44, size * 0.80);
 
-            let prisonCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.golemHead);
+            let prisonCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.trapperIceBright);
             prisonCore.scale.setScalar(size * 0.24);
 
-            let focusGlow = new THREE.Sprite(SharedMat.spriteBlue);
-            focusGlow.scale.set(size * 2.5, size * 2.5, 1);
-
-            cageFocus.add(ringOuter, ringInner, prisonCore, focusGlow);
-            group.add(skirt, torso, iceBelt, paulL, paulR, neckCollar, head, visor, thornCrown, armL, stirCenter, cageFocus);
+            cageFocus.add(ringOuter, ringInner, prisonCore);
+            group.add(spikeSkirt, torso, paulL, paulR, neckCollar, head, visor, thornCrown, armL, stirCenter, cageFocus);
 
             parts.cageFocus = cageFocus;
             parts.ringOuter = ringOuter;
             parts.ringInner = ringInner;
             parts.prisonCore = prisonCore;
-            parts.focusGlow = focusGlow;
             parts.paulL = paulL;
             parts.paulR = paulR;
-            parts.iceBelt = iceBelt;
-            parts.iceNecklace = iceBelt;
+            parts.spikeSkirt = spikeSkirt;
             parts.thornCrown = thornCrown;
             parts.stirArmPivot = stirArmPivot;
             parts.stirHand = stirHand;
@@ -10767,20 +10768,22 @@ const UI = {
             if (this.els.lowHpTunnel && this.els.lowHpCrt) {
                 let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
                 let pulseWave = Math.sin(Game.playTime * 7.85);
-                let beat = Math.pow(Math.max(0, pulseWave), 4) * (0.045 + t * 0.055);
-                let tunnelScale = Math.max(0.42, (1.38 - t * 0.88) - beat);
+                let beat = Math.pow(Math.max(0, pulseWave), 4) * (0.05 + t * 0.06);
+                let tunnelScale = Math.max(0.62, (1.32 - t * 0.58) - beat);
 
                 let offX = 0, offY = 0;
                 if (typeof Game.toScreenPosition === 'function' && Game.camera) {
                     let sp = Game.toScreenPosition(Game.player.x, 14, Game.player.y);
                     if (sp && Number.isFinite(sp.x) && Number.isFinite(sp.y)) {
-                        offX = Math.round(sp.x - Game.width * 0.5);
-                        offY = Math.round(sp.y - Game.height * 0.5);
+                        let maxOffX = Game.width * 0.22;
+                        let maxOffY = Game.height * 0.22;
+                        offX = Math.round(MathUtils.clamp(sp.x - Game.width * 0.5, -maxOffX, maxOffX));
+                        offY = Math.round(MathUtils.clamp(sp.y - Game.height * 0.5, -maxOffY, maxOffY));
                     }
                 }
 
                 this.els.lowHpTunnel.style.transform = `translate3d(${offX}px, ${offY}px, 0) scale3d(${tunnelScale.toFixed(3)}, ${tunnelScale.toFixed(3)}, 1)`;
-                this.els.lowHpCrt.style.opacity = Math.min(1, 0.55 + t * 0.45 + beat * 1.6).toFixed(2);
+                this.els.lowHpCrt.style.opacity = Math.min(1, 0.45 + t * 0.40 + beat * 1.2).toFixed(2);
             }
         }
 
@@ -21936,6 +21939,8 @@ class Enemy extends Entity {
         this.level = level;
         this.attackCooldown = 0;
         this.telegraphTimer = 0;
+      this.flashTimer = 0;
+        this.hitSquashTimer = 0;
         this.isPursuer = false;
         this.isGolden = false;
 
@@ -22243,7 +22248,7 @@ class Enemy extends Entity {
         this.shadowMesh.position.set(x + 2, 0.45, y + 3);
         this.shadowMesh.scale.set(initShadowSize, 1, initShadowSize);
         this.shadowMesh.updateMatrix();
-        this.shadowMesh.visible = !AppSettings.shadowsEnabled;
+        this.shadowMesh.visible = (type !== 'trapper') && !AppSettings.shadowsEnabled;
 
         if (this.isMegaElite) {
             this.megaAuraRadius = Math.round(this.radius * 2.25 + 36);
@@ -22272,54 +22277,39 @@ class Enemy extends Entity {
             this.megaAuraRing.visible = true;
 
             Game.getFloatingText().spawn(this.x, this.y + 28, "MEGA ELITE!", '#ff1e56', 34, true);
-        } else if (this.isGolden) {
-            Game.getFloatingText().spawn(this.x, this.y + 20, "ELITE DORATO", '#fbbf24', 32, true);
+        } else {
+            if (this.megaAuraGlow) this.megaAuraGlow.visible = false;
+            if (this.megaAuraRing) this.megaAuraRing.visible = false;
+            if (this.isGolden) {
+                Game.getFloatingText().spawn(this.x, this.y + 20, "ELITE DORATO", '#fbbf24', 32, true);
+            }
         }
 
         if (this.type === 'trapper') {
-            this.trapperAuraRadius = Math.round(this.radius * 2.1 + 10);
+            this.trapperAuraRadius = Math.round(this.radius * 2.4 + 14);
             if (!this.trapperAuraGlow) {
                 if (!SharedMat.trapperAuraGlow) {
                     SharedMat.trapperAuraGlow = new THREE.MeshBasicMaterial({
                         map: GLOW_TEX,
-                        color: 0x00c8ff,
+                        color: 0x38bdf8,
                         transparent: true,
-                        opacity: 0.55,
+                        opacity: 0.52,
                         blending: THREE.AdditiveBlending,
                         depthWrite: false
                     });
                 }
                 this.trapperAuraGlow = new THREE.Mesh(window.GLOBAL_TELEGRAPH_GEO, SharedMat.trapperAuraGlow);
                 this.trapperAuraGlow.matrixAutoUpdate = false;
-                this.trapperAuraGlow.renderOrder = -2;
+                this.trapperAuraGlow.renderOrder = 1;
                 Game.scene.add(this.trapperAuraGlow);
             }
-            if (!this.trapperAuraRing) {
-                if (!SharedMat.trapperAuraRing) {
-                    SharedMat.trapperAuraRing = new THREE.MeshBasicMaterial({
-                        color: 0x00f0ff,
-                        transparent: true,
-                        opacity: 0.85,
-                        blending: THREE.AdditiveBlending,
-                        depthWrite: false
-                    });
-                }
-                this.trapperAuraRing = new THREE.Mesh(SharedGeo.torus, SharedMat.trapperAuraRing);
-                this.trapperAuraRing.rotation.x = -Math.PI / 2;
-                this.trapperAuraRing.matrixAutoUpdate = false;
-                this.trapperAuraRing.renderOrder = -1;
-                Game.scene.add(this.trapperAuraRing);
-            }
-            let dScale = this.trapperAuraRadius * 2.2;
-            this.trapperAuraGlow.position.set(x, 0.46, y);
+            if (this.trapperAuraRing) this.trapperAuraRing.visible = false;
+
+            let dScale = this.trapperAuraRadius * 2.5;
+            this.trapperAuraGlow.position.set(x, 0.65, y);
             this.trapperAuraGlow.scale.set(dScale, 1, dScale);
             this.trapperAuraGlow.updateMatrix();
             this.trapperAuraGlow.visible = true;
-
-            this.trapperAuraRing.position.set(x, 0.52, y);
-            this.trapperAuraRing.scale.set(this.trapperAuraRadius, this.trapperAuraRadius, 0.22);
-            this.trapperAuraRing.updateMatrix();
-            this.trapperAuraRing.visible = true;
         } else {
             if (this.trapperAuraGlow) this.trapperAuraGlow.visible = false;
             if (this.trapperAuraRing) this.trapperAuraRing.visible = false;
@@ -22384,31 +22374,24 @@ class Enemy extends Entity {
 
     updateTrapperAura(dt) {
         if (this.type !== 'trapper' || this.dead || !this.active) return;
-        let auraRad = this.trapperAuraRadius || 36;
+        let auraRad = this.trapperAuraRadius || 44;
         if (this.trapperAuraGlow && this.trapperAuraGlow.visible) {
-            let pulse = 1.0 + Math.sin(Game.playTime * 4.5 + (this.thinkOffset || 0)) * 0.06;
-            let dScale = auraRad * 2.2 * pulse;
-            this.trapperAuraGlow.position.set(this.x, 0.46, this.y);
-            this.trapperAuraGlow.rotation.y += dt * 0.6;
+            let isCharging = this.telegraphTimer > 0;
+            let pulse = 1.0 + Math.sin(Game.playTime * (isCharging ? 8.0 : 3.4) + (this.animPhase || 0)) * (isCharging ? 0.14 : 0.08);
+            let dScale = auraRad * 2.5 * pulse;
+            this.trapperAuraGlow.position.set(this.x, 0.65, this.y);
             this.trapperAuraGlow.scale.set(dScale, 1, dScale);
             this.trapperAuraGlow.updateMatrix();
         }
-        if (this.trapperAuraRing && this.trapperAuraRing.visible) {
-            let rPulse = 1.0 + Math.sin(Game.playTime * 4.5 + (this.thinkOffset || 0)) * 0.04;
-            this.trapperAuraRing.position.set(this.x, 0.52, this.y);
-            this.trapperAuraRing.rotation.z -= dt * 1.0;
-            this.trapperAuraRing.scale.set(auraRad * rPulse, auraRad * rPulse, 0.22);
-            this.trapperAuraRing.updateMatrix();
-        }
         if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 12 : 8) === 0) {
             let a = Math.random() * Math.PI * 2;
-            let r = auraRad * (0.35 + Math.random() * 0.6);
+            let r = auraRad * (0.25 + Math.random() * 0.55);
             let sp = Game.getParticle();
-            sp.spawn(this.x + Math.cos(a) * r, 5, this.y + Math.sin(a) * r, SharedMat.spriteBlue, 'trail');
+            sp.spawn(this.x + Math.cos(a) * r, 4, this.y + Math.sin(a) * r, SharedMat.spriteBlue, 'trail');
             sp.baseSize = 7;
             sp.vy = 22;
-            sp.life = 0.32;
-            sp.maxLife = 0.32;
+            sp.life = 0.34;
+            sp.maxLife = 0.34;
         }
     }
 
@@ -22426,13 +22409,9 @@ class Enemy extends Entity {
                 this.megaAuraGlow.updateMatrix();
             }
         }
-        if (this.type === 'trapper' && this.trapperAuraRing && this.trapperAuraRing.visible) {
-            this.trapperAuraRing.position.set(this.x, 0.52, this.y);
-            this.trapperAuraRing.updateMatrix();
-            if (this.trapperAuraGlow) {
-                this.trapperAuraGlow.position.set(this.x, 0.46, this.y);
-                this.trapperAuraGlow.updateMatrix();
-            }
+        if (this.type === 'trapper' && this.trapperAuraGlow && this.trapperAuraGlow.visible) {
+            this.trapperAuraGlow.position.set(this.x, 0.65, this.y);
+            this.trapperAuraGlow.updateMatrix();
         }
         if (!this.shadowMesh || !this.shadowMesh.visible) return;
         let isGob = (this.type === 'goblin');
@@ -22660,14 +22639,22 @@ class Enemy extends Entity {
             }
         }
         if (this.type === 'trapper' && this.modelParts && this.modelParts.cageFocus) {
-            this.mesh.position.y = Game.animFloat * 0.7;
             let bs = this.baseModelSize || 14.5;
+            let hoverWave = Math.sin(Game.playTime * 3.4 + (this.animPhase || 0));
+            this.mesh.position.y = 9.0 + hoverWave * 3.2;
+
+            // La gonna di spine levita, ruota dolcemente e si apre/chiude respirando
+            if (this.modelParts.spikeSkirt) {
+                this.modelParts.spikeSkirt.position.y = bs * 1.38 - hoverWave * 1.4;
+                this.modelParts.spikeSkirt.rotation.y += dt * 0.85;
+                let skirtOpen = 1.04 + Math.sin(Game.playTime * 3.4 + (this.animPhase || 0) + 1.2) * 0.08;
+                this.modelParts.spikeSkirt.scale.set(skirtOpen, 1.0, skirtOpen);
+            }
+
             let isCharging = this.telegraphTimer > 0;
             let maxT = this.trapperMaxTelegraph || 1.10;
-            // Progresso da 0.0 (inizio carica) a 1.0 (trappola castata)
             let chargeProg = isCharging ? Math.min(1.0, Math.max(0, 1.0 - (this.telegraphTimer / maxT))) : 0;
 
-            // La velocità di mescolamento aumenta esponenzialmente man mano che la trappola si carica
             let stirSpeed = isCharging ? (4.0 + chargeProg * chargeProg * 34.0) : 2.0;
             this.stirAngle = (this.stirAngle || 0) + dt * stirSpeed;
 
@@ -22680,7 +22667,6 @@ class Enemy extends Entity {
                     Math.sin(this.stirAngle * 2.0) * (bs * 0.04),
                     sa * stirRad
                 );
-                // Inclinazione conica del braccio per dare il gesto naturale del "mescolare"
                 this.modelParts.stirArmPivot.rotation.set(
                     sa * (isCharging ? 0.35 : 0.12),
                     -ca * 0.25,
@@ -22691,7 +22677,6 @@ class Enemy extends Entity {
                 }
             }
 
-            // Il sigillo sottostante accelera insieme alla mano
             let spinMult = isCharging ? (3.0 + chargeProg * chargeProg * 22.0) : 2.2;
             this.modelParts.ringOuter.rotation.z += dt * spinMult;
             this.modelParts.ringInner.rotation.x += dt * (spinMult * 1.2);
@@ -23866,13 +23851,12 @@ if (this.type === 'trapper') {
                         this.angle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                         this.mesh.rotation.y = -this.angle + Math.PI / 2;
                     }
-                    // Emette scintille glaciali sempre più frequenti mentre la mano accelera il mescolamento
-                    if (!AppSettings.isLow && Game.frameCount % Math.max(2, Math.floor(8 - progT * 6)) === 0) {
+                    if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 6 : 4) === 0) {
                         let spX = this.x + Math.cos(this.angle) * (this.radius * 1.1);
                         let spY = this.y + Math.sin(this.angle) * (this.radius * 1.1);
                         let sp = Game.getParticle();
-                        sp.spawn(spX + MathUtils.randomRange(-8, 8), this.radius * 1.5, spY + MathUtils.randomRange(-8, 8), progT > 0.6 ? SharedMat.spriteWhite : SharedMat.spriteBlue, 'spark');
-                        sp.baseSize = 10 + progT * 8;
+                        sp.spawn(spX + MathUtils.randomRange(-6, 6), this.radius * 1.6, spY + MathUtils.randomRange(-6, 6), SharedMat.spriteBlue, 'trail');
+                        sp.baseSize = 8 + progT * 5;
                     }
                     if (this.telegraphTimer <= 0) {
                         if (this.modelParts && this.modelParts.stirArmPivot) {
@@ -23944,7 +23928,8 @@ if (this.type === 'trapper') {
             let trapperRepositioning = (this.type === 'trapper' && this.telegraphTimer <= 0 && (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220));
             if (this.distToTargetSq > this.attackRangeSq || trapperRepositioning) {
                 this.move(this.moveX, this.moveY, dt);
-                if (trapperRepositioning) {
+                if (this.type === 'trapper') {
+                    this.mesh.position.y = 9.0 + Math.sin(Game.playTime * 3.4 + (this.animPhase || 0)) * 3.2;
                     this.angle = Math.atan2(this.moveY, this.moveX);
                     this.mesh.rotation.y = -this.angle + Math.PI / 2;
                 }
@@ -23957,7 +23942,7 @@ if (this.type === 'trapper') {
                         this.modelParts.legL.rotation.x = legSwing;
                         this.modelParts.legR.rotation.x = -legSwing;
                     }
-                } else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin') {
+                } else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin' && this.type !== 'trapper') {
                     this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 4.5;
                     this.mesh.rotation.z = Math.cos(walkPhase) * 0.11;
                 }
@@ -24399,6 +24384,9 @@ if (this.type === 'trapper') {
             this._archerLaser = null;
         }
         this.hideAuras();
+        if (this.trapperAuraGlow) this.trapperAuraGlow.visible = false;
+        if (this.megaAuraGlow) this.megaAuraGlow.visible = false;
+        if (this.megaAuraRing) this.megaAuraRing.visible = false;
 
         if (this.beams) {
             for (let i = 0; i < 3; i++) {
@@ -26197,6 +26185,7 @@ function clearScene() {
             ep.active = false; 
             ep.mesh.visible = false; 
             ep.hideAuras();
+            if (ep.trapperAuraGlow) ep.trapperAuraGlow.visible = false; if (ep.megaAuraGlow) ep.megaAuraGlow.visible = false; if (ep.megaAuraRing) ep.megaAuraRing.visible = false;
             if(ep.shadowMesh) ep.shadowMesh.visible = false; 
             
             // FIX MEMORY LEAK: Rilascia subito dalla VRAM i materiali clonati per la Nemesi
