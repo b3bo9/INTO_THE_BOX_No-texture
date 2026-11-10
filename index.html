@@ -8707,80 +8707,161 @@ const ModelFactory = {
             parts.nockedArrow = nockedArrow;
             parts.tipGlint = tipGlint;
         } else if (type === 'pyromancer') {
-            // 1. Veste inferiore pesante e busto corazzato
-            let skirt = new THREE.Mesh(SharedGeo.cone, darkMat);
-            skirt.scale.set(size * 1.15, size * 1.65, size * 1.15);
-            skirt.position.y = size * 0.82;
+            // --- MOSTRO "FAUCE PIROCLASTICA" (Gargoyle/Salamandra Magmatica Low-Poly, Zero Compenetrazioni) ---
+            if (!SharedMat.pyroObsidian) {
+                SharedMat.pyroObsidian = isTouchDevice
+                    ? new THREE.MeshLambertMaterial({ color: 0x1a0c0a, emissive: 0x240600 })
+                    : new THREE.MeshPhongMaterial({ color: 0x1a0c0a, emissive: 0x240600, shininess: 45, flatShading: true });
+                SharedMatSet.add(SharedMat.pyroObsidian);
+            }
+            if (!SharedMat.pyroMagma) {
+                SharedMat.pyroMagma = new THREE.MeshBasicMaterial({ color: 0xffae00 });
+                SharedMatSet.add(SharedMat.pyroMagma);
+            }
 
-            let torso = new THREE.Mesh(SharedGeo.cylinder, mat);
-            torso.scale.set(size * 0.78, size * 1.15, size * 0.68);
-            torso.position.y = size * 1.90;
+            // 1. Coda/Base piramidale vulcanica sospesa (distaccata dal torso)
+            let tail = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+            tail.scale.set(size * 0.42, size * 0.56, size * 0.42);
+            tail.position.set(0, size * 0.36, -size * 0.30);
+            tail.rotation.x = Math.PI - 0.32;
 
-            // 2. Doppia bombola di magma sulla schiena con nucleo incandescente
-            let tankGroup = new THREE.Group();
-            tankGroup.position.set(0, size * 1.95, -size * 0.72);
+            // 2. Torso incurvato da bestia magmatica
+            let torso = new THREE.Mesh(SharedGeo.octahedron, mat);
+            torso.scale.set(size * 0.80, size * 0.70, size * 0.74);
+            torso.position.set(0, size * 1.34, -size * 0.08);
+            torso.rotation.x = 0.22;
 
-            let tankL = new THREE.Mesh(SharedGeo.cylinder, darkMat);
-            tankL.scale.set(size * 0.34, size * 1.35, size * 0.34);
-            tankL.position.set(-size * 0.36, 0, 0);
+            // Nucleo di brace incandescente incastonato davanti al petto (esterno alla superficie del torso)
+            let bellyCore = new THREE.Mesh(SharedGeo.octahedron, SharedMat.pyroMagma);
+            bellyCore.scale.set(size * 0.30, size * 0.34, size * 0.16);
+            bellyCore.position.set(0, size * 1.18, size * 0.64);
+            bellyCore.rotation.x = 0.22;
 
-            let tankR = new THREE.Mesh(SharedGeo.cylinder, darkMat);
-            tankR.scale.set(size * 0.34, size * 1.35, size * 0.34);
-            tankR.position.set(size * 0.36, 0, 0);
+            // 3. Cresta dorsale di 3 aculei vulcanici (staccati lungo la schiena)
+            let dorsalSpines = new THREE.Group();
+            const spineConfigs = [
+                { y: size * 2.04, z: -size * 0.52, sx: size * 0.16, sy: size * 0.48, rx: -0.60 },
+                { y: size * 1.50, z: -size * 0.80, sx: size * 0.14, sy: size * 0.40, rx: -1.05 },
+                { y: size * 0.96, z: -size * 0.76, sx: size * 0.11, sy: size * 0.30, rx: -1.40 }
+            ];
+            for (let i = 0; i < spineConfigs.length; i++) {
+                let sc = spineConfigs[i];
+                let sp = new THREE.Mesh(SharedGeo.cone, i === 0 ? SharedMat.pyroMagma : SharedMat.pyroObsidian);
+                sp.scale.set(sc.sx, sc.sy, sc.sx * 1.2);
+                sp.position.set(0, sc.y, sc.z);
+                sp.rotation.x = sc.rx;
+                dorsalSpines.add(sp);
+            }
 
-            let tankCore = new THREE.Mesh(SharedGeo.cylinder, mat);
-            tankCore.scale.set(size * 0.28, size * 0.95, size * 0.28);
-            tankCore.position.set(0, 0, -size * 0.10);
-
-            tankGroup.add(tankL, tankR, tankCore);
-
-            // 3. Testa con elmo scuro, visiera ignifuga e cresta di fuoco
-            let head = new THREE.Mesh(SharedGeo.sphere, darkMat);
-            head.scale.set(size * 0.66, size * 0.66, size * 0.66);
-            head.position.set(0, size * 2.85, 0);
-
-            let visor = new THREE.Mesh(SharedGeo.box, mat);
-            visor.scale.set(size * 0.66, size * 0.26, size * 0.36);
-            visor.position.set(0, size * 2.80, size * 0.44);
-
-            let crest = new THREE.Mesh(SharedGeo.cone, mat);
-            crest.scale.set(size * 0.36, size * 0.95, size * 0.45);
-            crest.position.set(0, size * 3.45, -size * 0.10);
-            crest.rotation.x = -0.25;
-
-            // 4. Cannone Lanciafiamme frontale con fiammella pilota sulla bocca di fuoco
+            // 4. Testa mostruosa con Fauce Articolata (nozzleGroup)
             let nozzleGroup = new THREE.Group();
             nozzleGroup.position.set(0, size * 1.65, size * 0.55);
 
-            let barrel = new THREE.Mesh(SharedGeo.cylinder, darkMat);
-            barrel.scale.set(size * 0.28, size * 1.60, size * 0.28);
-            barrel.rotation.x = Math.PI / 2;
-            barrel.position.z = size * 0.65;
+            // Cranio superiore + Occhi + Corna + Zanne superiori
+            let upperHead = new THREE.Group();
+            let skull = new THREE.Mesh(SharedGeo.octahedron, mat);
+            skull.scale.set(size * 0.58, size * 0.32, size * 0.64);
+            skull.position.set(0, size * 0.24, size * 0.10);
 
-            let shroud = new THREE.Mesh(SharedGeo.cylinder, mat);
-            shroud.scale.set(size * 0.38, size * 0.55, size * 0.38);
-            shroud.rotation.x = Math.PI / 2;
-            shroud.position.z = size * 1.25;
+            let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeL.scale.set(size * 0.16, size * 0.08, size * 0.14);
+            eyeL.position.set(-size * 0.30, size * 0.32, size * 0.44);
+            eyeL.rotation.set(0.2, 0.25, -0.28);
 
-            let muzzleRing = new THREE.Mesh(SharedGeo.torus, darkMat);
-            muzzleRing.scale.set(size * 0.38, size * 0.38, size * 0.65);
-            muzzleRing.position.z = size * 1.48;
+            let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeR.scale.set(size * 0.16, size * 0.08, size * 0.14);
+            eyeR.position.set(size * 0.30, size * 0.32, size * 0.44);
+            eyeR.rotation.set(0.2, -0.25, 0.28);
 
-            let pilotCore = new THREE.Mesh(SharedGeo.icosahedron, mat);
-            pilotCore.scale.setScalar(size * 0.26);
-            pilotCore.position.z = size * 1.58;
+            // Corna d'ossidiana piegate all'indietro (esterne alle tempie)
+            let hornL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+            hornL.scale.set(size * 0.14, size * 0.58, size * 0.14);
+            hornL.position.set(-size * 0.48, size * 0.48, -size * 0.14);
+            hornL.rotation.set(-0.88, 0, 0.36);
+
+            let hornR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+            hornR.scale.set(size * 0.14, size * 0.58, size * 0.14);
+            hornR.position.set(size * 0.48, size * 0.48, -size * 0.14);
+            hornR.rotation.set(-0.88, 0, -0.36);
+
+            // Zanne superiori appuntite
+            let fangUL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+            fangUL.scale.set(size * 0.08, size * 0.22, size * 0.08);
+            fangUL.position.set(-size * 0.24, size * 0.02, size * 0.48);
+            fangUL.rotation.x = Math.PI;
+
+            let fangUR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+            fangUR.scale.set(size * 0.08, size * 0.22, size * 0.08);
+            fangUR.position.set(size * 0.24, size * 0.02, size * 0.48);
+            fangUR.rotation.x = Math.PI;
+
+            upperHead.add(skull, eyeL, eyeR, hornL, hornR, fangUL, fangUR);
+
+            // Mascella inferiore articolata (si spalanca durante carica e fiammata)
+            let lowerJaw = new THREE.Group();
+            lowerJaw.position.set(0, -size * 0.08, -size * 0.04);
+            lowerJaw.rotation.x = 0.28;
+
+            let jawBone = new THREE.Mesh(SharedGeo.octahedron, SharedMat.pyroObsidian);
+            jawBone.scale.set(size * 0.44, size * 0.16, size * 0.52);
+            jawBone.position.set(0, -size * 0.08, size * 0.26);
+
+            let fangLL = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
+            fangLL.scale.set(size * 0.07, size * 0.18, size * 0.07);
+            fangLL.position.set(-size * 0.19, size * 0.06, size * 0.44);
+
+            let fangLR = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroMagma);
+            fangLR.scale.set(size * 0.07, size * 0.18, size * 0.07);
+            fangLR.position.set(size * 0.19, size * 0.06, size * 0.44);
+
+            lowerJaw.add(jawBone, fangLL, fangLR);
+
+            // Globo di fuoco vivo in fondo alla gola spalancata
+            let pilotCore = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.pyroMagma);
+            pilotCore.scale.setScalar(size * 0.22);
+            pilotCore.position.set(0, size * 0.04, size * 0.24);
 
             let pilotGlow = new THREE.Sprite(SharedMat.spriteYellow);
             pilotGlow.scale.set(size * 1.8, size * 1.8, 1);
-            pilotGlow.position.z = size * 1.65;
+            pilotGlow.position.set(0, size * 0.04, size * 0.32);
 
-            nozzleGroup.add(barrel, shroud, muzzleRing, pilotCore, pilotGlow);
-            group.add(skirt, torso, tankGroup, head, visor, crest, nozzleGroup);
+            nozzleGroup.add(upperHead, lowerJaw, pilotCore, pilotGlow);
 
+            // 5. Artigli fluttuanti laterali (distaccati dal corpo, zero intersezioni)
+            const buildClawArm = (side) => {
+                let armGroup = new THREE.Group();
+                armGroup.position.set(side * size * 0.96, size * 1.32, size * 0.16);
+
+                let bracer = new THREE.Mesh(SharedGeo.octahedron, mat);
+                bracer.scale.set(size * 0.22, size * 0.38, size * 0.26);
+                bracer.rotation.z = side * -0.25;
+
+                let claw1 = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+                claw1.scale.set(size * 0.07, size * 0.26, size * 0.07);
+                claw1.position.set(-side * size * 0.06, -size * 0.34, size * 0.16);
+                claw1.rotation.x = Math.PI * 0.72;
+
+                let claw2 = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
+                claw2.scale.set(size * 0.07, size * 0.26, size * 0.07);
+                claw2.position.set(side * size * 0.08, -size * 0.34, size * 0.16);
+                claw2.rotation.x = Math.PI * 0.72;
+
+                armGroup.add(bracer, claw1, claw2);
+                return armGroup;
+            };
+            let armL = buildClawArm(-1);
+            let armR = buildClawArm(1);
+
+            group.add(tail, torso, bellyCore, dorsalSpines, nozzleGroup, armL, armR);
+            parts.torso = torso;
             parts.nozzleGroup = nozzleGroup;
+            parts.upperHead = upperHead;
+            parts.lowerJaw = lowerJaw;
+            parts.dorsalSpines = dorsalSpines;
             parts.pilotCore = pilotCore;
             parts.pilotGlow = pilotGlow;
-            parts.tankGroup = tankGroup;
+            parts.armL = armL;
+            parts.armR = armR;
         } else if (type === 'mage' || type === 'dark_prophet') {
             let robe = new THREE.Mesh(SharedGeo.cone, darkMat); robe.scale.set(size*1.2, size*3.6, size*1.2); robe.position.y = size*1.8;
             let hood = new THREE.Mesh(SharedGeo.sphere, mat); hood.scale.set(size*0.8, size*0.8, size*0.8); hood.position.y = size*2.8;
@@ -21633,7 +21714,7 @@ class Enemy extends Entity {
         else if (type === 'slime_mini') { color = 0xcc33ff; size = 8; spdMod = 1.42; hpMod = 0.32; dmgMod = 0.55; this.aggroRange = 600; this.attackRange = 30; }
         else if (type === 'leaper') { color = 0xaa00ff; size = 12; spdMod = 0.78; hpMod = 1.05; dmgMod = 1.45; this.aggroRange = 600; this.attackRange = 250; this.leapCooldown = 0; }
         else if (type === 'crystal') { color = 0xff00ff; size = 12; this.aggroRange = 0; this.speed = 0; hpMod = 0.001; }
-        else if (type === 'pyromancer') { color = 0xff3300; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.15; this.aggroRange = 650; this.attackRange = 310; }
+       else if (type === 'pyromancer') { color = 0xff3300; size = 13; spdMod = 0.75; hpMod = 1.05; dmgMod = 1.15; this.aggroRange = 650; this.attackRange = 215; }
         else if (type === 'fire_demon') { color = 0xff4400; size = 14; spdMod = 0.95; hpMod = 1.35; dmgMod = 1.85; this.aggroRange = 800; this.attackRange = 560; }
         else if (type === 'mage') { color = 0x00aaff; size = 12; spdMod = 0.65; hpMod = 0.75; dmgMod = 1.30; this.aggroRange = 700; this.attackRange = 450; }
         else if (type === 'trapper') { color = 0x00e5ff; size = 13; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
@@ -21811,6 +21892,9 @@ class Enemy extends Entity {
             if (this.type === 'pyromancer' && this.modelParts.nozzleGroup) {
                 this.modelParts.nozzleGroup.scale.set(1, 1, 1);
                 this.modelParts.nozzleGroup.position.set(0, baseModelSize * 1.65, baseModelSize * 0.55);
+                this.modelParts.nozzleGroup.rotation.set(0, 0, 0);
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28;
+                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = 0;
                 if (this.modelParts.pilotGlow) {
                     this.modelParts.pilotGlow.scale.set(baseModelSize * 1.8, baseModelSize * 1.8, 1);
                 }
@@ -22205,6 +22289,12 @@ class Enemy extends Entity {
             if (this.modelParts.crystals) {
                 let cSpin = (this.type === 'mage' && this.blinkAnimTimer > 0) ? 16.0 : 2.0;
                 this.modelParts.crystals.rotation.y += dt * cSpin;
+            }
+            if (this.type === 'pyromancer' && this.telegraphTimer <= 0 && this.flameStreamTimer <= 0 && this.modelParts) {
+                let breath = Math.sin(Game.playTime * 6.5 + (this.animPhase || 0));
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.26 + breath * 0.10;
+                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -breath * 0.05;
+                if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.y += dt * 4.0;
             }
         }
 
@@ -22952,7 +23042,7 @@ class Enemy extends Entity {
                 return;
             }
         }
-// --- PIROMANTE: GETTO LANCIAFIAMME LINEARE A LUNGA GITTATA CON REDIREZIONE LENTA ---
+// --- PIROMANTE: RUGGITO DI FUOCO DALLA FAUCE CON PORTATA VISIVA = PORTATA DANNO ---
         if (this.type === 'pyromancer' && this.flameStreamTimer > 0) {
             this.flameStreamTimer -= dt;
             let bs = this.baseModelSize || 13;
@@ -22964,7 +23054,6 @@ class Enemy extends Entity {
                 while (diff < -Math.PI) diff += Math.PI * 2;
                 while (diff > Math.PI) diff -= Math.PI * 2;
 
-                // Velocità angolare ridotta (~1.15 rad/s base, modificata da rallentamenti o buff)
                 let turnRate = 1.15 * (this.isProphetBuffed ? 1.35 : 1.0) * (aura === 'blue' ? 0.6 : 1.0) * (this.slowedTimer > 0 ? 0.55 : 1.0);
                 let maxStep = turnRate * dt;
                 if (Math.abs(diff) <= maxStep) this.lockedAttackAngle = targetAngle;
@@ -22973,74 +23062,83 @@ class Enemy extends Entity {
 
             this.angle = this.lockedAttackAngle;
             this.mesh.rotation.y = -this.lockedAttackAngle + Math.PI / 2;
-            this.mesh.position.y = 0;
+            this.mesh.position.y = Game.animFloat * 0.4;
 
-            // Rinculo e vibrazione dell'ugello durante l'erogazione del fuoco
+            // Fauce spalancata che vibra per la potenza del getto + artigli protesi all'indietro
             if (this.modelParts && this.modelParts.nozzleGroup) {
-                let vibe = Math.sin(Game.playTime * 55) * 0.08;
-                this.modelParts.nozzleGroup.position.z = bs * 0.45 + vibe * 2.0;
-                this.modelParts.nozzleGroup.scale.set(1.0 + vibe, 1.0 + vibe, 1.08);
-                if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.z += dt * 18;
+                let vibe = Math.sin(Game.playTime * 55) * 0.06;
+                this.modelParts.nozzleGroup.position.z = bs * 0.68 + vibe * 1.5;
+                this.modelParts.nozzleGroup.rotation.x = 0.08 + vibe * 0.5;
+                if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.88 + vibe * 1.2;
+                if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -0.18 + vibe * 0.5;
+                if (this.modelParts.armL) { this.modelParts.armL.rotation.x = 0.55; this.modelParts.armL.rotation.z = -0.35; }
+                if (this.modelParts.armR) { this.modelParts.armR.rotation.x = 0.55; this.modelParts.armR.rotation.z = 0.35; }
+                if (this.modelParts.pilotCore) this.modelParts.pilotCore.rotation.z += dt * 20;
                 if (this.modelParts.pilotGlow) {
-                    let gScale = bs * (3.6 + Math.sin(Game.playTime * 40) * 0.6);
+                    let gScale = bs * (3.2 + Math.sin(Game.playTime * 40) * 0.5);
                     this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
                 }
             }
 
-            // 2. Calcolo portata effettiva della linea di fuoco (si ferma contro muri e obelischi)
+            // 2. Calcolo portata reale del getto (235 unità max, bloccato da muri e obelischi)
             let cosA = Math.cos(this.lockedAttackAngle);
             let sinA = Math.sin(this.lockedAttackAngle);
             let muzzleDist = this.radius * 1.25;
             let startX = this.x + cosA * muzzleDist;
             let startY = this.y + sinA * muzzleDist;
 
-            let maxStreamLen = 370;
+            let maxStreamLen = 235;
             let streamLen = maxStreamLen;
-            for (let d = 24; d <= maxStreamLen; d += 24) {
+            for (let d = 20; d <= maxStreamLen; d += 20) {
                 if (Game.map.isSolid(startX + cosA * d, startY + sinA * d, true)) {
                     streamLen = d;
                     break;
                 }
             }
 
-            // 3. Particelle del getto lineare (stile Inferno del giocatore ma stretto e lungo)
+            // Progressione dell'onda di fuoco nei primi 0.18s (il danno avanza insieme alle particelle!)
+            let streamTotalDur = this.isMegaElite ? 3.4 : (this.isElite ? 3.0 : 2.6);
+            let elapsedStream = Math.max(0, streamTotalDur - this.flameStreamTimer);
+            let streamFrontRatio = Math.min(1.0, elapsedStream / 0.18);
+
+            // 3. Particelle calibrate sull'attrito (k = 2.5 in Particle.update) per coprire esattamente streamLen
             if (Game.frameCount % (isTouchDevice ? 2 : 1) === 0) {
                 let pCount = AppSettings.isLow ? 2 : (isTouchDevice ? 3 : 6);
                 for (let i = 0; i < pCount; i++) {
-                    let spread = MathUtils.randomRange(-0.11, 0.11);
+                    let spread = MathUtils.randomRange(-0.10, 0.10);
                     let pAngle = this.lockedAttackAngle + spread;
                     let isCore = Math.abs(spread) < 0.045 && Math.random() > 0.45;
                     let pMat = isCore ? SharedMat.spriteYellow : SharedMat.spriteRed;
 
                     let p = Game.getParticle();
-                    p.spawn(startX, 16 + MathUtils.randomRange(-4, 4), startY, pMat, 'flame', pAngle);
+                    p.spawn(startX, 18 + MathUtils.randomRange(-3, 3), startY, pMat, 'flame', pAngle);
 
-                    // Velocità calibrata per coprire esattamente streamLen prima di svanire
-                    let spd = MathUtils.randomRange(680, 920);
-                    let maxReachLife = (streamLen / spd) * MathUtils.randomRange(0.85, 1.05);
+                    // Con attrito 2.5*dt e vita 0.36s, una particella percorre ~0.593 * (spd / 2.5):
+                    // impostiamo spd in modo che il corpo visibile della fiamma arrivi esattamente a streamLen
+                    let targetReach = streamLen * MathUtils.randomRange(0.94, 1.06);
+                    let spd = (targetReach * 2.5) / 0.58;
                     p.vx = Math.cos(pAngle) * spd;
                     p.vz = Math.sin(pAngle) * spd;
-                    p.vy = MathUtils.randomRange(-10, 18);
-                    p.life = Math.min(0.42, Math.max(0.08, maxReachLife));
+                    p.vy = MathUtils.randomRange(-8, 14);
+                    p.life = MathUtils.randomRange(0.34, 0.38);
                     p.maxLife = p.life;
-                    p.baseSize = MathUtils.randomRange(18, 30);
+                    p.baseSize = MathUtils.randomRange(18, 28);
                 }
             }
             if (Game.frameCount % 8 === 0) AudioEngine.playShoot('flame');
 
-            // 4. Collisione e Danno lungo la linea di fuoco
+            // 4. Collisione e Danno strettamente dentro la parte visibile della colonna di fuoco
             this.flameHitTick -= dt;
-            if (Game.player && !Game.player.dead && !Game.player.isDashing) {
+            let activeHitLen = streamLen * streamFrontRatio * 0.90;
+            if (Game.player && !Game.player.dead && !Game.player.isDashing && activeHitLen > 12) {
                 let relX = Game.player.x - startX;
                 let relY = Game.player.y - startY;
-                // Proiezione longitudinale e distanza ortogonale dalla linea del getto
                 let proj = relX * cosA + relY * sinA;
                 let perp = Math.abs(-relX * sinA + relY * cosA);
-                let streamHalfWidth = 14 + Math.max(0, proj / maxStreamLen) * 18;
+                let streamHalfWidth = 10 + Math.max(0, proj / maxStreamLen) * 14;
 
-                if (proj >= -8 && proj <= streamLen + Game.player.radius && perp <= streamHalfWidth + Game.player.radius) {
+                if (proj >= -4 && proj <= activeHitLen + Game.player.radius * 0.5 && perp <= streamHalfWidth + Game.player.radius * 0.75) {
                     if (Game.player.activeShieldTimer > 0) {
-                        // Lo Scudo Cinetico assorbe la fiammata e rigenera come sulle pozze/muri di fuoco
                         Game.player.isHealingFromShield = true;
                         if (this.flameHitTick <= 0) {
                             this.flameHitTick = 0.22;
@@ -23058,22 +23156,27 @@ class Enemy extends Entity {
                 }
             }
 
-            // 5. Piccole braci residue a terra lungo la spazzata
+            // 5. Piccole braci residue a terra solo dove il fuoco è realmente arrivato
             this.flamePoolTick += dt;
-            if (this.flamePoolTick >= 0.65 && streamLen > 90) {
+            if (this.flamePoolTick >= 0.65 && activeHitLen > 85) {
                 this.flamePoolTick = 0;
-                let dropDist = MathUtils.randomRange(90, streamLen * 0.88);
+                let dropDist = MathUtils.randomRange(70, activeHitLen * 0.88);
                 let px = startX + cosA * dropDist;
                 let py = startY + sinA * dropDist;
                 if (!Game.map.isSolid(px, py)) {
-                    Game.getHazard().spawn(px, py, 26, 2.2, this.stats.maxDmg * 0.45, 0xff3300, 'enemy_fire');
+                    Game.getHazard().spawn(px, py, 24, 2.2, this.stats.maxDmg * 0.45, 0xff3300, 'enemy_fire');
                 }
             }
 
             if (this.flameStreamTimer <= 0) {
                 if (this.modelParts && this.modelParts.nozzleGroup) {
                     this.modelParts.nozzleGroup.position.z = bs * 0.55;
+                    this.modelParts.nozzleGroup.rotation.set(0, 0, 0);
                     this.modelParts.nozzleGroup.scale.set(1, 1, 1);
+                    if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28;
+                    if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = 0;
+                    if (this.modelParts.armL) this.modelParts.armL.rotation.set(0, 0, 0);
+                    if (this.modelParts.armR) this.modelParts.armR.rotation.set(0, 0, 0);
                     if (this.modelParts.pilotGlow) {
                         this.modelParts.pilotGlow.scale.set(bs * 1.8, bs * 1.8, 1);
                     }
@@ -23404,11 +23507,18 @@ if (this.type === 'pyromancer') {
                         this.lockedAttackAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                         this.angle = this.lockedAttackAngle;
                     }
-                    if (this.modelParts && this.modelParts.pilotGlow) {
+                    if (this.modelParts) {
                         let bs = this.baseModelSize || 13;
                         let progP = Math.min(1.0, 1.0 - (this.telegraphTimer / 0.60));
-                        let gScale = bs * (1.8 + progP * 2.6);
-                        this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
+                        // Inspira profondamente: spalanca la mascella, piega la testa indietro e allarga gli artigli
+                        if (this.modelParts.lowerJaw) this.modelParts.lowerJaw.rotation.x = 0.28 + progP * 0.62;
+                        if (this.modelParts.upperHead) this.modelParts.upperHead.rotation.x = -progP * 0.25;
+                        if (this.modelParts.armL) { this.modelParts.armL.rotation.x = -progP * 0.65; this.modelParts.armL.rotation.z = -progP * 0.45; }
+                        if (this.modelParts.armR) { this.modelParts.armR.rotation.x = -progP * 0.65; this.modelParts.armR.rotation.z = progP * 0.45; }
+                        if (this.modelParts.pilotGlow) {
+                            let gScale = bs * (1.8 + progP * 2.6);
+                            this.modelParts.pilotGlow.scale.set(gScale, gScale, 1);
+                        }
                     }
                 }
                 // Caricamento standard (Mage, Pyromancer)
