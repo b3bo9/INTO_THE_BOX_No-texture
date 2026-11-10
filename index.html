@@ -716,13 +716,70 @@
         transition: opacity 0.3s;
     }
 
-        @media (hover: none) and (pointer: coarse) {
-        .vignette-low-hp-active {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            webkit-mask-image: none !important;
-            mask-image: none !important;
-            background: radial-gradient(circle at center, transparent 35%, rgba(200, 0, 0, 0.28) 75%, rgba(255, 0, 0, 0.65) 100%) !important;
+    /* --- EFFETTO LOW HP HARDWARE-ACCELERATED (TUNNEL DESATURO + VECCHIO MONITOR CRT) --- */
+    #low-hp-overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 6;
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.25s ease-out;
+    }
+    #low-hp-overlay.active {
+        opacity: 1;
+    }
+    /* Layer 1: Tunnel circolare che segue il personaggio e si chiude su di lui via GPU (scale3d) */
+    #low-hp-tunnel {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 220vmax;
+        height: 220vmax;
+        margin-left: -110vmax;
+        margin-top: -110vmax;
+        pointer-events: none;
+        will-change: transform, opacity;
+        /* Foro centrale nitido -> Anello grigio-ardesia desaturo -> Corona sangue -> Bordo tubo catodico */
+        background: radial-gradient(
+            circle at center,
+            transparent 0%,
+            transparent 14%,
+            rgba(34, 38, 46, 0.48) 17.5%,
+            rgba(20, 22, 28, 0.82) 22.5%,
+            rgba(115, 10, 22, 0.88) 30%,
+            rgba(18, 3, 7, 0.96) 42%,
+            rgba(4, 2, 4, 0.99) 100%
+        );
+        transform: translate3d(0px, 0px, 0px) scale3d(1.4, 1.4, 1);
+    }
+    /* Layer 2: Scanline Vecchio Monitor CRT + Vignettatura fosforica statica */
+    #low-hp-crt {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        will-change: opacity;
+        background:
+            repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0) 2px,
+                rgba(10, 12, 16, 0.44) 3px,
+                rgba(0, 0, 0, 0.56) 4px
+            ),
+            radial-gradient(
+                circle at center,
+                transparent 32%,
+                rgba(28, 30, 36, 0.34) 64%,
+                rgba(190, 12, 28, 0.45) 86%,
+                rgba(0, 0, 0, 0.82) 100%
+            );
+    }
+    /* Su PC desktop aggiunge anche la desaturazione hardware sul layer CRT; su Android resta a costo 0 */
+    @media (hover: hover) and (pointer: fine) {
+        #low-hp-crt {
+            backdrop-filter: grayscale(0.82) contrast(1.18);
+            -webkit-backdrop-filter: grayscale(0.82) contrast(1.18);
         }
     }
         
@@ -959,7 +1016,7 @@ body.colorblind-mode #opt-colorblind-text {
             #floorScreen .plasma-bubble {
                 box-shadow: none !important;
             }
-            #floorScreen . plasma-bubble:nth-child(even) {
+            #floorScreen .plasma-bubble:nth-child(even) {
                 display: none !important; /* Dimezza le bolle su WebView mantenendo l'effetto fluido a 60fps */
             }
             #floorScreen .surge-wave,
@@ -10082,6 +10139,16 @@ const UI = {
         this.els.btnDashFill = document.getElementById('btn-dash-fill');
         this.els.vignette = document.getElementById('vignette');
         this.els.bloodVignette = document.getElementById('blood-vignette');
+        let lowHpWrap = document.getElementById('low-hp-overlay');
+        if (!lowHpWrap) {
+            lowHpWrap = document.createElement('div');
+            lowHpWrap.id = 'low-hp-overlay';
+            lowHpWrap.innerHTML = '<div id="low-hp-tunnel"></div><div id="low-hp-crt"></div>';
+            document.body.appendChild(lowHpWrap);
+        }
+        this.els.lowHpOverlay = lowHpWrap;
+        this.els.lowHpTunnel = document.getElementById('low-hp-tunnel');
+        this.els.lowHpCrt = document.getElementById('low-hp-crt');
 
         let flashDiv = document.createElement('div');
         flashDiv.className = 'absolute inset-0 pointer-events-none z-[6] opacity-0 transition-opacity duration-75';
@@ -10409,32 +10476,38 @@ const UI = {
         }
         
         let hpRatio = Game.player.stats.hp / Game.player.stats.maxHp;
-        let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state !== 'WARPING_OUT' && Game.state !== 'WARPING_IN';
+        let isLowHp = hpRatio < 0.30 && !Game.player.dead && Game.state === 'PLAYING';
         
         if (this.cache.isLowHp !== isLowHp) {
-            if (isLowHp) {
-                this.els.bloodVignette.classList.add('vignette-low-hp-active');
-            } else {
-                this.els.bloodVignette.classList.remove('vignette-low-hp-active');
-                this.els.bloodVignette.style.webkitMaskImage = '';
-                this.els.bloodVignette.style.maskImage = '';
-                this.cache.lowHpMask = null;
-                document.body.classList.remove('crt-active');
+            if (this.els.lowHpOverlay) {
+                this.els.lowHpOverlay.classList.toggle('active', isLowHp);
             }
+            document.body.classList.toggle('crt-active', isLowHp);
             this.cache.isLowHp = isLowHp;
         }
 
-        if (isLowHp && !isTouchDevice) {
+        if (isLowHp && this.els.lowHpTunnel && this.els.lowHpCrt) {
+            // t va da 0.0 (a 30% HP) fino a 1.0 (a 0% HP)
             let t = Math.max(0, Math.min(1, (0.30 - hpRatio) / 0.30));
-            let inner = Math.round(55 - t * 33);
-            let outer = Math.round(85 - t * 37);
-            let maskStr = `radial-gradient(circle at center, transparent ${inner}%, black ${outer}%)`;
-            
-            if (this.cache.lowHpMask !== maskStr) {
-                this.els.bloodVignette.style.webkitMaskImage = maskStr;
-                this.els.bloodVignette.style.maskImage = maskStr;
-                this.cache.lowHpMask = maskStr;
+            // Battito cardiaco sincronizzato con AudioEngine.playHeartbeat (ogni 0.8s)
+            let pulseWave = Math.sin(Game.playTime * 7.85);
+            let beat = Math.pow(Math.max(0, pulseWave), 4) * (0.045 + t * 0.055);
+
+            // Il cerchio si stringe progressivamente sul personaggio al calare della vita (da 1.38x fino a 0.48x)
+            let tunnelScale = Math.max(0.42, (1.38 - t * 0.88) - beat);
+
+            // Segue le coordinate reali a schermo del personaggio
+            let offX = 0, offY = 0;
+            if (typeof Game.toScreenPosition === 'function' && Game.camera) {
+                let sp = Game.toScreenPosition(Game.player.x, 14, Game.player.y);
+                if (sp && Number.isFinite(sp.x) && Number.isFinite(sp.y)) {
+                    offX = Math.round(sp.x - Game.width * 0.5);
+                    offY = Math.round(sp.y - Game.height * 0.5);
+                }
             }
+
+            this.els.lowHpTunnel.style.transform = `translate3d(${offX}px, ${offY}px, 0) scale3d(${tunnelScale.toFixed(3)}, ${tunnelScale.toFixed(3)}, 1)`;
+            this.els.lowHpCrt.style.opacity = Math.min(1, 0.55 + t * 0.45 + beat * 1.6).toFixed(2);
         }
 
         if (isLowHp !== AudioEngine.isLowHp) {
@@ -12889,13 +12962,13 @@ startGame(diffMult) {
         
 
         // --- AGGIORNA LE LUCI ESPLOSIVE ---
-        if (this.flashLights) {
-            for(let i=0; i<3; i++) {
+        if (this.flashLights && this.flashLights.length > 0) {
+            for (let i = 0; i < this.flashLights.length; i++) {
                 let fl = this.flashLights[i];
-                if (fl.life > 0) {
+                if (fl && fl.life > 0) {
                     fl.life -= safeVisualDt;
-                    fl.light.intensity *= (fl.life / fl.maxLife); // Fade-out fluido
-                } else {
+                    fl.light.intensity *= (fl.life / fl.maxLife);
+                } else if (fl && fl.light) {
                     fl.light.intensity = 0;
                 }
             }
@@ -16788,28 +16861,34 @@ class GameMap {
                 this.mapGroup.add(meshPitRimStones);
             }
 
-            const tempObj = new THREE.Object3D();
-            const PropMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
+           const tempObj = new THREE.Object3D();
+            const createPitPropMat = (opts) => {
+                if (isTouchDevice) {
+                    const { roughness, metalness, flatShading, ...lambertOpts } = opts;
+                    return new THREE.MeshLambertMaterial(lambertOpts);
+                }
+                return new THREE.MeshStandardMaterial(opts);
+            };
             if (!window.GLOBAL_PIT_PAD_ASSETS) {
                 window.GLOBAL_PIT_PAD_ASSETS = {};
                 for (let pIdx = 0; pIdx < 3; pIdx++) {
                     let padGeo, padMat;
                     if (pIdx === 0) {
                         padGeo = new THREE.CylinderGeometry(8.5, 8.0, 0.6, 9, 1, false, 0.42, Math.PI * 2 - 0.84);
-                        padMat = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true });
+                        padMat = createPitPropMat({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true });
                     } else if (pIdx === 1) {
                         padGeo = new THREE.CylinderGeometry(7.0, 9.2, 1.3, 6);
-                        padMat = new PropMatClass({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.60, roughness: 0.9, flatShading: true });
+                        padMat = createPitPropMat({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.60, roughness: 0.9, flatShading: true });
                     } else {
                         padGeo = new THREE.CylinderGeometry(8.0, 8.5, 0.45, 6);
-                        padMat = new PropMatClass({ color: 0x9ec4db, emissive: 0x103554, emissiveIntensity: 0.16, roughness: 0.42, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.82, depthWrite: false });
+                        padMat = createPitPropMat({ color: 0x9ec4db, emissive: 0x103554, emissiveIntensity: 0.16, roughness: 0.42, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.82, depthWrite: false });
                     }
                     padGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
                     padGeo._isGlobalCached = true;
                     padMat._isGlobalCached = true;
                     window.GLOBAL_PIT_PAD_ASSETS[pIdx] = { geo: padGeo, mat: padMat };
                 }
-                window.GLOBAL_PIT_PAD_DYNAMIC_MAT = new PropMatClass({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true, transparent: true, opacity: 1.0 });
+                window.GLOBAL_PIT_PAD_DYNAMIC_MAT = createPitPropMat({ color: 0x2e8538, emissive: 0x0d2b12, emissiveIntensity: 0.45, roughness: 0.65, flatShading: true, transparent: true, opacity: 1.0 });
                 window.GLOBAL_PIT_PAD_DYNAMIC_MAT._isGlobalCached = true;
             }
             if (!window.GLOBAL_PIT_ACCENT_ASSETS) {
@@ -16821,20 +16900,20 @@ class GameMap {
                         let bud = new THREE.DodecahedronGeometry(1.7, 0); bud.translate(0, 1.7, 0);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([petals.toNonIndexed(), bud.toNonIndexed()]);
                         petals.dispose(); bud.dispose();
-                        accentMat = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
+                        accentMat = createPitPropMat({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
                     } else if (aIdx === 1) {
                         let s1 = new THREE.ConeGeometry(3.2, 11.5, 5); s1.translate(0, 5.0, 0); s1.rotateZ(0.18);
                         let s2 = new THREE.ConeGeometry(2.2, 8.0, 5); s2.translate(-2.0, 3.4, 1.1); s2.rotateZ(-0.28);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([s1.toNonIndexed(), s2.toNonIndexed()]);
                         s1.dispose(); s2.dispose();
-                        accentMat = new PropMatClass({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
+                        accentMat = createPitPropMat({ color: 0x2b0d0a, emissive: 0xff4500, emissiveIntensity: 0.65, roughness: 0.45, metalness: 0.4, flatShading: true });
                     } else {
                         let c1 = new THREE.CylinderGeometry(0.3, 2.4, 11.5, 6); c1.translate(0, 5.0, 0); c1.rotateZ(0.16);
                         let c2 = new THREE.CylinderGeometry(0.25, 1.8, 8.5, 6); c2.translate(-2.0, 3.6, 1.2); c2.rotateZ(-0.32); c2.rotateX(0.22);
                         let c3 = new THREE.CylinderGeometry(0.25, 1.6, 7.5, 6); c3.translate(1.8, 3.2, -1.1); c3.rotateZ(0.35); c3.rotateX(-0.20);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([c1.toNonIndexed(), c2.toNonIndexed(), c3.toNonIndexed()]);
                         c1.dispose(); c2.dispose(); c3.dispose();
-                        accentMat = new PropMatClass({ color: 0x9ad8eb, emissive: 0x1499b8, emissiveIntensity: 0.45, roughness: 0.30, metalness: 0.2, flatShading: true });
+                        accentMat = createPitPropMat({ color: 0x9ad8eb, emissive: 0x1499b8, emissiveIntensity: 0.45, roughness: 0.30, metalness: 0.2, flatShading: true });
                     }
                     accentGeo.computeVertexNormals();
                     accentGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
@@ -16842,7 +16921,7 @@ class GameMap {
                     accentMat._isGlobalCached = true;
                     window.GLOBAL_PIT_ACCENT_ASSETS[aIdx] = { geo: accentGeo, mat: accentMat };
                 }
-                window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT = new PropMatClass({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
+                window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT = createPitPropMat({ color: 0xffe0f2, emissive: 0xff5ca8, emissiveIntensity: 0.95, roughness: 0.3, flatShading: true });
                 window.GLOBAL_PIT_ACCENT_DYNAMIC_MAT._isGlobalCached = true;
             }
 
@@ -16903,20 +16982,29 @@ class GameMap {
         if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
         
       // MATERIALE OBELISCO: Pietra antica monolitica con supporto colore per-istanza (setColorAt) per obelischi multicolore
-       const ObeliskMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
-     this.obeliskMat = new ObeliskMatClass({
-            color: 0x383840, // Base grigia neutra modulata dal colore individuale dell'obelisco
-            emissive: 0x0c0c12, 
-            emissiveIntensity: 0.25,
-            roughness: 0.84, 
-            metalness: 0.38,
-            map: CHAR_GRUNGE_TEX,
-            bumpMap: isTouchDevice ? null : CHAR_GRUNGE_TEX,
-            bumpScale: 0.15,
-            transparent: false, 
-            depthWrite: true,
-            depthTest: true
-        });
+       this.obeliskMat = isTouchDevice
+            ? new THREE.MeshLambertMaterial({
+                color: 0x383840,
+                emissive: 0x0c0c12,
+                emissiveIntensity: 0.25,
+                map: CHAR_GRUNGE_TEX,
+                transparent: false,
+                depthWrite: true,
+                depthTest: true
+            })
+            : new THREE.MeshStandardMaterial({
+                color: 0x383840,
+                emissive: 0x0c0c12,
+                emissiveIntensity: 0.25,
+                roughness: 0.84,
+                metalness: 0.38,
+                map: CHAR_GRUNGE_TEX,
+                bumpMap: CHAR_GRUNGE_TEX,
+                bumpScale: 0.15,
+                transparent: false,
+                depthWrite: true,
+                depthTest: true
+            });
         
         const obeliskMesh = new THREE.InstancedMesh(window.GLOBAL_OBELISK_GEO, this.obeliskMat, pillarCount);
         obeliskMesh.castShadow = true; obeliskMesh.receiveShadow = true;
@@ -21653,15 +21741,23 @@ class Enemy extends Entity {
             }
 
             const EnemyMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
-           this.mat = type === 'crystal' ?
-                new EnemyMatClass({color: 0x000000, emissive: color}) :
-                applyCharacterShader(new EnemyMatClass({
-                    color: color,
-                    shininess: AppSettings.isUltraPC ? 60 : 30,
-                    map: CHAR_GRUNGE_TEX,
-                    bumpMap: isTouchDevice ? null : CHAR_GRUNGE_TEX,
-                    bumpScale: 0.06
-                }), type === 'ring_walker' ? 0.85 : 0.75);
+            this.mat = type === 'crystal'
+                ? new EnemyMatClass({ color: 0x000000, emissive: color })
+                : applyCharacterShader(
+                    isTouchDevice
+                        ? new THREE.MeshLambertMaterial({
+                            color: color,
+                            map: CHAR_GRUNGE_TEX
+                        })
+                        : new THREE.MeshPhongMaterial({
+                            color: color,
+                            shininess: AppSettings.isUltraPC ? 60 : 30,
+                            map: CHAR_GRUNGE_TEX,
+                            bumpMap: CHAR_GRUNGE_TEX,
+                            bumpScale: 0.06
+                        }),
+                    type === 'ring_walker' ? 0.85 : 0.75
+                );
 
             let modelData = ModelFactory.buildEnemy(type, baseModelSize, this.mat);
             this.mesh.add(modelData.group);
@@ -25660,6 +25756,7 @@ function respawnPlayer() {
         if (typeof UI !== 'undefined' && UI.els) {
             if (UI.els.bloodVignette) {
                 UI.els.bloodVignette.classList.remove('vignette-low-hp-active', 'death-fade-active');
+                if (UI.els.lowHpOverlay) UI.els.lowHpOverlay.classList.remove('active');
                 UI.els.bloodVignette.style.webkitMaskImage = '';
                 UI.els.bloodVignette.style.maskImage = '';
                 UI.els.bloodVignette.style.opacity = '0';
