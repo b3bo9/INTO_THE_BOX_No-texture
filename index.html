@@ -9220,6 +9220,83 @@ const ModelFactory = {
             let gem = new THREE.Mesh(SharedGeo.icosahedron, mat); gem.scale.set(size*0.8, size*2.5, size*0.8); gem.position.y = size*1.8;
             let ring = new THREE.Mesh(SharedGeo.torus, mat); ring.scale.set(size*1.5, size*1.5, size*0.2); ring.position.y = size*1.8; ring.rotation.x = Math.PI/2;
             group.add(base); group.add(gem); group.add(ring); parts.ring = ring; parts.gem = gem;
+            } else if (type === 'roller') {
+            // --- ROLLER (STILE RAMMUS): SFERA CORAZZATA CON CRESTA DI SPUNCIONI ROTANTI ---
+            if (!SharedMat.rollerSpike) {
+                SharedMat.rollerSpike = isTouchDevice
+                    ? new THREE.MeshLambertMaterial({ color: 0xe2e8f0, emissive: 0x332200 })
+                    : new THREE.MeshPhongMaterial({ color: 0xe2e8f0, emissive: 0x332200, shininess: 90, flatShading: true });
+                SharedMatSet.add(SharedMat.rollerSpike);
+            }
+
+            let wheelGroup = new THREE.Group();
+            wheelGroup.position.set(0, size * 1.05, 0);
+
+            // 1. Nucleo corazzato sfaccettato + Guscio scuro interno
+            let coreShell = new THREE.Mesh(SharedGeo.icosahedron, darkMat);
+            coreShell.scale.set(size * 0.96, size * 0.96, size * 0.96);
+
+            let armorPlates = new THREE.Mesh(SharedGeo.icosahedron, mat);
+            armorPlates.scale.set(size * 1.04, size * 0.92, size * 1.02);
+
+            // 2. Cerchioni corazzati laterali che esaltano la rotazione
+            let rimL = new THREE.Mesh(SharedGeo.torus, darkMat);
+            rimL.rotation.y = Math.PI / 2;
+            rimL.position.x = -size * 0.52;
+            rimL.scale.set(size * 0.82, size * 0.82, size * 1.35);
+
+            let rimR = new THREE.Mesh(SharedGeo.torus, darkMat);
+            rimR.rotation.y = Math.PI / 2;
+            rimR.position.x = size * 0.52;
+            rimR.scale.set(size * 0.82, size * 0.82, size * 1.35);
+
+            // 3. Occhi incandescenti incastonati nella corazza
+            let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeL.scale.set(size * 0.22, size * 0.12, size * 0.20);
+            eyeL.position.set(-size * 0.28, size * 0.22, size * 0.88);
+            eyeL.rotation.z = 0.25;
+
+            let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+            eyeR.scale.set(size * 0.22, size * 0.12, size * 0.20);
+            eyeR.position.set(size * 0.28, size * 0.22, size * 0.88);
+            eyeR.rotation.z = -0.25;
+
+            wheelGroup.add(coreShell, armorPlates, rimL, rimR, eyeL, eyeR);
+
+            // 4. Corona centrale di 8 grandi spuncioni + 8 spuncioni laterali inclinati
+            const numMainSpikes = 8;
+            for (let i = 0; i < numMainSpikes; i++) {
+                let a = (i / numMainSpikes) * Math.PI * 2;
+                let sinA = Math.sin(a), cosA = Math.cos(a);
+
+                // Spuncione centrale lungo la dorsale di rotolamento
+                let spike = new THREE.Mesh(SharedGeo.cone, SharedMat.rollerSpike);
+                let spLen = size * 0.72;
+                spike.scale.set(size * 0.24, spLen, size * 0.24);
+                spike.position.set(0, cosA * (size * 0.92 + spLen * 0.38), sinA * (size * 0.92 + spLen * 0.38));
+                spike.rotation.x = a;
+                wheelGroup.add(spike);
+
+                // Coppia di spuncioni laterali sfalsati (effetto Rammus)
+                if (i % 2 === 0) {
+                    for (let side = -1; side <= 1; side += 2) {
+                        let sSpike = new THREE.Mesh(SharedGeo.cone, mat);
+                        let sLen = size * 0.52;
+                        sSpike.scale.set(size * 0.20, sLen, size * 0.20);
+                        sSpike.position.set(
+                            side * size * 0.78,
+                            cosA * (size * 0.72 + sLen * 0.32),
+                            sinA * (size * 0.72 + sLen * 0.32)
+                        );
+                        sSpike.rotation.set(a, 0, -side * 0.65);
+                        wheelGroup.add(sSpike);
+                    }
+                }
+            }
+
+            group.add(wheelGroup);
+            parts.wheelGroup = wheelGroup;
+            parts.torso = armorPlates;
           } else if (type === 'golem') {
             let torso = new THREE.Mesh(SharedGeo.box, mat); torso.scale.set(size*1.8, size*2.0, size*1.5); torso.position.y = size*1.5;
             let head = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead); head.scale.set(size*0.9, size*0.9, size*0.9); head.position.set(0, size*2.8, size*0.2);
@@ -11750,7 +11827,9 @@ pushDebris(px, pz, radius, force) {
             if (r > 0.89) type = 'pyromancer';
             if (r > 0.94) type = 'fire_demon';
         }
-
+if (this.floor >= 3 && type !== 'dark_prophet' && Math.random() < (this.floor <= 5 ? 0.14 : 0.11)) {
+            type = 'roller';
+        }
        // Spawn del Trapper (Carceriere Arcano) dal Piano 4 in poi (max 2 attivi contemporaneamente)
         if (f >= 4 && type === 'mage' && Math.random() < 0.42 && countAlive('trapper') < 2) {
             type = 'trapper';
@@ -21718,7 +21797,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     slime: 0xaa00ff, slime_mini: 0xcc33ff, leaper: 0xaa00ff,
                     crystal: 0xff00ff, pyromancer: 0xff3300, fire_demon: 0xff4400,
                     mage: 0x00aaff, trapper: 0x00e5ff, golem: 0x00aaff, ring_walker: 0x141418,
-                    dark_prophet: 0xff5500, boss: 0x550000
+                    roller: 0xd97706, dark_prophet: 0xff5500, boss: 0x550000
                 };
                 const enemyNamesIT = {
                     orc: 'Orco Guerriero',
@@ -21734,6 +21813,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     trapper: 'Carceriere Arcano',
                     golem: 'Golem di Pietra',
                     ring_walker: 'Dominatore degli Anelli',
+                    roller: 'Roller Corazzato',
                     dark_prophet: 'Profeta Oscuro',
                     boss: 'Signore del Dungeon'
                 };
@@ -21938,6 +22018,11 @@ class Enemy extends Entity {
         this.goblinTimer = 0;
         this.goblinStunTimer = 0;
         this.goblinHitPlayer = false;
+      this.rollerTimer = 0;
+        this.rollerStunTimer = 0;
+        this.rollerHitPlayer = false;
+        this.rollAngle = 0;
+        this.rollSpeed = 0;
         this.evadeCooldown = 0;
         this.evadeTimer = 0;
         this.slimeAge = 0;
@@ -21967,6 +22052,7 @@ class Enemy extends Entity {
         else if (type === 'mage') { color = 0x00aaff; size = 12; spdMod = 0.65; hpMod = 0.75; dmgMod = 1.30; this.aggroRange = 700; this.attackRange = 450; }
         else if (type === 'trapper') { color = 0x00e5ff; size = 14.5; spdMod = 0.72; hpMod = 1.05; dmgMod = 1.05; this.aggroRange = 720; this.attackRange = 480; }
         else if (type === 'golem') { color = 0x00aaff; size = 20; spdMod = 0.45; hpMod = 3.50; dmgMod = 1.65; this.aggroRange = 600; this.attackRange = 60; }
+        else if (type === 'roller') { color = 0xd97706; size = 15; spdMod = 0.82; hpMod = 1.45; dmgMod = 1.40; this.aggroRange = 660; this.attackRange = 360; }      
         else if (type === 'ring_walker') { color = 0x141418; size = 15; spdMod = 0.78; hpMod = 1.40; dmgMod = 1.45; this.aggroRange = 680; this.attackRange = 360; }
         else if (type === 'dark_prophet') { color = 0xff5500; size = 12; spdMod = 0.35; hpMod = 1.25; dmgMod = 0.80; this.aggroRange = 800; this.attackRange = 0; }
         else if (type === 'boss') { color = 0x550000; size = 35; }
@@ -22136,6 +22222,11 @@ class Enemy extends Entity {
             if (this.modelParts.armR) this.modelParts.armR.rotation.set(0, 0, 0);
             if (this.type === 'orc' && this.modelParts.club) {
                 this.modelParts.club.visible = true;
+            }
+            if (this.type === 'roller' && this.modelParts.wheelGroup) {
+                this.modelParts.wheelGroup.position.set(0, baseModelSize * 1.05, 0);
+                this.modelParts.wheelGroup.rotation.set(0, 0, 0);
+                this.modelParts.wheelGroup.scale.set(1, 1, 1);
             }
            if (this.type === 'pyromancer' && this.modelParts.nozzleGroup) {
                 this.modelParts.nozzleGroup.scale.set(1, 1, 1);
@@ -22430,6 +22521,10 @@ class Enemy extends Entity {
                     this.modelParts.chargeGlow.visible = false;
                 }
             }
+            if (this.type === 'roller' && (this.state === 'roller_windup' || this.state === 'roller_roll')) {
+                this.state = 'walk';
+                this.attackCooldown = 1.0;
+            }
             if (this.type === 'skeleton_archer' && this.modelParts && this.modelParts.nockedArrow) {
                 this.modelParts.nockedArrow.visible = false;
                 this.modelParts.tipGlint.visible = false;
@@ -22488,7 +22583,43 @@ class Enemy extends Entity {
             this.mesh.updateMatrix();
             return;
         }
-
+// --- STORDIMENTO ROLLER DOPO SCHIANTO SU PARETE (3.0s, +50% Danni Subiti) ---
+        if (this.rollerStunTimer > 0) {
+            this.rollerStunTimer -= dt;
+            if (this.modelParts && this.modelParts.wheelGroup) {
+                let bs = this.baseModelSize || 15;
+                // Rimane ribaltato e oscilla intontito mostrando il nucleo scoperto
+                this.modelParts.wheelGroup.position.set(0, bs * 0.85, 0);
+                this.modelParts.wheelGroup.rotation.z = Math.sin(Game.playTime * 26) * 0.45;
+                this.modelParts.wheelGroup.rotation.x += dt * 2.5;
+            }
+            if (this.flashTimer <= 0 && !this.isProphetBuffed) {
+                for (let i = 0; i < this.flashMats.length; i++) {
+                    this.flashMats[i].emissive.setHex(0xff8800);
+                    this.flashMats[i].emissiveIntensity = 0.65 + Math.sin(Game.playTime * 18) * 0.35;
+                }
+            }
+            if (Game.frameCount % 7 === 0) {
+                let sp = Game.getParticle();
+                sp.spawn(this.x + MathUtils.randomRange(-8, 8), 20, this.y + MathUtils.randomRange(-8, 8), SharedMat.spriteYellow, 'spark');
+                sp.baseSize = 11;
+            }
+            if (this.rollerStunTimer <= 0) {
+                this.state = 'walk';
+                this.attackCooldown = 1.15;
+                if (this.modelParts && this.modelParts.wheelGroup) {
+                    this.modelParts.wheelGroup.position.set(0, (this.baseModelSize || 15) * 1.05, 0);
+                    this.modelParts.wheelGroup.rotation.z = 0;
+                }
+                for (let i = 0; i < this.flashMats.length; i++) {
+                    this.flashMats[i].emissive.setHex(defaultEmissive);
+                    this.flashMats[i].emissiveIntensity = defaultIntensity;
+                }
+            }
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
         // --- ORCO BERSERKER: LANCIO FISICO DELLA CLAVA SOTTO IL 30% HP ---
         if (this.type === 'orc' && this.stats.hp < this.stats.maxHp * 0.3 && !this.isBerserk) {
             this.isBerserk = true;
@@ -23314,7 +23445,7 @@ class Enemy extends Entity {
         if (this.type === 'ring_walker' || this.type === 'skeleton_archer' || this.type === 'pyromancer' || (this.type === 'orc' && !this.isBerserk)) {
             let faceAngle = ((this.telegraphTimer > 0 || this.flameStreamTimer > 0) && this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
             this.mesh.rotation.y = -faceAngle + Math.PI / 2;
-       } else if (this.type === 'goblin' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
+       } else if (this.type === 'goblin' || this.type === 'roller' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
             this.mesh.rotation.y = -this.angle + Math.PI / 2;
         } else if (this.type === 'golem') {
             let targetRot = -this.angle + Math.PI / 2;
@@ -23670,6 +23801,178 @@ class Enemy extends Entity {
             this.mesh.updateMatrix();
             return;
         }
+        // --- ROLLER: CARICA ROTEANDO SU SE STESSO (0.75s) E ASSALTO ROTOLANTE STILE RAMMUS ---
+        if (this.state === 'roller_windup') {
+            this.rollerTimer -= dt;
+            let bs = this.baseModelSize || 15;
+            let prog = Math.min(1.0, 1.0 - (this.rollerTimer / 0.75));
+            let vScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
+
+            if (Game.player && !Game.player.dead) {
+                this.rollAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                this.angle = this.rollAngle;
+            }
+            this.mesh.rotation.y = -this.rollAngle + Math.PI / 2;
+
+            // Ruota vorticosamente sul posto accelerando e schiacciandosi come una ruota pronta a scattare
+            if (this.modelParts && this.modelParts.wheelGroup) {
+                let spinSpeed = 10.0 + prog * prog * 42.0;
+                this.modelParts.wheelGroup.rotation.x += dt * spinSpeed;
+                this.modelParts.wheelGroup.position.set(
+                    MathUtils.randomRange(-1.2, 1.2) * prog,
+                    bs * (1.05 + Math.sin(prog * Math.PI) * 0.22),
+                    0
+                );
+            }
+            this.mesh.scale.set(
+                vScale * (1.0 - prog * 0.16),
+                vScale * (1.0 + prog * 0.18),
+                vScale * (1.0 + prog * 0.16)
+            );
+
+            for (let i = 0; i < this.flashMats.length; i++) {
+                this.flashMats[i].emissive.setHex(prog > 0.65 ? 0xffdd44 : 0xff6600);
+                this.flashMats[i].emissiveIntensity = 0.8 + prog * 1.8;
+            }
+
+            // Solleva scintille e polvere da attrito mentre prende giri sul posto
+            if (Game.frameCount % (isTouchDevice ? 4 : 2) === 0 && !AppSettings.isLow) {
+                let backX = this.x - Math.cos(this.rollAngle) * (this.radius * 0.9);
+                let backY = this.y - Math.sin(this.rollAngle) * (this.radius * 0.9);
+                let p = Game.getParticle();
+                p.spawn(backX + MathUtils.randomRange(-6, 6), 5, backY + MathUtils.randomRange(-6, 6), prog > 0.5 ? SharedMat.spriteYellow : SharedMat.spriteDust, prog > 0.5 ? 'spark' : 'dust');
+                p.baseSize = 11 + prog * 6;
+            }
+
+            if (this.rollerTimer <= 0) {
+                this.state = 'roller_roll';
+                this.rollerTimer = 2.4; // Durata massima della rotolata
+                this.rollSpeed = 260;   // Parte a 260 e accelera fino a 560
+                this.mesh.scale.setScalar(vScale);
+                if (this.modelParts && this.modelParts.wheelGroup) {
+                    this.modelParts.wheelGroup.position.set(0, bs * 1.05, 0);
+                }
+                AudioEngine.playDash();
+            }
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
+
+        if (this.state === 'roller_roll') {
+            this.rollerTimer -= dt;
+            let bs = this.baseModelSize || 15;
+
+            // 1. Accelera progressivamente e corregge leggermente la traiettoria verso il giocatore (stile Rammus)
+            let maxRollSpd = 560 * (this.isProphetBuffed ? 1.25 : 1.0) * (aura === 'blue' ? 0.65 : 1.0) * (this.slowedTimer > 0 ? 0.65 : 1.0);
+            this.rollSpeed = Math.min(maxRollSpd, (this.rollSpeed || 260) + 420 * dt);
+
+            if (Game.player && !Game.player.dead) {
+                let targetAng = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                let diff = targetAng - this.rollAngle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                // Sterzata leggera (max ~1.18 rad/s): il giocatore può schivarlo lateralmente e mandarlo contro un muro!
+                let maxTurn = 1.18 * dt;
+                this.rollAngle += MathUtils.clamp(diff, -maxTurn, maxTurn);
+            }
+
+            this.angle = this.rollAngle;
+            let cosR = Math.cos(this.rollAngle), sinR = Math.sin(this.rollAngle);
+            this.mesh.rotation.y = -this.rollAngle + Math.PI / 2;
+
+            if (this.modelParts && this.modelParts.wheelGroup) {
+                this.modelParts.wheelGroup.rotation.x += dt * 38.0;
+                this.modelParts.wheelGroup.position.y = bs * 1.05 + Math.abs(Math.sin(Game.playTime * 28)) * 2.2;
+            }
+
+            if (Game.frameCount % (isTouchDevice ? 3 : 2) === 0 && !AppSettings.isLow) {
+                let tr = Game.getParticle();
+                tr.spawn(this.x - cosR * 10, 6, this.y - sinR * 10, Game.frameCount % 4 === 0 ? SharedMat.spriteYellow : SharedMat.spriteDust, 'dust');
+                tr.baseSize = 15;
+            }
+
+            // 2. Avanzamento con controllo collisione contro pareti, rocce e obelischi
+            let totalDist = this.rollSpeed * dt;
+            let steps = Math.max(1, Math.ceil(totalDist / 12));
+            let stepDist = totalDist / steps;
+            let rCheck = this.radius * 0.95;
+
+            const hitsWallOrObstacle = (wx, wy) => {
+                if (Game.map.isSolid(wx, wy, false)) return true;
+                let gx = Math.floor(wx / TILE_SIZE), gy = Math.floor(wy / TILE_SIZE);
+                if (gx >= 0 && gy >= 0 && gx < Game.map.width && gy < Game.map.height && Game.map.grid[gx][gy] === 3) {
+                    let cx = gx * TILE_SIZE + TILE_SIZE / 2, cy = gy * TILE_SIZE + TILE_SIZE / 2;
+                    if (Math.abs(wx - cx) < 20 && Math.abs(wy - cy) < 20) return true;
+                }
+                return false;
+            };
+
+            for (let s = 0; s < steps; s++) {
+                let nx = this.x + cosR * stepDist;
+                let ny = this.y + sinR * stepDist;
+
+                // Se sbatte contro una parete si stunna per 3 secondi e diventa vulnerabile (+50% danni)!
+                if (hitsWallOrObstacle(nx + cosR * rCheck, ny + sinR * rCheck) ||
+                    hitsWallOrObstacle(nx + cosR * rCheck * 0.65 - sinR * 8, ny + sinR * rCheck * 0.65 + cosR * 8) ||
+                    hitsWallOrObstacle(nx + cosR * rCheck * 0.65 + sinR * 8, ny + sinR * rCheck * 0.65 - cosR * 8)) {
+
+                    this.push(-cosR, -sinR, 26);
+                    this.state = 'walk';
+                    this.rollerStunTimer = 3.0;
+                    this.hitSquashTimer = 0.24;
+                    Game.addTrauma(0.45);
+                    AudioEngine.playBreak('crate');
+                    Game.getFloatingText().spawn(this.x, this.y + 24, "STORDITO!", '#fbbf24', 26, true);
+                    let crashNova = Game.getParticle();
+                    crashNova.spawn(this.x, 14, this.y, SharedMat.spriteYellow, 'nova');
+                    crashNova.baseSize = 65;
+                    for (let k = 0; k < 6; k++) Game.getParticle().spawn(this.x, 14, this.y, SharedMat.spriteYellow, 'spark');
+                    break;
+                }
+
+                this.x = nx;
+                this.y = ny;
+
+                // Impatto contro il giocatore
+                if (!this.rollerHitPlayer && Game.player && !Game.player.dead) {
+                    let pdx = Game.player.x - this.x, pdy = Game.player.y - this.y;
+                    let hitR = this.radius + Game.player.radius + 4;
+                    if ((pdx * pdx + pdy * pdx) <= hitR * hitR) {
+                        this.rollerHitPlayer = true;
+                        let buffDmg = this.isProphetBuffed ? 2.2 : 1.0;
+                        let dmg = MathUtils.randomRange(this.stats.minDmg, this.stats.maxDmg) * 1.25 * buffDmg * (aura === 'red' ? 1.35 : 1.0);
+                        Game.player.takeDamage(dmg, this);
+                        Game.player.push(cosR, sinR, 55);
+                        this.push(-cosR, -sinR, 18);
+                        this.state = 'walk';
+                        this.attackCooldown = 1.35;
+                        this.hitSquashTimer = 0.16;
+                        Game.addTrauma(0.4);
+                        AudioEngine.playBreak('crate');
+                        for (let i = 0; i < this.flashMats.length; i++) {
+                            this.flashMats[i].emissive.setHex(defaultEmissive);
+                            this.flashMats[i].emissiveIntensity = defaultIntensity;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (this.rollerTimer <= 0 && this.state === 'roller_roll') {
+                this.state = 'walk';
+                this.attackCooldown = 1.25;
+                for (let i = 0; i < this.flashMats.length; i++) {
+                    this.flashMats[i].emissive.setHex(defaultEmissive);
+                    this.flashMats[i].emissiveIntensity = defaultIntensity;
+                }
+            }
+
+            this.mesh.position.set(this.x, 0, this.y);
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
 
         // --- LEAPER ---
         if (this.state === 'leaping') {
@@ -23936,7 +24239,12 @@ if (this.type === 'trapper') {
                         this.modelParts.legL.rotation.x = legSwing;
                         this.modelParts.legR.rotation.x = -legSwing;
                     }
-                } else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin' && this.type !== 'trapper') {
+                } else if (this.type === 'roller') {
+                    this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 2.2;
+                    if (this.modelParts && this.modelParts.wheelGroup) {
+                        this.modelParts.wheelGroup.rotation.x += dt * 7.5;
+                    }
+                }else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin' && this.type !== 'trapper') {
                     this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 4.5;
                     this.mesh.rotation.z = Math.cos(walkPhase) * 0.11;
                 }
@@ -24009,6 +24317,15 @@ if (this.type === 'trapper') {
                 Game._lastGobWarn = Game.playTime;
                 AudioEngine.playHover();
             }
+            return;
+        }
+        if (this.type === 'roller') {
+            this.state = 'roller_windup';
+            this.rollerTimer = 0.75;
+            this.rollAngle = Game.player ? Math.atan2(Game.player.y - this.y, Game.player.x - this.x) : this.angle;
+            this.rollerHitPlayer = false;
+            this.attackCooldown = 99;
+            AudioEngine.playHover();
             return;
         }
         if (this.type === 'orc' && !this.isBerserk) {
@@ -24271,7 +24588,17 @@ if (this.type === 'trapper') {
         if (this.type === 'goblin' && (this.goblinStunTimer || 0) > 0) {
             amount *= 1.50;
         }
-
+if (this.type === 'roller') {
+            if (this.state === 'roller_roll') {
+                // Finché rotola subisce il -50% dei danni
+                amount *= (hasJudgment ? 0.65 : 0.50) * shieldBreaker;
+                this._shieldClang = true;
+                if (Game.frameCount % 3 === 0) Game.getParticle().spawn(this.x, this.radius * 1.2, this.y, SharedMat.spriteYellow, 'spark');
+            } else if ((this.rollerStunTimer || 0) > 0) {
+                // Stordito dopo lo schianto a muro: vulnerabile (+50% danni subiti)
+                amount *= 1.50;
+            }
+        }
         if (this.type === 'orc' && (this.clubRecoveryTimer || 0) > 0) {
             amount *= 1.25;
         }
@@ -24883,7 +25210,7 @@ class BossEnemy extends Enemy {
                 if (this.level >= 10) {
                     if (this.bossElement === 'red') {
                         let mr = Math.random();
-                        minionType = mr < 0.35 ? 'orc' : (mr < 0.70 ? 'ring_walker' : 'pyromancer');
+                        minionType = mr < 0.28 ? 'orc' : (mr < 0.55 ? 'roller' : (mr < 0.80 ? 'ring_walker' : 'pyromancer'));
                     }
                     else if (this.bossElement === 'blue') minionType = Math.random() > 0.5 ? 'mage' : 'skeleton_archer';
                     else if (this.bossElement === 'green') minionType = 'leaper';
@@ -25833,7 +26160,7 @@ class Debris {
             this.sy = MathUtils.randomRange(0.20, 0.32);
             this.sz = MathUtils.randomRange(0.85, 1.25);
             this.isFlatPiece = true;
-        } else if (enemyType === 'golem' || enemyType === 'orc') {
+        } else if (enemyType === 'golem' || enemyType === 'orc'|| enemyType === 'roller') {
             this.shapeType = 1;
         } else if (enemyType === 'slime' || enemyType === 'slime_mini') {
             this.shapeType = 2;
