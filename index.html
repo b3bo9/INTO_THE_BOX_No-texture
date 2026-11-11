@@ -8762,8 +8762,8 @@ const ModelFactory = {
             parts.bowGroup = bowGroup;
             parts.nockedArrow = nockedArrow;
             parts.tipGlint = tipGlint;
-        } else if (type === 'pyromancer') {
-            // --- PYROMANCER: SENZA GAMBE, LEVITA SU UN CERCHIO DI FUOCO 3D ---
+       } else if (type === 'pyromancer') {
+            // --- PYROMANCER: SENZA GAMBE, LEVITA SU UN SINGOLO ANELLO DI FUOCO SFUMATO ---
             if (!SharedMat.pyroObsidian) {
                 SharedMat.pyroObsidian = isTouchDevice
                     ? new THREE.MeshLambertMaterial({ color: 0x1a0c0a, emissive: 0x120300 })
@@ -8778,38 +8778,74 @@ const ModelFactory = {
                 SharedMat.pyroPilot = new THREE.MeshBasicMaterial({ color: 0xffee55 });
                 SharedMatSet.add(SharedMat.pyroPilot);
             }
+            if (!SharedMat.pyroSoftRingMat) {
+                const cSize = 256;
+                const canvas = document.createElement('canvas');
+                canvas.width = cSize;
+                canvas.height = cSize;
+                const ctx = canvas.getContext('2d');
+                const imgData = ctx.createImageData(cSize, cSize);
+                const d = imgData.data;
+                const half = cSize * 0.5;
 
-            // 1. CERCHIO DI FUOCO DI LEVITAZIONE (Sostituisce le gambe alla base)
-            let fireRingBase = new THREE.Group();
-            fireRingBase.position.set(0, size * 0.52, 0);
+                for (let py = 0; py < cSize; py++) {
+                    for (let px = 0; px < cSize; px++) {
+                        const dx = (px - half) / half;
+                        const dy = (py - half) / half;
+                        const r = Math.sqrt(dx * dx + dy * dy);
+                        const idx = (py * cSize + px) * 4;
 
-            let ringOuter = new THREE.Mesh(SharedGeo.torus, SharedMat.pyroFlameCore);
-            ringOuter.rotation.x = Math.PI / 2;
-            ringOuter.scale.set(size * 1.30, size * 1.30, size * 1.85);
+                        if (r >= 0.98 || r <= 0.12) {
+                            d[idx + 3] = 0;
+                            continue;
+                        }
 
-            let ringInner = new THREE.Mesh(SharedGeo.torus, SharedMat.pyroPilot);
-            ringInner.rotation.x = Math.PI / 2;
-            ringInner.scale.set(size * 0.92, size * 0.92, size * 1.35);
-            fireRingBase.add(ringOuter, ringInner);
+                        // Leggera ondulazione organica lungo l'anello così ruotando sembra fuoco vivo
+                        const ang = Math.atan2(dy, dx);
+                        const wisp = Math.sin(ang * 8.0 + r * 5.0) * 0.028 + Math.cos(ang * 13.0 - r * 7.0) * 0.018;
+                        const distFromRing = Math.abs((r + wisp) - 0.56);
 
-            // Lingue di fuoco 3D disposte in cerchio lungo l'anello
-            const numRingFlames = 8;
-            for (let i = 0; i < numRingFlames; i++) {
-                let a = (i / numRingFlames) * Math.PI * 2;
-                let fHolder = new THREE.Group();
-                fHolder.rotation.y = -a;
+                        // Profilo gaussiano morbido senza bordi netti
+                        let intensity = Math.exp(-(distFromRing * distFromRing) / (2.0 * 0.135 * 0.135));
+                        const outerFade = Math.max(0, Math.min(1, (0.96 - r) / 0.24));
+                        const innerFade = Math.max(0, Math.min(1, (r - 0.16) / 0.22));
+                        intensity *= outerFade * innerFade;
 
-                let flameTongue = new THREE.Mesh(
-                    SharedGeo.cone,
-                    (i % 2 === 0) ? SharedMat.pyroPilot : SharedMat.pyroFlameCore
-                );
-                let fH = (i % 2 === 0) ? size * 0.58 : size * 0.42;
-                flameTongue.scale.set(size * 0.20, fH, size * 0.20);
-                flameTongue.position.set(size * 1.25, fH * 0.35, 0);
-                flameTongue.rotation.z = -0.28;
-                fHolder.add(flameTongue);
-                fireRingBase.add(fHolder);
+                        // Sfumatura colore: rosso brace esterno -> arancio vivo -> nucleo giallo caldo
+                        const coreFactor = Math.pow(intensity, 1.8);
+                        d[idx]     = 255;
+                        d[idx + 1] = Math.min(255, Math.floor(35 + intensity * 135 + coreFactor * 85));
+                        d[idx + 2] = Math.min(255, Math.floor(coreFactor * 140));
+                        d[idx + 3] = Math.min(255, Math.floor(Math.pow(intensity, 1.15) * 240));
+                    }
+                }
+                ctx.putImageData(imgData, 0, 0);
+
+                const ringTex = new THREE.CanvasTexture(canvas);
+                ringTex.encoding = THREE.sRGBEncoding;
+                SharedMat.pyroSoftRingMat = new THREE.MeshBasicMaterial({
+                    map: ringTex,
+                    transparent: true,
+                    opacity: 0.95,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    side: THREE.DoubleSide
+                });
+                SharedMatSet.add(SharedMat.pyroSoftRingMat);
             }
+            if (!SharedGeo.pyroRingPlane) {
+                SharedGeo.pyroRingPlane = new THREE.PlaneGeometry(1, 1);
+                SharedGeo.pyroRingPlane.rotateX(-Math.PI / 2);
+                SharedGeoSet.add(SharedGeo.pyroRingPlane);
+            }
+
+            // 1. SINGOLO ANELLO DI FUOCO SFUMATO ALLA BASE
+            let fireRingBase = new THREE.Group();
+            fireRingBase.position.set(0, size * 0.42, 0);
+
+            let softFireRing = new THREE.Mesh(SharedGeo.pyroRingPlane, SharedMat.pyroSoftRingMat);
+            softFireRing.scale.set(size * 3.4, 1, size * 3.4);
+            fireRingBase.add(softFireRing);
 
             // 2. Coda magmatica inferiore (nessuna gamba: il busto converge nel vortice di fuoco)
             let lowerTaper = new THREE.Mesh(SharedGeo.cone, SharedMat.pyroObsidian);
@@ -8944,8 +8980,6 @@ const ModelFactory = {
             group.add(fireRingBase, lowerTaper, torso, chestFrame, bellyCore, paulL, paulR, dorsalSpines, nozzleGroup, armL, armR, fireShield);
             parts.torso = torso;
             parts.fireRingBase = fireRingBase;
-            parts.ringOuter = ringOuter;
-            parts.ringInner = ringInner;
             parts.nozzleGroup = nozzleGroup;
             parts.upperHead = upperHead;
             parts.lowerJaw = lowerJaw;
@@ -22521,10 +22555,7 @@ class Enemy extends Entity {
                     this.modelParts.chargeGlow.visible = false;
                 }
             }
-            if (this.type === 'roller' && (this.state === 'roller_windup' || this.state === 'roller_roll')) {
-                this.state = 'walk';
-                this.attackCooldown = 1.0;
-            }
+            
             if (this.type === 'skeleton_archer' && this.modelParts && this.modelParts.nockedArrow) {
                 this.modelParts.nockedArrow.visible = false;
                 this.modelParts.tipGlint.visible = false;
@@ -23802,21 +23833,27 @@ class Enemy extends Entity {
             return;
         }
         // --- ROLLER: CARICA ROTEANDO SU SE STESSO (0.75s) E ASSALTO ROTOLANTE STILE RAMMUS ---
+        // --- ROLLER: CARICA ININTERROMPIBILE (0.75s) E ROTOLATA CONTINUA FINO ALL'IMPATTO ---
         if (this.state === 'roller_windup') {
             this.rollerTimer -= dt;
             let bs = this.baseModelSize || 15;
             let prog = Math.min(1.0, 1.0 - (this.rollerTimer / 0.75));
             let vScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
 
-            if (Game.player && !Game.player.dead) {
-                this.rollAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+            // Segue leggermente con lo sguardo solo all'inizio della carica, ma non interrompe MAI l'animazione
+            if (prog < 0.70 && Game.player && !Game.player.dead) {
+                let targetAng = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                let diff = targetAng - this.rollAngle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.rollAngle += diff * Math.min(1.0, dt * 6.0);
                 this.angle = this.rollAngle;
             }
             this.mesh.rotation.y = -this.rollAngle + Math.PI / 2;
 
-            // Ruota vorticosamente sul posto accelerando e schiacciandosi come una ruota pronta a scattare
+            // Ruota vorticosamente su se stesso accelerando sul posto
             if (this.modelParts && this.modelParts.wheelGroup) {
-                let spinSpeed = 10.0 + prog * prog * 42.0;
+                let spinSpeed = 12.0 + prog * prog * 40.0;
                 this.modelParts.wheelGroup.rotation.x += dt * spinSpeed;
                 this.modelParts.wheelGroup.position.set(
                     MathUtils.randomRange(-1.2, 1.2) * prog,
@@ -23835,7 +23872,6 @@ class Enemy extends Entity {
                 this.flashMats[i].emissiveIntensity = 0.8 + prog * 1.8;
             }
 
-            // Solleva scintille e polvere da attrito mentre prende giri sul posto
             if (Game.frameCount % (isTouchDevice ? 4 : 2) === 0 && !AppSettings.isLow) {
                 let backX = this.x - Math.cos(this.rollAngle) * (this.radius * 0.9);
                 let backY = this.y - Math.sin(this.rollAngle) * (this.radius * 0.9);
@@ -23844,10 +23880,10 @@ class Enemy extends Entity {
                 p.baseSize = 11 + prog * 6;
             }
 
+            // Parte SEMPRE al termine della carica, anche se il giocatore si è allontanato
             if (this.rollerTimer <= 0) {
                 this.state = 'roller_roll';
-                this.rollerTimer = 2.4; // Durata massima della rotolata
-                this.rollSpeed = 260;   // Parte a 260 e accelera fino a 560
+                this.rollSpeed = 175; // Velocità iniziale ridotta
                 this.mesh.scale.setScalar(vScale);
                 if (this.modelParts && this.modelParts.wheelGroup) {
                     this.modelParts.wheelGroup.position.set(0, bs * 1.05, 0);
@@ -23860,20 +23896,19 @@ class Enemy extends Entity {
         }
 
         if (this.state === 'roller_roll') {
-            this.rollerTimer -= dt;
             let bs = this.baseModelSize || 15;
 
-            // 1. Accelera progressivamente e corregge leggermente la traiettoria verso il giocatore (stile Rammus)
-            let maxRollSpd = 560 * (this.isProphetBuffed ? 1.25 : 1.0) * (aura === 'blue' ? 0.65 : 1.0) * (this.slowedTimer > 0 ? 0.65 : 1.0);
-            this.rollSpeed = Math.min(maxRollSpd, (this.rollSpeed || 260) + 420 * dt);
+            // 1. Velocità ridotta (max 325 invece di 560) per renderlo schivabile con il giusto tempismo
+            let maxRollSpd = 325 * (this.isProphetBuffed ? 1.20 : 1.0) * (aura === 'blue' ? 0.65 : 1.0) * (this.slowedTimer > 0 ? 0.65 : 1.0);
+            this.rollSpeed = Math.min(maxRollSpd, (this.rollSpeed || 175) + 180 * dt);
 
+            // 2. Angolo di sterzata molto ampio (0.48 rad/s = ~27°/s): non può fare curve strette!
             if (Game.player && !Game.player.dead) {
                 let targetAng = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                 let diff = targetAng - this.rollAngle;
                 while (diff < -Math.PI) diff += Math.PI * 2;
                 while (diff > Math.PI) diff -= Math.PI * 2;
-                // Sterzata leggera (max ~1.18 rad/s): il giocatore può schivarlo lateralmente e mandarlo contro un muro!
-                let maxTurn = 1.18 * dt;
+                let maxTurn = 0.48 * dt;
                 this.rollAngle += MathUtils.clamp(diff, -maxTurn, maxTurn);
             }
 
@@ -23882,19 +23917,19 @@ class Enemy extends Entity {
             this.mesh.rotation.y = -this.rollAngle + Math.PI / 2;
 
             if (this.modelParts && this.modelParts.wheelGroup) {
-                this.modelParts.wheelGroup.rotation.x += dt * 38.0;
-                this.modelParts.wheelGroup.position.y = bs * 1.05 + Math.abs(Math.sin(Game.playTime * 28)) * 2.2;
+                this.modelParts.wheelGroup.rotation.x += dt * 28.0;
+                this.modelParts.wheelGroup.position.y = bs * 1.05 + Math.abs(Math.sin(Game.playTime * 24)) * 2.0;
             }
 
             if (Game.frameCount % (isTouchDevice ? 3 : 2) === 0 && !AppSettings.isLow) {
                 let tr = Game.getParticle();
                 tr.spawn(this.x - cosR * 10, 6, this.y - sinR * 10, Game.frameCount % 4 === 0 ? SharedMat.spriteYellow : SharedMat.spriteDust, 'dust');
-                tr.baseSize = 15;
+                tr.baseSize = 14;
             }
 
-            // 2. Avanzamento con controllo collisione contro pareti, rocce e obelischi
+            // 3. Continua a rotolare all'infinito finché non sbatte contro un muro/ostacolo o contro il giocatore
             let totalDist = this.rollSpeed * dt;
-            let steps = Math.max(1, Math.ceil(totalDist / 12));
+            let steps = Math.max(1, Math.ceil(totalDist / 10));
             let stepDist = totalDist / steps;
             let rCheck = this.radius * 0.95;
 
@@ -23912,7 +23947,7 @@ class Enemy extends Entity {
                 let nx = this.x + cosR * stepDist;
                 let ny = this.y + sinR * stepDist;
 
-                // Se sbatte contro una parete si stunna per 3 secondi e diventa vulnerabile (+50% danni)!
+                // Impatto contro parete/ostacolo -> Stun di 3 secondi (+50% danni subiti)
                 if (hitsWallOrObstacle(nx + cosR * rCheck, ny + sinR * rCheck) ||
                     hitsWallOrObstacle(nx + cosR * rCheck * 0.65 - sinR * 8, ny + sinR * rCheck * 0.65 + cosR * 8) ||
                     hitsWallOrObstacle(nx + cosR * rCheck * 0.65 + sinR * 8, ny + sinR * rCheck * 0.65 - cosR * 8)) {
@@ -23934,11 +23969,12 @@ class Enemy extends Entity {
                 this.x = nx;
                 this.y = ny;
 
-                // Impatto contro il giocatore
+                // Impatto contro il giocatore -> Danno, spinta e fine carica
                 if (!this.rollerHitPlayer && Game.player && !Game.player.dead) {
-                    let pdx = Game.player.x - this.x, pdy = Game.player.y - this.y;
+                    let pdx = Game.player.x - this.x;
+                    let pdy = Game.player.y - this.y;
                     let hitR = this.radius + Game.player.radius + 4;
-                    if ((pdx * pdx + pdy * pdx) <= hitR * hitR) {
+                    if ((pdx * pdx + pdy * pdy) <= hitR * hitR) {
                         this.rollerHitPlayer = true;
                         let buffDmg = this.isProphetBuffed ? 2.2 : 1.0;
                         let dmg = MathUtils.randomRange(this.stats.minDmg, this.stats.maxDmg) * 1.25 * buffDmg * (aura === 'red' ? 1.35 : 1.0);
@@ -23946,7 +23982,7 @@ class Enemy extends Entity {
                         Game.player.push(cosR, sinR, 55);
                         this.push(-cosR, -sinR, 18);
                         this.state = 'walk';
-                        this.attackCooldown = 1.35;
+                        this.attackCooldown = 1.45;
                         this.hitSquashTimer = 0.16;
                         Game.addTrauma(0.4);
                         AudioEngine.playBreak('crate');
@@ -23956,15 +23992,6 @@ class Enemy extends Entity {
                         }
                         break;
                     }
-                }
-            }
-
-            if (this.rollerTimer <= 0 && this.state === 'roller_roll') {
-                this.state = 'walk';
-                this.attackCooldown = 1.25;
-                for (let i = 0; i < this.flashMats.length; i++) {
-                    this.flashMats[i].emissive.setHex(defaultEmissive);
-                    this.flashMats[i].emissiveIntensity = defaultIntensity;
                 }
             }
 
