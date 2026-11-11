@@ -2802,26 +2802,28 @@ const AppSettings = {
     damageNumbers: true,
     orientation: 'portrait',
     get isLow() { return this.mode === 0; },
-    get isUltra() { return this.mode === 2; },
+    get isUltra() { return this.mode >= 2; },
     get isBalanced() { return this.mode === 1; },
-    get isUltraPC() { return this.mode === 2 && !isTouchDevice; },
+    get isMega() { return isTouchDevice && this.mode === 3; },
+    get isUltraPC() { return (!isTouchDevice && this.mode === 2) || this.isMega; },
+    get useMobileLimits() { return isTouchDevice && !this.isMega; },
     _storageKey: 'intoTheBox_settings_v1',
-    get maxParticlesPerFrame() { return isTouchDevice ? (this.mode === 0 ? 7 : (this.mode === 1 ? 14 : 24)) : (this.mode === 0 ? 20 : (this.mode === 1 ? 35 : 55)); },
-    get maxDebrisPerFrame() { return isTouchDevice ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 9)) : (this.mode === 0 ? 6 : (this.mode === 1 ? 12 : 18)); },
-    get maxTextsDrawn() { return isTouchDevice ? (this.mode === 0 ? 6 : (this.mode === 1 ? 10 : 16)) : (this.mode === 0 ? 14 : (this.mode === 1 ? 25 : 35)); },
-    get maxWindSources() { return isTouchDevice ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 6)) : (this.mode === 0 ? 4 : (this.mode === 1 ? 8 : 10)); },
+    get maxParticlesPerFrame() { return this.useMobileLimits ? (this.mode === 0 ? 7 : (this.mode === 1 ? 14 : 24)) : (this.mode === 0 ? 20 : (this.mode === 1 ? 35 : 55)); },
+    get maxDebrisPerFrame() { return this.useMobileLimits ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 9)) : (this.mode === 0 ? 6 : (this.mode === 1 ? 12 : 18)); },
+    get maxTextsDrawn() { return this.useMobileLimits ? (this.mode === 0 ? 6 : (this.mode === 1 ? 10 : 16)) : (this.mode === 0 ? 14 : (this.mode === 1 ? 25 : 35)); },
+    get maxWindSources() { return this.useMobileLimits ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 6)) : (this.mode === 0 ? 4 : (this.mode === 1 ? 8 : 10)); },
     get grassDensityMult() { return this.mode === 0 ? 0.50 : (this.mode === 1 ? 0.78 : 1.0); },
-    get targetFogCount() { return this.mode === 0 ? 0 : (isTouchDevice ? (this.mode === 1 ? 32 : 55) : (this.mode === 1 ? 55 : 95)); },
-    get playerLightRadius() { return !isTouchDevice ? 1050 : (this.mode === 0 ? 520 : (this.mode === 1 ? 650 : 780)); },
+    get targetFogCount() { return this.mode === 0 ? 0 : (this.useMobileLimits ? (this.mode === 1 ? 32 : 55) : (this.mode === 1 ? 55 : 95)); },
+    get playerLightRadius() { return !this.useMobileLimits ? 1050 : (this.mode === 0 ? 520 : (this.mode === 1 ? 650 : 780)); },
     getTargetPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
         if (isTouchDevice) {
             if (this._batteryLow) return Math.min(dpr * 0.55, 0.85);
-            if (this.mode === 2) return Math.max(1.0, Math.min(dpr * 0.72, 1.22));
+            if (this.mode >= 2) return Math.max(1.0, Math.min(dpr * 0.72, 1.22));
             if (this.mode === 1) return Math.max(0.85, Math.min(dpr * 0.60, 1.0));
             return Math.max(0.68, Math.min(dpr * 0.48, 0.80));
         }
-        return this.mode === 2 ? Math.min(dpr, 1.5) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
+        return this.mode >= 2 ? Math.min(dpr, 1.5) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
     },
     getTargetUiDpr() {
         const dpr = window.devicePixelRatio || 1;
@@ -2912,14 +2914,15 @@ const AppSettings = {
         }
     },
     
-   get shadowsEnabled() { return this.mode === 2; },
+   get shadowsEnabled() { return this.mode >= 2; },
     loadAndDetect() {
         let loaded = false;
+        const maxAllowedMode = isTouchDevice ? 3 : 2;
         try {
             const raw = localStorage.getItem(this._storageKey);
             if (raw) {
                 const data = JSON.parse(raw);
-                if (typeof data.mode === 'number' && data.mode >= 0 && data.mode <= 2) {
+                if (typeof data.mode === 'number' && data.mode >= 0 && data.mode <= maxAllowedMode) {
                     this.mode = data.mode;
                     loaded = true;
                 }
@@ -2956,7 +2959,7 @@ const AppSettings = {
                     const isLow = (!bat.charging && bat.level <= 0.20);
                     if (this._batteryLow !== isLow) {
                         this._batteryLow = isLow;
-                        if (isLow && this.mode === 2) {
+                        if (isLow && this.mode >= 2) {
                             this.mode = 1;
                             if (typeof UIManager !== 'undefined') UIManager.updateOptionsUI();
                         }
@@ -2975,7 +2978,8 @@ const AppSettings = {
     },
     
     toggleGraphics() {
-        this.mode = (this.mode + 1) % 3;
+        const maxMode = isTouchDevice ? 4 : 3;
+        this.mode = (this.mode + 1) % maxMode;
         this.save();
         this.applyGraphics();
     },
@@ -2992,28 +2996,59 @@ const AppSettings = {
 
         if (typeof Game !== 'undefined' && Game.mistSystem) {
             Game.mistSystem.visible = !this.isLow;
-            if (Game.mistMat1 && isTouchDevice) {
-                Game.mistMat1.opacity = this.isUltra ? 0.35 : 0.30;
+            if (Game.mistMat1) {
+                Game.mistMat1.opacity = this.isUltraPC ? 0.33 : (isTouchDevice ? (this.isUltra ? 0.35 : 0.30) : 0.33);
             }
         }
         if (typeof Game !== 'undefined' && Game.snowSystem) {
             Game.snowSystem.visible = (Game.currentThemeIndex === 2);
-            const maxSnow = Game.maxSnowCount || (isTouchDevice ? 140 : 220);
+            const snowBase = this.useMobileLimits ? 140 : (Game.maxSnowCount || 220);
             const snowMult = this.isLow ? 0.55 : (this.isUltra ? 1.0 : 0.80);
-            Game.snowSystem.geometry.setDrawRange(0, Math.floor(maxSnow * snowMult));
+            const maxPos = Game.snowSystem.geometry.attributes.position ? Game.snowSystem.geometry.attributes.position.count : snowBase;
+            Game.snowSystem.geometry.setDrawRange(0, Math.min(maxPos, Math.floor(snowBase * snowMult)));
             if (Game.snowMat && Game.snowMat.uniforms && Game.snowMat.uniforms.uSizeScale) {
                 const pr = this.getTargetPixelRatio();
-                Game.snowMat.uniforms.uSizeScale.value = (isTouchDevice ? 1650.0 : 2100.0) * pr;
+                Game.snowMat.uniforms.uSizeScale.value = (this.useMobileLimits ? 1650.0 : 2100.0) * pr;
             }
         }
 
         if (this.isLow) document.body.classList.add('low-spec');
         else document.body.classList.remove('low-spec');
 
-        if (Game.renderer) {
+        const wantDesktopBump = !this.useMobileLimits ? CHAR_GRUNGE_TEX : null;
+        if (typeof SharedMat !== 'undefined') {
+            if (SharedMat.enemyDark && SharedMat.enemyDark.bumpMap !== wantDesktopBump) {
+                SharedMat.enemyDark.bumpMap = wantDesktopBump;
+                SharedMat.enemyDark.needsUpdate = true;
+            }
+            if (SharedMat.deadObelisk && SharedMat.deadObelisk.bumpMap !== wantDesktopBump) {
+                SharedMat.deadObelisk.bumpMap = wantDesktopBump;
+                SharedMat.deadObelisk.needsUpdate = true;
+            }
+        }
+
+        if (typeof Game !== 'undefined' && Game.renderer) {
+            if (!this.useMobileLimits && Game.ensureMegaPools) Game.ensureMegaPools();
             const pr = this.getTargetPixelRatio();
             Game.renderer.setPixelRatio(pr);
             Game.resize();
+
+            if (typeof Preloader !== 'undefined' && Preloader.textures) {
+                const targetAniso = this.useMobileLimits
+                    ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy())
+                    : Game.renderer.capabilities.getMaxAnisotropy();
+                const texKeys = ['dirt', 'grass', 'rock', 'wall'];
+                const variants = ['', '_lava', '_ice'];
+                for (let k = 0; k < texKeys.length; k++) {
+                    for (let v = 0; v < variants.length; v++) {
+                        let t = Preloader.textures[texKeys[k] + variants[v]];
+                        if (t && t.anisotropy !== targetAniso) {
+                            t.anisotropy = targetAniso;
+                            t.needsUpdate = true;
+                        }
+                    }
+                }
+            }
 
             let showFakeShadows = !this.shadowsEnabled;
             if (Game.player && Game.player.shadowMesh) Game.player.shadowMesh.visible = showFakeShadows && !Game.player.dead;
@@ -3031,9 +3066,20 @@ const AppSettings = {
                 if (Game.map.treeCanopyMesh) {
                     Game.map.treeCanopyMesh.castShadow = this.isUltra;
                 }
-                if (Game.map.debrisStaticMesh && Game.map.totalDebrisStaticSpawned !== undefined) {
-                    const debMult = this.isLow ? 0.45 : (this.isUltra ? 1.0 : 0.75);
-                    Game.map.debrisStaticMesh.count = Math.floor(Game.map.totalDebrisStaticSpawned * debMult);
+                if (Game.map.debrisStaticMesh) {
+                    Game.map.debrisStaticMesh.castShadow = this.isUltraPC;
+                    if (Game.map.totalDebrisStaticSpawned !== undefined) {
+                        const debMult = this.isLow ? 0.45 : (this.isUltra ? 1.0 : 0.75);
+                        Game.map.debrisStaticMesh.count = Math.floor(Game.map.totalDebrisStaticSpawned * debMult);
+                    }
+                }
+                if (Game.map.meshPitBanks && Game.map.meshPitBanks.material) {
+                    const bankMat = Game.map.meshPitBanks.material;
+                    const wantBankBump = !this.useMobileLimits ? bankMat.map : null;
+                    if (bankMat.bumpMap !== wantBankBump) {
+                        bankMat.bumpMap = wantBankBump;
+                        bankMat.needsUpdate = true;
+                    }
                 }
                 if (Game.map.raysMesh) {
                     Game.map.raysMesh.visible = !this.isLow;
@@ -3054,8 +3100,16 @@ const AppSettings = {
                         bodyMat.needsUpdate = true;
                     }
                 }
+                if (Game.player.modelParts && Game.player.modelParts.scarf && Game.player.modelParts.scarf.material) {
+                    const scarfMat = Game.player.modelParts.scarf.material;
+                    const wantScarfBump = !this.useMobileLimits ? (scarfMat.map || CHAR_GRUNGE_TEX) : null;
+                    if (scarfMat.bumpMap !== wantScarfBump) {
+                        scarfMat.bumpMap = wantScarfBump;
+                        scarfMat.needsUpdate = true;
+                    }
+                }
             }
-            if (this.isLow && Game.flashLights) {
+            if ((this.isLow || this.useMobileLimits) && Game.flashLights) {
                 for (let i = 0; i < Game.flashLights.length; i++) {
                     Game.flashLights[i].life = 0;
                     Game.flashLights[i].light.intensity = 0;
@@ -3063,7 +3117,7 @@ const AppSettings = {
             }
         }
         
-        if (Game.bloomPass) {
+        if (typeof Game !== 'undefined' && Game.bloomPass) {
             Game.bloomPass.strength = this.isUltraPC ? 0.28 : 0.20;
             Game.bloomPass.radius = 0.22;
         }
@@ -6733,14 +6787,15 @@ const UIManager = {
         }
         document.getElementById('collectedRelicsModal').classList.remove('hidden');
     },
-    updateOptionsUI() {
-        // Grafica
-        const gfxTxt = document.getElementById('opt-gfx-text');
-        const btnGfx = document.getElementById('btn-opt-gfx');
-        btnGfx.classList.remove('text-yellow-500', 'text-green-400', 'text-cyan-400');
-        if (AppSettings.mode === 0) { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-bolt"></i> PERF. (BASE)' : '<i class="fa-solid fa-mobile-screen-button"></i> PERF.'; btnGfx.classList.add('text-yellow-500'); }
-        else if (AppSettings.mode === 1) { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-scale-balanced"></i> BILANC. (MEDIA)' : '<i class="fa-solid fa-scale-balanced"></i> BILANC.'; btnGfx.classList.add('text-green-400'); }
-        else { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-wand-magic-sparkles"></i> ULTRA (TOP)' : '<i class="fa-solid fa-wand-magic-sparkles"></i> ULTRA'; btnGfx.classList.add('text-cyan-400'); }
+    updateOptionsUI() {
+        // Grafica
+        const gfxTxt = document.getElementById('opt-gfx-text');
+        const btnGfx = document.getElementById('btn-opt-gfx');
+        btnGfx.classList.remove('text-yellow-500', 'text-green-400', 'text-cyan-400', 'text-fuchsia-400');
+        if (AppSettings.mode === 0) { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-bolt"></i> PERF. (BASE)' : '<i class="fa-solid fa-mobile-screen-button"></i> PERF.'; btnGfx.classList.add('text-yellow-500'); }
+        else if (AppSettings.mode === 1) { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-scale-balanced"></i> BILANC. (MEDIA)' : '<i class="fa-solid fa-scale-balanced"></i> BILANC.'; btnGfx.classList.add('text-green-400'); }
+        else if (AppSettings.mode === 2) { gfxTxt.innerHTML = isTouchDevice ? '<i class="fa-solid fa-wand-magic-sparkles"></i> ULTRA (TOP)' : '<i class="fa-solid fa-wand-magic-sparkles"></i> ULTRA'; btnGfx.classList.add('text-cyan-400'); }
+        else { gfxTxt.innerHTML = '<i class="fa-solid fa-fire"></i> MEGA (PC ULTRA)'; btnGfx.classList.add('text-fuchsia-400'); }
 
         // Musica
         const musTxt = document.getElementById('opt-music-text');
@@ -8632,7 +8687,7 @@ const ModelFactory = {
         let head = new THREE.Mesh(geos.head, headMat);
         head.position.y = 29;
 
-        let scarfMat = new THREE.MeshStandardMaterial({color: skin.colors.scarf, roughness: cfg.scarfRough, metalness: cfg.scarfMetal, map: skinTex, bumpMap: isTouchDevice ? null : skinTex, bumpScale: 0.05});
+        let scarfMat = new THREE.MeshStandardMaterial({color: skin.colors.scarf, roughness: cfg.scarfRough, metalness: cfg.scarfMetal, map: skinTex, bumpMap: AppSettings.useMobileLimits ? null : skinTex, bumpScale: 0.05});
         let scarf = new THREE.Mesh(geos.scarf, scarfMat);
         scarf.position.y = 24;
 
@@ -8735,6 +8790,13 @@ const ModelFactory = {
         return { group, staffGem, halo, weaponGroup, body, head, scarf, staff, accentMesh, headAccentMesh, hatBandMesh, auraMesh, auraMat };
     },
     buildEnemy(type, size, mat) {
+        if (SharedMat._accentMobileLimits !== AppSettings.useMobileLimits) {
+            SharedMat._accentMobileLimits = AppSettings.useMobileLimits;
+            SharedMat.pyroObsidian = null;
+            SharedMat.trapperIceSpike = null;
+            SharedMat.trapperIceBright = null;
+            SharedMat.rollerSpike = null;
+        }
         let group = new THREE.Group(); let parts = {}; 
         let darkMat = SharedMat.enemyDark;
        if (type === 'goblin') {
@@ -8842,7 +8904,7 @@ const ModelFactory = {
        } else if (type === 'pyromancer') {
             // --- PYROMANCER: SENZA GAMBE, LEVITA SU UN SINGOLO ANELLO DI FUOCO SFUMATO ---
             if (!SharedMat.pyroObsidian) {
-                SharedMat.pyroObsidian = isTouchDevice
+                SharedMat.pyroObsidian = AppSettings.useMobileLimits
                     ? new THREE.MeshLambertMaterial({ color: 0x1a0c0a, emissive: 0x120300 })
                     : new THREE.MeshPhongMaterial({ color: 0x1a0c0a, emissive: 0x120300, shininess: 65, flatShading: true });
                 SharedMatSet.add(SharedMat.pyroObsidian);
@@ -9213,13 +9275,13 @@ const ModelFactory = {
         } else if (type === 'trapper') {
             // --- TRAPPER: GONNA ALTA E APERTA A "MEDUSA" + CORPO SUPERIORE ESSENZIALE ---
             if (!SharedMat.trapperIceSpike) {
-                SharedMat.trapperIceSpike = isTouchDevice
+                SharedMat.trapperIceSpike = AppSettings.useMobileLimits
                     ? new THREE.MeshLambertMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.90 })
                     : new THREE.MeshPhongMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.90, shininess: 95, flatShading: true });
                 SharedMatSet.add(SharedMat.trapperIceSpike);
             }
             if (!SharedMat.trapperIceBright) {
-                SharedMat.trapperIceBright = isTouchDevice
+                SharedMat.trapperIceBright = AppSettings.useMobileLimits
                     ? new THREE.MeshLambertMaterial({ color: 0xbae6fd, emissive: 0x38bdf8, emissiveIntensity: 1.05 })
                     : new THREE.MeshPhongMaterial({ color: 0xbae6fd, emissive: 0x38bdf8, emissiveIntensity: 1.05, shininess: 110, flatShading: true });
                 SharedMatSet.add(SharedMat.trapperIceBright);
@@ -9334,7 +9396,7 @@ const ModelFactory = {
             } else if (type === 'roller') {
             // --- ROLLER (STILE RAMMUS): SFERA CORAZZATA CON CRESTA DI SPUNCIONI ROTANTI ---
             if (!SharedMat.rollerSpike) {
-                SharedMat.rollerSpike = isTouchDevice
+                SharedMat.rollerSpike = AppSettings.useMobileLimits
                     ? new THREE.MeshLambertMaterial({ color: 0xe2e8f0, emissive: 0x332200 })
                     : new THREE.MeshPhongMaterial({ color: 0xe2e8f0, emissive: 0x332200, shininess: 90, flatShading: true });
                 SharedMatSet.add(SharedMat.rollerSpike);
@@ -9969,7 +10031,7 @@ class Hazard {
             }
 
             // Braci e scintille lungo il fronte ad arco
-            if ((Game.frameCount + this.updateOffset) % (isTouchDevice ? 4 : 2) === 0 && !AppSettings.isLow) {
+            if ((Game.frameCount + this.updateOffset) % (AppSettings.useMobileLimits ? 4 : 2) === 0 && !AppSettings.isLow) {
                 let pAng = this.dirAngle + MathUtils.randomRange(-this.arcHalfAngle * 0.85, this.arcHalfAngle * 0.85);
                 let px = this.x + Math.cos(pAng) * this.radius;
                 let pz = this.y + Math.sin(pAng) * this.radius;
@@ -10108,7 +10170,7 @@ class Hazard {
             this.ring.updateMatrix();
             this.ringMat.opacity = Math.min(1.0, Math.pow(lifeRatio, 0.65) * 1.15);
             
-            if (Game.frameCount % 2 === 0 && !isTouchDevice) {
+            if (Game.frameCount % 2 === 0 && !AppSettings.useMobileLimits) {
                 let angle = Math.random() * Math.PI * 2;
                 let matFlame = this.type === 'crystal_nova_ring' ? SharedMat.spritePink : SharedMat.spriteGreen;
                 let matSpark = this.type === 'crystal_nova_ring' ? SharedMat.spritePink : SharedMat.spriteRed;
@@ -10183,7 +10245,7 @@ class Hazard {
                 this.ringMat.opacity = 0.8 + Math.sin(this.life * 15) * 0.2; 
             }
             
-            if ((Game.frameCount + this.updateOffset) % 5 === 0 && !isTouchDevice && this.activationTimer <= 0) { 
+            if ((Game.frameCount + this.updateOffset) % 5 === 0 && !AppSettings.useMobileLimits && this.activationTimer <= 0) {
                 let mat = (this.type === 'fire' || this.type === 'poison') ? SharedMat.spriteGreen : SharedMat.spriteRed;
                 if (this.type === 'crystal_fire' || this.type === 'snake_fire') mat = SharedMat.spritePink;
                 Game.getParticle().spawn(this.x + MathUtils.randomRange(-this.radius, this.radius), 2, this.y + MathUtils.randomRange(-this.radius, this.radius), mat, 'trail');
@@ -11093,18 +11155,18 @@ getEnemy() {
         
         // OTTIMIZZAZIONE SCALABILITÀ: Assegnazione corretta e SICURA della risoluzione al lancio!
         this.renderer = new THREE.WebGLRenderer({ 
-            antialias: !isTouchDevice, 
+            antialias: !AppSettings.useMobileLimits, 
             alpha: false, 
             stencil: false,
             preserveDrawingBuffer: false,
-            powerPreference: isTouchDevice ? "default" : "high-performance" 
+            powerPreference: AppSettings.useMobileLimits ? "default" : "high-performance" 
         });
         const pixelRatio = AppSettings.getTargetPixelRatio(); this.renderer.setPixelRatio(pixelRatio); this.renderer.setSize(this.width, this.height); this.frameInterval = 1000 / AppSettings.fpsCap;
        this.renderer.outputEncoding = THREE.sRGBEncoding; 
         // FIX LUMINOSITÀ: Rimuoviamo ACESFilmic per un look "arcade" più vibrante e luminoso
         this.renderer.toneMapping = THREE.NoToneMapping;
         this.renderer.shadowMap.enabled = AppSettings.shadowsEnabled; 
-this.renderer.shadowMap.type = isTouchDevice ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+this.renderer.shadowMap.type = AppSettings.useMobileLimits ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
        
         
@@ -11122,18 +11184,8 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
         this.scene.add(this.dirLight.target);
         this.updateShadowConfig();
 
-        // OTTIMIZZAZIONE VRAM MOBILE: Istanzia EffectComposer e UnrealBloomPass SOLO su PC (!isTouchDevice)
-        // Su smartphone il bloom post-process non viene mai renderizzato (vedi Game.draw), risparmiando diversi framebuffer fullscreen in VRAM
-        if (!isTouchDevice) {
-            const renderScene = new THREE.RenderPass(this.scene, this.camera);
-            let initialStrength = 0.2; 
-            let initialRadius = 0.2;
-            this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width / 4, this.height / 4), initialStrength, initialRadius, 0.65);
-            this.bloomPass.threshold = 0.65;
-            this.composer = new THREE.EffectComposer(this.renderer);
-            this.composer.addPass(renderScene); 
-            this.composer.addPass(this.bloomPass);
-        }
+        // OTTIMIZZAZIONE VRAM MOBILE: Istanzia EffectComposer e UnrealBloomPass su PC o Mobile MEGA
+        this.ensureComposer();
         this.uiCtx = this.uiCanvas.getContext('2d'); this.resize(); window.addEventListener('resize', () => this.resize());
         
         // --- INIZIO MONITOR DELLE PRESTAZIONI ---
@@ -11291,7 +11343,7 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
                 transparent: true, depthWrite: false, depthTest: true, fog: false,
                 blending: THREE.NormalBlending
             });
-            this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33;
+            this.mistMat1.opacity = AppSettings.isUltraPC ? 0.33 : (isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33);
             this.mistMat1.color = this.mistMat1.uniforms.uColor.value; // alias compatibile col resto del codice
             this.mistMat2 = null;
 
@@ -11307,7 +11359,7 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
 
         // --- SISTEMA NEVICATA LEGGERA GPU (1 Draw Call, 0 cicli CPU per fiocco, Toroidale attorno alla Camera) ---
         {
-            const maxSnow = isTouchDevice ? 140 : 220;
+            const maxSnow = 220;
             this.maxSnowCount = maxSnow;
             const snowPos = new Float32Array(maxSnow * 3);
             const snowSeed = new Float32Array(maxSnow * 3);
@@ -11322,14 +11374,15 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             const snowGeo = new THREE.BufferGeometry();
             snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
             snowGeo.setAttribute('aSeed', new THREE.BufferAttribute(snowSeed, 3));
+            const effectiveSnow = AppSettings.useMobileLimits ? 140 : 220;
             const snowMult = AppSettings.isLow ? 0.55 : (AppSettings.isUltra ? 1.0 : 0.80);
-            snowGeo.setDrawRange(0, Math.floor(maxSnow * snowMult));
+            snowGeo.setDrawRange(0, Math.floor(effectiveSnow * snowMult));
 
             this.snowMat = new THREE.ShaderMaterial({
                 uniforms: {
                     uTime: { value: 0.0 },
                     uFocusPos: { value: new THREE.Vector2(960, 960) },
-                    uSizeScale: { value: (isTouchDevice ? 1650.0 : 2100.0) * pixelRatio }
+                    uSizeScale: { value: (AppSettings.useMobileLimits ? 1650.0 : 2100.0) * pixelRatio }
                 },
                 vertexShader: `
                     attribute vec3 aSeed;
@@ -11432,6 +11485,7 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
         }, false);
         // -----------------------------------------------------
 
+        AppSettings.applyGraphics();
         this._boundLoop = this.loop.bind(this); requestAnimationFrame(this._boundLoop);
     },
 prewarmShaders() {
@@ -11460,7 +11514,7 @@ prewarmShaders() {
                 let tRock = Preloader.textures['rock' + v];
                 let tWall = Preloader.textures['wall' + v];
                 
-                let maxAniso = isTouchDevice ? Math.min(4, this.renderer.capabilities.getMaxAnisotropy()) : this.renderer.capabilities.getMaxAnisotropy();
+                let maxAniso = AppSettings.useMobileLimits ? Math.min(4, this.renderer.capabilities.getMaxAnisotropy()) : this.renderer.capabilities.getMaxAnisotropy();
                 [tDirt, tGrass, tRock, tWall].forEach(t => {
                     if (t) { t.anisotropy = maxAniso; t.encoding = THREE.sRGBEncoding; }
                 });
@@ -11498,61 +11552,93 @@ prewarmShaders() {
 
         this.renderer.compile(warmScene, warmCam);
     },
-    initPools() {
-        const maxDynamicDebris = isTouchDevice ? 90 : 250;
-// Passiamo l'indice (i) al costruttore per sapere quale "slot" della matrice aggiornare
-this.debris = Array.from({length: maxDynamicDebris}, (_, i) => new Debris(i));
-
-if (!this._dummyDebris) this._dummyDebris = new THREE.Object3D();
-
-const debrisMat = isTouchDevice ? new THREE.MeshLambertMaterial() : new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0.2});
-        
-        // Geometrie: 0 = Triangoli, 1 = Cubi, 2 = Sfere (Dodecaedri Low Poly per massime performance)
-        const geos = [SharedGeo.tetrahedron, SharedGeo.box, new THREE.DodecahedronGeometry(0.8, 0)];
+    ensureComposer() {
+        if (this.composer || !this.renderer || !this.scene || !this.camera || AppSettings.useMobileLimits) return;
+        const renderScene = new THREE.RenderPass(this.scene, this.camera);
+        let initialStrength = AppSettings.isUltraPC ? 0.28 : 0.20;
+        let initialRadius = 0.22;
+        this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(Math.max(1, this.width / 2), Math.max(1, this.height / 2)), initialStrength, initialRadius, 0.65);
+        this.bloomPass.threshold = (this.currentThemeIndex === 2) ? 0.76 : 0.72;
+        this.composer = new THREE.EffectComposer(this.renderer);
+        this.composer.addPass(renderScene);
+        this.composer.addPass(this.bloomPass);
+    },
+    ensureFlashLights() {
+        if (!this.scene || AppSettings.useMobileLimits) return;
+        if (!this.flashLights) this.flashLights = [];
+        while (this.flashLights.length < 3) {
+            let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
+            this.scene.add(l);
+            this.flashLights.push({ light: l, life: 0, maxLife: 0 });
+        }
+    },
+    initDebrisPool(maxDynamicDebris, useDesktopMat) {
+        if (!this._dummyDebris) this._dummyDebris = new THREE.Object3D();
+        if (this.debrisMeshes && this.debrisMeshes.length > 0) {
+            for (let m = 0; m < this.debrisMeshes.length; m++) {
+                this.scene.remove(this.debrisMeshes[m]);
+            }
+        }
+        this.debris = Array.from({length: maxDynamicDebris}, (_, i) => new Debris(i));
+        this._debrisIdx = 0;
+        const debrisMat = useDesktopMat
+            ? new THREE.MeshStandardMaterial({roughness: 0.8, metalness: 0.2})
+            : new THREE.MeshLambertMaterial();
+        if (!this._debrisGeos) {
+            this._debrisGeos = [SharedGeo.tetrahedron, SharedGeo.box, new THREE.DodecahedronGeometry(0.8, 0)];
+        }
+        const geos = this._debrisGeos;
         this.debrisMeshes = [];
-        
         let hideMat = new THREE.Matrix4().makeScale(0, 0, 0);
         let defColor = new THREE.Color(0x000000);
-
-        // Creiamo 3 canali di rendering separati (Costo CPU/GPU: 0)
         for (let m = 0; m < 3; m++) {
             let im = new THREE.InstancedMesh(geos[m], debrisMat, maxDynamicDebris);
             im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
             im.frustumCulled = false; // Evita la sparizione dei detriti quando l'origine (0,0,0) esce dallo schermo
-            im.castShadow = false; 
+            im.castShadow = false;
             im.receiveShadow = false;
             im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(maxDynamicDebris * 3), 3);
-            
-            for(let i = 0; i < maxDynamicDebris; i++) {
+            for (let i = 0; i < maxDynamicDebris; i++) {
                 im.setMatrixAt(i, hideMat);
                 im.setColorAt(i, defColor);
             }
             this.debrisMeshes.push(im);
-            Game.scene.add(im);
+            this.scene.add(im);
         }
-       this.enemyPool = Array.from({length: 80}, () => new Enemy()); // Pre-alloca 80 nemici
+    },
+    ensureMegaPools() {
+        if (AppSettings.useMobileLimits || !this.scene) return;
+        this.ensureComposer();
+        this.ensureFlashLights();
+        if (this.particles && this.particles.length < 2500) {
+            while (this.particles.length < 2500) {
+                this.particles.push(new Particle());
+            }
+        }
+        if (this.debris && this.debris.length < 250) {
+            this.initDebrisPool(250, true);
+        }
+    },
+    initPools() {
+        const maxDynamicDebris = AppSettings.useMobileLimits ? 90 : 250;
+        this.initDebrisPool(maxDynamicDebris, !AppSettings.useMobileLimits);
+        this.enemyPool = Array.from({length: 80}, () => new Enemy()); // Pre-alloca 80 nemici
         // POOL DEI PROPS
         this.propsCrates = Array.from({length: isTouchDevice ? 25 : 60}, (_, i) => new Prop(i, 'crate'));
         this.propsUrns = Array.from({length: isTouchDevice ? 25 : 60}, (_, i) => new Prop(i, 'urn'));
-        this.particles = Array.from({length: isTouchDevice ? 400 : 2500}, () => new Particle());
+        this.particles = Array.from({length: AppSettings.useMobileLimits ? 400 : 2500}, () => new Particle());
         this.projectiles = Array.from({length: 300}, () => new Projectile());
         this.floatingTexts = Array.from({length: 100}, () => new FloatingText());
         this.hazards = Array.from({length: 60}, () => new Hazard());
-       this.essences = Array.from({length: 50}, () => new Essence());
-        this.extraLivesDrops = Array.from({length: 10}, () => new ExtraLife());
-        this.coinDrops = Array.from({length: 40}, () => new Coin());
-        this.decoys = Array.from({length: 10}, () => new Decoy());
-       this.dashLines = Array.from({length: 30}, () => new DashLine());     
+        this.essences = Array.from({length: 50}, () => new Essence());
+        this.extraLivesDrops = Array.from({length: 10}, () => new ExtraLife());
+        this.coinDrops = Array.from({length: 40}, () => new Coin());
+        this.decoys = Array.from({length: 10}, () => new Decoy());
+        this.dashLines = Array.from({length: 30}, () => new DashLine());     
 
-        // POOL LUCI ESPLOSIVE: Creato solo su PC! Su mobile evita che Three.js calcoli 4 PointLight per pixel su tutta la mappa
+        // POOL LUCI ESPLOSIVE: Creato su PC e Mobile MEGA
         this.flashLights = [];
-        if (!isTouchDevice) {
-            for(let i=0; i<3; i++) {
-                let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
-                Game.scene.add(l);
-                this.flashLights.push({ light: l, life: 0, maxLife: 0 });
-            }
-        }
+        this.ensureFlashLights();
         this._flashLightIdx = 0;
     },
 pushDebris(px, pz, radius, force) {
@@ -11597,10 +11683,10 @@ pushDebris(px, pz, radius, force) {
         }
     },
     spawnLightFlash(x, z, colorHex, intensity, distance, duration = 0.2) {
-        if (isTouchDevice || AppSettings.isLow || !this.flashLights || this.flashLights.length === 0) return;
+        if (AppSettings.useMobileLimits || AppSettings.isLow || !this.flashLights || this.flashLights.length === 0) return;
         let fl = this.flashLights[this._flashLightIdx];
-        this._flashLightIdx = (this._flashLightIdx + 1) % (isTouchDevice && AppSettings.isBalanced ? 2 : 3);
-        if (isTouchDevice && AppSettings.isBalanced) distance *= 0.85;
+        this._flashLightIdx = (this._flashLightIdx + 1) % (AppSettings.useMobileLimits && AppSettings.isBalanced ? 2 : 3);
+        if (AppSettings.useMobileLimits && AppSettings.isBalanced) distance *= 0.85;
         fl.light.color.setHex(colorHex);
         fl.light.intensity = intensity;
         fl.light.distance = distance;
@@ -11775,7 +11861,7 @@ pushDebris(px, pz, radius, force) {
             uNova.spawn(this.player.x, 20, this.player.y, SharedMat.spritePurple, 'nova');
             uNova.baseSize = 220;
 
-            let pCount = AppSettings.isLow ? 8 : (isTouchDevice ? 16 : (AppSettings.isUltraPC ? 60 : 32));
+            let pCount = AppSettings.isLow ? 8 : (AppSettings.useMobileLimits ? 16 : (AppSettings.isUltraPC ? 60 : 32));
             for (let i = 0; i < pCount; i++) {
                 let a = (Math.PI * 2 / pCount) * i;
                 let mat = (i % 3 === 0) ? SharedMat.spritePink : ((i % 3 === 1) ? SharedMat.spritePurple : SharedMat.spriteWhite);
@@ -11797,10 +11883,10 @@ pushDebris(px, pz, radius, force) {
         const enabled = AppSettings.shadowsEnabled;
         const prevEnabled = this.renderer.shadowMap.enabled;
         this.renderer.shadowMap.enabled = enabled;
-        this.renderer.shadowMap.type = isTouchDevice ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = AppSettings.useMobileLimits ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 
         if (enabled) {
-            const targetMapSize = isTouchDevice ? 1024 : 2048;
+            const targetMapSize = AppSettings.useMobileLimits ? 1024 : 2048;
             const aspect = (this.width && this.height) ? (this.width / this.height) : 1.0;
             // Frustum calibrato sull'inquadratura reale (include la diagonale a 45° su smartphone verticale)
             let halfW, halfH;
@@ -11822,9 +11908,9 @@ pushDebris(px, pz, radius, force) {
             this._shadowStepV = (2 * halfH) / (targetMapSize * 0.87038828);
 
             // normalBias scalato sulle unità mondo (TILE_SIZE = 64): zero acne e ombre incollate alla base
-            this.dirLight.shadow.bias = isTouchDevice ? -0.00025 : -0.0002;
-            this.dirLight.shadow.normalBias = isTouchDevice ? 0.85 : 0.65;
-            this.dirLight.shadow.radius = isTouchDevice ? 1.0 : 1.4;
+            this.dirLight.shadow.bias = AppSettings.useMobileLimits ? -0.00025 : -0.0002;
+            this.dirLight.shadow.normalBias = AppSettings.useMobileLimits ? 0.85 : 0.65;
+            this.dirLight.shadow.radius = AppSettings.useMobileLimits ? 1.0 : 1.4;
 
             if (this.dirLight.shadow.mapSize.width !== targetMapSize) {
                 this.dirLight.shadow.mapSize.set(targetMapSize, targetMapSize);
@@ -12627,7 +12713,7 @@ loop(timestamp) {
                 if (this.mistMat1.uniforms && this.mistMat1.uniforms.uEdgeColor) {
                     this.mistMat1.uniforms.uEdgeColor.value.copy(this._edgeTintTmp);
                 }
-                this.mistMat1.opacity = isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33;
+                this.mistMat1.opacity = AppSettings.isUltraPC ? 0.33 : (isTouchDevice ? (AppSettings.isUltra ? 0.35 : 0.30) : 0.33);
             }
         }
         if (this.snowSystem) {
@@ -13135,7 +13221,7 @@ startGame(diffMult) {
             if (map.meshPitBanks && map.meshPitBanks.material) {
                 if (tBank) {
                     map.meshPitBanks.material.map = tBank;
-                    if (!isTouchDevice) map.meshPitBanks.material.bumpMap = tBank;
+                    if (!AppSettings.useMobileLimits) map.meshPitBanks.material.bumpMap = tBank;
                 }
             }
             if (map.initialRockColor) {
@@ -13340,8 +13426,8 @@ startGame(diffMult) {
 
         // --- SISTEMA TIME-SLICING: Elaborazione Coda Drop (Previene i freeze) ---
         if (this.pendingDrops && this.pendingDrops.length > 0) {
-            // Processa max 2 drop su low, 4 su mobile normale, 10 su PC Ultra
-            let limit = AppSettings.isLow ? 2 : (isTouchDevice ? 4 : 10);
+            // Processa max 2 drop su low, 4 su mobile normale, 10 su PC Ultra / MEGA
+            let limit = AppSettings.isLow ? 2 : (AppSettings.useMobileLimits ? 4 : 10);
             let toProcess = Math.min(this.pendingDrops.length, limit);
             
             for (let i = 0; i < toProcess; i++) {
@@ -13765,7 +13851,7 @@ startGame(diffMult) {
                     if (h.radius < 75 || activeMaxWind - windCount < 4) {
                         windSources[windCount++].set(h.x, 3.6, h.y);
                     } else {
-                        let points = Math.min(isTouchDevice ? 4 : 6, activeMaxWind - windCount);
+                        let points = Math.min(AppSettings.useMobileLimits ? 4 : 6, activeMaxWind - windCount);
                         for (let j = 0; j < points && windCount < activeMaxWind; j++) {
                             let a = (Math.PI * 2 / points) * j + (Game.playTime * 5);
                             windSources[windCount++].set(h.x + Math.cos(a) * h.radius, 2.2, h.y + Math.sin(a) * h.radius);
@@ -13891,7 +13977,7 @@ startGame(diffMult) {
                     pt.baseRune.rotation.y += safeVisualDt * (isReady ? 1.2 : 0.3);
 
                     // Scia di particelle magiche stile WoW lungo il bordo ovale del portale
-                    if (isReady && Game.frameCount % (AppSettings.isLow ? 8 : (isTouchDevice ? (AppSettings.isUltra ? 3 : 5) : 2)) === 0) {
+                    if (isReady && Game.frameCount % (AppSettings.isLow ? 8 : (AppSettings.useMobileLimits ? (AppSettings.isUltra ? 3 : 5) : 2)) === 0) {
                         let a = Math.random() * Math.PI * 2;
                         let px = pt.x + Math.cos(a) * 20;
                         let py = 34 + Math.sin(a) * 28;
@@ -13948,7 +14034,7 @@ startGame(diffMult) {
         }
 
         // Particelle che salgono dal pavimento SOLO per gli Obelischi ancora attivi
-        if (this.auras && Game.frameCount % (AppSettings.isLow ? 18 : (isTouchDevice ? (AppSettings.isUltra ? 8 : 12) : 5)) === 0) {
+        if (this.auras && Game.frameCount % (AppSettings.isLow ? 18 : (AppSettings.useMobileLimits ? (AppSettings.isUltra ? 8 : 12) : 5)) === 0) {
             for (let i = 0; i < this.auras.length; i++) {
                 let a = this.auras[i];
                 if (!a.active) continue;
@@ -14048,7 +14134,7 @@ startGame(diffMult) {
         }
      // --- EMANAZIONI PARTICOLARI DALLE FOSSE ---
         // La CPU controlla solo una piccola griglia 5x5 attorno al giocatore ogni tot frame!
-        if (!AppSettings.isLow && this.map && Game.frameCount % (isTouchDevice ? (AppSettings.isUltra ? 4 : 6) : 3) === 0 && this.player && !this.player.dead) {
+        if (!AppSettings.isLow && this.map && Game.frameCount % (AppSettings.useMobileLimits ? (AppSettings.isUltra ? 4 : 6) : 3) === 0 && this.player && !this.player.dead) {
             let px = Math.floor(this.player.x / TILE_SIZE);
             let py = Math.floor(this.player.y / TILE_SIZE);
             
@@ -14095,7 +14181,7 @@ startGame(diffMult) {
         // OTTIMIZZAZIONE ZERO-COST: Se è il tema ghiaccio, dimezziamo i tempi di attesa
         // e raddoppiamo i fiocchi riciclando le particelle dal pool per simulare la nevicata.
         let isIceTheme = this.currentThemeIndex === 2;
-        let baseAmbRate = isTouchDevice ? (AppSettings.isLow ? 44 : (AppSettings.isUltra ? 18 : 28)) : 12;
+        let baseAmbRate = AppSettings.useMobileLimits ? (AppSettings.isLow ? 44 : (AppSettings.isUltra ? 18 : 28)) : 12;
         let spawnRate = isIceTheme ? Math.max(4, Math.floor(baseAmbRate * 0.5)) : baseAmbRate;
 
         if (Game.frameCount % spawnRate === 0) {
@@ -14146,7 +14232,7 @@ startGame(diffMult) {
         }
         
        // --- NUOVO: ALBERI INFUOCATI REALISTICI (SOLO TEMA LAVA) ---
-       if (!AppSettings.isLow && Game.currentThemeIndex === 1 && Game.frameCount % (isTouchDevice ? (AppSettings.isUltra ? 10 : 16) : 6) === 0 && this.map && this.map.treePositions && this.map.treePositions.length > 0) {
+       if (!AppSettings.isLow && Game.currentThemeIndex === 1 && Game.frameCount % (AppSettings.useMobileLimits ? (AppSettings.isUltra ? 10 : 16) : 6) === 0 && this.map && this.map.treePositions && this.map.treePositions.length > 0) {
             if (!this._tempVisibleTrees) this._tempVisibleTrees = [];
             this._tempVisibleTrees.length = 0;
             
@@ -14162,7 +14248,7 @@ startGame(diffMult) {
                 }
             }
 
-            let maxTreesToProcess = isTouchDevice ? (AppSettings.isUltra ? 4 : 2) : 8;
+            let maxTreesToProcess = AppSettings.useMobileLimits ? (AppSettings.isUltra ? 4 : 2) : 8;
             let visibleCount = this._tempVisibleTrees.length;
             
             for (let i = 0; i < Math.min(visibleCount, maxTreesToProcess); i++) {
@@ -14562,14 +14648,14 @@ startGame(diffMult) {
         if(!this.scene || !this.uiCtx) return;
         if (this.camera) InteractiveGrassSystem.uniforms.uCamPos.value.copy(this.camera.position);
         
-        if (isTouchDevice && AppSettings.shadowsEnabled) {
+        if (AppSettings.useMobileLimits && AppSettings.shadowsEnabled) {
             this.renderer.shadowMap.autoUpdate = false;
             if (this.frameCount % 2 === 0) this.renderer.shadowMap.needsUpdate = true;
         } else {
             this.renderer.shadowMap.autoUpdate = true;
         }
 
-        if (!AppSettings.isLow && !isTouchDevice && this.composer) {
+        if (!AppSettings.isLow && !AppSettings.useMobileLimits && this.composer) {
             this.composer.render();
         } else {
             this.renderer.render(this.scene, this.camera); 
@@ -14662,7 +14748,7 @@ startGame(diffMult) {
                                 this.uiCtx.arc(pPos.x, pPos.y - 24, 21, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct));
                                 this.uiCtx.strokeStyle = arcColor;
                                 this.uiCtx.lineWidth = 3.2;
-                                if (!isTouchDevice) {
+                                if (!AppSettings.useMobileLimits) {
                                     this.uiCtx.shadowColor = arcColor;
                                     this.uiCtx.shadowBlur = 8;
                                 }
@@ -15005,8 +15091,8 @@ startGame(diffMult) {
        
 };
 // --- SISTEMA ERBA INTERATTIVA (GPU SHADER) ---
-// Su mobile consentiamo 6 sorgenti (1 giocatore + fino a 5 proiettili in volo)
-const MAX_WIND = isTouchDevice ? 6 : 10;
+// Alloca 10 sorgenti max (i limiti attivi vengono controllati da AppSettings.maxWindSources tramite uWindCount)
+const MAX_WIND = 10;
 
 const InteractiveGrassSystem = {
     uniforms: {
@@ -15702,9 +15788,21 @@ class GameMap {
             }
         }
 
+        const useDesktopMapMats = !AppSettings.useMobileLimits;
+        if (window._mapMatDesktop !== useDesktopMapMats) {
+            window._mapMatDesktop = useDesktopMapMats;
+            window.GLOBAL_DEBRIS_MAT = null;
+            window.GLOBAL_TREE_MAT = null;
+            window.GLOBAL_PIT_MATS = null;
+            window.GLOBAL_ICE_MAT = null;
+            window.GLOBAL_PIT_BANK_MATS = null;
+            window.GLOBAL_PIT_PAD_ASSETS = null;
+            window.GLOBAL_PIT_ACCENT_ASSETS = null;
+        }
+
        // 2. ALLOCHIAMO LA MEMORIA PER L'ERBA (Scalata su modalità grafica, 0 costo nella Shadow Map)
         const grassModeMult = 1.0; // Allocata a capacità piena per scalare live tra Performance (30%), Bilanciata (68%) e Ultra (100%)
-        const maxGrassClusters = Math.ceil(floorCount * (isTouchDevice ? 45 : 150) * grassModeMult);
+        const maxGrassClusters = Math.ceil(floorCount * (AppSettings.useMobileLimits ? 45 : 150) * grassModeMult);
         const interactiveGrassMesh = new THREE.InstancedMesh(InteractiveGrassSystem.geo, InteractiveGrassSystem.mat, maxGrassClusters);
         interactiveGrassMesh.receiveShadow = true;
         interactiveGrassMesh.castShadow = false;
@@ -15715,10 +15813,10 @@ class GameMap {
         let idxInteractiveGrass = 0; const grassPassTag = new Uint8Array(maxGrassClusters);
 
        // --- 2.5 ALLOCHIAMO I DETRITI ---
-        const maxDebris = floorCount * (isTouchDevice ? 8 : 20);
+        const maxDebris = floorCount * (AppSettings.useMobileLimits ? 8 : 20);
         if (!window.GLOBAL_DEBRIS_GEO) window.GLOBAL_DEBRIS_GEO = new THREE.DodecahedronGeometry(2.5, 0);
         if (!window.GLOBAL_DEBRIS_MAT) {
-            window.GLOBAL_DEBRIS_MAT = isTouchDevice
+            window.GLOBAL_DEBRIS_MAT = AppSettings.useMobileLimits
                 ? new THREE.MeshLambertMaterial({ color: 0x2c3628 })
                 : new THREE.MeshStandardMaterial({ color: 0x2c3628, roughness: 0.88, metalness: 0.08 });
         }
@@ -15731,10 +15829,10 @@ class GameMap {
         let idxDebris = 0;
         
        // --- 2.6 ALLOCHIAMO GLI ALBERI E LE CHIOME ANIMATE ---
-        const maxTrees = floorCount * (isTouchDevice ? 1 : 2); 
+        const maxTrees = floorCount * (AppSettings.useMobileLimits ? 1 : 2); 
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
         if (!window.GLOBAL_TREE_MAT) {
-            window.GLOBAL_TREE_MAT = isTouchDevice
+            window.GLOBAL_TREE_MAT = AppSettings.useMobileLimits
                 ? new THREE.MeshLambertMaterial({ color: 0x241f16, emissive: 0x020101 })
                 : new THREE.MeshStandardMaterial({ color: 0x241f16, emissive: 0x020101, roughness: 0.9 });
         }
@@ -15763,7 +15861,7 @@ class GameMap {
         // ------------------------------------------
 
      // --- NUOVO: DECALCOMANIE PERMANENTI (SANGUE E BRUCIATURE) ---
-        Game.maxBlood = isTouchDevice ? 60 : 150; 
+        Game.maxBlood = AppSettings.useMobileLimits ? 60 : 150; 
         if (!window.GLOBAL_BLOOD_GEO) {
             window.GLOBAL_BLOOD_GEO = new THREE.PlaneGeometry(12, 12);
             window.GLOBAL_BLOOD_GEO.rotateX(-Math.PI / 2);
@@ -15789,7 +15887,7 @@ class GameMap {
         // --- INIZIO GESTIONE MATERIALI OTTIMIZZATI ---
         const MapMaterialClass = THREE.MeshPhongMaterial;
         const alphaTex = GLOBAL_ALPHA_TEX; 
-        const maxAnisotropy = isTouchDevice ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy()) : Game.renderer.capabilities.getMaxAnisotropy();
+        const maxAnisotropy = AppSettings.useMobileLimits ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy()) : Game.renderer.capabilities.getMaxAnisotropy();
 
         // 1. Creiamo i 3 SET DI MATERIALI una sola volta per non intaccare la RAM
         if (!window.GLOBAL_THEME_MATS) {
@@ -16093,7 +16191,8 @@ class GameMap {
                 } else {
                     pitColor = 0x2288d8; pitEmissive = 0x0f4d8a; pitOpacity = 0.96; pitRoughness = 0.45; pitMetalness = 0.05;
                 }
-            const PitMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
+            const useMobPit = AppSettings.useMobileLimits;
+            const PitMatClass = useMobPit ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
                 emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.42 : 0.66),
@@ -16101,7 +16200,7 @@ class GameMap {
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
-            if (isTouchDevice) {
+            if (useMobPit) {
                 pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 24 : 36);
                 pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x18527a : 0x1e4c70));
             } else {
@@ -16110,7 +16209,7 @@ class GameMap {
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v15_' + themeIdx + (isTouchDevice ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v15_' + themeIdx + (useMobPit ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -16445,7 +16544,8 @@ class GameMap {
                 iceTex.needsUpdate = true;
 
                 if (!window.GLOBAL_ICE_MAT) {
-                    const IceMatClass = isTouchDevice ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
+                    const useMobIce = AppSettings.useMobileLimits;
+                    const IceMatClass = useMobIce ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
                     const iceMatParams = {
                         color: 0xb8e6ff, emissive: 0x165a8a,
                         emissiveIntensity: 0.34,
@@ -16453,7 +16553,7 @@ class GameMap {
                         transparent: true, opacity: 0.80,
                         depthWrite: false
                     };
-                    if (isTouchDevice) {
+                    if (useMobIce) {
                         // Speculare Phong calibrato per non creare patine grigie piatte su smartphone
                         iceMatParams.shininess = 72;
                         iceMatParams.specular = new THREE.Color(0x0c243b);
@@ -16462,7 +16562,7 @@ class GameMap {
                         iceMatParams.metalness = 0.06;
                     }
                     const cachedIceMat = new IceMatClass(iceMatParams);
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v15' + (isTouchDevice ? '_m' : '_d');
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v15' + (useMobIce ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                         shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -17123,7 +17223,7 @@ class GameMap {
                     const cachedBankMat = new THREE.MeshPhongMaterial({
                         color: 0xffffff,
                         map: tBank,
-                        bumpMap: isTouchDevice ? null : tBank,
+                        bumpMap: AppSettings.useMobileLimits ? null : tBank,
                         bumpScale: 0.09,
                         vertexColors: true,
                         shininess: themeIdx === 2 ? 24 : (themeIdx === 1 ? 10 : 12),
@@ -17136,7 +17236,7 @@ class GameMap {
                 bankMat.color.setRGB(1, 1, 1);
                 if (tBank) {
                     bankMat.map = tBank;
-                    if (!isTouchDevice) bankMat.bumpMap = tBank;
+                    bankMat.bumpMap = AppSettings.useMobileLimits ? null : tBank;
                 }
                 const meshPitBanks = new THREE.Mesh(bankGeo, bankMat);
                 meshPitBanks.renderOrder = -5;
@@ -17292,7 +17392,7 @@ class GameMap {
 
            const tempObj = new THREE.Object3D();
             const createPitPropMat = (opts) => {
-                if (isTouchDevice) {
+                if (AppSettings.useMobileLimits) {
                     const { roughness, metalness, flatShading, ...lambertOpts } = opts;
                     return new THREE.MeshLambertMaterial(lambertOpts);
                 }
@@ -17411,7 +17511,7 @@ class GameMap {
         if (!window.GLOBAL_OBELISK_GEO) window.GLOBAL_OBELISK_GEO = createObeliskGeometry();
         
       // MATERIALE OBELISCO: Pietra antica monolitica con supporto colore per-istanza (setColorAt) per obelischi multicolore
-       this.obeliskMat = isTouchDevice
+       this.obeliskMat = AppSettings.useMobileLimits
             ? new THREE.MeshLambertMaterial({
                 color: 0x383840,
                 emissive: 0x0c0c12,
@@ -17663,7 +17763,7 @@ class GameMap {
                         let patchScore = bandCore * 0.55 + meadowWave * 0.45;
                         if (patchScore > 0.15) {
                             let intensity = Math.min(1.0, (patchScore - 0.15) / 0.62);
-                            let baseMax = Math.ceil((isTouchDevice ? 45 : 110));
+                            let baseMax = Math.ceil((AppSettings.useMobileLimits ? 45 : 110));
                             let numBlades = Math.floor(baseMax * (0.5 + 0.5 * intensity));
                             let patchOffX = Math.sin(x * 1.7 + y * 2.3) * (nearPit ? 4 : 8);
                             let patchOffZ = Math.cos(x * 2.1 - y * 1.9) * (nearPit ? 4 : 8);
@@ -18063,7 +18163,7 @@ Game.auras.push({
         // FIX PRESTAZIONI E VISIBILITÀ: La nebbia si adatta al menu Opzioni!
         // Numero aumentato di mini banchi di nebbia distribuiti per la mappa (niente enormi parti omogenee)
         // 0 (Performance) = Niente nebbia. 1 (Bilanciata) = Media. 2 (Ultra) = Densa.
-        let fogCount = isTouchDevice ? 55 : 95; this.maxFogAllocated = fogCount;
+        let fogCount = AppSettings.useMobileLimits ? 55 : 95; this.maxFogAllocated = fogCount;
         // Allocata alla capienza massima del dispositivo per permettere il cambio live da Opzioni!
         // La visibilità e il .count effettivo sono regolati da AppSettings.targetFogCount
 
@@ -18532,7 +18632,7 @@ Game.auras.push({
         const palette = isCrate ? cratePalette : urnPalette;
 
         // 1. Esplosione fisica in vere assi di legno o cocci di terracotta 3D
-        let pieceCount = AppSettings.isLow ? 5 : (isTouchDevice ? 7 : 11);
+        let pieceCount = AppSettings.isLow ? 5 : (AppSettings.useMobileLimits ? 7 : 11);
         for (let i = 0; i < pieceCount; i++) {
             let deb = Game.getDebris();
             if (!deb) break;
@@ -18561,7 +18661,7 @@ Game.auras.push({
         // 2. Nuvola di segatura o polvere di terracotta (rimosso il cerchio piatto 'nova')
 
         let dustMat = isCrate ? SharedMat.spriteWoodDust : SharedMat.spriteClayDust;
-        let dustCount = AppSettings.isLow ? 3 : (isTouchDevice ? 5 : 8);
+        let dustCount = AppSettings.isLow ? 3 : (AppSettings.useMobileLimits ? 5 : 8);
         for (let i = 0; i < dustCount; i++) {
             let a = (Math.PI * 2 / dustCount) * i + MathUtils.randomRange(-0.3, 0.3);
             let p = Game.getParticle();
@@ -18753,7 +18853,7 @@ class Entity {
             }
         }
 
-       let pCount = AppSettings.isLow ? (isCrit ? 2 : 1) : (isCrit ? (isTouchDevice ? 4 : (AppSettings.isUltraPC ? 16 : 8)) : (isTouchDevice ? 2 : (AppSettings.isUltraPC ? 8 : 4)));
+       let pCount = AppSettings.isLow ? (isCrit ? 2 : 1) : (isCrit ? (AppSettings.useMobileLimits ? 4 : (AppSettings.isUltraPC ? 16 : 8)) : (AppSettings.useMobileLimits ? 2 : (AppSettings.isUltraPC ? 8 : 4)));
         for(let i=0; i<pCount; i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteBlood, 'blood');
         
        // --- HIT FEEDBACK DIREZIONALE ELEMENTALE (IMPATTO POTENZIATO) ---
@@ -19516,7 +19616,7 @@ class Player extends Entity {
         let odColorHex = '#' + ESSENCE_COLORS[this.essence].toString(16).padStart(6, '0');
         Game.getFloatingText().spawn(this.x, this.y, "OVERDRIVE", odColorHex, 42, true);
         let mat = this.essence === 'red' ? SharedMat.spriteRed : (this.essence === 'blue' ? SharedMat.spriteBlue : SharedMat.spriteGreen);
-        let pCount = AppSettings.isLow ? 4 : (isTouchDevice ? 10 : (AppSettings.isUltraPC ? 60 : 30));
+        let pCount = AppSettings.isLow ? 4 : (AppSettings.useMobileLimits ? 10 : (AppSettings.isUltraPC ? 60 : 30));
         for(let i=0; i<pCount; i++) Game.getParticle().spawn(this.x, 20, this.y, mat, 'trail');
         this.fireGrimoireBolts();
     }
@@ -19848,7 +19948,7 @@ class Player extends Entity {
             this.modelParts.body.material.emissive.setHex(0x6b21a8);  
             this.modelParts.body.material.emissiveIntensity = 0.14;  
             this.light.intensity = (Game.currentThemeIndex === 2) ? 3.3 : 3.6;
-            this.light.distance = isTouchDevice ? 700 : 1100;
+            this.light.distance = AppSettings.useMobileLimits ? 700 : 1100;
         } else if (this.overdrive) {
             this.light.intensity = (Game.currentThemeIndex === 2) ? 2.9 : 3.2; 
             this.modelParts.body.material.emissive.setHex(gemColor);  
@@ -19861,7 +19961,7 @@ class Player extends Entity {
 
         if (Game.isCorrupted && Game.corruptedType === 'darkness') {
             this.light.intensity = Game.ultimateActive ? 6.0 : 4.0; 
-            this.light.distance = isTouchDevice ? 500 : 750; 
+            this.light.distance = AppSettings.useMobileLimits ? 500 : 750; 
         }
 
         if (this.shieldMesh.visible) {
@@ -19984,7 +20084,7 @@ class Player extends Entity {
                 this.bloodHaloGroup.scale.setScalar(idlePulse);
             }
 
-            if (Game.frameCount % (isTouchDevice ? 10 : 5) === 0) {
+            if (Game.frameCount % (AppSettings.useMobileLimits ? 10 : 5) === 0) {
                 let ha = Math.random() * Math.PI * 2;
                 let hx = this.x + Math.cos(ha) * 7.8;
                 let hz = this.y + Math.sin(ha) * 7.8;
@@ -20087,7 +20187,7 @@ class Player extends Entity {
                     this.shieldFloorRing.scale.set(floorRad, floorRad, 1);
                 }
 
-                if (Game.frameCount % (isTouchDevice ? 5 : 3) === 0 && !AppSettings.isLow) {
+                if (Game.frameCount % (AppSettings.useMobileLimits ? 5 : 3) === 0 && !AppSettings.isLow) {
                     let a = Math.random() * Math.PI * 2;
                     let p = Game.getParticle();
                     p.spawn(this.x + Math.cos(a) * 26, 16, this.y + Math.sin(a) * 26, isAlertPeak ? SharedMat.spriteWhite : SharedMat.spriteRed, 'spark', a);
@@ -20112,7 +20212,7 @@ class Player extends Entity {
                 if (this.shieldFloorRing) this.shieldFloorRing.scale.set(34, 34, 1);
             }
 
-            if (this.modifiers.explosiveShield && Game.frameCount % (isTouchDevice ? 6 : 3) === 0) {
+            if (this.modifiers.explosiveShield && Game.frameCount % (AppSettings.useMobileLimits ? 6 : 3) === 0) {
                 let va = Game.playTime * 8.0;
                 let vp = Game.getParticle();
                 vp.spawn(this.x + Math.cos(va) * 26, 16, this.y + Math.sin(va) * 26, SharedMat.spritePink, 'trail');
@@ -20487,7 +20587,7 @@ class Player extends Entity {
         // Debuff: Sanguinamento Corrotto 1% HP/sec
       if (aura === 'corrupted') {
             this.stats.hp = Math.max(1, this.stats.hp - (this.stats.maxHp * 0.01 * dt));
-            if (Game.frameCount % 20 === 0 && !isTouchDevice) {
+            if (Game.frameCount % 20 === 0 && !AppSettings.useMobileLimits) {
                 Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spritePink, 'dust');
             }
         }
@@ -20575,7 +20675,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
           }
 
           // Fiamme, scie e scintille arcane viola sprigionate dal corpo
-          let emitRate = AppSettings.isLow ? 5 : (isTouchDevice ? 3 : 2);
+          let emitRate = AppSettings.isLow ? 5 : (AppSettings.useMobileLimits ? 3 : 2);
           if (Game.frameCount % emitRate === 0) {
               let a = Math.random() * Math.PI * 2;
               let r = MathUtils.randomRange(6, 22);
@@ -20670,7 +20770,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 AudioEngine.playEnvironmentSound(envType, isMoving, dt);
 
                 // DERAPATA SUL GHIACCIO OTTIMIZZATA: zero gravità/rimbalzi CPU, bassa frequenza e niente overdraw
-                if (isIce && !AppSettings.isLow && inputLen > 0.1 && slideSpeed > 0.38 && Game.frameCount % (isTouchDevice ? 9 : 6) === 0) {
+                if (isIce && !AppSettings.isLow && inputLen > 0.1 && slideSpeed > 0.38 && Game.frameCount % (AppSettings.useMobileLimits ? 9 : 6) === 0) {
                     let driftDot = (inputDx * this.slideDx + inputDy * this.slideDy) / slideSpeed;
                     if (driftDot < 0.45) {
                         let frost = Game.getParticle();
@@ -20707,7 +20807,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 
                 // --- EFFETTI VISIVI CAMMINATA E REAZIONE DEI LIQUIDI ---
                 let hasRelicStep = (this.modifiers.miserPact || this.modifiers.fireTrail || this.modifiers.dashLightning || this.modifiers.explosiveShield);
-                let stepRate = inPit ? (isIce ? (isTouchDevice ? 10 : 7) : (isTouchDevice ? 4 : 3)) : (hasRelicStep ? (isTouchDevice ? 4 : 3) : 6);
+                let stepRate = inPit ? (isIce ? (AppSettings.useMobileLimits ? 10 : 7) : (AppSettings.useMobileLimits ? 4 : 3)) : (hasRelicStep ? (AppSettings.useMobileLimits ? 4 : 3) : 6);
                 if (Game.frameCount % stepRate === 0) {
                     if (inPit) {
                         let moveAng = Math.atan2(dy, dx);
@@ -20807,7 +20907,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.lavaTimer = 0;
             }
 
-            if (isVoidWalker && Game.frameCount % (isTouchDevice ? 6 : 4) === 0) {
+            if (isVoidWalker && Game.frameCount % (AppSettings.useMobileLimits ? 6 : 4) === 0) {
                 let p = Game.getParticle();
                 let ox = MathUtils.randomRange(-7, 7), oz = MathUtils.randomRange(-7, 7);
                 p.spawn(this.x + ox, 3, this.y + oz, Math.random() > 0.35 ? SharedMat.spriteBlackSmoke : SharedMat.spritePink, 'dust');
@@ -20863,7 +20963,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             this.light.position.y += (this.modelParts.weaponGroup.position.y + 18 - this.light.position.y) * dt * 18;
             this.light.position.z += (this.modelParts.weaponGroup.position.z + 12 - this.light.position.z) * dt * 18;
             
-            if ((this.essence || this.overdrive || Game.ultimateActive) && Game.frameCount % (isTouchDevice ? 4 : 2) === 0) {
+            if ((this.essence || this.overdrive || Game.ultimateActive) && Game.frameCount % (AppSettings.useMobileLimits ? 4 : 2) === 0) {
              let pMat = SharedMat.spriteWhite;
              if (Game.ultimateActive) pMat = SharedMat.spritePurple || SharedMat.spritePink;
              else if (this.essence === 'red') pMat = SharedMat.spriteRed;
@@ -21042,7 +21142,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
         let flicker = (Math.sin(Game.playTime * 4.3) * 0.08) + (Math.sin(Game.playTime * 7.8) * 0.08);
         let attackSwingPulse = this.isAttacking ? Math.max(0, Math.sin(this.attackSwing)) : 0.0;
         let attackIntensityBurst = attackSwingPulse * 0.6;
-        let baseRadius = isTouchDevice ? 650 : 1050;
+        let baseRadius = AppSettings.playerLightRadius;
         let attackRadiusBurst = attackSwingPulse * 140;
         
         this.light.intensity = baseInt + flicker + attackIntensityBurst;
@@ -21111,7 +21211,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                 this.relicPetMeshes.box.scale.setScalar(isHighFlow ? 1.25 : 1.0);
                 if (isHighFlow) {
                     this.relicPetMeshes.box.rotation.x += dt * 5.5;
-                    if (Game.frameCount % (isTouchDevice ? 8 : 5) === 0) {
+                    if (Game.frameCount % (AppSettings.useMobileLimits ? 8 : 5) === 0) {
                         let fp = Game.getParticle();
                         fp.spawn(this.x + MathUtils.randomRange(-16, 16), 26, this.y + MathUtils.randomRange(-16, 16), SharedMat.spriteYellow, 'spark');
                         fp.baseSize = 14;
@@ -21168,9 +21268,9 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
    
         
   flamethrower(dt) {
-        if (Game.frameCount % (isTouchDevice ? 2 : 1) === 0) {
-            // Aumentiamo leggermente il numero di particelle per dare volume al fuoco
-            let pCount = AppSettings.isLow ? 2 : (isTouchDevice ? 4 : (AppSettings.isUltraPC ? 12 : 6));
+        if (Game.frameCount % (AppSettings.useMobileLimits ? 2 : 1) === 0) {
+            // Aumentiamo leggermente il numero di particelle per dare volume al fuoco
+            let pCount = AppSettings.isLow ? 2 : (AppSettings.useMobileLimits ? 4 : (AppSettings.isUltraPC ? 12 : 6));
             for(let i=0; i<pCount; i++) {
                 // 1. Apriamo il cono visivo a ~90 gradi totali per matchare l'hitbox del danno
                 let spread = MathUtils.randomRange(-0.8, 0.8);
@@ -21415,7 +21515,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
         // 3. Scintille ad alta velocità lungo la scia del raggio
         if (!AppSettings.isLow) {
-            let steps = isTouchDevice ? 6 : 14;
+            let steps = AppSettings.useMobileLimits ? 6 : 14;
             for (let i = 1; i <= steps; i++) {
                 let f = (i / steps) * dist;
                 let p = Game.getParticle();
@@ -21583,7 +21683,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             AudioEngine.playShoot('chain_lightning');
             Game.addTrauma(0.45);
             Game.getFloatingText().spawn(this.x, this.y + 24, "NOVA GELIDA!", '#38bdf8', 24, true);
-            let pCount = AppSettings.isLow ? 10 : (isTouchDevice ? 16 : 26);
+            let pCount = AppSettings.isLow ? 10 : (AppSettings.useMobileLimits ? 16 : 26);
             for (let i = 0; i < pCount; i++) {
                 let a = (Math.PI * 2 / pCount) * i + MathUtils.randomRange(-0.1, 0.1);
                 let sp = MathUtils.randomRange(240, 520);
@@ -22032,7 +22132,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             }
             this.stats.minDmg += 3; this.stats.maxDmg += 5;
             this.baseStats.minDmg += 3; this.baseStats.maxDmg += 5;
-            for(let i=0; i< (isTouchDevice?10:(AppSettings.isUltraPC?60:30)); i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteLevel, 'level');
+            for(let i=0; i< (AppSettings.useMobileLimits?10:(AppSettings.isUltraPC?60:30)); i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteLevel, 'level');
             Game.getFloatingText().spawn(this.x, this.y, "LEVEL UP!", '#ffffff', 28, true);
             AudioEngine.playLevelUp();
             Game.pushDebris(this.x, this.y, 250, 400);
@@ -22252,7 +22352,9 @@ class Enemy extends Entity {
         this.aggroRangeSq = this.aggroRange * this.aggroRange;
         this.attackRangeSq = this.attackRange * this.attackRange;
 
-        if (this.currentType !== type) {
+        const useMobEnemyMat = AppSettings.useMobileLimits;
+        const desiredShininess = AppSettings.isUltraPC ? 60 : 30;
+        if (this.currentType !== type || this._matMobileLimits !== useMobEnemyMat || (!useMobEnemyMat && this._matShininess !== desiredShininess)) {
             for (let i = this.mesh.children.length - 1; i >= 0; i--) {
                 let child = this.mesh.children[i];
                 if (child === this.shadowMesh || child === this.telegraphMesh || child === this.auraRingMesh || child === this.auraGlow) continue;
@@ -22266,18 +22368,18 @@ class Enemy extends Entity {
                 this.modelParts.ringGlowMat.dispose();
             }
 
-            const EnemyMatClass = isTouchDevice ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
+            const EnemyMatClass = useMobEnemyMat ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
             this.mat = type === 'crystal'
                 ? new EnemyMatClass({ color: 0x000000, emissive: color })
                 : applyCharacterShader(
-                    isTouchDevice
+                    useMobEnemyMat
                         ? new THREE.MeshLambertMaterial({
                             color: color,
                             map: CHAR_GRUNGE_TEX
                         })
                         : new THREE.MeshPhongMaterial({
                             color: color,
-                            shininess: AppSettings.isUltraPC ? 60 : 30,
+                            shininess: desiredShininess,
                             map: CHAR_GRUNGE_TEX,
                             bumpMap: CHAR_GRUNGE_TEX,
                             bumpScale: 0.06
@@ -22289,6 +22391,8 @@ class Enemy extends Entity {
             this.mesh.add(modelData.group);
             this.modelParts = modelData.parts;
             this.currentType = type;
+            this._matMobileLimits = useMobEnemyMat;
+            this._matShininess = desiredShininess;
 
             this.flashMats = [];
             if (type !== 'crystal') {
@@ -22507,7 +22611,7 @@ class Enemy extends Entity {
             this.megaAuraRing.scale.set(auraRad * rPulse, auraRad * rPulse, 0.26);
             this.megaAuraRing.updateMatrix();
         }
-        if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 10 : 6) === 0) {
+        if (!AppSettings.isLow && Game.frameCount % (AppSettings.useMobileLimits ? 10 : 6) === 0) {
             let a = Math.random() * Math.PI * 2;
             let r = auraRad * (0.45 + Math.random() * 0.52);
             let sp = Game.getParticle();
@@ -22556,7 +22660,7 @@ class Enemy extends Entity {
             this.trapperAuraGlow.scale.set(dScale, 1, dScale);
             this.trapperAuraGlow.updateMatrix();
         }
-        if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 12 : 8) === 0) {
+        if (!AppSettings.isLow && Game.frameCount % (AppSettings.useMobileLimits ? 12 : 8) === 0) {
             let a = Math.random() * Math.PI * 2;
             let r = auraRad * (0.25 + Math.random() * 0.55);
             let sp = Game.getParticle();
@@ -22986,7 +23090,7 @@ class Enemy extends Entity {
                     this.mat.emissive.setHex(0x992200);
                     this.mat.emissiveIntensity = 0.35 + Math.sin(Game.playTime * 20) * 0.12;
                 }
-                if (Game.frameCount % (isTouchDevice ? 8 : 5) === 0 && !AppSettings.isLow) {
+                if (Game.frameCount % (AppSettings.useMobileLimits ? 8 : 5) === 0 && !AppSettings.isLow) {
                     let hp = Game.getParticle();
                     hp.spawn(this.x + MathUtils.randomRange(-8, 8), this.radius * 2.48, this.y + MathUtils.randomRange(-8, 8), SharedMat.spriteRed, 'trail');
                     hp.baseSize = 9; hp.vy = 30;
@@ -23151,7 +23255,7 @@ class Enemy extends Entity {
                     for (let i = 0; i < this.flashMats.length; i++) this.flashMats[i].emissive.setHex(0x003366);
                 }
             }
-            if (Game.frameCount % 8 === 0 && !isTouchDevice) {
+            if (Game.frameCount % 8 === 0 && !AppSettings.useMobileLimits) {
                 Game.getParticle().spawn(this.x, 4, this.y, SharedMat.spriteBlue, 'dust');
             }
         } else if (this._wasPermafrost) {
@@ -23211,7 +23315,7 @@ class Enemy extends Entity {
             }
         }
 
-        if (this.infected && Game.frameCount % 10 === 0 && !isTouchDevice) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteGreen, 'trail');
+        if (this.infected && Game.frameCount % 10 === 0 && !AppSettings.useMobileLimits) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteGreen, 'trail');
         if (this.type === 'crystal') return;
 
         // --- ORCO: RECUPERO CON CLAVA PIANTATA A TERRA (Spalle scoperte per 0.55s) ---
@@ -23683,8 +23787,8 @@ class Enemy extends Entity {
             let streamFrontRatio = Math.min(1.0, elapsedStream / 0.18);
 
             // 3. Particelle calibrate sull'attrito (k = 2.5 in Particle.update) per coprire esattamente streamLen
-            if (Game.frameCount % (isTouchDevice ? 2 : 1) === 0) {
-                let pCount = AppSettings.isLow ? 2 : (isTouchDevice ? 3 : 6);
+            if (Game.frameCount % (AppSettings.useMobileLimits ? 2 : 1) === 0) {
+                let pCount = AppSettings.isLow ? 2 : (AppSettings.useMobileLimits ? 3 : 6);
                 for (let i = 0; i < pCount; i++) {
                     let spread = MathUtils.randomRange(-0.10, 0.10);
                     let pAngle = this.lockedAttackAngle + spread;
@@ -23846,7 +23950,7 @@ class Enemy extends Entity {
                 this.modelParts.body.rotation.z += dt * 48.0;
                 this.modelParts.wings.rotation.y -= dt * 40.0;
             }
-            if (Game.frameCount % (isTouchDevice ? 3 : 2) === 0 && !AppSettings.isLow) {
+            if (Game.frameCount % (AppSettings.useMobileLimits ? 3 : 2) === 0 && !AppSettings.isLow) {
                 let tp = Game.getParticle();
                 tp.spawn(this.x, 14, this.y, Game.frameCount % 4 === 0 ? SharedMat.spriteYellow : SharedMat.spriteRed, 'trail');
                 tp.baseSize = 13; tp.life = 0.18; tp.maxLife = 0.18;
@@ -23964,7 +24068,7 @@ class Enemy extends Entity {
                 this.flashMats[i].emissiveIntensity = 0.8 + prog * 1.8;
             }
 
-            if (Game.frameCount % (isTouchDevice ? 4 : 2) === 0 && !AppSettings.isLow) {
+            if (Game.frameCount % (AppSettings.useMobileLimits ? 4 : 2) === 0 && !AppSettings.isLow) {
                 let backX = this.x - Math.cos(this.rollAngle) * (this.radius * 0.9);
                 let backY = this.y - Math.sin(this.rollAngle) * (this.radius * 0.9);
                 let p = Game.getParticle();
@@ -24013,7 +24117,7 @@ class Enemy extends Entity {
                 this.modelParts.wheelGroup.position.y = bs * 1.05 + Math.abs(Math.sin(Game.playTime * 24)) * 2.0;
             }
 
-            if (Game.frameCount % (isTouchDevice ? 3 : 2) === 0 && !AppSettings.isLow) {
+            if (Game.frameCount % (AppSettings.useMobileLimits ? 3 : 2) === 0 && !AppSettings.isLow) {
                 let tr = Game.getParticle();
                 tr.spawn(this.x - cosR * 10, 6, this.y - sinR * 10, Game.frameCount % 4 === 0 ? SharedMat.spriteYellow : SharedMat.spriteDust, 'dust');
                 tr.baseSize = 14;
@@ -24149,7 +24253,7 @@ class Enemy extends Entity {
                     this.mesh.position.y = 0;
                     this.mesh.rotation.z = 0;
 
-                    if (Game.frameCount % (isTouchDevice ? 5 : 3) === 0 && !AppSettings.isLow) {
+                    if (Game.frameCount % (AppSettings.useMobileLimits ? 5 : 3) === 0 && !AppSettings.isLow) {
                         let sa = Math.random() * Math.PI * 2;
                         let sr = this.radius * 1.35 * ringExpand;
                         let sp = Game.getParticle();
@@ -24240,7 +24344,7 @@ class Enemy extends Entity {
                     let vScale = (this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0)) * (this.demonChargeScale || 1.0);
                     this.mesh.scale.setScalar(vScale);
 
-                    if (Game.frameCount % (isTouchDevice ? 5 : 3) === 0 && !AppSettings.isLow) {
+                    if (Game.frameCount % (AppSettings.useMobileLimits ? 5 : 3) === 0 && !AppSettings.isLow) {
                         let cp = Game.getParticle();
                         cp.spawn(this.x + MathUtils.randomRange(-10, 10), this.radius * 1.5, this.y + MathUtils.randomRange(-10, 10), SharedMat.spriteYellow, 'spark');
                         cp.baseSize = 12;
@@ -24262,7 +24366,7 @@ if (this.type === 'trapper') {
                         this.angle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
                         this.mesh.rotation.y = -this.angle + Math.PI / 2;
                     }
-                    if (!AppSettings.isLow && Game.frameCount % (isTouchDevice ? 6 : 4) === 0) {
+                    if (!AppSettings.isLow && Game.frameCount % (AppSettings.useMobileLimits ? 6 : 4) === 0) {
                         let spX = this.x + Math.cos(this.angle) * (this.radius * 1.1);
                         let spY = this.y + Math.sin(this.angle) * (this.radius * 1.1);
                         let sp = Game.getParticle();
@@ -24524,7 +24628,7 @@ if (this.type === 'trapper') {
         endNova.baseSize = 48;
 
         if (!AppSettings.isLow) {
-            let pCount = isTouchDevice ? 5 : 10;
+            let pCount = AppSettings.useMobileLimits ? 5 : 10;
             for (let i = 0; i < pCount; i++) {
                 Game.getParticle().spawn(this.x, 18, this.y, i % 2 === 0 ? SharedMat.spriteBlue : SharedMat.spriteWhite, 'spark');
             }
@@ -25012,7 +25116,7 @@ if (this.type === 'roller') {
         if (this.type === 'goblin' || this.type === 'leaper') energyMat = SharedMat.spriteGreen;
         else if (this.type === 'mage' || this.type === 'skeleton_archer') energyMat = SharedMat.spriteBlue;
 
-        let pCount = AppSettings.isLow ? 3 : (isTouchDevice ? 6 : 15);
+        let pCount = AppSettings.isLow ? 3 : (AppSettings.useMobileLimits ? 6 : 15);
         for (let i = 0; i < pCount; i++) Game.getParticle().spawn(this.x, 20, this.y, energyMat, 'spark');
 
         if (Game.player.modifiers.vampirismMaxHp > 0 && Math.random() < 0.10) {
@@ -25573,7 +25677,7 @@ class BossEnemy extends Enemy {
             burst.spawn(ox, oy, oz, (Math.random() > 0.4 ? elemMat : SharedMat.spriteWhite), 'nova');
             burst.baseSize = MathUtils.randomRange(65, 125) * (1 + progress * 0.5);
 
-            let sparkCount = AppSettings.isLow ? 2 : (isTouchDevice ? 4 : 8);
+            let sparkCount = AppSettings.isLow ? 2 : (AppSettings.useMobileLimits ? 4 : 8);
             for (let s = 0; s < sparkCount; s++) {
                 Game.getParticle().spawn(ox, oy, oz, elemMat, 'spark');
             }
@@ -25623,7 +25727,7 @@ class BossEnemy extends Enemy {
         bigNova.spawn(this.x, 35, this.y, SharedMat.spriteWhite, 'nova');
         bigNova.baseSize = 340;
 
-        let pCount = AppSettings.isLow ? 8 : (isTouchDevice ? 20 : (AppSettings.isUltraPC ? 80 : 40));
+        let pCount = AppSettings.isLow ? 8 : (AppSettings.useMobileLimits ? 20 : (AppSettings.isUltraPC ? 80 : 40));
         for (let i = 0; i < pCount; i++) {
             Game.getParticle().spawn(this.x, 30, this.y, bloodMat, 'blood');
             Game.getParticle().spawn(this.x, 35, this.y, SharedMat.spriteYellow, 'spark');
@@ -25990,7 +26094,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
             }
         }
         if (this.life <= 0) this.destroy();
-        if(this.active && this.type !== 'arrow' && (Game.frameCount + this.updateOffset) % (isTouchDevice?6:3) === 0) {
+        if(this.active && this.type !== 'arrow' && (Game.frameCount + this.updateOffset) % (AppSettings.useMobileLimits?6:3) === 0) {
             let pMat = SharedMat.spriteWhite;
             let pType = 'trail'; // Fisica standard (fumo che sale)
 
@@ -26043,7 +26147,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
         puff.spawn(this.x, 16, this.y, SharedMat.spriteWhite, 'nova');
         puff.baseSize = 28;
         puff.life = 0.10; puff.maxLife = 0.10;
-        let spCount = AppSettings.isLow ? 1 : (isTouchDevice ? 2 : 4);
+        let spCount = AppSettings.isLow ? 1 : (AppSettings.useMobileLimits ? 2 : 4);
         for (let i = 0; i < spCount; i++) {
             Game.getParticle().spawn(this.x, 16, this.y, i % 2 === 0 ? SharedMat.spriteRed : SharedMat.spriteYellow, 'spark');
         }
@@ -26065,7 +26169,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
        if (this.type === 'chain_lightning' || this.type === 'enemy_bolt') pMat = SharedMat.spriteBlue;
         if (this.type === 'homing_arrow') pMat = SharedMat.spriteGreen;
         if (this.type === 'orc_club') pMat = SharedMat.spriteWoodDust;
-        let count = AppSettings.isLow ? 1 : (isTouchDevice ? 2 : (AppSettings.isUltraPC ? 12 : 6));
+        let count = AppSettings.isLow ? 1 : (AppSettings.useMobileLimits ? 2 : (AppSettings.isUltraPC ? 12 : 6));
         for(let i=0; i<count; i++) Game.getParticle().spawn(this.x, 15, this.y, pMat, 'spark');
         if (this.type === 'fire_shape') Game.getHazard().spawn(this.x, this.y, 45, 8.0, this.damage, 0xff3300, 'enemy_fire');
        if (this.type === 'explosive_arrow') {
@@ -26075,7 +26179,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
                 for(let i=0, len=nearby.length; i<len; i++) { let e = nearby[i]; if (!e.dead && MathUtils.distanceSq(this, e) < 120*120) e.takeDamage(this.damage * 1.5, Game.player, false, false); }
                 
                 // Sostituiamo i detriti fisici con un'esplosione di particelle per evitare confusione
-                let pCount = AppSettings.isLow ? 4 : (isTouchDevice ? 8 : 15);
+                let pCount = AppSettings.isLow ? 4 : (AppSettings.useMobileLimits ? 8 : 15);
                 for(let i=0; i<pCount; i++) {
                     let a = (Math.PI * 2 / pCount) * i;
                     Game.getParticle().spawn(this.x, 15, this.y, SharedMat.spriteRed, 'flame', a);
@@ -26109,8 +26213,8 @@ class Particle {
         
         if (type === 'nova') {
             this.life = 0.15;
-            // FIX FILL-RATE: Dimezza le esplosioni trasparenti enormi su smartphone
-            this.baseSize = isTouchDevice ? MathUtils.randomRange(30, 50) : MathUtils.randomRange(60, 100);
+            // FIX FILL-RATE: Dimezza le esplosioni trasparenti enormi su smartphone (esclusa MEGA)
+            this.baseSize = AppSettings.useMobileLimits ? MathUtils.randomRange(30, 50) : MathUtils.randomRange(60, 100);
             this.vx = 0; this.vy = 0; this.vz = 0;
         } else if (type === 'ambient') { 
             // --- FISICA CENERE INFUOCATA ---
@@ -26139,9 +26243,9 @@ class Particle {
             this.vz = MathUtils.randomRange(-5, 5);
       } else {
             this.life = type === 'flame' ? MathUtils.randomRange(0.15, 0.45) : MathUtils.randomRange(0.2, 0.5); 
-            // FIX FILL-RATE: Riduce la dimensione del lanciafiamme e del sangue su mobile
+            // FIX FILL-RATE: Riduce la dimensione del lanciafiamme e del sangue su mobile (esclusa MEGA)
             let defaultSize = type === 'blood' ? 12 : (type==='level'? 16 : (type==='flame'? 24 : 10));
-            this.baseSize = isTouchDevice ? defaultSize * 0.6 : defaultSize;
+            this.baseSize = AppSettings.useMobileLimits ? defaultSize * 0.6 : defaultSize;
             
             let a = dirAngle !== null ? dirAngle + MathUtils.randomRange(-0.4, 0.4) : Math.random() * Math.PI * 2;
             let speed = type==='blood' ? MathUtils.randomRange(50, 200) : (type==='flame' ? MathUtils.randomRange(250, 750) : MathUtils.randomRange(100, 350));
