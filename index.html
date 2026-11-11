@@ -12977,6 +12977,9 @@ startGame(diffMult) {
             return {
                 rockShininess: 15, rockSpec: 0x13263a,
                 rockEm: 0x020710, dirtEm: 0x02050b, grassEm: 0x020812, wallEm: 0x02050b,
+                skirtShininess: 20, skirtSpec: 0x1a3348,
+                bankShininess: 24, bankSpec: 0x1e3c56,
+                rimShininess: 12, rimSpec: 0x101d29,
                 fogOp: 0.12, dirInt: 1.00, ambInt: 0.58,
                 bedHex: 0x0d4a80, shoreY: -8.38, padY: -8.25,
                 portalHex: 0x00ddff, portalSprite: SharedMat.spriteBlue,
@@ -12986,6 +12989,9 @@ startGame(diffMult) {
             return {
                 rockShininess: 12, rockSpec: 0x24100a,
                 rockEm: 0x070101, dirtEm: 0x050101, grassEm: 0x090201, wallEm: 0x050101,
+                skirtShininess: 8, skirtSpec: 0x111111,
+                bankShininess: 10, bankSpec: 0x26100c,
+                rimShininess: 8, rimSpec: 0x121212,
                 fogOp: 0.13, dirInt: 1.16, ambInt: 0.68,
                 bedHex: 0x240602, shoreY: -17.35, padY: -17.12,
                 portalHex: 0xff3300, portalSprite: SharedMat.spriteRed,
@@ -12995,6 +13001,9 @@ startGame(diffMult) {
         return {
             rockShininess: 14, rockSpec: 0x182010,
             rockEm: 0x030602, dirtEm: 0x030302, grassEm: 0x040902, wallEm: 0x020401,
+            skirtShininess: 8, skirtSpec: 0x111111,
+            bankShininess: 12, bankSpec: 0x182218,
+            rimShininess: 8, rimSpec: 0x121212,
             fogOp: 0.15, dirInt: 1.16, ambInt: 0.68,
             bedHex: 0x0e4f82, shoreY: -17.26, padY: -17.12,
             portalHex: 0x33ff66, portalSprite: SharedMat.spriteGreen,
@@ -13073,7 +13082,13 @@ startGame(diffMult) {
             fromMistEdgeCol: new THREE.Color(), toMistEdgeCol: new THREE.Color(),
             fromAbyssCol: new THREE.Color(), toAbyssCol: new THREE.Color(),
             fromBedCol: new THREE.Color(), toBedCol: new THREE.Color(),
-            fromBankTint: new THREE.Color(), toBankTint: new THREE.Color(),
+            fromSkirtSpec: new THREE.Color(), toSkirtSpec: new THREE.Color(),
+            fromBankSpec: new THREE.Color(), toBankSpec: new THREE.Color(),
+            fromRimSpec: new THREE.Color(), toRimSpec: new THREE.Color(),
+            fromSkirtCols: null, toSkirtCols: null,
+            fromBankCols: null, toBankCols: null,
+            fromRimCols: null, toRimCols: null,
+            fromShoreXZ: null, toShoreXZ: null,
             fromPortalCol: new THREE.Color(), toPortalCol: new THREE.Color(),
             fromPadCol: new THREE.Color(), toPadCol: new THREE.Color(),
             fromPadEm: new THREE.Color(), toPadEm: new THREE.Color(),
@@ -13191,8 +13206,23 @@ startGame(diffMult) {
         }
         tr.toAbyssCol.setHex(targetTheme.fog).multiplyScalar(0.35);
 
+        tr.fromSkirtCols = null; tr.toSkirtCols = null;
+        tr.fromBankCols = null; tr.toBankCols = null;
+        tr.fromRimCols = null; tr.toRimCols = null;
+        tr.fromShoreXZ = null; tr.toShoreXZ = null;
+
         // Transizione Fosse (Acqua / Lava / Lastre di Ghiaccio)
         if (map) {
+            const snapshotFloatAttr = (cacheKey, srcArr) => {
+                if (!srcArr) return null;
+                let buf = map[cacheKey];
+                if (!buf || buf.length !== srcArr.length) {
+                    buf = new Float32Array(srcArr.length);
+                    map[cacheKey] = buf;
+                }
+                buf.set(srcArr);
+                return buf;
+            };
             if (map.meshPitBed && map.meshPitBed.material) {
                 tr.fromBedCol.copy(map.meshPitBed.material.color);
                 tr.toBedCol.setHex(spec.bedHex);
@@ -13215,35 +13245,79 @@ startGame(diffMult) {
             const v = ['', '_lava', '_ice'][targetThemeIdx];
             const tBank = Preloader.textures['rock' + v];
             if (map.meshPitSkirt && map.meshPitSkirt.material) {
-                if (tBank) map.meshPitSkirt.material.map = tBank;
-                tr.fromBankTint.copy(map.meshPitSkirt.material.color);
-            }
-            if (map.meshPitBanks && map.meshPitBanks.material) {
-                if (tBank) {
-                    map.meshPitBanks.material.map = tBank;
-                    if (!AppSettings.useMobileLimits) map.meshPitBanks.material.bumpMap = tBank;
+                const prevSkirtMat = map.meshPitSkirt.material;
+                tr.fromSkirtSpec.copy(prevSkirtMat.specular);
+                tr.toSkirtSpec.setHex(spec.skirtSpec);
+                const nextSkirtMat = (window.GLOBAL_PIT_SKIRT_MATS && window.GLOBAL_PIT_SKIRT_MATS[targetThemeIdx]) || prevSkirtMat;
+                if (tBank && (!window.GLOBAL_PIT_SKIRT_MATS || !window.GLOBAL_PIT_SKIRT_MATS[targetThemeIdx])) nextSkirtMat.map = tBank;
+                nextSkirtMat.color.setRGB(1, 1, 1);
+                nextSkirtMat.shininess = spec.skirtShininess;
+                nextSkirtMat.specular.copy(tr.fromSkirtSpec);
+                map.meshPitSkirt.material = nextSkirtMat;
+                if (map.meshPitSkirt.geometry && map.meshPitSkirt.geometry.attributes.color && map.pitSkirtThemeCols) {
+                    tr.fromSkirtCols = snapshotFloatAttr('_trFromSkirtCols', map.meshPitSkirt.geometry.attributes.color.array);
+                    tr.toSkirtCols = map.pitSkirtThemeCols[targetThemeIdx];
                 }
             }
-            if (map.initialRockColor) {
-                const ir = Math.max(0.05, map.initialRockColor.r);
-                const ig = Math.max(0.05, map.initialRockColor.g);
-                const ib = Math.max(0.05, map.initialRockColor.b);
-                tr.toBankTint.setRGB(
-                    Math.max(0.45, Math.min(1.65, tr.toRockCol.r / ir)),
-                    Math.max(0.45, Math.min(1.65, tr.toRockCol.g / ig)),
-                    Math.max(0.45, Math.min(1.65, tr.toRockCol.b / ib))
-                );
-            } else {
-                tr.toBankTint.setRGB(1, 1, 1);
+            if (map.meshPitBanks && map.meshPitBanks.material) {
+                const prevBankMat = map.meshPitBanks.material;
+                tr.fromBankSpec.copy(prevBankMat.specular);
+                tr.toBankSpec.setHex(spec.bankSpec);
+                const nextBankMat = (window.GLOBAL_PIT_BANK_MATS && window.GLOBAL_PIT_BANK_MATS[targetThemeIdx]) || prevBankMat;
+                if (tBank && (!window.GLOBAL_PIT_BANK_MATS || !window.GLOBAL_PIT_BANK_MATS[targetThemeIdx])) nextBankMat.map = tBank;
+                const wantBankBump = !AppSettings.useMobileLimits ? nextBankMat.map : null;
+                if (nextBankMat.bumpMap !== wantBankBump) {
+                    const bumpPresenceChanged = (!!nextBankMat.bumpMap !== !!wantBankBump);
+                    nextBankMat.bumpMap = wantBankBump;
+                    if (bumpPresenceChanged) nextBankMat.needsUpdate = true;
+                }
+                nextBankMat.color.setRGB(1, 1, 1);
+                nextBankMat.shininess = spec.bankShininess;
+                nextBankMat.specular.copy(tr.fromBankSpec);
+                map.meshPitBanks.material = nextBankMat;
+                if (map.meshPitBanks.geometry && map.meshPitBanks.geometry.attributes.color && map.pitBankThemeCols) {
+                    tr.fromBankCols = snapshotFloatAttr('_trFromBankCols', map.meshPitBanks.geometry.attributes.color.array);
+                    tr.toBankCols = map.pitBankThemeCols[targetThemeIdx];
+                }
             }
             if (map.meshPitRimStones && map.meshPitRimStones.material) {
-                const tWall = Preloader.textures['wall' + v] || tBank;
-                if (tWall) map.meshPitRimStones.material.map = tWall;
+                const prevRimMat = map.meshPitRimStones.material;
+                tr.fromRimSpec.copy(prevRimMat.specular);
+                tr.toRimSpec.setHex(spec.rimSpec);
+                const nextRimMat = (window.GLOBAL_PIT_RIMSTONE_MATS && window.GLOBAL_PIT_RIMSTONE_MATS[targetThemeIdx]) || prevRimMat;
+                if (!window.GLOBAL_PIT_RIMSTONE_MATS || !window.GLOBAL_PIT_RIMSTONE_MATS[targetThemeIdx]) {
+                    const tWall = Preloader.textures['wall' + v] || tBank;
+                    if (tWall) nextRimMat.map = tWall;
+                }
+                nextRimMat.color.copy(prevRimMat.color);
+                nextRimMat.emissive.copy(prevRimMat.emissive);
+                nextRimMat.shininess = spec.rimShininess;
+                nextRimMat.specular.copy(tr.fromRimSpec);
+                map.meshPitRimStones.material = nextRimMat;
+                if (map.meshPitRimStones.instanceColor && map.pitRimStoneThemeCols) {
+                    tr.fromRimCols = snapshotFloatAttr('_trFromRimCols', map.meshPitRimStones.instanceColor.array);
+                    tr.toRimCols = map.pitRimStoneThemeCols[targetThemeIdx];
+                }
             }
             if (map.meshShoreFoam && window.GLOBAL_SHORE_MATS && window.GLOBAL_SHORE_MATS[targetThemeIdx]) {
                 map.meshShoreFoam.material = window.GLOBAL_SHORE_MATS[targetThemeIdx];
                 tr.fromShoreY = map.meshShoreFoam.position.y;
                 tr.toShoreY = spec.shoreY - (map.shoreInitialY || 0);
+                if (map.meshShoreFoam.geometry && map.meshShoreFoam.geometry.attributes.position && map.pitShoreThemeXZ) {
+                    const posArr = map.meshShoreFoam.geometry.attributes.position.array;
+                    const vCount = (posArr.length / 3) | 0;
+                    let bufXZ = map._trFromShoreXZ;
+                    if (!bufXZ || bufXZ.length !== vCount * 2) {
+                        bufXZ = new Float32Array(vCount * 2);
+                        map._trFromShoreXZ = bufXZ;
+                    }
+                    for (let k = 0; k < vCount; k++) {
+                        bufXZ[k * 2] = posArr[k * 3];
+                        bufXZ[k * 2 + 1] = posArr[k * 3 + 2];
+                    }
+                    tr.fromShoreXZ = bufXZ;
+                    tr.toShoreXZ = map.pitShoreThemeXZ[targetThemeIdx];
+                }
             }
             if (map.meshPitPads && window.GLOBAL_PIT_PAD_ASSETS && window.GLOBAL_PIT_PAD_ASSETS[targetThemeIdx]) {
                 const targetPadAsset = window.GLOBAL_PIT_PAD_ASSETS[targetThemeIdx];
@@ -13363,18 +13437,53 @@ startGame(diffMult) {
                     window.GLOBAL_ICE_MAT.opacity = 0.80;
                 }
             }
-            if (map.meshPitSkirt && map.meshPitSkirt.material) {
-                map.meshPitSkirt.material.color.copy(tr.fromBankTint).lerp(tr.toBankTint, t);
+            const lerpFloatAttr = (attr, fromArr, toArr) => {
+                if (!attr || !fromArr || !toArr) return;
+                const arr = attr.array;
+                for (let i = 0, len = arr.length; i < len; i++) {
+                    arr[i] = fromArr[i] + (toArr[i] - fromArr[i]) * t;
+                }
+                attr.needsUpdate = true;
+            };
+            if (map.meshPitSkirt) {
+                if (map.meshPitSkirt.material) {
+                    map.meshPitSkirt.material.color.setRGB(1, 1, 1);
+                    map.meshPitSkirt.material.specular.copy(tr.fromSkirtSpec).lerp(tr.toSkirtSpec, t);
+                }
+                if (map.meshPitSkirt.geometry) {
+                    lerpFloatAttr(map.meshPitSkirt.geometry.attributes.color, tr.fromSkirtCols, tr.toSkirtCols);
+                }
             }
-            if (map.meshPitBanks && map.meshPitBanks.material) {
-                map.meshPitBanks.material.color.copy(tr.fromBankTint).lerp(tr.toBankTint, t);
+            if (map.meshPitBanks) {
+                if (map.meshPitBanks.material) {
+                    map.meshPitBanks.material.color.setRGB(1, 1, 1);
+                    map.meshPitBanks.material.specular.copy(tr.fromBankSpec).lerp(tr.toBankSpec, t);
+                }
+                if (map.meshPitBanks.geometry) {
+                    lerpFloatAttr(map.meshPitBanks.geometry.attributes.color, tr.fromBankCols, tr.toBankCols);
+                }
             }
-            if (map.meshPitRimStones && map.meshPitRimStones.material && nextMats) {
-                map.meshPitRimStones.material.color.copy(nextMats.wall.color);
-                map.meshPitRimStones.material.emissive.copy(nextMats.wall.emissive);
+            if (map.meshPitRimStones) {
+                if (map.meshPitRimStones.material && nextMats) {
+                    map.meshPitRimStones.material.color.copy(nextMats.wall.color);
+                    map.meshPitRimStones.material.emissive.copy(nextMats.wall.emissive);
+                    map.meshPitRimStones.material.specular.copy(tr.fromRimSpec).lerp(tr.toRimSpec, t);
+                }
+                lerpFloatAttr(map.meshPitRimStones.instanceColor, tr.fromRimCols, tr.toRimCols);
             }
             if (map.meshShoreFoam) {
                 map.meshShoreFoam.position.y = tr.fromShoreY + (tr.toShoreY - tr.fromShoreY) * t;
+                if (map.meshShoreFoam.geometry && tr.fromShoreXZ && tr.toShoreXZ) {
+                    const posAttr = map.meshShoreFoam.geometry.attributes.position;
+                    const posArr = posAttr.array;
+                    for (let i = 0, n = tr.fromShoreXZ.length >> 1; i < n; i++) {
+                        const i2 = i * 2, i3 = i * 3;
+                        posArr[i3]     = tr.fromShoreXZ[i2]     + (tr.toShoreXZ[i2]     - tr.fromShoreXZ[i2])     * t;
+                        posArr[i3 + 2] = tr.fromShoreXZ[i2 + 1] + (tr.toShoreXZ[i2 + 1] - tr.fromShoreXZ[i2 + 1]) * t;
+                    }
+                    posAttr.needsUpdate = true;
+                    if (rawT >= 1.0) map.meshShoreFoam.geometry.computeBoundingSphere();
+                }
             }
             if (map.meshPitPads) {
                 map.meshPitPads.position.y = tr.fromPadY + (tr.toPadY - tr.fromPadY) * t;
@@ -16706,7 +16815,7 @@ class GameMap {
 
                             // Opacità vitrea calibrata: 0.38..0.52 nelle finestre trasparenti per lasciar vedere l'acqua che scorre sotto, 0.88..0.94 su crepe e brina
                             float slabOpacity = mix(0.38, 0.78, clamp(frostBody * 0.78 + snowRime * 0.36 - clearWindow * 0.24, 0.0, 1.0));
-                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.93), 0.38, 0.94);
+                            diffuseColor.a = clamp(max(slabOpacity, crackMask * 0.93), 0.38, 0.94) * clamp(opacity / 0.80, 0.0, 1.0);
                             `
                         ).replace(
                             '#include <dithering_fragment>',
@@ -16780,27 +16889,36 @@ class GameMap {
                 activeMats.dirt.map.needsUpdate = true;
             }
 
-            const cDirt = new THREE.Color(currentTheme.dirt);
-            const cGrass = new THREE.Color(currentTheme.grass);
-            const cRock = new THREE.Color(currentTheme.rock);
-            const cWall = new THREE.Color(currentTheme.wall);
-            this.initialRockColor = cRock.clone();
+            const pitPalettes = [0, 1, 2].map((t) => {
+                const th = MAP_THEMES[t];
+                return {
+                    dirt: new THREE.Color(th.dirt),
+                    grass: new THREE.Color(th.grass),
+                    rock: new THREE.Color(th.rock),
+                    wall: new THREE.Color(th.wall),
+                    deep: (t === 1)
+                        ? { r: 1.50, g: 0.40, b: 0.08 }
+                        : ((t === 0) ? { r: 0.20, g: 0.64, b: 0.90 } : { r: 0.12, g: 0.48, b: 0.80 }),
+                    shoreD0: (t === 2) ? 3.5 : (t === 0 ? 5.6 : 6.6),
+                    shoreD1: (t === 2) ? 19.5 : (t === 0 ? 38.0 : 21.5)
+                };
+            });
+            const activePal = pitPalettes[themeIdx];
+            this.initialRockColor = activePal.rock.clone();
             this.shoreInitialY = (themeIdx === 2) ? -8.38 : (themeIdx === 0 ? -17.26 : -17.35);
             this.padInitialY = (themeIdx === 2) ? -8.25 : -17.12;
-            const cDeep = (themeIdx === 1)
-                ? { r: 1.50, g: 0.40, b: 0.08 }
-                : ((themeIdx === 0) ? { r: 0.20, g: 0.64, b: 0.90 } : { r: 0.12, g: 0.48, b: 0.80 });
 
-            const sampleTileColor = (tx, ty) => {
-                if (tx < 0 || tx >= this.width || ty < 0 || ty >= this.height) return cDirt;
-                if (this.grid[tx][ty] !== 2 && this.grid[tx][ty] !== 3) return cDirt;
+            // Pesi canonici [dirt, grass, rock] per calcolare esattamente i colori vertice di ogni tema senza derive cromatiche
+            const sampleTileWeights = (tx, ty) => {
+                if (tx < 0 || tx >= this.width || ty < 0 || ty >= this.height) return [1, 0, 0];
+                if (this.grid[tx][ty] !== 2 && this.grid[tx][ty] !== 3) return [1, 0, 0];
                 let nRaw = (Math.sin(tx * 0.3) + Math.cos(ty * 0.3)) / 2.0;
                 let prng = Math.abs(Math.sin(tx * 12.9898 + ty * 78.233)) * 43758.5453;
                 prng = prng - Math.floor(prng);
                 let val = prng * 0.4 + (nRaw * 0.6 + 0.5);
-                if (val <= 0.35) return cDirt;
-                if (val < 0.70) return cGrass;
-                return cRock;
+                if (val <= 0.35) return [1, 0, 0];
+                if (val < 0.70) return [0, 1, 0];
+                return [0, 0, 1];
             };
 
             const rawEdges = [];
@@ -16849,9 +16967,9 @@ class GameMap {
             }
 
             const apronPos = [], apronNorm = [], apronUVs = [], apronIdx = [];
-            const skirtPos = [], skirtUVs = [], skirtCols = [], skirtIdx = [];
-            const bankPos = [], bankUVs = [], bankCols = [], bankIdx = [];
-            const shorePos = [], shoreAttr = [], shoreIdx = [];
+            const skirtPos = [], skirtUVs = [], skirtThemeCols = [[], [], []], skirtIdx = [];
+            const bankPos = [], bankUVs = [], bankThemeCols = [[], [], []], bankIdx = [];
+            const shorePos = [], shoreAttr = [], shoreThemeXZ = [[], [], []], shoreIdx = [];
             const seamPairs = [];
             const rimStoneSpawns = [], padSpawns = [], accentSpawns = [];
             const reedDummy = new THREE.Object3D();
@@ -16868,8 +16986,8 @@ class GameMap {
                 for (let i = 0; i < M; i++) {
                     const prev = loop[(i - 1 + M) % M];
                     const curr = loop[i];
-                    const tileCol = sampleTileColor(curr.adjX, curr.adjY);
-                    const prevCol = sampleTileColor(prev.adjX, prev.adjY);
+                    const tileW = sampleTileWeights(curr.adjX, curr.adjY);
+                    const prevW = sampleTileWeights(prev.adjX, prev.adjY);
 
                     for (let s = 0; s < SUB; s++) {
                         const t = s / SUB;
@@ -16877,7 +16995,7 @@ class GameMap {
                         const bz = (curr.vy0 + curr.dy * t) * TILE_SIZE;
 
                         let mx0 = curr.inX, mz0 = curr.inY;
-                        let cr = tileCol.r, cg = tileCol.g, cb = tileCol.b;
+                        let wd = tileW[0], wg = tileW[1], wr = tileW[2];
                         let turn = 0;
 
                         if (s === 0) {
@@ -16886,9 +17004,9 @@ class GameMap {
                                 mx0 = prev.inX + curr.inX;
                                 mz0 = prev.inY + curr.inY;
                             }
-                            cr = (tileCol.r + prevCol.r) * 0.5;
-                            cg = (tileCol.g + prevCol.g) * 0.5;
-                            cb = (tileCol.b + prevCol.b) * 0.5;
+                            wd = (tileW[0] + prevW[0]) * 0.5;
+                            wg = (tileW[1] + prevW[1]) * 0.5;
+                            wr = (tileW[2] + prevW[2]) * 0.5;
                         }
 
                         const phase = L * 2.71;
@@ -16904,7 +17022,7 @@ class GameMap {
                             pitX: curr.pitX,
                             pitY: curr.pitY,
                             isCorner: (s === 0 && turn !== 0),
-                            r: cr, g: cg, b: cb
+                            wd, wg, wr
                         });
                     }
                 }
@@ -16912,18 +17030,18 @@ class GameMap {
                 const N = pts.length;
                 for (let pass = 0; pass < 4; pass++) {
                     const nPX = new Float32Array(N), nPZ = new Float32Array(N);
-                    const nR = new Float32Array(N), nG = new Float32Array(N), nB = new Float32Array(N);
+                    const nD = new Float32Array(N), nG = new Float32Array(N), nR = new Float32Array(N);
                     for (let k = 0; k < N; k++) {
                         const p0 = pts[(k - 1 + N) % N], p1 = pts[k], p2 = pts[(k + 1) % N];
                         nPX[k] = p0.px * 0.25 + p1.px * 0.5 + p2.px * 0.25;
                         nPZ[k] = p0.pz * 0.25 + p1.pz * 0.5 + p2.pz * 0.25;
-                        nR[k] = p0.r * 0.25 + p1.r * 0.5 + p2.r * 0.25;
-                        nG[k] = p0.g * 0.25 + p1.g * 0.5 + p2.g * 0.25;
-                        nB[k] = p0.b * 0.25 + p1.b * 0.5 + p2.b * 0.25;
+                        nD[k] = p0.wd * 0.25 + p1.wd * 0.5 + p2.wd * 0.25;
+                        nG[k] = p0.wg * 0.25 + p1.wg * 0.5 + p2.wg * 0.25;
+                        nR[k] = p0.wr * 0.25 + p1.wr * 0.5 + p2.wr * 0.25;
                     }
                     for (let k = 0; k < N; k++) {
                         pts[k].px = nPX[k]; pts[k].pz = nPZ[k];
-                        pts[k].r = nR[k]; pts[k].g = nG[k]; pts[k].b = nB[k];
+                        pts[k].wd = nD[k]; pts[k].wg = nG[k]; pts[k].wr = nR[k];
                     }
                 }
 
@@ -16993,61 +17111,61 @@ class GameMap {
                         skirtPos.push(sx, sHeights[sr], sz);
                         skirtUVs.push(uSeamless, sVs[sr]);
                         const blend = sr / (S_ROWS - 1);
-                        if (themeIdx === 2) {
-                            skirtCols.push(
-                                p.r * (1.0 - blend) + (cRock.r * 0.90) * blend,
-                                p.g * (1.0 - blend) + (cRock.g * 0.94) * blend,
-                                p.b * (1.0 - blend) + (cRock.b * 0.98) * blend
-                            );
-                        } else if (themeIdx === 1) {
-                            skirtCols.push(
-                                p.r * (1.0 - blend) + cWall.r * 0.90 * blend,
-                                p.g * (1.0 - blend) + cWall.g * 0.85 * blend,
-                                p.b * (1.0 - blend) + cWall.b * 0.85 * blend
-                            );
-                        } else {
-                            skirtCols.push(
-                                p.r * (1.0 - blend) + cRock.r * 0.92 * blend,
-                                p.g * (1.0 - blend) + cRock.g * 0.98 * blend,
-                                p.b * (1.0 - blend) + cRock.b * 0.90 * blend
+                        for (let t = 0; t < 3; t++) {
+                            const pal = pitPalettes[t];
+                            const pr = p.wd * pal.dirt.r + p.wg * pal.grass.r + p.wr * pal.rock.r;
+                            const pg = p.wd * pal.dirt.g + p.wg * pal.grass.g + p.wr * pal.rock.g;
+                            const pb = p.wd * pal.dirt.b + p.wg * pal.grass.b + p.wr * pal.rock.b;
+                            const rimBase = (t === 1) ? pal.wall : pal.rock;
+                            const rmR = (t === 2) ? 0.90 : (t === 1 ? 0.90 : 0.92);
+                            const rmG = (t === 2) ? 0.94 : (t === 1 ? 0.85 : 0.98);
+                            const rmB = (t === 2) ? 0.98 : (t === 1 ? 0.85 : 0.90);
+                            skirtThemeCols[t].push(
+                                pr * (1.0 - blend) + (rimBase.r * rmR) * blend,
+                                pg * (1.0 - blend) + (rimBase.g * rmG) * blend,
+                                pb * (1.0 - blend) + (rimBase.b * rmB) * blend
                             );
                         }
                     }
 
                     bankPos.push(p.px - p.mx * 3.8, -0.30, p.pz - p.mz * 3.8);
                     bankUVs.push(uSeamless, 1.0);
-                    bankCols.push(cRock.r * 0.92, cRock.g * 0.92, cRock.b * 0.92);
-
                     bankPos.push(p.px - p.mx * 1.1, rimH, p.pz - p.mz * 1.1);
                     bankUVs.push(uSeamless, 0.84);
-                    const crestBoost = 1.08 * dirShade;
-                    bankCols.push(cRock.r * crestBoost, cRock.g * crestBoost, cRock.b * crestBoost);
-
                     bankPos.push(p.px + p.mx * 1.5, 0.15 + crag * 0.22, p.pz + p.mz * 1.5);
                     bankUVs.push(uSeamless, 0.68);
-                    bankCols.push(cRock.r * 0.94 * dirShade, cRock.g * 0.94 * dirShade, cRock.b * 0.94 * dirShade);
-
                     bankPos.push(p.px + p.mx * 4.5, -8.4 + crag * 0.50, p.pz + p.mz * 4.5);
                     bankUVs.push(uSeamless, 0.44);
-                    const midR = (cWall.r * 0.48 + cRock.r * 0.52) * dirShade;
-                    const midG = (cWall.g * 0.48 + cRock.g * 0.52) * dirShade;
-                    const midB = (cWall.b * 0.48 + cRock.b * 0.52) * dirShade;
-                    bankCols.push(midR, midG, midB);
-
                     bankPos.push(p.px + p.mx * 7.8, -17.3 + crag * 0.40, p.pz + p.mz * 7.8);
                     bankUVs.push(uSeamless, 0.20);
-                    bankCols.push(midR * 0.65 + cDeep.r * 0.35, midG * 0.65 + cDeep.g * 0.35, midB * 0.65 + cDeep.b * 0.35);
-
                     bankPos.push(p.px + p.mx * 12.2, -24.5, p.pz + p.mz * 12.2);
                     bankUVs.push(uSeamless, 0.0);
-                    bankCols.push(cDeep.r * 0.85, cDeep.g * 0.85, cDeep.b * 0.85);
 
-                    const shoreY = (themeIdx === 2) ? -8.38 : (themeIdx === 0 ? -17.26 : -17.35);
-                    const dShore0 = (themeIdx === 2) ? 3.5 : (themeIdx === 0 ? 5.6 : 6.6);
-                    const dShore1 = (themeIdx === 2) ? 19.5 : (themeIdx === 0 ? 38.0 : 21.5);
+                    const crestBoost = 1.08 * dirShade;
+                    for (let t = 0; t < 3; t++) {
+                        const pal = pitPalettes[t];
+                        const bRock = pal.rock, bWall = pal.wall, bDeep = pal.deep;
+                        const midR = (bWall.r * 0.48 + bRock.r * 0.52) * dirShade;
+                        const midG = (bWall.g * 0.48 + bRock.g * 0.52) * dirShade;
+                        const midB = (bWall.b * 0.48 + bRock.b * 0.52) * dirShade;
+                        bankThemeCols[t].push(
+                            bRock.r * 0.92, bRock.g * 0.92, bRock.b * 0.92,
+                            bRock.r * crestBoost, bRock.g * crestBoost, bRock.b * crestBoost,
+                            bRock.r * 0.94 * dirShade, bRock.g * 0.94 * dirShade, bRock.b * 0.94 * dirShade,
+                            midR, midG, midB,
+                            midR * 0.65 + bDeep.r * 0.35, midG * 0.65 + bDeep.g * 0.35, midB * 0.65 + bDeep.b * 0.35,
+                            bDeep.r * 0.85, bDeep.g * 0.85, bDeep.b * 0.85
+                        );
+                        shoreThemeXZ[t].push(
+                            p.px + p.mx * pal.shoreD0, p.pz + p.mz * pal.shoreD0,
+                            p.px + p.mx * pal.shoreD1, p.pz + p.mz * pal.shoreD1
+                        );
+                    }
+
+                    const shoreY = this.shoreInitialY;
                     shorePos.push(
-                        p.px + p.mx * dShore0, shoreY, p.pz + p.mz * dShore0,
-                        p.px + p.mx * dShore1, shoreY, p.pz + p.mz * dShore1
+                        p.px + p.mx * activePal.shoreD0, shoreY, p.pz + p.mz * activePal.shoreD0,
+                        p.px + p.mx * activePal.shoreD1, shoreY, p.pz + p.mz * activePal.shoreD1
                     );
                     shoreAttr.push(uSeamless, 0.0, uSeamless, 1.0);
 
@@ -17157,36 +17275,58 @@ class GameMap {
                 this.mapGroup.add(meshPitApron);
             }
 
-            const tBank = Preloader.textures['rock' + ['', '_lava', '_ice'][themeIdx]];
-            if (tBank) { tBank.wrapS = THREE.RepeatWrapping; tBank.wrapT = THREE.RepeatWrapping; }
+            this.pitShoreThemeXZ = [
+                new Float32Array(shoreThemeXZ[0]),
+                new Float32Array(shoreThemeXZ[1]),
+                new Float32Array(shoreThemeXZ[2])
+            ];
+
+            const bankVars = ['', '_lava', '_ice'];
+            const bankTextures = bankVars.map((bv) => {
+                const tex = Preloader.textures['rock' + bv];
+                if (tex) { tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; }
+                return tex;
+            });
 
             if (skirtIdx.length > 0) {
+                this.pitSkirtThemeCols = [
+                    new Float32Array(skirtThemeCols[0]),
+                    new Float32Array(skirtThemeCols[1]),
+                    new Float32Array(skirtThemeCols[2])
+                ];
                 const skirtGeo = new THREE.BufferGeometry();
                 skirtGeo.setAttribute('position', new THREE.Float32BufferAttribute(skirtPos, 3));
                 skirtGeo.setAttribute('uv', new THREE.Float32BufferAttribute(skirtUVs, 2));
-                skirtGeo.setAttribute('color', new THREE.Float32BufferAttribute(skirtCols, 3));
+                skirtGeo.setAttribute('color', new THREE.Float32BufferAttribute(this.pitSkirtThemeCols[themeIdx].slice(), 3));
                 skirtGeo.setIndex(skirtIdx);
                 skirtGeo.computeVertexNormals();
                 skirtGeo.computeBoundingSphere();
 
                 if (!window.GLOBAL_PIT_SKIRT_MATS) window.GLOBAL_PIT_SKIRT_MATS = {};
-                if (!window.GLOBAL_PIT_SKIRT_MATS[themeIdx]) {
-                    const cachedSkirtMat = new THREE.MeshPhongMaterial({
-                        color: 0xffffff,
-                        map: tBank,
-                        alphaMap: window.GLOBAL_PIT_SKIRT_ALPHA,
-                        vertexColors: true,
-                        transparent: true,
-                        depthWrite: false,
-                        shininess: themeIdx === 2 ? 20 : 8,
-                        specular: themeIdx === 2 ? 0x1a3348 : 0x111111
-                    });
-                    cachedSkirtMat._isGlobalCached = true;
-                    window.GLOBAL_PIT_SKIRT_MATS[themeIdx] = cachedSkirtMat;
+                for (let sIdx = 0; sIdx < 3; sIdx++) {
+                    const specPit = Game.getThemeMaterialSpec(sIdx);
+                    const sTex = bankTextures[sIdx];
+                    if (!window.GLOBAL_PIT_SKIRT_MATS[sIdx]) {
+                        const cachedSkirtMat = new THREE.MeshPhongMaterial({
+                            color: 0xffffff,
+                            map: sTex,
+                            alphaMap: window.GLOBAL_PIT_SKIRT_ALPHA,
+                            vertexColors: true,
+                            transparent: true,
+                            depthWrite: false,
+                            shininess: specPit.skirtShininess,
+                            specular: specPit.skirtSpec
+                        });
+                        cachedSkirtMat._isGlobalCached = true;
+                        window.GLOBAL_PIT_SKIRT_MATS[sIdx] = cachedSkirtMat;
+                    }
+                    const mSk = window.GLOBAL_PIT_SKIRT_MATS[sIdx];
+                    mSk.color.setRGB(1, 1, 1);
+                    if (sTex) mSk.map = sTex;
+                    mSk.shininess = specPit.skirtShininess;
+                    mSk.specular.setHex(specPit.skirtSpec);
                 }
                 const skirtMat = window.GLOBAL_PIT_SKIRT_MATS[themeIdx];
-                skirtMat.color.setRGB(1, 1, 1);
-                if (tBank) skirtMat.map = tBank;
                 const meshPitSkirt = new THREE.Mesh(skirtGeo, skirtMat);
                 meshPitSkirt.renderOrder = -6;
                 meshPitSkirt.receiveShadow = true;
@@ -17195,10 +17335,15 @@ class GameMap {
             }
 
             if (bankIdx.length > 0) {
+                this.pitBankThemeCols = [
+                    new Float32Array(bankThemeCols[0]),
+                    new Float32Array(bankThemeCols[1]),
+                    new Float32Array(bankThemeCols[2])
+                ];
                 const bankGeo = new THREE.BufferGeometry();
                 bankGeo.setAttribute('position', new THREE.Float32BufferAttribute(bankPos, 3));
                 bankGeo.setAttribute('uv', new THREE.Float32BufferAttribute(bankUVs, 2));
-                bankGeo.setAttribute('color', new THREE.Float32BufferAttribute(bankCols, 3));
+                bankGeo.setAttribute('color', new THREE.Float32BufferAttribute(this.pitBankThemeCols[themeIdx].slice(), 3));
                 bankGeo.setIndex(bankIdx);
                 bankGeo.computeVertexNormals();
 
@@ -17219,25 +17364,35 @@ class GameMap {
                 bankGeo.computeBoundingSphere();
 
                 if (!window.GLOBAL_PIT_BANK_MATS) window.GLOBAL_PIT_BANK_MATS = {};
-                if (!window.GLOBAL_PIT_BANK_MATS[themeIdx]) {
-                    const cachedBankMat = new THREE.MeshPhongMaterial({
-                        color: 0xffffff,
-                        map: tBank,
-                        bumpMap: AppSettings.useMobileLimits ? null : tBank,
-                        bumpScale: 0.09,
-                        vertexColors: true,
-                        shininess: themeIdx === 2 ? 24 : (themeIdx === 1 ? 10 : 12),
-                        specular: themeIdx === 2 ? 0x1e3c56 : (themeIdx === 1 ? 0x26100c : 0x182218)
-                    });
-                    cachedBankMat._isGlobalCached = true;
-                    window.GLOBAL_PIT_BANK_MATS[themeIdx] = cachedBankMat;
+                for (let bIdx = 0; bIdx < 3; bIdx++) {
+                    const specPit = Game.getThemeMaterialSpec(bIdx);
+                    const bTex = bankTextures[bIdx];
+                    const wantBump = AppSettings.useMobileLimits ? null : bTex;
+                    if (!window.GLOBAL_PIT_BANK_MATS[bIdx]) {
+                        const cachedBankMat = new THREE.MeshPhongMaterial({
+                            color: 0xffffff,
+                            map: bTex,
+                            bumpMap: wantBump,
+                            bumpScale: 0.09,
+                            vertexColors: true,
+                            shininess: specPit.bankShininess,
+                            specular: specPit.bankSpec
+                        });
+                        cachedBankMat._isGlobalCached = true;
+                        window.GLOBAL_PIT_BANK_MATS[bIdx] = cachedBankMat;
+                    }
+                    const mBk = window.GLOBAL_PIT_BANK_MATS[bIdx];
+                    mBk.color.setRGB(1, 1, 1);
+                    if (bTex) mBk.map = bTex;
+                    if (mBk.bumpMap !== wantBump) {
+                        const bumpPresenceChanged = (!!mBk.bumpMap !== !!wantBump);
+                        mBk.bumpMap = wantBump;
+                        if (bumpPresenceChanged) mBk.needsUpdate = true;
+                    }
+                    mBk.shininess = specPit.bankShininess;
+                    mBk.specular.setHex(specPit.bankSpec);
                 }
                 const bankMat = window.GLOBAL_PIT_BANK_MATS[themeIdx];
-                bankMat.color.setRGB(1, 1, 1);
-                if (tBank) {
-                    bankMat.map = tBank;
-                    bankMat.bumpMap = AppSettings.useMobileLimits ? null : tBank;
-                }
                 const meshPitBanks = new THREE.Mesh(bankGeo, bankMat);
                 meshPitBanks.renderOrder = -5;
                 meshPitBanks.receiveShadow = true;
@@ -17357,10 +17512,21 @@ class GameMap {
                     window.GLOBAL_PIT_BOULDER_GEO.boundingSphere = window.GLOBAL_GIANT_SPHERE;
                 }
                 if (!window.GLOBAL_PIT_RIMSTONE_MATS) window.GLOBAL_PIT_RIMSTONE_MATS = {};
-                if (!window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx]) {
-                    const rMat = this.wallMat.clone();
-                    rMat._isGlobalCached = true;
-                    window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx] = rMat;
+                const stoneWallVars = ['', '_lava', '_ice'];
+                for (let rIdx = 0; rIdx < 3; rIdx++) {
+                    const sv = stoneWallVars[rIdx];
+                    const tStoneWall = Preloader.textures['wall' + sv] || Preloader.textures['rock' + sv];
+                    const specRim = Game.getThemeMaterialSpec(rIdx);
+                    if (!window.GLOBAL_PIT_RIMSTONE_MATS[rIdx]) {
+                        const baseWallMat = (window.GLOBAL_THEME_MATS && window.GLOBAL_THEME_MATS[rIdx]) ? window.GLOBAL_THEME_MATS[rIdx].wall : this.wallMat;
+                        const rMat = baseWallMat.clone();
+                        rMat._isGlobalCached = true;
+                        window.GLOBAL_PIT_RIMSTONE_MATS[rIdx] = rMat;
+                    }
+                    const rMat = window.GLOBAL_PIT_RIMSTONE_MATS[rIdx];
+                    if (tStoneWall) rMat.map = tStoneWall;
+                    rMat.shininess = specRim.rimShininess;
+                    rMat.specular.setHex(specRim.rimSpec);
                 }
                 const rimStoneMat = window.GLOBAL_PIT_RIMSTONE_MATS[themeIdx];
                 rimStoneMat.color.copy(this.wallMat.color);
@@ -17372,6 +17538,16 @@ class GameMap {
 
                 const stoneObj = new THREE.Object3D();
                 const stoneCol = new THREE.Color();
+                this.pitRimStoneThemeCols = [
+                    new Float32Array(rimStoneSpawns.length * 3),
+                    new Float32Array(rimStoneSpawns.length * 3),
+                    new Float32Array(rimStoneSpawns.length * 3)
+                ];
+                const rimMults = [
+                    [0.96, 1.03, 0.94],
+                    [1.05, 0.88, 0.84],
+                    [0.78, 0.88, 0.98]
+                ];
                 for (let i = 0; i < rimStoneSpawns.length; i++) {
                     const rs = rimStoneSpawns[i];
                     stoneObj.position.set(rs.x, rs.y, rs.z);
@@ -17379,9 +17555,15 @@ class GameMap {
                     stoneObj.scale.set(rs.sx, rs.sy, rs.sz);
                     stoneObj.updateMatrix();
                     meshPitRimStones.setMatrixAt(i, stoneObj.matrix);
-                    if (themeIdx === 2) stoneCol.setRGB(rs.shade * 0.78, rs.shade * 0.88, Math.min(1.0, rs.shade * 0.98));
-                    else if (themeIdx === 1) stoneCol.setRGB(rs.shade * 1.05, rs.shade * 0.88, rs.shade * 0.84);
-                    else stoneCol.setRGB(rs.shade * 0.96, rs.shade * 1.03, rs.shade * 0.94);
+                    for (let t = 0; t < 3; t++) {
+                        const m = rimMults[t];
+                        const arrT = this.pitRimStoneThemeCols[t];
+                        arrT[i * 3]     = rs.shade * m[0];
+                        arrT[i * 3 + 1] = rs.shade * m[1];
+                        arrT[i * 3 + 2] = (t === 2) ? Math.min(1.0, rs.shade * m[2]) : rs.shade * m[2];
+                    }
+                    const activeArr = this.pitRimStoneThemeCols[themeIdx];
+                    stoneCol.setRGB(activeArr[i * 3], activeArr[i * 3 + 1], activeArr[i * 3 + 2]);
                     meshPitRimStones.setColorAt(i, stoneCol);
                 }
                 meshPitRimStones.instanceMatrix.needsUpdate = true;
