@@ -23915,7 +23915,6 @@ if (this.type === 'trapper') {
             }
 
             let trapperRepositioning = (this.type === 'trapper' && this.telegraphTimer <= 0 && (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220));
-            let trapperRepositioning = (this.type === 'trapper' && this.telegraphTimer <= 0 && (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220));
             if (this.distToTargetSq > this.attackRangeSq || trapperRepositioning) {
                 this.move(this.moveX, this.moveY, dt);
                 if (this.type === 'trapper') {
