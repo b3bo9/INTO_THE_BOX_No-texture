@@ -3117,9 +3117,8 @@ const AppSettings = {
             }
         }
         
-        if (typeof Game !== 'undefined' && Game.bloomPass) {
-            Game.bloomPass.strength = this.isUltraPC ? 0.28 : 0.20;
-            Game.bloomPass.radius = 0.22;
+        if (typeof Game !== 'undefined' && Game.applyBloomSpec) {
+            Game.applyBloomSpec(Game.currentThemeIndex);
         }
     },
     toggleColorblind() {
@@ -11552,16 +11551,36 @@ prewarmShaders() {
 
         this.renderer.compile(warmScene, warmCam);
     },
+    getBloomSpec(themeIdx) {
+        const isIce = (themeIdx === 2);
+        return {
+            strength: isIce
+                ? (AppSettings.isUltraPC ? 0.19 : 0.14)
+                : (AppSettings.isUltraPC ? 0.25 : 0.18),
+            radius: isIce ? 0.18 : 0.22,
+            threshold: isIce ? 0.82 : 0.72
+        };
+    },
+    applyBloomSpec(themeIdx = this.currentThemeIndex) {
+        const bloomOn = !AppSettings.isLow && !AppSettings.useMobileLimits && !!this.composer;
+        if (typeof InteractiveGrassSystem !== 'undefined' && InteractiveGrassSystem.uniforms && InteractiveGrassSystem.uniforms.uBloomActive) {
+            InteractiveGrassSystem.uniforms.uBloomActive.value = bloomOn ? 1.0 : 0.0;
+        }
+        if (!this.bloomPass) return;
+        const b = this.getBloomSpec(themeIdx);
+        this.bloomPass.strength = b.strength;
+        this.bloomPass.radius = b.radius;
+        this.bloomPass.threshold = b.threshold;
+    },
     ensureComposer() {
         if (this.composer || !this.renderer || !this.scene || !this.camera || AppSettings.useMobileLimits) return;
         const renderScene = new THREE.RenderPass(this.scene, this.camera);
-        let initialStrength = AppSettings.isUltraPC ? 0.28 : 0.20;
-        let initialRadius = 0.22;
-        this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(Math.max(1, this.width / 2), Math.max(1, this.height / 2)), initialStrength, initialRadius, 0.65);
-        this.bloomPass.threshold = (this.currentThemeIndex === 2) ? 0.76 : 0.72;
+        const bSpec = this.getBloomSpec(this.currentThemeIndex);
+        this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(Math.max(1, this.width / 2), Math.max(1, this.height / 2)), bSpec.strength, bSpec.radius, bSpec.threshold);
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(renderScene);
         this.composer.addPass(this.bloomPass);
+        this.applyBloomSpec(this.currentThemeIndex);
     },
     ensureFlashLights() {
         if (!this.scene || AppSettings.useMobileLimits) return;
@@ -12737,10 +12756,7 @@ loop(timestamp) {
             this.scene.fog.near = fogNear;
             this.scene.fog.far = fogFar;
         }
-        if (this.bloomPass) {
-            this.bloomPass.strength = AppSettings.isUltraPC ? 0.25 : 0.18;
-            this.bloomPass.threshold = (this.currentThemeIndex === 2) ? 0.76 : 0.72;
-        }
+        this.applyBloomSpec(this.currentThemeIndex);
         Game.arenaEvolution = false;
         Game.bossLightClear = false;
         
@@ -13100,7 +13116,11 @@ startGame(diffMult) {
             fromIceOp: 0.0, toIceOp: 0.80,
             fromPadOp: 1.0, toPadOp: 1.0,
             fromShoreY: 0, toShoreY: 0,
-            fromPadY: 0, toPadY: 0
+            fromPadY: 0, toPadY: 0,
+            hasBloomTr: false,
+            fromBloomStr: 0.25, toBloomStr: 0.25,
+            fromBloomRad: 0.22, toBloomRad: 0.22,
+            fromBloomThresh: 0.72, toBloomThresh: 0.72
         });
 
         tr.elapsed = 0;
@@ -13358,6 +13378,23 @@ startGame(diffMult) {
             }
         }
 
+        // Bilanciamento Bloom progressivo nella transizione (evita stacchi luminosi entrando o uscendo dal Ghiaccio)
+        if (this.bloomPass) {
+            const targetBloom = this.getBloomSpec(targetThemeIdx);
+            tr.hasBloomTr = true;
+            tr.fromBloomStr = this.bloomPass.strength;
+            tr.toBloomStr = targetBloom.strength;
+            tr.fromBloomRad = this.bloomPass.radius;
+            tr.toBloomRad = targetBloom.radius;
+            tr.fromBloomThresh = this.bloomPass.threshold;
+            tr.toBloomThresh = targetBloom.threshold;
+        } else {
+            tr.hasBloomTr = false;
+        }
+        if (typeof InteractiveGrassSystem !== 'undefined' && InteractiveGrassSystem.uniforms && InteractiveGrassSystem.uniforms.uBloomActive) {
+            InteractiveGrassSystem.uniforms.uBloomActive.value = (!AppSettings.isLow && !AppSettings.useMobileLimits && !!this.composer) ? 1.0 : 0.0;
+        }
+
         this.themeTransition = tr;
     },
 
@@ -13507,6 +13544,12 @@ startGame(diffMult) {
             if (p0.vortexOuterMat) p0.vortexOuterMat.color.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
             if (p0.frameMat) p0.frameMat.emissive.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
             if (p0.baseRuneMat) p0.baseRuneMat.color.copy(tr.fromPortalCol).lerp(tr.toPortalCol, t);
+        }
+
+        if (this.bloomPass && tr.hasBloomTr) {
+            this.bloomPass.strength = tr.fromBloomStr + (tr.toBloomStr - tr.fromBloomStr) * t;
+            this.bloomPass.radius = tr.fromBloomRad + (tr.toBloomRad - tr.fromBloomRad) * t;
+            this.bloomPass.threshold = tr.fromBloomThresh + (tr.toBloomThresh - tr.fromBloomThresh) * t;
         }
 
         if (rawT >= 1.0) {
@@ -15213,6 +15256,7 @@ const InteractiveGrassSystem = {
         uPlayerPit: { value: new THREE.Vector4(0, 0, 0, 0) },
         // vec4(dirX, dirZ, speedRatio, wakePhase) orientamento e deformazione dinamica delle onde
         uPlayerPitDir: { value: new THREE.Vector4(1, 0, 0, 0) },
+        uBloomActive: { value: 0.0 },
         uGroundGrassColor: { value: new THREE.Color(0x194310) }
     },
     geo: null,
@@ -16318,11 +16362,12 @@ class GameMap {
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v15_' + themeIdx + (useMobPit ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v16_' + themeIdx + (useMobPit ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                 shader.uniforms.uPlayerPitDir = InteractiveGrassSystem.uniforms.uPlayerPitDir;
+                shader.uniforms.uBloomActive = InteractiveGrassSystem.uniforms.uBloomActive;
                 const hasMapDecode = THREE.ShaderChunk && THREE.ShaderChunk.map_fragment && THREE.ShaderChunk.map_fragment.includes('mapTexelToLinear');
                 const sampleWaterTex = (uvVar) => hasMapDecode ? `mapTexelToLinear(texture2D(map, ${uvVar}))` : `texture2D(map, ${uvVar})`;
 
@@ -16348,6 +16393,7 @@ class GameMap {
                 );
                 shader.fragmentShader = `
                     uniform float uTime;
+                    uniform float uBloomActive;
                     uniform vec4 uPlayerPit;
                     uniform vec4 uPlayerPitDir;
                     varying vec2 vPitWPos;
@@ -16547,16 +16593,17 @@ class GameMap {
                         float subBubbles = pow(clamp(0.5 + 0.5 * sin(bubGrid.x) * cos(bubGrid.y * 1.3), 0.0, 1.0), 6.0) * smoothstep(0.35, 0.85, stream);
 
                         float flowMix = clamp(texLum * 0.42 + stream * 0.58, 0.0, 1.0);
-                        vec3 deepSubCol   = vec3(0.080, 0.420, 0.780);
-                        vec3 midSubCol    = vec3(0.200, 0.680, 0.960);
-                        vec3 brightSubCol = vec3(0.520, 0.900, 1.000);
+                        float bBal = clamp(uBloomActive, 0.0, 1.0);
+                        vec3 deepSubCol   = mix(vec3(0.080, 0.420, 0.780), vec3(0.055, 0.290, 0.600), bBal);
+                        vec3 midSubCol    = mix(vec3(0.200, 0.680, 0.960), vec3(0.135, 0.490, 0.790), bBal);
+                        vec3 brightSubCol = mix(vec3(0.520, 0.900, 1.000), vec3(0.320, 0.690, 0.900), bBal);
 
                         vec3 subWaterCol = mix(deepSubCol, midSubCol, smoothstep(0.10, 0.78, flowMix));
                         subWaterCol = mix(subWaterCol, brightSubCol, clamp(streamRibbon * 0.55 + subCaustic * 0.62, 0.0, 0.88));
-                        subWaterCol += vec3(0.75, 0.96, 1.00) * (subBubbles * 0.65);
+                        subWaterCol += mix(vec3(0.75, 0.96, 1.00), vec3(0.52, 0.82, 0.95), bBal) * (subBubbles * mix(0.65, 0.42, bBal));
 
                         diffuseColor.rgb = subWaterCol;
-                        totalEmissiveRadiance = mix(vec3(0.045, 0.220, 0.440), vec3(0.220, 0.640, 0.920), clamp(flowMix * 0.6 + subCaustic * 0.5 + subBubbles * 0.5, 0.0, 1.0)) * 0.62;
+                        totalEmissiveRadiance = mix(vec3(0.045, 0.220, 0.440), vec3(0.220, 0.640, 0.920), clamp(flowMix * 0.6 + subCaustic * 0.5 + subBubbles * 0.5, 0.0, 1.0)) * mix(0.62, 0.36, bBal);
                         vec3 waterBaseCol = diffuseColor.rgb;
                     `)}
                     `
@@ -16567,13 +16614,19 @@ class GameMap {
                         // Mantiene l'acqua luminosa e fiabesca anche lontano dalla PointLight del giocatore su smartphone
                         float baseLum = max(0.06, dot(waterBaseCol, vec3(0.299, 0.587, 0.114)));
                         float litLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                        float lumGain = clamp(litLum / baseLum, 0.86, 1.14);
+                        float lumGain = clamp(litLum / baseLum, 0.86, ${themeIdx === 0 ? '1.14' : 'mix(1.14, 1.05, clamp(uBloomActive, 0.0, 1.0))'});
                         gl_FragColor.rgb = waterBaseCol * lumGain;
 
-                        float capLim = ${themeIdx === 0 ? '0.88' : '0.86'};
+                        float capLim = ${themeIdx === 0 ? '0.88' : 'mix(0.86, 0.75, clamp(uBloomActive, 0.0, 1.0))'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
-                            float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 2.5);
+                            ${themeIdx === 0 ? `
+                                float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 2.5);
+                            ` : `
+                                float iceSubHead = mix(0.28, 0.09, clamp(uBloomActive, 0.0, 1.0));
+                                float overSub = maxC - capLim;
+                                float compressed = capLim + (iceSubHead * overSub) / (iceSubHead + overSub);
+                            `}
                             gl_FragColor.rgb *= (compressed / maxC);
                         }
                     ` : ''}
@@ -16667,15 +16720,17 @@ class GameMap {
                         iceMatParams.shininess = 72;
                         iceMatParams.specular = new THREE.Color(0x0c243b);
                     } else {
-                        iceMatParams.roughness = 0.20;
-                        iceMatParams.metalness = 0.06;
+                        iceMatParams.roughness = 0.28;
+                        iceMatParams.metalness = 0.04;
+                        iceMatParams.emissiveIntensity = 0.24;
                     }
                     const cachedIceMat = new IceMatClass(iceMatParams);
-                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v15' + (useMobIce ? '_m' : '_d');
+                    cachedIceMat.customProgramCacheKey = () => 'pit_ice_v16' + (useMobIce ? '_m' : '_d');
                     cachedIceMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                         shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
                         shader.uniforms.uCamPos = InteractiveGrassSystem.uniforms.uCamPos;
+                        shader.uniforms.uBloomActive = InteractiveGrassSystem.uniforms.uBloomActive;
                         shader.vertexShader = `
                             varying vec2 vIceWPos;
                         ` + shader.vertexShader.replace(
@@ -16687,6 +16742,7 @@ class GameMap {
                         );
                         shader.fragmentShader = `
                             uniform float uTime;
+                            uniform float uBloomActive;
                             uniform vec4 uPlayerPit;
                             uniform vec3 uCamPos;
                             varying vec2 vIceWPos;
@@ -16763,30 +16819,36 @@ class GameMap {
                             float viewFacet = clamp(dot(viewDirXZ, facetNormXZ) * 0.5 + 0.5, 0.0, 1.0);
                             float crystalSpec = pow(viewFacet, 4.5) * (0.45 + 0.55 * facetRidge);
 
-                            // 4. Palette Lastre Ghiacciate Fiabesche (Azzurro Cristallo, Celeste Incantato, Acquamarina e Brina)
-                            vec3 windowIceCol     = vec3(0.220, 0.650, 0.940);
-                            vec3 fairyGlacierCol  = vec3(0.380, 0.780, 0.980);
-                            vec3 brightCrystalCol = vec3(0.580, 0.890, 1.000);
-                            vec3 frostRimeCol     = vec3(0.880, 0.970, 1.000);
+                            // 4. Palette Lastre Ghiacciate Fiabesche (calibrata per rimanere ricca e cristallina anche con Bloom attivo)
+                            float bloomBal = clamp(uBloomActive, 0.0, 1.0);
+                            vec3 windowIceCol     = mix(vec3(0.220, 0.650, 0.940), vec3(0.145, 0.450, 0.780), bloomBal);
+                            vec3 fairyGlacierCol  = mix(vec3(0.380, 0.780, 0.980), vec3(0.245, 0.560, 0.860), bloomBal);
+                            vec3 brightCrystalCol = mix(vec3(0.580, 0.890, 1.000), vec3(0.390, 0.700, 0.920), bloomBal);
+                            vec3 frostRimeCol     = mix(vec3(0.880, 0.970, 1.000), vec3(0.660, 0.830, 0.940), bloomBal);
+                            vec3 balFairyTex      = mix(fairyIceTex, vec3(0.16 + iceTex * 0.24, 0.46 + iceTex * 0.24, 0.76 + iceTex * 0.18), bloomBal);
 
                             vec3 slabCol = mix(windowIceCol, fairyGlacierCol, smoothstep(0.08, 0.55, frostBody));
                             slabCol = mix(slabCol, brightCrystalCol, smoothstep(0.45, 0.85, frostBody * (0.65 + 0.35 * facetSlope)));
-                            slabCol = mix(slabCol, fairyIceTex, 0.24);
-                            slabCol *= mix(0.92, 1.10, facetSlope);
+                            slabCol = mix(slabCol, balFairyTex, 0.24);
+                            slabCol *= mix(0.92, mix(1.10, 1.07, bloomBal), facetSlope);
 
                             // Correnti d'acqua e bolle che scorrono sotto la lastra, visibili attraverso le finestre di ghiaccio trasparente
                             float subFlowVis = (0.45 + 0.55 * clearWindow) * (1.0 - crackMask * 0.8);
-                            vec3 subFlowGlow = mix(vec3(0.16, 0.62, 0.94), vec3(0.56, 0.92, 1.00), clamp(underStream * 0.55 + underRibbon * 0.60, 0.0, 1.0));
-                            slabCol = mix(slabCol, subFlowGlow, subFlowVis * (0.35 + 0.35 * underRibbon));
-                            slabCol += vec3(0.72, 0.96, 1.00) * (underBubbles * subFlowVis * 0.52);
+                            vec3 subFlowGlow = mix(
+                                mix(vec3(0.16, 0.62, 0.94), vec3(0.12, 0.46, 0.78), bloomBal),
+                                mix(vec3(0.56, 0.92, 1.00), vec3(0.36, 0.74, 0.92), bloomBal),
+                                clamp(underStream * 0.55 + underRibbon * 0.60, 0.0, 1.0)
+                            );
+                            slabCol = mix(slabCol, subFlowGlow, subFlowVis * (mix(0.35, 0.28, bloomBal) + mix(0.35, 0.28, bloomBal) * underRibbon));
+                            slabCol += mix(vec3(0.72, 0.96, 1.00), vec3(0.48, 0.78, 0.92), bloomBal) * (underBubbles * subFlowVis * mix(0.52, 0.34, bloomBal));
 
                             // Rifrazione celeste sulle creste sfaccettate e brina fiabesca
-                            slabCol += vec3(0.12, 0.32, 0.46) * (facetRidge * 0.45);
-                            slabCol = mix(slabCol, frostRimeCol, snowRime * 0.50);
+                            slabCol += mix(vec3(0.12, 0.32, 0.46), vec3(0.07, 0.20, 0.34), bloomBal) * (facetRidge * mix(0.45, 0.28, bloomBal));
+                            slabCol = mix(slabCol, frostRimeCol, snowRime * mix(0.50, 0.36, bloomBal));
 
                             // Bisello 3D interno delle fratture in azzurro ceruleo intenso (profondità 3D senza mai scurire la lastra)
                             float shadowMask = clamp(depthWall * 0.72 + crackBevel * 0.42, 0.0, 0.82) * (1.0 - crackMask);
-                            slabCol = mix(slabCol, vec3(0.140, 0.490, 0.830), shadowMask);
+                            slabCol = mix(slabCol, mix(vec3(0.140, 0.490, 0.830), vec3(0.105, 0.365, 0.690), bloomBal), shadowMask);
 
                             // Alone di pressione cristallino sotto i passi del giocatore
                             float stepFrost = 0.0;
@@ -16800,18 +16862,21 @@ class GameMap {
 
                             // Venature di ghiaccio brillanti ciano-bianche
                             float brightVeinMask = clamp(crackMask * 0.88 + scratches * 0.60 + crystalSpec * 0.46 + stepFrost * 0.65, 0.0, 1.0);
-                            vec3 veinCol = mix(vec3(0.66, 0.92, 1.00), vec3(0.96, 0.995, 1.00), clamp(crackCore * 0.85 + crystalSpec * 0.60 + stepFrost * 0.50, 0.0, 1.0));
-                            slabCol = mix(slabCol, veinCol, brightVeinMask * 0.86);
+                            vec3 veinLow  = mix(vec3(0.66, 0.92, 1.00), vec3(0.48, 0.76, 0.92), bloomBal);
+                            vec3 veinHigh = mix(vec3(0.96, 0.995, 1.00), vec3(0.84, 0.94, 0.99), bloomBal);
+                            vec3 veinCol = mix(veinLow, veinHigh, clamp(crackCore * 0.85 + crystalSpec * 0.60 + stepFrost * 0.50, 0.0, 1.0));
+                            slabCol = mix(slabCol, veinCol, brightVeinMask * mix(0.86, 0.74, bloomBal));
 
                             vec3 baseIceCol = slabCol;
-                            vec3 iceHighlightCol = veinCol * (crackMask * 0.36 + crackCore * 0.30 + crystalSpec * 0.28 + scratches * 0.22 + stepFrost * 0.34);
+                            float hiScale = mix(1.0, 0.44, bloomBal);
+                            vec3 iceHighlightCol = veinCol * (crackMask * 0.36 + crackCore * 0.30 + crystalSpec * 0.28 + scratches * 0.22 + stepFrost * 0.34) * hiScale;
 
                             diffuseColor.rgb = slabCol;
                             totalEmissiveRadiance = mix(
                                 vec3(0.065, 0.260, 0.480),
                                 vec3(0.240, 0.660, 0.940),
                                 clamp(frostBody * 0.35 + crackMask * 0.65 + underRibbon * 0.40 + stepFrost * 0.60, 0.0, 1.0)
-                            ) * 0.48;
+                            ) * mix(0.48, 0.26, bloomBal);
 
                             // Opacità vitrea calibrata: 0.38..0.52 nelle finestre trasparenti per lasciar vedere l'acqua che scorre sotto, 0.88..0.94 su crepe e brina
                             float slabOpacity = mix(0.38, 0.78, clamp(frostBody * 0.78 + snowRime * 0.36 - clearWindow * 0.24, 0.0, 1.0));
@@ -16820,15 +16885,19 @@ class GameMap {
                         ).replace(
                             '#include <dithering_fragment>',
                             `
-                            // Mantiene le lastre di ghiaccio luminose, azzurre e fiabesche su smartphone
+                            // Mantiene le lastre di ghiaccio luminose ma controllate in presenza di Bloom alle grafiche alte
                             float baseIceLum = max(0.06, dot(baseIceCol, vec3(0.299, 0.587, 0.114)));
                             float litIceLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                            float iceLumGain = clamp(litIceLum / baseIceLum, 0.90, 1.15);
+                            float iceGainMax = mix(1.15, 1.05, clamp(uBloomActive, 0.0, 1.0));
+                            float iceLumGain = clamp(litIceLum / baseIceLum, 0.88, iceGainMax);
                             gl_FragColor.rgb = baseIceCol * iceLumGain + iceHighlightCol;
 
+                            float iceKnee = mix(0.95, 0.76, clamp(uBloomActive, 0.0, 1.0));
+                            float iceHead = mix(0.24, 0.12, clamp(uBloomActive, 0.0, 1.0));
                             float maxIceC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-                            if (maxIceC > 0.95) {
-                                float compIce = 0.95 + (maxIceC - 0.95) / (1.0 + (maxIceC - 0.95) * 3.0);
+                            if (maxIceC > iceKnee) {
+                                float overIce = maxIceC - iceKnee;
+                                float compIce = iceKnee + (iceHead * overIce) / (iceHead + overIce);
                                 gl_FragColor.rgb *= (compIce / maxIceC);
                             }
                             #include <dithering_fragment>
@@ -17421,9 +17490,10 @@ class GameMap {
                         polygonOffsetUnits: -1
                     });
 
-                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v8_' + themeIdx;
+                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v9_' + themeIdx;
                     cachedShoreMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
+                        shader.uniforms.uBloomActive = InteractiveGrassSystem.uniforms.uBloomActive;
                         shader.vertexShader = `
                             attribute vec2 aShoreUV;
                             varying vec2 vShoreUV;
@@ -17436,6 +17506,7 @@ class GameMap {
                         );
                         shader.fragmentShader = `
                             uniform float uTime;
+                            uniform float uBloomActive;
                             varying vec2 vShoreUV;
                         ` + shader.fragmentShader.replace(
                             '#include <color_fragment>',
@@ -17477,8 +17548,10 @@ class GameMap {
                                 float rimeEdge = 1.0 - smoothstep(0.16 + frostNoise, 0.58 + frostNoise, d);
                                 float crystalGlint = smoothstep(0.03, 0.14, d) * (1.0 - smoothstep(0.14, 0.30, d));
                                 float innerCrack = pow(clamp(0.5 + 0.5 * sin(uArc * 14.0 + d * 18.0), 0.0, 1.0), 6.0) * rimeEdge;
-                                vec3 rimeCol = mix(vec3(0.12, 0.44, 0.78), vec3(0.76, 0.93, 1.00), clamp(rimeEdge * 0.68 + crystalGlint * 0.45 + innerCrack * 0.35, 0.0, 1.0));
-                                float rimeAlpha = clamp(rimeEdge * 0.66 + crystalGlint * 0.22, 0.0, 0.76) * deepFade;
+                                float shoreBloomBal = clamp(uBloomActive, 0.0, 1.0);
+                                vec3 rimeHi = mix(vec3(0.76, 0.93, 1.00), vec3(0.56, 0.78, 0.92), shoreBloomBal);
+                                vec3 rimeCol = mix(vec3(0.12, 0.44, 0.78), rimeHi, clamp(rimeEdge * 0.68 + crystalGlint * 0.45 + innerCrack * 0.35, 0.0, 1.0));
+                                float rimeAlpha = clamp(rimeEdge * 0.66 + crystalGlint * 0.22, 0.0, mix(0.76, 0.62, shoreBloomBal)) * deepFade;
                                 diffuseColor = vec4(rimeCol, rimeAlpha);
                             `)}
                             `
@@ -17592,7 +17665,7 @@ class GameMap {
                         padMat = createPitPropMat({ color: 0x240a08, emissive: 0x4d1204, emissiveIntensity: 0.60, roughness: 0.9, flatShading: true });
                     } else {
                         padGeo = new THREE.CylinderGeometry(8.0, 8.5, 0.45, 6);
-                        padMat = createPitPropMat({ color: 0x9ec4db, emissive: 0x103554, emissiveIntensity: 0.16, roughness: 0.42, metalness: 0.08, flatShading: true, transparent: true, opacity: 0.82, depthWrite: false });
+                        padMat = createPitPropMat({ color: 0x8fb8d1, emissive: 0x0f3250, emissiveIntensity: 0.14, roughness: 0.48, metalness: 0.06, flatShading: true, transparent: true, opacity: 0.82, depthWrite: false });
                     }
                     padGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
                     padGeo._isGlobalCached = true;
@@ -17624,7 +17697,7 @@ class GameMap {
                         let c3 = new THREE.CylinderGeometry(0.25, 1.6, 7.5, 6); c3.translate(1.8, 3.2, -1.1); c3.rotateZ(0.35); c3.rotateX(-0.20);
                         accentGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([c1.toNonIndexed(), c2.toNonIndexed(), c3.toNonIndexed()]);
                         c1.dispose(); c2.dispose(); c3.dispose();
-                        accentMat = createPitPropMat({ color: 0x9ad8eb, emissive: 0x1499b8, emissiveIntensity: 0.45, roughness: 0.30, metalness: 0.2, flatShading: true });
+                        accentMat = createPitPropMat({ color: 0x8ecbe0, emissive: 0x148fb0, emissiveIntensity: 0.32, roughness: 0.34, metalness: 0.18, flatShading: true });
                     }
                     accentGeo.computeVertexNormals();
                     accentGeo.boundingSphere = window.GLOBAL_GIANT_SPHERE;
