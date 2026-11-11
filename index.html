@@ -1807,20 +1807,22 @@ body.colorblind-mode #opt-colorblind-text {
             font-size: 9px !important;
         }
 
-       /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE: ZERO SPAZI VUOTI E ICONE GRANDI --- */
+       /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE: PANORAMICA, ICONE GRANDI E RIGHE ALLINEATE AL PIXEL --- */
         html body.mobile-landscape #relic-main-wrap,
         html body.force-rotate-landscape #relic-main-wrap {
             display: grid !important;
-            grid-template-columns: 1.25fr 0.95fr !important;
-            grid-template-rows: auto minmax(0, 1fr) 42px !important;
-            gap: 5px 10px !important;
-            max-width: 860px !important;
-            width: 100% !important;
+            grid-template-columns: 1.18fr 0.82fr !important;
+            grid-template-rows: auto minmax(0, 1fr) 44px !important;
+            gap: 6px 12px !important;
+            max-width: 98% !important;
+            width: 98% !important;
             height: 100% !important;
-            padding: 5px 14px !important;
+            padding: 6px 10px !important;
+            margin: 0 auto !important;
             align-items: stretch !important;
             box-sizing: border-box !important;
         }
+
         /* Riga 1: Header compatto a tutta larghezza */
         html body.mobile-landscape #relic-main-wrap > div:first-child,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child {
@@ -1830,108 +1832,153 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child > div > div,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child > div > div {
-            padding: 4px 12px !important;
+            padding: 4px 14px !important;
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child h2,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child h2 {
-            font-size: 1rem !important;
+            font-size: 1.05rem !important;
             margin-top: 1px !important;
         }
-        /* Riga 2: Contenitore delle 3 Carte Reliquia */
+
+        /* Riga 2: Griglia a 3 colonne a tutta larghezza per le Carte Reliquia */
         html body.mobile-landscape #relicCardsContainer,
         html body.force-rotate-landscape #relicCardsContainer {
             grid-column: 1 / -1 !important;
             grid-row: 2 / 3 !important;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             height: 100% !important;
             min-height: 0 !important;
             margin: 0 !important;
-            gap: 10px !important;
+            gap: 12px !important;
             align-items: stretch !important;
         }
-        /* Carta Reliquia: distribuzione compatta senza buchi vuoti */
+
+        /* Carta Reliquia: Griglia a 3 righe fisse (1: Vetrina Icona+Titolo, 2: Box Testo 54px, 3: Bottone 26px) */
         html body.mobile-landscape #relicCardsContainer .relic-card,
         html body.force-rotate-landscape #relicCardsContainer .relic-card {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            gap: 3px !important;
-            padding: 6px 9px !important;
+            display: grid !important;
+            grid-template-rows: minmax(0, 1fr) 54px 26px !important;
+            align-items: stretch !important;
+            justify-items: center !important;
+            gap: 6px !important;
+            padding: 8px 10px !important;
             min-height: 0 !important;
             height: 100% !important;
             box-sizing: border-box !important;
         }
-        /* Blocco superiore (Badge + Icona Grande + Titolo) che occupa tutto lo spazio nobile della carta */
+
+        /* Blocco Superiore (Badge Rarità in cima + Icona Gigante al centro + Titolo su 28px fissi) */
         html body.mobile-landscape #relicCardsContainer .relic-card > div:first-child,
         html body.force-rotate-landscape #relicCardsContainer .relic-card > div:first-child {
-            flex: 1 1 auto !important;
+            width: 100% !important;
+            height: 100% !important;
             min-height: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-rows: 18px minmax(0, 1fr) 28px !important;
             align-items: center !important;
-            justify-content: center !important;
-            gap: 3px !important;
+            justify-items: center !important;
+            gap: 4px !important;
+            margin: 0 !important;
         }
-        /* Immagine Reliquia GRANDE, quadrata e ben visibile (80px-102px adattivi) */
+
+        /* Immagine/Icona Reliquia GRANDE, centrata e identica su tutte le carte */
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame {
-            width: clamp(78px, 25vh, 102px) !important;
-            height: clamp(78px, 25vh, 102px) !important;
-            margin: 1px 0 !important;
-            border-radius: 12px !important;
+            width: clamp(76px, 25vh, 108px) !important;
+            height: clamp(76px, 25vh, 108px) !important;
+            margin: 0 !important;
+            border-radius: 14px !important;
             border-width: 2px !important;
-            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            align-self: center !important;
+            justify-self: center !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame i,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame i {
-            font-size: 2.15rem !important;
+            font-size: clamp(2.2rem, 8.5vh, 3rem) !important;
         }
+        html body.mobile-landscape #relicCardsContainer .relic-icon-frame svg,
+        html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame svg,
+        html body.mobile-landscape #relicCardsContainer .relic-icon-frame img,
+        html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame img {
+            width: 72% !important;
+            height: 72% !important;
+            object-fit: contain !important;
+        }
+
+        /* Titolo Reliquia: altezza fissa 28px e centrato così 1 o 2 righe non spostano mai gli altri elementi */
         html body.mobile-landscape #relicCardsContainer .relic-card h3,
         html body.force-rotate-landscape #relicCardsContainer .relic-card h3 {
-            font-size: 11px !important;
-            line-height: 1.12 !important;
+            height: 28px !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            font-size: 11.5px !important;
+            line-height: 1.15 !important;
             margin: 0 !important;
+            padding: 0 4px !important;
         }
-        /* Riquadro descrizione aderente al testo: rimuove il min-h-[64px]/sm:min-h-[72px] di Tailwind */
+
+        /* Riquadro Descrizione: altezza bloccata a 54px e testo centrato verticalmente e orizzontalmente */
         html body.mobile-landscape #relicCardsContainer .relic-desc-box,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box {
-            flex: 0 0 auto !important;
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            padding: 4px 8px !important;
+            width: 100% !important;
+            height: 54px !important;
+            min-height: 54px !important;
+            max-height: 54px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 4px 10px !important;
             margin: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-desc-box p,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box p {
-            font-size: 9.5px !important;
-            line-height: 1.16 !important;
+            font-size: 10.5px !important;
+            line-height: 1.22 !important;
+            text-align: center !important;
             margin: 0 !important;
+            width: 100% !important;
         }
-        /* Pill "Scegli" sottile alla base della carta */
+
+        /* Barra "SCEGLI" inferiore allineata (26px) */
         html body.mobile-landscape #relicCardsContainer [id^="relic-pick-pill-"],
         html body.force-rotate-landscape #relicCardsContainer [id^="relic-pick-pill-"] {
-            flex: 0 0 auto !important;
-            padding: 2.5px 0 !important;
+            width: 100% !important;
+            height: 26px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
             margin: 0 !important;
-            font-size: 8.5px !important;
-            line-height: 1.1 !important;
+            font-size: 9.5px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.08em !important;
+            line-height: 1 !important;
         }
-        /* Riga 3 Sinistra: Forgia Cosmica su singola linea orizzontale (42px) */
+
+        /* Riga 3 Sinistra: Forgia Cosmica (44px) */
         html body.mobile-landscape #reforgeSection,
         html body.force-rotate-landscape #reforgeSection {
             grid-column: 1 / 2 !important;
             grid-row: 3 / 4 !important;
-            height: 42px !important;
-            min-height: 42px !important;
-            max-height: 42px !important;
-            padding: 4px 10px !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            max-height: 44px !important;
+            padding: 4px 12px !important;
             margin: 0 !important;
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
             box-sizing: border-box !important;
         }
-        /* Nasconde l'intestazione superiore ridondante della Forgia in orizzontale per guadagnare spazio verticale */
         html body.mobile-landscape #reforgeSection > div:first-child,
         html body.force-rotate-landscape #reforgeSection > div:first-child {
             display: none !important;
@@ -1939,30 +1986,31 @@ body.colorblind-mode #opt-colorblind-text {
         html body.mobile-landscape #reforgeSection > div:last-child,
         html body.force-rotate-landscape #reforgeSection > div:last-child {
             padding-top: 0 !important;
-            gap: 8px !important;
+            gap: 10px !important;
             width: 100% !important;
             height: 100% !important;
             align-items: center !important;
         }
         html body.mobile-landscape #btn-select-reforge,
         html body.force-rotate-landscape #btn-select-reforge {
-            width: 32px !important;
-            height: 32px !important;
+            width: 34px !important;
+            height: 34px !important;
             border-radius: 8px !important;
+            flex-shrink: 0 !important;
         }
         html body.mobile-landscape #btn-select-reforge i,
         html body.force-rotate-landscape #btn-select-reforge i {
-            font-size: 1rem !important;
+            font-size: 1.05rem !important;
         }
         html body.mobile-landscape #reforge-desc-title,
         html body.force-rotate-landscape #reforge-desc-title {
-            font-size: 10px !important;
-            line-height: 1.1 !important;
+            font-size: 10.5px !important;
+            line-height: 1.15 !important;
         }
         html body.mobile-landscape #reforge-desc-text,
         html body.force-rotate-landscape #reforge-desc-text {
-            font-size: 8.5px !important;
-            line-height: 1.1 !important;
+            font-size: 9px !important;
+            line-height: 1.15 !important;
             margin-top: 1px !important;
             display: -webkit-box !important;
             -webkit-line-clamp: 1 !important;
@@ -1971,21 +2019,23 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #btn-do-reforge,
         html body.force-rotate-landscape #btn-do-reforge {
-            padding: 5px 10px !important;
-            font-size: 9.5px !important;
-            height: 30px !important;
+            padding: 6px 12px !important;
+            font-size: 10px !important;
+            height: 32px !important;
+            flex-shrink: 0 !important;
         }
-        /* Riga 3 Destra: Pulsante Conferma e Procedi alto esattamente 42px come la Forgia */
+
+        /* Riga 3 Destra: Pulsante Conferma e Procedi (44px) */
         html body.mobile-landscape #btn-proceed-relic,
         html body.force-rotate-landscape #btn-proceed-relic {
             grid-column: 2 / 3 !important;
             grid-row: 3 / 4 !important;
-            height: 42px !important;
-            min-height: 42px !important;
-            max-height: 42px !important;
-            padding: 0 14px !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            max-height: 44px !important;
+            padding: 0 16px !important;
             margin: 0 !important;
-            font-size: 11.5px !important;
+            font-size: 12px !important;
             box-sizing: border-box !important;
         }
         /* --- SCHERMATA SEI CADUTO / MORTE (#deathScreen) IN ORIZZONTALE --- */
@@ -2463,34 +2513,38 @@ body.colorblind-mode #opt-colorblind-text {
     </div>
 
    <!-- RELIQUIE -->
-   <div id="relicScreen" class="absolute inset-0 z-[250] pointer-events-auto hidden bg-cover bg-center bg-no-repeat overflow-hidden" style="background-image: url('bg_piano.png');">
-        <div class="absolute inset-0 bg-gradient-to-b from-amber-950/55 via-slate-950/48 to-black/88 pointer-events-none"></div>
-        <div class="absolute -top-10 left-1/4 w-80 h-56 bg-amber-500/25 blur-3xl pointer-events-none animate-pulse"></div>
-        <div class="absolute top-1/3 -left-12 w-64 h-64 bg-purple-500/25 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.7s;"></div>
-        <div class="absolute top-1/3 -right-12 w-64 h-64 bg-cyan-500/22 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 1.3s;"></div>
-        <div class="absolute bottom-16 left-1/3 w-72 h-44 bg-amber-500/20 blur-3xl pointer-events-none animate-pulse" style="animation-delay: 0.4s;"></div>
-        <div id="relic-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-3.5 sm:py-6 relative max-w-[470px] mx-auto">
-            
-            <!-- HEADER -->
-            <div class="w-full shrink-0">
-                <div class="w-full"><div class="w-full flex items-center justify-between gap-3 bg-slate-950/88 border-2 border-amber-400/55 rounded-xl px-4 py-2.5 shadow-[0_0_25px_rgba(251,191,36,0.28)]">
-                    <div class="flex flex-col text-left">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                            <span class="text-[9px] sm:text-[10px] text-amber-300 font-black tracking-[0.22em] uppercase leading-none">Santuario dell'Ascesa</span>
-                        </div>
-                        <h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Scegli una Reliquia</h2>
-                    </div>
-                    <button onclick="UIManager.showCollectedRelics()" class="flex items-center gap-2 bg-purple-950/80 hover:bg-purple-900/80 border-2 border-purple-400 px-3 py-1.5 rounded-lg shadow-[0_0_18px_rgba(168,85,247,0.45)] transition-all active:scale-95 cursor-pointer shrink-0">
-                        <i class="fa-solid fa-gem text-purple-300 text-base sm:text-xl drop-shadow-[0_0_10px_rgba(168,85,247,1)]"></i>
-                        <div class="flex flex-col items-start leading-none">
-                            <span class="text-[8px] font-black text-purple-200 uppercase tracking-wider">Arsenale</span>
-                            <span id="relic-screen-count" class="text-white font-display font-black text-sm sm:text-lg tracking-wider leading-none mt-0.5">0</span>
-                        </div>
-                    </button>
+  <div id="relicScreen" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-2">
+    <div class="relic-modal-shell pointer-events-auto">
+        
+        <!-- Header compatto su una sola riga per lasciare massimo spazio alle 3 carte -->
+        <div class="flex items-center justify-between border-b border-amber-500/25 pb-1.5 px-1 shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400 flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.35)]">
+                    <i class="fa-solid fa-gem text-amber-300 text-sm"></i>
                 </div>
+                <div>
+                    <h2 class="font-display font-black text-base sm:text-xl text-amber-300 tracking-wider uppercase leading-none m-0">
+                        SCEGLI UNA RELIQUIA
+                    </h2>
+                    <p class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5">
+                        Potenzia la tua discesa con un artefatto antico
+                    </p>
                 </div>
             </div>
+
+            <!-- Pulsante Reliquie Possedute allineato a destra -->
+            <button onclick="UIManager.showCollectedRelics()"
+                    class="px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-400/50 text-amber-200 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 shadow transition active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-box-open text-amber-400"></i>
+                <span>INVENTARIO (<span id="relic-screen-count">0</span>)</span>
+            </button>
+        </div>
+
+        <!-- Griglia a 3 Colonne per le Carte Reliquia -->
+        <div id="relicChoices"></div>
+
+    </div>
+</div>
             
             <!-- 3 CARTE RELIQUIA -->
             <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full my-1 items-stretch select-none z-10"></div>
