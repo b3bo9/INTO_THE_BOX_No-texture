@@ -1820,6 +1820,7 @@ body.colorblind-mode #opt-colorblind-text {
             padding: 6px 10px !important;
             margin: 0 auto !important;
             align-items: stretch !important;
+            overflow: hidden !important;
             box-sizing: border-box !important;
         }
 
@@ -1829,10 +1830,11 @@ body.colorblind-mode #opt-colorblind-text {
             grid-column: 1 / -1 !important;
             grid-row: 1 / 2 !important;
             margin: 0 !important;
+            padding: 6px 14px !important;
         }
-        html body.mobile-landscape #relic-main-wrap > div:first-child > div > div,
-        html body.force-rotate-landscape #relic-main-wrap > div:first-child > div > div {
-            padding: 4px 14px !important;
+        html body.mobile-landscape #relic-main-wrap > div:first-child p,
+        html body.force-rotate-landscape #relic-main-wrap > div:first-child p {
+            display: none !important;
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child h2,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child h2 {
@@ -1849,6 +1851,7 @@ body.colorblind-mode #opt-colorblind-text {
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             height: 100% !important;
             min-height: 0 !important;
+            max-height: none !important;
             margin: 0 !important;
             gap: 12px !important;
             align-items: stretch !important;
@@ -1885,8 +1888,8 @@ body.colorblind-mode #opt-colorblind-text {
         /* Immagine/Icona Reliquia GRANDE, centrata e identica su tutte le carte */
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame {
-            width: clamp(76px, 25vh, 108px) !important;
-            height: clamp(76px, 25vh, 108px) !important;
+            width: clamp(64px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
+            height: clamp(64px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
             margin: 0 !important;
             border-radius: 14px !important;
             border-width: 2px !important;
@@ -1898,7 +1901,7 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame i,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame i {
-            font-size: clamp(2.2rem, 8.5vh, 3rem) !important;
+            font-size: clamp(2rem, calc(var(--app-h, 100vh) * 0.08), 3rem) !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame svg,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame svg,
@@ -1920,6 +1923,7 @@ body.colorblind-mode #opt-colorblind-text {
             text-align: center !important;
             font-size: 11.5px !important;
             line-height: 1.15 !important;
+            overflow: hidden !important;
             margin: 0 !important;
             padding: 0 4px !important;
         }
@@ -2512,53 +2516,50 @@ body.colorblind-mode #opt-colorblind-text {
         </div>
     </div>
 
-   <!-- RELIQUIE -->
-  <div id="relicScreen" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-2">
-    <div class="relic-modal-shell pointer-events-auto">
-        
-        <!-- Header compatto su una sola riga per lasciare massimo spazio alle 3 carte -->
-        <div class="flex items-center justify-between border-b border-amber-500/25 pb-1.5 px-1 shrink-0">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400 flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.35)]">
-                    <i class="fa-solid fa-gem text-amber-300 text-sm"></i>
+    <!-- RELIQUIE -->
+    <div id="relicScreen" class="hidden absolute inset-0 bg-slate-950/92 backdrop-blur-md z-[100] pointer-events-auto overflow-hidden">
+        <div class="absolute -top-12 left-1/4 w-72 h-52 bg-amber-500/15 blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-1/4 w-72 h-52 bg-purple-500/15 blur-3xl pointer-events-none"></div>
+
+        <div id="relic-main-wrap" class="w-full h-full flex flex-col justify-between items-center z-10 px-2.5 sm:px-5 py-2.5 sm:py-5 relative max-w-[560px] mx-auto overflow-y-auto custom-scrollbar">
+            
+            <!-- 1. Header compatto su una sola riga -->
+            <div class="w-full flex items-center justify-between gap-2.5 bg-slate-950/90 border-2 border-amber-400/50 rounded-xl px-3.5 py-2 shadow-[0_0_22px_rgba(251,191,36,0.22)] shrink-0 z-10">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400 flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.35)] shrink-0">
+                        <i class="fa-solid fa-gem text-amber-300 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="font-display font-black text-sm sm:text-xl text-amber-300 tracking-wider uppercase leading-none m-0 truncate">
+                            SCEGLI UNA RELIQUIA
+                        </h2>
+                        <p class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5 truncate">
+                            Potenzia la tua discesa con un artefatto antico
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="font-display font-black text-base sm:text-xl text-amber-300 tracking-wider uppercase leading-none m-0">
-                        SCEGLI UNA RELIQUIA
-                    </h2>
-                    <p class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5">
-                        Potenzia la tua discesa con un artefatto antico
-                    </p>
-                </div>
+
+                <!-- Pulsante Reliquie Possedute allineato a destra -->
+                <button onclick="UIManager.showCollectedRelics()"
+                        class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-400/50 text-amber-200 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 shadow transition active:scale-95 cursor-pointer shrink-0">
+                    <i class="fa-solid fa-box-open text-amber-400"></i>
+                    <span>INVENTARIO (<span id="relic-screen-count">0</span>)</span>
+                </button>
             </div>
 
-            <!-- Pulsante Reliquie Possedute allineato a destra -->
-            <button onclick="UIManager.showCollectedRelics()"
-                    class="px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-400/50 text-amber-200 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5 shadow transition active:scale-95 cursor-pointer">
-                <i class="fa-solid fa-box-open text-amber-400"></i>
-                <span>INVENTARIO (<span id="relic-screen-count">0</span>)</span>
-            </button>
-        </div>
+            <!-- 2. 3 CARTE RELIQUIA -->
+            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full flex-1 min-h-[220px] max-h-[52vh] my-1.5 items-stretch select-none z-10"></div>
 
-        <!-- Griglia a 3 Colonne per le Carte Reliquia -->
-        <div id="relicChoices"></div>
-
-    </div>
-</div>
-            
-            <!-- 3 CARTE RELIQUIA -->
-            <div id="relicCardsContainer" class="grid grid-cols-3 gap-2 sm:gap-3 w-full my-1 items-stretch select-none z-10"></div>
-            
-            <!-- BARRA COMPATTE FORGIA COSMICA (REROLL) -->
-            <div id="reforgeSection" class="w-full px-4 py-3.5 sm:py-4 rounded-xl bg-gradient-to-b from-purple-950/70 via-slate-950/92 to-slate-950/96 border-2 border-purple-400/65 shadow-[0_0_26px_rgba(168,85,247,0.32)] flex flex-col justify-between gap-2.5 shrink-0 z-10 relative my-1 min-h-[126px] sm:min-h-[142px]">
-                <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
+            <!-- 3. BARRA COMPATTA FORGIA COSMICA (REROLL) -->
+            <div id="reforgeSection" class="w-full px-3.5 sm:px-4 py-3 sm:py-4 rounded-xl bg-gradient-to-b from-purple-950/70 via-slate-950/92 to-slate-950/96 border-2 border-purple-400/65 shadow-[0_0_26px_rgba(168,85,247,0.32)] flex flex-col justify-between gap-2 shrink-0 z-10 relative my-1 min-h-[118px] sm:min-h-[136px]">
+                <div class="flex items-center justify-between border-b border-purple-500/30 pb-1.5">
                     <span class="text-[11px] sm:text-xs font-display font-black text-purple-300 uppercase tracking-widest flex items-center gap-2 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
                         <i class="fa-solid fa-rotate"></i> Forgia Cosmica
                     </span>
-                    <span id="reforge-status-badge" class="text-[9px] sm:text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 border border-purple-500/40 uppercase tracking-wider">1 Uso Disponibile</span>
+                    <span id="reforge-status-badge" class="text-[9px] sm:text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-md border border-purple-500/40 uppercase tracking-wider">1 Uso Disponibile</span>
                 </div>
 
-                <div class="flex items-center justify-between gap-3.5 pt-1 flex-1">
+                <div class="flex items-center justify-between gap-3 pt-0.5 flex-1">
                     <!-- Icona Reliquia / Slot -->
                     <button id="btn-select-reforge" onclick="RelicSystem.openReforgeModal()" class="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/75 hover:border-white flex items-center justify-center bg-slate-950 transition-all active:scale-95 group relative overflow-hidden shrink-0">
                         <i id="reforge-icon-default" class="fa-solid fa-wand-magic-sparkles text-purple-300 group-hover:text-white text-2xl sm:text-3xl transition-colors drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]"></i>
@@ -2579,7 +2580,7 @@ body.colorblind-mode #opt-colorblind-text {
                 </div>
             </div>
 
-            <!-- TASTO PROCEDI -->
+            <!-- 4. TASTO PROCEDI -->
             <button id="btn-proceed-relic" onclick="RelicSystem.proceedToNextFloor()" class="btn-cyber w-full min-h-[56px] sm:min-h-[60px] py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-gray-500 bg-slate-900/90 border-2 border-gray-700/60 shrink-0 cursor-not-allowed flex items-center justify-center" disabled>
                 Seleziona una Reliquia
             </button>
@@ -3013,9 +3014,6 @@ const AppSettings = {
             const pr = this.getTargetPixelRatio();
             Game.renderer.setPixelRatio(pr);
             Game.resize();
-            if (Game.composer) Game.composer.setSize(window.innerWidth, window.innerHeight);
-            if (Game.bloomPass) Game.bloomPass.setSize(Math.max(1, Math.floor(window.innerWidth / 2)), Math.max(1, Math.floor(window.innerHeight / 2)));
-            Game.updateShadowConfig();
 
             let showFakeShadows = !this.shadowsEnabled;
             if (Game.player && Game.player.shadowMesh) Game.player.shadowMesh.visible = showFakeShadows && !Game.player.dead;
@@ -6602,7 +6600,7 @@ const DeathSceneSystem = {
         } else if (data.phase === 'RELIC_SELECTION') {
             AudioEngine.stopAllMusic();
             Game.state = 'RELIC_SELECTION';
-            RelicSystem.showChoices();
+            RelicSystem.showChoices(data.relicChoices, !!data.hasReforged);
         } else {
             if (!Game.isBossFloor && data.floorKills > 0) {
                 Game.floorKills = Math.min(data.floorKills, Math.max(0, Game.floorMaxKills - 4));
@@ -6851,7 +6849,7 @@ const RelicSystem = {
         // 🟣 EPICHE (8 Reliquie - Drop 17% - Sinergie forti)
         { id: 'r2', name: "Calzari di Mercurio", desc: "Cooldown dello Scatto ridotto del -20%. Per 3s dopo lo scatto subisci -15% danni.", rarity: "epic", image: "icona_mercurio.png", icon: "fa-shoe-prints", apply: (p) => { p.modifiers.dashCooldownMult -= 0.20; p.modifiers.dashResist = true; } },
         { id: 'e1', name: "Ritmo di Battaglia", desc: "La Combo sale di +2 a colpo e dura +1.5s prima di decadere.", rarity: "epic", image: "icona_ritmo_di_battaglia.png", icon: "fa-drum", apply: (p) => { p.modifiers.comboStep += 1; p.modifiers.comboDecayAdd += 1.5; } },
-        { id: 'e4', name: "Sovraccarico Etereo", desc: "Durante l'Ascensione (Ultimate), ogni 12 nemici uccisi estende la durata dell'Ultimate di +0.5s.", rarity: "epic", image: "icona_sovraccarico.png", icon: "fa-bolt-lightning", apply: (p) => { p.modifiers.ultDurationPerKill = true; } },
+        { id: 'e4', name: "Sovraccarico Etereo", desc: "Durante l'Ascensione (Ultimate), ogni 10 nemici uccisi estende la durata dell'Ultimate di +0.5s.", rarity: "epic", image: "icona_sovraccarico.png", icon: "fa-bolt-lightning", apply: (p) => { p.modifiers.ultDurationPerKill = true; } },
         { id: 'e5', name: "Sovraccarico Sismico", desc: "Attivare lo Scudo Cinetico genera un'onda d'urto immediata che respinge i nemici e li stordisce per 1s.", rarity: "epic", image: "icona_zanna_del_vampiro.png", icon: "fa-wifi", apply: (p) => { p.modifiers.seismicShield = true; } },
         { id: 'e9', name: "Gemelli Cinetici", desc: "Mentre lo Scudo Cinetico è attivo, spari 2 proiettili paralleli (ciascuno infligge il 65% del danno).", rarity: "epic", image: "icona_gemelli_cinetici.png", icon: "fa-clone", apply: (p) => { p.modifiers.twinKinetic = true; } },
         { id: 'e7', name: "Lama del Vento", desc: "Subito dopo uno Scatto, i tuoi prossimi 2 attacchi sono Colpi Critici garantiti.", rarity: "epic", image: "icona_lama_vento.png", icon: "fa-wind", apply: (p) => { p.modifiers.dashCritsEnabled = true; } },
@@ -6859,7 +6857,7 @@ const RelicSystem = {
         { id: 'r3', name: "Scudo dell'Egidio", desc: "Lo Scudo Cinetico si attiva automaticamente gratis ogni 15 secondi.", rarity: "epic", image: "icona_scudo_dell_egidio.png", icon: "fa-shield-halved", apply: (p) => { p.modifiers.shieldActive = true; } },
 
         // 🟡 LEGGENDARIE (10 Reliquie - Drop 8% - Con Mutazioni 3D, Kill FX, Scie e Arrivi)
-        { id: 'e2', name: "Riciclo Magico", desc: "Conbi/Overdrive non consumano l'ultima essenza e lanciano 2 dardi a ricerca (75% Danno).", rarity: "legendary", image: "icona_riciclo_magico.png", icon: "fa-recycle", apply: (p) => { p.modifiers.keepEssenceOnCombo = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'e2', name: "Riciclo Magico", desc: "Combo/Overdrive non consumano l'ultima essenza e lanciano 2 dardi a ricerca (75% Danno).", rarity: "legendary", image: "icona_riciclo_magico.png", icon: "fa-recycle", apply: (p) => { p.modifiers.keepEssenceOnCombo = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
        { id: 'l1', name: "Follia Omicida", desc: "Danni Critici 2.25x e +15% Prob. Critico, ma Velocità d'Attacco ridotta del -12%.", rarity: "legendary", image: "icona_follia_omicida.png", icon: "fa-skull", apply: (p) => { p.modifiers.critDmgMult = 2.25; p.modifiers.bonusCritChance += 0.15; p.modifiers.atkSpeedPenalty = 0.88; p.modifiers.homicidalFrenzy = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
         { id: 'l5', name: "Maestria del Flow", desc: "Cap Combo 200. Se >=50: +25% danni, perforazione +1 e +12% danni subiti. Se <50: -12% danni subiti.", rarity: "legendary", image: "icona_maestria_del_flow.png", icon: "fa-infinity", apply: (p) => { p.modifiers.flowMastery = true; p.modifiers.comboDecayRate *= 0.5; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
         { id: 'e6', name: "Batteria a Ioni", desc: "Lo Scudo dura +1s, riduce i danni del 65% e folgora i nemici vicini.", rarity: "legendary", image: "icona_batteria_ioni.png", icon: "fa-battery-full", apply: (p) => { p.modifiers.shieldDurationAdd += 1.0; p.modifiers.ionBattery = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
@@ -6867,7 +6865,7 @@ const RelicSystem = {
        { id: 'l2', name: "Lama del Giudizio", desc: "[Mietitore d'Anime] +75% danni ai nemici sotto il 30% HP (+25% ai Boss <20% HP) e penetra il 50% degli scudi.", rarity: "legendary", image: "icona_lama_del_giudizio.png", icon: "fa-gavel", apply: (p) => { p.modifiers.executioner = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
         { id: 'l4', name: "Sete di Sangue Eterna", desc: "[Esplosione Cremisi] Ogni kill cura 1% HP (cd 0,5s, fino a +8% Scudo Sangue a vita piena), ma -15% HP Massimi.", rarity: "legendary", image: "icona_sete_di_sangue_eterna.png", icon: "fa-droplet", apply: (p) => { p.modifiers.bloodthirst = true; p.stats.maxHp = Math.floor(p.stats.maxHp * 0.85); if (p.stats.hp > p.stats.maxHp) p.stats.hp = p.stats.maxHp; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
         { id: 'e3', name: "Passo Infernale", desc: "Lo scatto lascia fuoco che brucia i nemici (+20% danni subiti). Atterraggio meteorico a inizio piano.", rarity: "legendary", image: "icona_passo_infernale.png", icon: "fa-fire-flame-curved", apply: (p) => { p.modifiers.fireTrail = true; p.modifiers.fireTrailDebuff = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
-        { id: 'l7', name: "Impatto Tonante", desc: "Lo scatto scatena 3 fulmini che danneggiato e stordiscono i nemici. Atterraggio elettrico a inizio piano.", rarity: "legendary", image: "icona_impatto_tonante.png", icon: "fa-bolt", apply: (p) => { p.modifiers.dashLightning = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
+        { id: 'l7', name: "Impatto Tonante", desc: "Lo scatto scatena 3 fulmini che danneggiano e stordiscono i nemici. Atterraggio elettrico a inizio piano.", rarity: "legendary", image: "icona_impatto_tonante.png", icon: "fa-bolt", apply: (p) => { p.modifiers.dashLightning = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } },
         { id: 'l6', name: "Aegis del Guardiano", desc: "Lo Scudo esplode al termine in una Nova Arcana (max 12 stack, fino a 2.5x Danno Base).", rarity: "legendary", image: "fa_shieldx.png", icon: "fa-shield", apply: (p) => { p.modifiers.explosiveShield = true; if(p.syncRelicVisuals) p.syncRelicVisuals(); } }
     ],
     getRandomRarity() { 
@@ -6906,11 +6904,14 @@ const RelicSystem = {
     currentChoices: [],
     selectedMainRelic: null, // Memorizza la reliquia scelta
     
-    showChoices() {
-        this.hasReforged = false;
+    showChoices(savedChoiceIds = null, savedHasReforged = false) {
+        this.hasReforged = !!savedHasReforged;
         this.selectedForReforge = null;
         this.selectedMainRelic = null;
-        this.currentChoices = this.getChoices();
+        let restored = Array.isArray(savedChoiceIds)
+            ? savedChoiceIds.map(id => this.allRelics.find(r => r.id === id)).filter(Boolean)
+            : [];
+        this.currentChoices = restored.length > 0 ? restored : this.getChoices();
         
         const container = document.getElementById('relicCardsContainer'); 
         container.innerHTML = ''; 
@@ -6920,7 +6921,33 @@ const RelicSystem = {
         const statusBadge = document.getElementById('reforge-status-badge');
         
         // --- SETUP BARRA FORGIA COSMICA ---
-        if (Game.player.relics.length > 0) {
+        if (Game.player.relics.length > 0 && this.hasReforged) {
+            reforgeSection.classList.remove('hidden');
+            reforgeSection.style.display = 'flex';
+            document.getElementById('reforge-icon-default').classList.remove('hidden');
+            document.getElementById('reforge-icon-img').classList.add('hidden');
+            document.getElementById('reforge-overlay').classList.add('hidden');
+            if (statusBadge) {
+                statusBadge.innerText = "Completata";
+                statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded-md border border-green-500/40 uppercase tracking-wider";
+            }
+            let btnDo = document.getElementById('btn-do-reforge');
+            btnDo.disabled = true;
+            btnDo.onclick = null;
+            btnDo.className = "btn-cyber px-3 py-2.5 text-[10px] sm:text-xs text-gray-500 border-gray-700 opacity-50 cursor-not-allowed shrink-0";
+            btnDo.innerHTML = '<i class="fa-solid fa-check"></i> Fatto';
+            let descTitle = document.getElementById('reforge-desc-title');
+            let descText = document.getElementById('reforge-desc-text');
+            descTitle.innerText = "Forgia già utilizzata";
+            descTitle.className = "text-xs sm:text-sm text-gray-300 font-black uppercase tracking-wide truncate m-0";
+            descText.innerText = "Hai già riforgiato una reliquia in questo piano.";
+            descText.className = "text-[10px] sm:text-xs text-gray-400 mt-0.5 leading-snug font-bold";
+            descText.classList.remove('hidden');
+            let btnSel = document.getElementById('btn-select-reforge');
+            btnSel.style.boxShadow = '';
+            btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center bg-slate-950/70 opacity-60 cursor-not-allowed shrink-0 relative overflow-hidden";
+            btnSel.onclick = null;
+        } else if (Game.player.relics.length > 0) {
             reforgeSection.classList.remove('hidden');
             reforgeSection.style.display = 'flex';
             document.getElementById('reforge-icon-default').classList.remove('hidden');
@@ -6929,7 +6956,7 @@ const RelicSystem = {
             
             if (statusBadge) {
                 statusBadge.innerText = "1 Uso Disponibile";
-                statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 border border-purple-500/40 uppercase tracking-wider";
+                statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-md border border-purple-500/40 uppercase tracking-wider";
             }
 
             let btnDo = document.getElementById('btn-do-reforge');
@@ -6947,8 +6974,8 @@ const RelicSystem = {
             descText.classList.remove('hidden');
             
             let btnSel = document.getElementById('btn-select-reforge');
-            btnSel.className = "w-14 h-14 sm:w-16 sm:h-16 border-2 border-dashed border-purple-500/60 hover:border-purple-400 flex items-center justify-center bg-black transition-all active:scale-95 group relative overflow-hidden shrink-0";
-            btnSel.style.boxShadow = "none";
+            btnSel.style.boxShadow = '';
+            btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/80 hover:border-white flex items-center justify-center bg-slate-950 shadow-[0_0_18px_rgba(168,85,247,0.38)] transition-all active:scale-95 group relative overflow-hidden shrink-0";
             btnSel.onclick = () => RelicSystem.openReforgeModal();
         } else {
             reforgeSection.classList.remove('hidden');
@@ -6972,12 +6999,13 @@ const RelicSystem = {
             descText.innerText = "Scegli la tua prima reliquia qui sopra per attivare la Forgia nei prossimi piani.";
             descText.className = "text-[10px] sm:text-xs text-gray-400 mt-1 leading-snug font-bold";
             let btnSel = document.getElementById('btn-select-reforge');
+            btnSel.style.boxShadow = '';
             btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-gray-700 flex items-center justify-center bg-slate-950/70 opacity-60 cursor-not-allowed shrink-0 relative overflow-hidden";
             btnSel.onclick = null;
             reforgeSection.style.display = 'flex';
         }
 
-       if (this.currentChoices.length === 0 && Game.player.relics.length === 0) {
+        if (this.currentChoices.length === 0 && Game.player.relics.length === 0) {
             this.proceedToNextFloor(true);
             return;
         }
@@ -6985,24 +7013,15 @@ const RelicSystem = {
         const relicCountEl = document.getElementById('relic-screen-count');
         if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
 
-        if (Game.player.relics.length > 0) {
-            let btnSel = document.getElementById('btn-select-reforge');
-            if (btnSel) {
-                btnSel.className = "w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-dashed border-purple-400/80 hover:border-white flex items-center justify-center bg-slate-950 shadow-[0_0_18px_rgba(168,85,247,0.38)] transition-all active:scale-95 group relative overflow-hidden shrink-0";
-            }
-        }
-
         if (this.currentChoices.length === 0) {
             btnProceed.disabled = false;
             btnProceed.innerHTML = '<span>PROCEDI AL PROSSIMO PIANO</span> <i class="fa-solid fa-bolt"></i>';
-            btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_25px_rgba(56,189,248,0.7)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
+            btnProceed.className = "w-full min-h-[56px] sm:min-h-[60px] py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_25px_rgba(56,189,248,0.7)] flex items-center justify-center gap-2 shrink-0 cursor-pointer transition-all active:scale-95";
         } else {
             btnProceed.disabled = true;
             btnProceed.innerHTML = '<i class="fa-solid fa-hand-pointer opacity-70"></i> <span>SELEZIONA UNA RELIQUIA</span>';
-            btnProceed.className = "w-full py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-gray-400 bg-slate-950/90 border-2 border-gray-700/80 flex items-center justify-center gap-2 shrink-0 cursor-not-allowed";
+            btnProceed.className = "w-full min-h-[56px] sm:min-h-[60px] py-3.5 sm:py-4 px-6 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-gray-400 bg-slate-950/90 border-2 border-gray-700/80 flex items-center justify-center gap-2 shrink-0 cursor-not-allowed";
         }
-
-        container.innerHTML = '';
         for (let i = 0; i < this.currentChoices.length; i++) {
             let relic = this.currentChoices[i];
 
@@ -7053,14 +7072,14 @@ const RelicSystem = {
             card.innerHTML = `
                 <div class="w-full flex flex-col items-center pointer-events-none shrink-0 z-10">
                     <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${rPal.badgeClass}">${rPal.rarityLabel}</span>
-                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
+                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-16 h-16 sm:w-[92px] sm:h-[92px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
                         <div class="absolute inset-0 opacity-45 pointer-events-none" style="background: radial-gradient(circle at center, ${rPal.main} 0%, transparent 72%);"></div>
                         <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover relative z-10">
                         <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-95 relative z-10" style="display:none; color:${rPal.main};"></i>
                     </div>
-                    <h3 class="text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">${relic.name}</h3>
+                    <h3 class="text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight min-h-[2.4em] flex items-center justify-center m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">${relic.name}</h3>
                 </div>
-                <div class="relic-desc-box w-full bg-slate-950/90 border border-white/15 rounded-lg px-2 py-2 my-1.5 min-h-[64px] sm:min-h-[72px] flex items-center justify-center pointer-events-none z-10">
+                <div class="relic-desc-box flex-1 w-full bg-slate-950/90 border border-white/15 rounded-lg px-2 py-2 my-1.5 min-h-[64px] sm:min-h-[72px] flex items-center justify-center pointer-events-none z-10">
                     <p class="text-[9.5px] sm:text-xs font-bold text-center leading-snug text-gray-100 m-0">${relic.desc}</p>
                 </div>
                 <div id="relic-pick-pill-${i}" class="w-full py-1.5 rounded-lg bg-slate-900/90 border border-white/20 text-[8.5px] sm:text-[10px] font-black uppercase tracking-widest text-center text-gray-200 transition-all shrink-0 pointer-events-none z-10">
@@ -7113,7 +7132,7 @@ const RelicSystem = {
         
         const btnConfirm = document.getElementById('btn-confirm-sacrifice');
         btnConfirm.disabled = true;
-        btnConfirm.className = "btn-cyber glass-panel flex-1 py-3.5 text-xs sm:text-sm font-bold text-purple-300 uppercase tracking-widest opacity-50 cursor-not-allowed grayscale";
+        btnConfirm.className = "btn-cyber glass-panel flex-1 min-h-[48px] sm:min-h-[52px] py-3 rounded-xl text-xs sm:text-sm font-bold text-purple-300 uppercase tracking-widest opacity-50 cursor-not-allowed grayscale";
         
         const modalName = document.getElementById('reforge-modal-name');
         const modalDesc = document.getElementById('reforge-modal-desc');
@@ -7164,7 +7183,7 @@ const RelicSystem = {
                 });
                 
                 btnConfirm.disabled = false;
-                btnConfirm.className = "flex-1 py-3.5 rounded-xl font-display font-black text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_22px_rgba(168,85,247,0.75)] uppercase tracking-widest cursor-pointer transition-all active:scale-95";
+                btnConfirm.className = "flex-1 min-h-[48px] sm:min-h-[52px] py-3 rounded-xl font-display font-black text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_22px_rgba(168,85,247,0.75)] uppercase tracking-widest cursor-pointer transition-all active:scale-95";
             };
             
             grid.appendChild(imgBox);
@@ -7182,6 +7201,18 @@ const RelicSystem = {
 
     executeReforge() {
         if (this.hasReforged || !this.selectedForReforge) return;
+        let sacrificedRelicId = this.selectedForReforge.relic.id;
+
+        let availablePool = this.allRelics.filter(r => 
+            !Game.player.relics.some(pr => pr.id === r.id) && 
+            !this.currentChoices.some(c => c.id === r.id) &&
+            r.id !== sacrificedRelicId
+        );
+        if (availablePool.length === 0) {
+            Game.getFloatingText().spawn(Game.player.x, Game.player.y + 30, "NESSUNA RELIQUIA DISPONIBILE", '#f87171', 26, true);
+            return;
+        }
+
         this.hasReforged = true;
         
         AudioEngine.playShoot('explosive_arrow');
@@ -7190,7 +7221,7 @@ const RelicSystem = {
         const statusBadge = document.getElementById('reforge-status-badge');
         if (statusBadge) {
             statusBadge.innerText = "Completata";
-            statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 border border-green-500/40 uppercase tracking-wider";
+            statusBadge.className = "text-[9px] sm:text-[10px] font-bold text-green-400 bg-green-950/60 px-2 py-0.5 rounded-md border border-green-500/40 uppercase tracking-wider";
         }
 
         let btnDo = document.getElementById('btn-do-reforge');
@@ -7203,16 +7234,8 @@ const RelicSystem = {
         btnSel.onclick = null;
         document.getElementById('reforge-overlay').classList.add('hidden');
         
-        let sacrificedRelicId = this.selectedForReforge.relic.id;
-        
         Game.player.relics.splice(this.selectedForReforge.index, 1);
         Game.player.recalculateModifiers();
-        
-        let availablePool = this.allRelics.filter(r => 
-            !Game.player.relics.some(pr => pr.id === r.id) && 
-            !this.currentChoices.some(c => c.id === r.id) &&
-            r.id !== sacrificedRelicId
-        );
         
         if (availablePool.length > 0) {
             let targetRarity = this.getRandomRarity(); 
@@ -7242,7 +7265,7 @@ const RelicSystem = {
                                   newRelic.rarity === 'rare' ? 'border-blue-400' : 'border-green-400';
                                   
                 btnSel.className = `w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-2 border-solid ${borderColor} flex items-center justify-center bg-slate-950 shrink-0 relative overflow-hidden`;
-                btnSel.style.boxShadow = `4px 4px 0px ${colorGlow}`;
+                btnSel.style.boxShadow = `0 0 18px ${colorGlow}`;
                 
                 let descTitle = document.getElementById('reforge-desc-title');
                 let descText = document.getElementById('reforge-desc-text');
@@ -13652,19 +13675,19 @@ startGame(diffMult) {
                                     Game.addUltimateCharge(50);
                                     Game.player.obeliskDmgTimer = obDur; Game.player.obeliskDmgVal = 1.10;
                                     Game.player.obeliskSpdTimer = obDur; Game.player.obeliskSpdVal = 1.10;
-                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+40% ULT`, '#aa00ff', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+50% ULT`, '#aa00ff', 25, true);
                                     Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `+10% ATK/VEL ${Math.round(obDur)}s`, '#ff3300', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spritePink, 'spark');
                                 } else if (a.type === 'red') {
                                     Game.addUltimateCharge(25);
                                     Game.player.obeliskBurnTimer = obDur;
-                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+25% ULT`, '#00DDFF', 25, true);
                                     Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `FUOCO & RESPINTA ${Math.round(obDur)}s`, '#ff3300', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteRed, 'spark');
                                 } else if (a.type === 'blue') {
                                     Game.addUltimateCharge(25);
                                     Game.player.obeliskSlowTimer = obDur;
-                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+25% ULT`, '#00DDFF', 25, true);
                                     Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `GELIDITÀ & STUN ${Math.round(obDur)}s`, '#00aaff', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteBlue, 'spark');
                                 } else if (a.type === 'green') {
@@ -13675,7 +13698,7 @@ startGame(diffMult) {
                                         Game.player.glacialShieldMesh.material.color.setHex(0x22ff44);
                                         Game.player.glacialShieldMesh.visible = true;
                                     }
-                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+15% ULT`, '#00DDFF', 25, true);
+                                    Game.getFloatingText().spawn(Game.player.x - 15, Game.player.y + 20, `+25% ULT`, '#00DDFF', 25, true);
                                     Game.getFloatingText().spawn(Game.player.x + 15, Game.player.y + 20, `RIGENERAZIONE & SCUDO ${Math.round(obDur)}s`, '#33ff00', 25, true);
                                     Game.getParticle().spawn(Game.player.x, 20, Game.player.y, SharedMat.spriteGreen, 'spark');
                                 }
@@ -22774,10 +22797,12 @@ class Enemy extends Entity {
 
         // --- SBLINK DEL MAGO ARCANO CON SQUASH & STRETCH ---
         if (this.type === 'mage') {
-            if (this.blinkCooldown > 0 && this.blinkAnimTimer <= 0) {
-                let dSqToP = Game.player ? MathUtils.distanceSq(this, Game.player) : 999999;
-                // Ricarica più rapida se il giocatore gli è addosso (< 190 unità)
-                this.blinkCooldown -= dt * (dSqToP < 36100 ? 1.85 : 1.0);
+            if (this.blinkAnimTimer <= 0) {
+                let dSqToP = (Game.player && !Game.player.dead) ? MathUtils.distanceSq(this, Game.player) : 999999;
+                if (this.blinkCooldown > 0) {
+                    // Ricarica più rapida se il giocatore gli è addosso (< 190 unità)
+                    this.blinkCooldown = Math.max(0, this.blinkCooldown - dt * (dSqToP < 36100 ? 1.85 : 1.0));
+                }
                 if (this.blinkCooldown <= 0 && this.telegraphTimer <= 0 && this.state === 'walk' && dSqToP < 360000) {
                     this.blinkAnimTimer = 0.38;
                     this.blinkTeleported = false;
@@ -22812,7 +22837,9 @@ class Enemy extends Entity {
                     // Istante esatto del teletrasporto all'apice dello stretch!
                     if (!this.blinkTeleported) {
                         this.blinkTeleported = true;
-                        this.performMageBlink();
+                        if (!this.performMageBlink()) {
+                            this.blinkCooldown = 0.75;
+                        }
                     }
                     if (p < 0.78) {
                         // Fase 3: Arrivo sottile e alto -> Squash d'impatto a terra
@@ -23320,6 +23347,17 @@ class Enemy extends Entity {
                         this.moveY = Math.sin(kiteAng);
                     }
                 }
+            } else if (this.type === 'mage' && this.telegraphTimer <= 0 && this.blinkAnimTimer <= 0 && this.attackCooldown > 0) {
+                if (!this.orbitDir) this.orbitDir = (this.thinkOffset % 2 === 0) ? 1 : -1;
+                if (this.distToTargetSq < 210 * 210) {
+                    let fleeAng = this.angle + Math.PI + (this.orbitDir * 0.45);
+                    this.moveX = Math.cos(fleeAng);
+                    this.moveY = Math.sin(fleeAng);
+                } else if (this.distToTargetSq <= this.attackRangeSq) {
+                    let kiteAng = this.angle + (Math.PI * 0.5 * this.orbitDir);
+                    this.moveX = Math.cos(kiteAng);
+                    this.moveY = Math.sin(kiteAng);
+                }
             }
 
             let sepX = 0, sepY = 0;
@@ -23530,7 +23568,7 @@ class Enemy extends Entity {
         if (this.type === 'ring_walker' || this.type === 'skeleton_archer' || this.type === 'pyromancer' || (this.type === 'orc' && !this.isBerserk)) {
             let faceAngle = ((this.telegraphTimer > 0 || this.flameStreamTimer > 0) && this.lockedAttackAngle !== undefined) ? this.lockedAttackAngle : this.angle;
             this.mesh.rotation.y = -faceAngle + Math.PI / 2;
-       } else if (this.type === 'goblin' || this.type === 'roller' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
+       } else if (this.type === 'goblin' || this.type === 'mage' || this.type === 'roller' || this.type === 'leaper' || this.type === 'orc' || this.type === 'fire_demon' || this.type === 'trapper' || this.type === 'boss' || this.type === 'slime' || this.type === 'slime_mini') {
             this.mesh.rotation.y = -this.angle + Math.PI / 2;
         } else if (this.type === 'golem') {
             let targetRot = -this.angle + Math.PI / 2;
@@ -24079,7 +24117,7 @@ class Enemy extends Entity {
         if (this.distToTargetSq !== undefined && this.distToTargetSq < this.aggroRangeSq) {
             if (this.telegraphTimer > 0) {
                 this.telegraphTimer -= dt;
-                let vScale = this.isMegaElite ? 1.95 : (this.isElite ? 1.5 : 1.0);
+                let vScale = this.isMegaElite ? 2.15 : (this.isElite ? 1.65 : 1.0);
 
                 // 1. RING WALKER: l'anello rosso brilla e si ingrandisce prima di partire
                 if (this.type === 'ring_walker' && this.modelParts && this.modelParts.ringPivot) {
@@ -24299,7 +24337,8 @@ if (this.type === 'trapper') {
             }
 
             let trapperRepositioning = (this.type === 'trapper' && this.telegraphTimer <= 0 && (this.attackCooldown > 0 || this.distToTargetSq < 220 * 220));
-            if (this.distToTargetSq > this.attackRangeSq || trapperRepositioning) {
+            let mageRepositioning = (this.type === 'mage' && this.telegraphTimer <= 0 && this.blinkAnimTimer <= 0 && this.attackCooldown > 0);
+            if (this.distToTargetSq > this.attackRangeSq || trapperRepositioning || mageRepositioning) {
                 this.move(this.moveX, this.moveY, dt);
                 if (this.type === 'trapper') {
                     let medusaPhase = Game.playTime * 3.2 + (this.animPhase || 0);
@@ -24426,7 +24465,7 @@ if (this.type === 'trapper') {
         }
     }
     performMageBlink() {
-        if (!Game.player || !Game.map) return;
+        if (!Game.player || !Game.map) return false;
         let oldX = this.x;
         let oldY = this.y;
         let bestX = this.x;
@@ -24437,21 +24476,22 @@ if (this.type === 'trapper') {
         let mapMaxX = (Game.map.width - 2.2) * TILE_SIZE;
         let mapMaxY = (Game.map.height - 2.2) * TILE_SIZE;
 
-        // Cerca una posizione tattica attorno al giocatore (tra 230 e 390 unità di distanza)
-        for (let attempt = 0; attempt < 14; attempt++) {
+        // Cerca una posizione tattica attorno al giocatore (con fallback più ampio negli ultimi tentativi)
+        for (let attempt = 0; attempt < 22; attempt++) {
             let ang = Math.random() * Math.PI * 2;
-            let dist = MathUtils.randomRange(230, 390);
-           let candX = Math.max(mapMin, Math.min(mapMaxX, Game.player.x + Math.cos(ang) * dist));
+            let dist = attempt < 14 ? MathUtils.randomRange(230, 390) : MathUtils.randomRange(175, 430);
+            let minMoveSq = attempt < 14 ? 19600 : 10000;
+            let candX = Math.max(mapMin, Math.min(mapMaxX, Game.player.x + Math.cos(ang) * dist));
             let candY = Math.max(mapMin, Math.min(mapMaxY, Game.player.y + Math.sin(ang) * dist));
 
             let moveDistSq = (candX - oldX) * (candX - oldX) + (candY - oldY) * (candY - oldY);
-            if (moveDistSq < 19600) continue; // Almeno 140 unità di spostamento
+            if (moveDistSq < minMoveSq) continue;
 
-            if (!Game.map.isSolid(candX, candY) &&
-                !Game.map.isSolid(candX + this.radius, candY) &&
-                !Game.map.isSolid(candX - this.radius, candY) &&
-                !Game.map.isSolid(candX, candY + this.radius) &&
-                !Game.map.isSolid(candX, candY - this.radius)) {
+            if (!Game.map.isSolid(candX, candY, this.isFlying) &&
+                !Game.map.isSolid(candX + this.radius, candY, this.isFlying) &&
+                !Game.map.isSolid(candX - this.radius, candY, this.isFlying) &&
+                !Game.map.isSolid(candX, candY + this.radius, this.isFlying) &&
+                !Game.map.isSolid(candX, candY - this.radius, this.isFlying)) {
                 bestX = candX;
                 bestY = candY;
                 found = true;
@@ -24459,7 +24499,7 @@ if (this.type === 'trapper') {
             }
         }
 
-        if (!found) return;
+        if (!found) return false;
 
         // Scia luminosa di Sblink tra partenza e arrivo (come lo Sblink Blu del giocatore)
         let dx = bestX - oldX;
@@ -24490,6 +24530,7 @@ if (this.type === 'trapper') {
             }
         }
         AudioEngine.playDash();
+        return true;
     }
 
 
@@ -25341,7 +25382,7 @@ class BossEnemy extends Enemy {
             AudioEngine.playShoot('enemy_bolt');
             let coneSpread = Math.PI / 2;
             for(let i=0; i<8; i++) {
-                let a = this.angle - (coneSpread/2) + (coneSpread/8) * i;
+                let a = this.angle - (coneSpread/2) + (coneSpread/7) * i;
                 Game.getProjectile().spawn(this.x, this.y, a, speed * 2.2, this.stats.maxDmg * 0.8, 'enemy', 'enemy_bolt', false, false, this);
             }
         } 
@@ -26758,6 +26799,8 @@ function goToMainMenu(skipSave = false) {
         document.getElementById('deathScreen').classList.add('hidden');
         document.getElementById('floorScreen').classList.add('hidden');
         document.getElementById('relicScreen').classList.add('hidden');
+        document.getElementById('reforgeSelectModal').classList.add('hidden');
+        document.getElementById('collectedRelicsModal').classList.add('hidden');
         let kBadgeMenu = document.getElementById('deathKillerBadge');
         if (kBadgeMenu) kBadgeMenu.classList.add('hidden');
         document.getElementById('deathMatchStats').classList.add('hidden');
@@ -27862,8 +27905,14 @@ window.addEventListener('popstate', function (event) {
     else if (!document.getElementById('skinModal').classList.contains('hidden')) {
         UIManager.hideModal('skinModal'); // Chiude il menu skin
     }
+    else if (!document.getElementById('reforgeSelectModal').classList.contains('hidden')) {
+        UIManager.hideModal('reforgeSelectModal'); // Chiude il modale sacrificio Forgia
+    }
     else if (!document.getElementById('collectedRelicsModal').classList.contains('hidden')) {
         UIManager.hideModal('collectedRelicsModal'); // Chiude l'inventario reliquie in game
+    }
+    else if (!document.getElementById('highScoreScreen').classList.contains('hidden')) {
+        hideHighScores(); // Chiude la classifica punteggi
     }
 });
 // Inizializza l'history stack per intrappolare l'utente
