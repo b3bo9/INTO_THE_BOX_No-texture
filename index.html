@@ -1539,13 +1539,24 @@ body.colorblind-mode #opt-colorblind-text {
             width: 36px !important;
             height: 36px !important;
         }
-        body.mobile-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
-        body.force-rotate-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
-        body.mobile-landscape #reforgeSelectModal .modal-enter > div:nth-child(4),
-        body.force-rotate-landscape #reforgeSelectModal .modal-enter > div:nth-child(4) {
+        html body.mobile-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
+        html body.force-rotate-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
+        html body.mobile-landscape #reforgeSelectModal .modal-enter > div:nth-child(4),
+        html body.force-rotate-landscape #reforgeSelectModal .modal-enter > div:nth-child(4) {
             min-height: 52px !important;
             padding: 5px 8px !important;
             margin-top: 5px !important;
+        }
+        html body.mobile-landscape #reforgeSelectModal .modal-enter > div:last-child,
+        html body.force-rotate-landscape #reforgeSelectModal .modal-enter > div:last-child {
+            margin-top: 6px !important;
+            gap: 8px !important;
+        }
+        html body.mobile-landscape #reforgeSelectModal .modal-enter > div:last-child button,
+        html body.force-rotate-landscape #reforgeSelectModal .modal-enter > div:last-child button {
+            min-height: 36px !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
         }
 
         /* --- FORGIA DELL'ASCESA (#floorScreen): 5 PERCORSI ORIZZONTALI "CICCIOTTI" E BILANCIATI --- */
@@ -1807,17 +1818,222 @@ body.colorblind-mode #opt-colorblind-text {
             font-size: 9px !important;
         }
 
+       /* --- RELIQUIE (#relicScreen) IN VERTICALE SMARTPHONE: 3 BANNER AMPI, ICONE GRANDI E TESTI LEGGIBILISSIMI --- */
+        html body.is-touch.mobile-portrait #relic-main-wrap,
+        html body.force-rotate-portrait #relic-main-wrap {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            max-width: 540px !important;
+            height: 100% !important;
+            padding: max(8px, env(safe-area-inset-top)) 12px max(8px, env(safe-area-inset-bottom)) 12px !important;
+            gap: clamp(7px, calc(var(--app-h, 100vh) * 0.012), 12px) !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+        html body.is-touch.mobile-portrait #relic-main-wrap > div:first-child,
+        html body.force-rotate-portrait #relic-main-wrap > div:first-child {
+            padding: 8px 12px !important;
+            margin: 0 !important;
+            gap: 8px !important;
+        }
+        html body.is-touch.mobile-portrait #relic-main-wrap > div:first-child h2,
+        html body.force-rotate-portrait #relic-main-wrap > div:first-child h2 {
+            font-size: clamp(14px, calc(var(--app-w, 100vw) * 0.041), 18px) !important;
+            line-height: 1.1 !important;
+        }
+        html body.is-touch.mobile-portrait #relic-main-wrap > div:first-child p,
+        html body.force-rotate-portrait #relic-main-wrap > div:first-child p {
+            font-size: clamp(9.5px, calc(var(--app-w, 100vw) * 0.025), 11px) !important;
+            margin-top: 2px !important;
+        }
+        html body.is-touch.mobile-portrait #relic-main-wrap > div:first-child > button,
+        html body.force-rotate-portrait #relic-main-wrap > div:first-child > button {
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            min-height: 34px !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer,
+        html body.force-rotate-portrait #relicCardsContainer {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            margin: 0 !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+            gap: clamp(7px, calc(var(--app-h, 100vh) * 0.012), 12px) !important;
+            align-items: stretch !important;
+            width: 100% !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-card,
+        html body.force-rotate-portrait #relicCardsContainer .relic-card {
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) auto !important;
+            grid-template-rows: auto minmax(0, 1fr) auto !important;
+            column-gap: 11px !important;
+            row-gap: clamp(4px, calc(var(--app-h, 100vh) * 0.006), 7px) !important;
+            align-items: stretch !important;
+            justify-items: stretch !important;
+            padding: clamp(8px, calc(var(--app-h, 100vh) * 0.011), 12px) 12px !important;
+            min-height: 0 !important;
+            height: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-icon-frame,
+        html body.force-rotate-portrait #relicCardsContainer .relic-icon-frame {
+            grid-column: 1 / 2 !important;
+            grid-row: 1 / 4 !important;
+            align-self: center !important;
+            justify-self: center !important;
+            width: clamp(68px, calc(var(--app-h, 100vh) * 0.112), 96px) !important;
+            height: clamp(68px, calc(var(--app-h, 100vh) * 0.112), 96px) !important;
+            margin: 0 !important;
+            border-radius: 14px !important;
+            border-width: 2px !important;
+        }
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-icon-frame img,
+        html body.force-rotate-portrait #relicCardsContainer .relic-icon-frame img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-icon-frame i,
+        html body.force-rotate-portrait #relicCardsContainer .relic-icon-frame i {
+            font-size: clamp(1.9rem, calc(var(--app-h, 100vh) * 0.045), 2.7rem) !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-card-title,
+        html body.force-rotate-portrait #relicCardsContainer .relic-card-title {
+            grid-column: 2 / 3 !important;
+            grid-row: 1 / 2 !important;
+            align-self: center !important;
+            justify-self: stretch !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            min-height: 0 !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            font-size: clamp(12.5px, calc(var(--app-w, 100vw) * 0.036), 15.5px) !important;
+            line-height: 1.15 !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-rarity-badge,
+        html body.force-rotate-portrait #relicCardsContainer .relic-rarity-badge {
+            grid-column: 3 / 4 !important;
+            grid-row: 1 / 2 !important;
+            align-self: center !important;
+            justify-self: end !important;
+            font-size: 8.5px !important;
+            padding: 2px 8px !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            margin: 0 !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-desc-box,
+        html body.force-rotate-portrait #relicCardsContainer .relic-desc-box {
+            grid-column: 2 / 4 !important;
+            grid-row: 2 / 3 !important;
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 5px 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            overflow-y: auto !important;
+            box-sizing: border-box !important;
+        }
+        html body.is-touch.mobile-portrait #relicCardsContainer .relic-desc-box p,
+        html body.force-rotate-portrait #relicCardsContainer .relic-desc-box p {
+            margin: auto 0 !important;
+            width: 100% !important;
+            text-align: left !important;
+            font-size: clamp(11px, calc(var(--app-w, 100vw) * 0.031), 13px) !important;
+            line-height: 1.28 !important;
+        }
+
+        html body.is-touch.mobile-portrait #relicCardsContainer [id^="relic-pick-pill-"],
+        html body.force-rotate-portrait #relicCardsContainer [id^="relic-pick-pill-"] {
+            grid-column: 2 / 4 !important;
+            grid-row: 3 / 4 !important;
+            width: 100% !important;
+            height: 24px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.1em !important;
+            line-height: 1 !important;
+        }
+
+        html body.is-touch.mobile-portrait #reforgeSection,
+        html body.force-rotate-portrait #reforgeSection {
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: clamp(7px, calc(var(--app-h, 100vh) * 0.011), 11px) 12px !important;
+            gap: 6px !important;
+        }
+        html body.is-touch.mobile-portrait #reforgeSection > div:first-child,
+        html body.force-rotate-portrait #reforgeSection > div:first-child {
+            padding-bottom: 4px !important;
+        }
+        html body.is-touch.mobile-portrait #btn-select-reforge,
+        html body.force-rotate-portrait #btn-select-reforge {
+            width: clamp(46px, calc(var(--app-h, 100vh) * 0.068), 58px) !important;
+            height: clamp(46px, calc(var(--app-h, 100vh) * 0.068), 58px) !important;
+        }
+        html body.is-touch.mobile-portrait #btn-select-reforge i,
+        html body.force-rotate-portrait #btn-select-reforge i {
+            font-size: 1.3rem !important;
+        }
+        html body.is-touch.mobile-portrait #reforge-desc-title,
+        html body.force-rotate-portrait #reforge-desc-title {
+            font-size: clamp(11.5px, calc(var(--app-w, 100vw) * 0.032), 13.5px) !important;
+        }
+        html body.is-touch.mobile-portrait #reforge-desc-text,
+        html body.force-rotate-portrait #reforge-desc-text {
+            font-size: clamp(10px, calc(var(--app-w, 100vw) * 0.027), 11.5px) !important;
+            line-height: 1.25 !important;
+        }
+        html body.is-touch.mobile-portrait #btn-do-reforge,
+        html body.force-rotate-portrait #btn-do-reforge {
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+        }
+        html body.is-touch.mobile-portrait #btn-proceed-relic,
+        html body.force-rotate-portrait #btn-proceed-relic {
+            min-height: 46px !important;
+            height: clamp(46px, calc(var(--app-h, 100vh) * 0.064), 56px) !important;
+            padding: 0 16px !important;
+            margin: 0 !important;
+            font-size: clamp(12px, calc(var(--app-w, 100vw) * 0.034), 14px) !important;
+        }
+
        /* --- RELIQUIE (#relicScreen) IN ORIZZONTALE: PANORAMICA, ICONE GRANDI E RIGHE ALLINEATE AL PIXEL --- */
         html body.mobile-landscape #relic-main-wrap,
         html body.force-rotate-landscape #relic-main-wrap {
             display: grid !important;
-            grid-template-columns: 1.18fr 0.82fr !important;
-            grid-template-rows: auto minmax(0, 1fr) 44px !important;
+            grid-template-columns: 1.22fr 0.78fr !important;
+            grid-template-rows: auto minmax(0, 1fr) 48px !important;
             gap: 6px 12px !important;
-            max-width: 98% !important;
-            width: 98% !important;
+            max-width: min(98%, 940px) !important;
+            width: 100% !important;
             height: 100% !important;
-            padding: 6px 10px !important;
+            padding: 6px max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left)) !important;
             margin: 0 auto !important;
             align-items: stretch !important;
             overflow: hidden !important;
@@ -1830,7 +2046,7 @@ body.colorblind-mode #opt-colorblind-text {
             grid-column: 1 / -1 !important;
             grid-row: 1 / 2 !important;
             margin: 0 !important;
-            padding: 6px 14px !important;
+            padding: 5px 12px !important;
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child p,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child p {
@@ -1838,8 +2054,13 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #relic-main-wrap > div:first-child h2,
         html body.force-rotate-landscape #relic-main-wrap > div:first-child h2 {
-            font-size: 1.05rem !important;
-            margin-top: 1px !important;
+            font-size: clamp(0.95rem, calc(var(--app-w, 100vw) * 0.020), 1.2rem) !important;
+            margin-top: 0 !important;
+        }
+        html body.mobile-landscape #relic-main-wrap > div:first-child > button,
+        html body.force-rotate-landscape #relic-main-wrap > div:first-child > button {
+            padding: 5px 12px !important;
+            font-size: 11px !important;
         }
 
         /* Riga 2: Griglia a 3 colonne a tutta larghezza per le Carte Reliquia */
@@ -1857,39 +2078,34 @@ body.colorblind-mode #opt-colorblind-text {
             align-items: stretch !important;
         }
 
-        /* Carta Reliquia: Griglia a 3 righe fisse (1: Vetrina Icona+Titolo, 2: Box Testo 54px, 3: Bottone 26px) */
+        /* Carta Reliquia: Griglia a 5 righe allineate al pixel tra tutte e 3 le carte */
         html body.mobile-landscape #relicCardsContainer .relic-card,
         html body.force-rotate-landscape #relicCardsContainer .relic-card {
             display: grid !important;
-            grid-template-rows: minmax(0, 1fr) 54px 26px !important;
+            grid-template-rows: 18px minmax(0, 1fr) 26px clamp(50px, calc(var(--app-h, 100vh) * 0.16), 68px) 26px !important;
             align-items: stretch !important;
             justify-items: center !important;
-            gap: 6px !important;
-            padding: 8px 10px !important;
+            gap: 5px !important;
+            padding: 7px 10px !important;
             min-height: 0 !important;
             height: 100% !important;
             box-sizing: border-box !important;
         }
 
-        /* Blocco Superiore (Badge Rarità in cima + Icona Gigante al centro + Titolo su 28px fissi) */
-        html body.mobile-landscape #relicCardsContainer .relic-card > div:first-child,
-        html body.force-rotate-landscape #relicCardsContainer .relic-card > div:first-child {
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            display: grid !important;
-            grid-template-rows: 18px minmax(0, 1fr) 28px !important;
-            align-items: center !important;
-            justify-items: center !important;
-            gap: 4px !important;
+        html body.mobile-landscape #relicCardsContainer .relic-rarity-badge,
+        html body.force-rotate-landscape #relicCardsContainer .relic-rarity-badge {
+            align-self: center !important;
+            font-size: 8.5px !important;
+            padding: 1px 9px !important;
+            line-height: 1.25 !important;
             margin: 0 !important;
         }
 
-        /* Immagine/Icona Reliquia GRANDE, centrata e identica su tutte le carte */
+        /* Immagine/Icona Reliquia GRANDE, centrata e a riempimento completo su tutte le carte */
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame {
-            width: clamp(64px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
-            height: clamp(64px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
+            width: clamp(54px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
+            height: clamp(54px, calc(var(--app-h, 100vh) * 0.22), 104px) !important;
             margin: 0 !important;
             border-radius: 14px !important;
             border-width: 2px !important;
@@ -1901,54 +2117,59 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame i,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame i {
-            font-size: clamp(2rem, calc(var(--app-h, 100vh) * 0.08), 3rem) !important;
+            font-size: clamp(2rem, calc(var(--app-h, 100vh) * 0.085), 3.1rem) !important;
         }
-        html body.mobile-landscape #relicCardsContainer .relic-icon-frame svg,
-        html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame svg,
         html body.mobile-landscape #relicCardsContainer .relic-icon-frame img,
         html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame img {
-            width: 72% !important;
-            height: 72% !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        html body.mobile-landscape #relicCardsContainer .relic-icon-frame svg,
+        html body.force-rotate-landscape #relicCardsContainer .relic-icon-frame svg {
+            width: 78% !important;
+            height: 78% !important;
             object-fit: contain !important;
         }
 
-        /* Titolo Reliquia: altezza fissa 28px e centrato così 1 o 2 righe non spostano mai gli altri elementi */
-        html body.mobile-landscape #relicCardsContainer .relic-card h3,
-        html body.force-rotate-landscape #relicCardsContainer .relic-card h3 {
-            height: 28px !important;
+        /* Titolo Reliquia: altezza fissa e centrato così 1 o 2 righe non spostano mai gli altri elementi */
+        html body.mobile-landscape #relicCardsContainer .relic-card-title,
+        html body.force-rotate-landscape #relicCardsContainer .relic-card-title {
+            height: 26px !important;
+            min-height: 26px !important;
             width: 100% !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             text-align: center !important;
-            font-size: 11.5px !important;
+            font-size: clamp(11.5px, calc(var(--app-w, 100vw) * 0.0155), 13.8px) !important;
             line-height: 1.15 !important;
             overflow: hidden !important;
             margin: 0 !important;
             padding: 0 4px !important;
         }
 
-        /* Riquadro Descrizione: altezza bloccata a 54px e testo centrato verticalmente e orizzontalmente */
+        /* Riquadro Descrizione: proporzionato con scroll fallback sicuro e testo centrato */
         html body.mobile-landscape #relicCardsContainer .relic-desc-box,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box {
             width: 100% !important;
-            height: 54px !important;
-            min-height: 54px !important;
-            max-height: 54px !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            max-height: none !important;
             display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            padding: 4px 10px !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            padding: 4px 9px !important;
             margin: 0 !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
+            overflow-y: auto !important;
         }
         html body.mobile-landscape #relicCardsContainer .relic-desc-box p,
         html body.force-rotate-landscape #relicCardsContainer .relic-desc-box p {
-            font-size: 10.5px !important;
-            line-height: 1.22 !important;
+            font-size: clamp(10.2px, calc(var(--app-w, 100vw) * 0.0138), 12px) !important;
+            line-height: 1.24 !important;
             text-align: center !important;
-            margin: 0 !important;
+            margin: auto 0 !important;
             width: 100% !important;
         }
 
@@ -1962,20 +2183,20 @@ body.colorblind-mode #opt-colorblind-text {
             justify-content: center !important;
             padding: 0 !important;
             margin: 0 !important;
-            font-size: 9.5px !important;
+            font-size: 10.5px !important;
             font-weight: 900 !important;
             letter-spacing: 0.08em !important;
             line-height: 1 !important;
         }
 
-        /* Riga 3 Sinistra: Forgia Cosmica (44px) */
+        /* Riga 3 Sinistra: Forgia Cosmica (48px) */
         html body.mobile-landscape #reforgeSection,
         html body.force-rotate-landscape #reforgeSection {
             grid-column: 1 / 2 !important;
             grid-row: 3 / 4 !important;
-            height: 44px !important;
-            min-height: 44px !important;
-            max-height: 44px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            max-height: 48px !important;
             padding: 4px 12px !important;
             margin: 0 !important;
             display: flex !important;
@@ -1997,23 +2218,23 @@ body.colorblind-mode #opt-colorblind-text {
         }
         html body.mobile-landscape #btn-select-reforge,
         html body.force-rotate-landscape #btn-select-reforge {
-            width: 34px !important;
-            height: 34px !important;
-            border-radius: 8px !important;
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 9px !important;
             flex-shrink: 0 !important;
         }
         html body.mobile-landscape #btn-select-reforge i,
         html body.force-rotate-landscape #btn-select-reforge i {
-            font-size: 1.05rem !important;
+            font-size: 1.15rem !important;
         }
         html body.mobile-landscape #reforge-desc-title,
         html body.force-rotate-landscape #reforge-desc-title {
-            font-size: 10.5px !important;
+            font-size: 11.5px !important;
             line-height: 1.15 !important;
         }
         html body.mobile-landscape #reforge-desc-text,
         html body.force-rotate-landscape #reforge-desc-text {
-            font-size: 9px !important;
+            font-size: 9.5px !important;
             line-height: 1.15 !important;
             margin-top: 1px !important;
             display: -webkit-box !important;
@@ -2024,22 +2245,22 @@ body.colorblind-mode #opt-colorblind-text {
         html body.mobile-landscape #btn-do-reforge,
         html body.force-rotate-landscape #btn-do-reforge {
             padding: 6px 12px !important;
-            font-size: 10px !important;
-            height: 32px !important;
+            font-size: 10.5px !important;
+            height: 34px !important;
             flex-shrink: 0 !important;
         }
 
-        /* Riga 3 Destra: Pulsante Conferma e Procedi (44px) */
+        /* Riga 3 Destra: Pulsante Conferma e Procedi (48px) */
         html body.mobile-landscape #btn-proceed-relic,
         html body.force-rotate-landscape #btn-proceed-relic {
             grid-column: 2 / 3 !important;
             grid-row: 3 / 4 !important;
-            height: 44px !important;
-            min-height: 44px !important;
-            max-height: 44px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            max-height: 48px !important;
             padding: 0 16px !important;
             margin: 0 !important;
-            font-size: 12px !important;
+            font-size: 13px !important;
             box-sizing: border-box !important;
         }
         /* --- SCHERMATA SEI CADUTO / MORTE (#deathScreen) IN ORIZZONTALE --- */
@@ -2806,21 +3027,30 @@ const AppSettings = {
     get isBalanced() { return this.mode === 1; },
     get isMega() { return isTouchDevice && this.mode === 3; },
     get isUltraPC() { return (!isTouchDevice && this.mode === 2) || this.isMega; },
+    get isDesktopUltra() { return !isTouchDevice && this.mode === 2; },
     get useMobileLimits() { return isTouchDevice && !this.isMega; },
     _storageKey: 'intoTheBox_settings_v1',
-    get maxParticlesPerFrame() { return this.useMobileLimits ? (this.mode === 0 ? 7 : (this.mode === 1 ? 14 : 24)) : (this.mode === 0 ? 20 : (this.mode === 1 ? 35 : 55)); },
-    get maxDebrisPerFrame() { return this.useMobileLimits ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 9)) : (this.mode === 0 ? 6 : (this.mode === 1 ? 12 : 18)); },
-    get maxTextsDrawn() { return this.useMobileLimits ? (this.mode === 0 ? 6 : (this.mode === 1 ? 10 : 16)) : (this.mode === 0 ? 14 : (this.mode === 1 ? 25 : 35)); },
-    get maxWindSources() { return this.useMobileLimits ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : 6)) : (this.mode === 0 ? 4 : (this.mode === 1 ? 8 : 10)); },
+    get maxParticlesPerFrame() { return isTouchDevice ? (this.mode === 0 ? 9 : (this.mode === 1 ? 18 : (this.mode === 2 ? 30 : 44))) : (this.mode === 0 ? 22 : (this.mode === 1 ? 38 : 55)); },
+    get maxDebrisPerFrame() { return isTouchDevice ? (this.mode === 0 ? 4 : (this.mode === 1 ? 7 : (this.mode === 2 ? 11 : 15))) : (this.mode === 0 ? 7 : (this.mode === 1 ? 12 : 18)); },
+    get maxTextsDrawn() { return isTouchDevice ? (this.mode === 0 ? 8 : (this.mode === 1 ? 14 : (this.mode === 2 ? 20 : 28))) : (this.mode === 0 ? 15 : (this.mode === 1 ? 25 : 35)); },
+    get maxWindSources() { return isTouchDevice ? (this.mode === 0 ? 3 : (this.mode === 1 ? 5 : (this.mode === 2 ? 7 : 8))) : (this.mode === 0 ? 5 : (this.mode === 1 ? 8 : 10)); },
     get grassDensityMult() { return this.mode === 0 ? 0.50 : (this.mode === 1 ? 0.78 : 1.0); },
-    get targetFogCount() { return this.mode === 0 ? 0 : (this.useMobileLimits ? (this.mode === 1 ? 32 : 55) : (this.mode === 1 ? 55 : 95)); },
-    get playerLightRadius() { return !this.useMobileLimits ? 1050 : (this.mode === 0 ? 520 : (this.mode === 1 ? 650 : 780)); },
+    get targetFogCount() { return this.mode === 0 ? 0 : (isTouchDevice ? (this.mode === 1 ? 34 : (this.mode === 2 ? 56 : 80)) : (this.mode === 1 ? 58 : 95)); },
+    get playerLightRadius() { return isTouchDevice ? (this.mode === 0 ? 580 : (this.mode === 1 ? 720 : (this.mode === 2 ? 880 : 1050))) : 1050; },
+    get targetParticlePool() { return this.useMobileLimits ? 400 : (this.isMega ? 900 : 2500); },
+    get targetDebrisPool() { return this.useMobileLimits ? 90 : (this.isMega ? 140 : 250); },
+    get targetMaxBlood() { return this.useMobileLimits ? 60 : (this.isMega ? 90 : 150); },
+    get targetFlashLights() { return (this.isLow || this.useMobileLimits) ? 0 : (this.isMega ? 5 : 10); },
+    get targetAmbientGpuCount() { return this.isMega ? 150 : 200; },
+    getTargetAnisotropy(maxCap) { return isTouchDevice ? Math.min(4, maxCap || 1) : (maxCap || 1); },
     getTargetPixelRatio() {
         const dpr = window.devicePixelRatio || 1;
         if (isTouchDevice) {
             if (this._batteryLow) return Math.min(dpr * 0.55, 0.85);
-            if (this.mode >= 2) return Math.max(1.0, Math.min(dpr * 0.72, 1.22));
-            if (this.mode === 1) return Math.max(0.85, Math.min(dpr * 0.60, 1.0));
+            // In MEGA la nitidezza è potenziata da FXAA + CAS Sharpen di ultraPostPass: 1.12 resta cristallino riducendo il fill-rate
+            if (this.mode === 3) return Math.max(1.0, Math.min(dpr * 0.65, 1.12));
+            if (this.mode === 2) return Math.max(1.0, Math.min(dpr * 0.70, 1.18));
+            if (this.mode === 1) return Math.max(0.86, Math.min(dpr * 0.60, 1.0));
             return Math.max(0.68, Math.min(dpr * 0.48, 0.80));
         }
         return this.mode >= 1 ? Math.min(dpr, 1.0) : 0.75;
@@ -2871,6 +3101,7 @@ const AppSettings = {
     applyOrientation(fromUserClick = false) {
         if (!document.body) return;
         const isLand = (this.orientation === 'landscape');
+        document.body.classList.toggle('is-touch', isTouchDevice);
         document.body.classList.toggle('mobile-landscape', isLand);
         document.body.classList.toggle('mobile-portrait', !isLand);
 
@@ -3003,13 +3234,13 @@ const AppSettings = {
         }
         if (typeof Game !== 'undefined' && Game.snowSystem) {
             Game.snowSystem.visible = (Game.currentThemeIndex === 2);
-            const snowBase = this.useMobileLimits ? 140 : (Game.maxSnowCount || 220);
+            const snowBase = this.useMobileLimits ? 140 : (this.isMega ? 180 : (Game.maxSnowCount || 220));
             const snowMult = this.isLow ? 0.55 : (this.isUltra ? 1.0 : 0.80);
             const maxPos = Game.snowSystem.geometry.attributes.position ? Game.snowSystem.geometry.attributes.position.count : snowBase;
             Game.snowSystem.geometry.setDrawRange(0, Math.min(maxPos, Math.floor(snowBase * snowMult)));
             if (Game.snowMat && Game.snowMat.uniforms && Game.snowMat.uniforms.uSizeScale) {
                 const pr = this.getTargetPixelRatio();
-                Game.snowMat.uniforms.uSizeScale.value = (this.useMobileLimits ? 1650.0 : 2100.0) * pr;
+                Game.snowMat.uniforms.uSizeScale.value = (this.useMobileLimits ? 1650.0 : (this.isMega ? 1900.0 : 2100.0)) * pr;
             }
         }
 
@@ -3035,15 +3266,13 @@ const AppSettings = {
         }
 
         if (typeof Game !== 'undefined' && Game.renderer) {
-            if (!this.useMobileLimits && Game.ensureMegaPools) Game.ensureMegaPools();
+            if (!this.isLow && !this.useMobileLimits && Game.ensureMegaPools) Game.ensureMegaPools();
             const pr = this.getTargetPixelRatio();
             Game.renderer.setPixelRatio(pr);
             Game.resize();
 
             if (typeof Preloader !== 'undefined' && Preloader.textures) {
-                const targetAniso = this.useMobileLimits
-                    ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy())
-                    : Game.renderer.capabilities.getMaxAnisotropy();
+                const targetAniso = this.getTargetAnisotropy(Game.renderer.capabilities.getMaxAnisotropy());
                 const texKeys = ['dirt', 'grass', 'rock', 'wall'];
                 const variants = ['', '_lava', '_ice'];
                 for (let k = 0; k < texKeys.length; k++) {
@@ -3074,7 +3303,7 @@ const AppSettings = {
                     Game.map.treeCanopyMesh.castShadow = this.isUltra;
                 }
                 if (Game.map.debrisStaticMesh) {
-                    Game.map.debrisStaticMesh.castShadow = this.isUltraPC;
+                    Game.map.debrisStaticMesh.castShadow = !isTouchDevice && this.isUltraPC;
                     if (Game.map.totalDebrisStaticSpawned !== undefined) {
                         const debMult = this.isLow ? 0.45 : (this.isUltra ? 1.0 : 0.75);
                         Game.map.debrisStaticMesh.count = Math.floor(Game.map.totalDebrisStaticSpawned * debMult);
@@ -3119,10 +3348,13 @@ const AppSettings = {
                     applySkinMaterials(Game.player.modelParts, SkinSystem.getCurrentSkin());
                 }
             }
-            if ((this.isLow || this.useMobileLimits) && Game.flashLights) {
+            if (Game.flashLights) {
+                const activeFlashCap = this.targetFlashLights;
                 for (let i = 0; i < Game.flashLights.length; i++) {
-                    Game.flashLights[i].life = 0;
-                    Game.flashLights[i].light.intensity = 0;
+                    if (this.isLow || this.useMobileLimits || i >= activeFlashCap) {
+                        Game.flashLights[i].life = 0;
+                        Game.flashLights[i].light.intensity = 0;
+                    }
                 }
             }
         }
@@ -7138,15 +7370,13 @@ const RelicSystem = {
             card.style.setProperty('--r-main', rPal.main);
 
             card.innerHTML = `
-                <div class="w-full flex flex-col items-center pointer-events-none shrink-0 z-10">
-                    <span class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${rPal.badgeClass}">${rPal.rarityLabel}</span>
-                    <div class="relic-icon-frame relative flex justify-center items-center my-2 w-16 h-16 sm:w-[92px] sm:h-[92px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden">
-                        <div class="absolute inset-0 opacity-45 pointer-events-none" style="background: radial-gradient(circle at center, ${rPal.main} 0%, transparent 72%);"></div>
-                        <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover relative z-10">
-                        <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-95 relative z-10" style="display:none; color:${rPal.main};"></i>
-                    </div>
-                    <h3 class="text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight min-h-[2.4em] flex items-center justify-center m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">${relic.name}</h3>
+                <span class="relic-rarity-badge text-[8px] sm:text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${rPal.badgeClass} pointer-events-none relative z-10 shrink-0">${rPal.rarityLabel}</span>
+                <div class="relic-icon-frame relative flex justify-center items-center my-2 w-16 h-16 sm:w-[92px] sm:h-[92px] shrink-0 bg-slate-950 border-2 ${rPal.iconBorder} overflow-hidden pointer-events-none z-10">
+                    <div class="absolute inset-0 opacity-45 pointer-events-none" style="background: radial-gradient(circle at center, ${rPal.main} 0%, transparent 72%);"></div>
+                    <img src="${relic.image}" alt="${relic.name}" onload="this.nextElementSibling.style.display='none';" onerror="window.handleRelicImgError(this, false)" class="w-full h-full object-cover relative z-10">
+                    <i class="fa-solid ${iconClass} text-3xl sm:text-4xl opacity-95 relative z-10" style="display:none; color:${rPal.main};"></i>
                 </div>
+                <h3 class="relic-card-title text-[11px] sm:text-sm font-display font-black ${rPal.titleCol} text-center uppercase tracking-wider leading-tight min-h-[2.4em] flex items-center justify-center m-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] pointer-events-none relative z-10 shrink-0">${relic.name}</h3>
                 <div class="relic-desc-box flex-1 w-full bg-slate-950/90 border border-white/15 rounded-lg px-2 py-2 my-1.5 min-h-[64px] sm:min-h-[72px] flex items-center justify-center pointer-events-none z-10">
                     <p class="text-[9.5px] sm:text-xs font-bold text-center leading-snug text-gray-100 m-0">${relic.desc}</p>
                 </div>
@@ -7446,7 +7676,9 @@ const PcUltraGraphics = {
 
     getCharHdTexture() {
         if (this._charHdTex) return this._charHdTex;
-        const size = 512;
+        const mob = (typeof isTouchDevice !== 'undefined' && isTouchDevice);
+        const size = mob ? 256 : 512;
+        const sc = size / 512;
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
@@ -7457,9 +7689,11 @@ const PcUltraGraphics = {
         let seed = 4242;
         const rand = () => { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 0) / 4294967296); };
 
-        // Trama morbida stile pittura a mano (elimina la pixellatura su Full HD)
+        // Trama morbida stile pittura a mano (calibra scala su 256p mobile / 512p PC)
         for (let i = 0; i < 420; i++) {
-            const g = ctx.createRadialGradient(rand() * size, rand() * size, 2, rand() * size, rand() * size, 22 + rand() * 36);
+            const r = (22 + rand() * 36) * sc;
+            const cx = rand() * size, cy = rand() * size;
+            const g = ctx.createRadialGradient(cx, cy, 2 * sc, cx, cy, r);
             const alpha = (0.04 + rand() * 0.07).toFixed(3);
             g.addColorStop(0, rand() > 0.35 ? `rgba(18,22,32,${alpha})` : `rgba(255,255,255,${alpha})`);
             g.addColorStop(1, 'rgba(255,255,255,0)');
@@ -7468,24 +7702,24 @@ const PcUltraGraphics = {
         }
 
         // Micro-fibra verticale delicata
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = Math.max(0.8, 1.2 * (0.7 + 0.3 * sc));
         for (let i = 0; i < 650; i++) {
             ctx.strokeStyle = rand() > 0.45 ? 'rgba(20,24,36,0.12)' : 'rgba(255,255,255,0.22)';
-            const x = rand() * size, y = rand() * size, len = 10 + rand() * 24;
+            const x = rand() * size, y = rand() * size, len = (10 + rand() * 24) * sc;
             ctx.beginPath();
             ctx.moveTo(x, y);
-            ctx.lineTo(x + (rand() - 0.5) * 4, y + len);
+            ctx.lineTo(x + (rand() - 0.5) * 4 * sc, y + len);
             ctx.stroke();
         }
 
         // Graffi sottili ad alta definizione
         for (let i = 0; i < 95; i++) {
-            ctx.lineWidth = 0.9 + rand() * 1.1;
+            ctx.lineWidth = (0.9 + rand() * 1.1) * (0.75 + 0.25 * sc);
             ctx.strokeStyle = i % 4 === 0 ? 'rgba(255,255,255,0.35)' : 'rgba(12,14,20,0.28)';
             const x = rand() * size, y = rand() * size;
             ctx.beginPath();
             ctx.moveTo(x, y);
-            ctx.lineTo(x + (rand() - 0.5) * 32, y + (rand() - 0.5) * 32);
+            ctx.lineTo(x + (rand() - 0.5) * 32 * sc, y + (rand() - 0.5) * 32 * sc);
             ctx.stroke();
         }
 
@@ -7495,7 +7729,7 @@ const PcUltraGraphics = {
         tex.encoding = THREE.sRGBEncoding;
         tex.magFilter = THREE.LinearFilter;
         tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.anisotropy = 8;
+        tex.anisotropy = mob ? 4 : 8;
         this._charHdTex = tex;
         return tex;
     },
@@ -7504,7 +7738,9 @@ const PcUltraGraphics = {
         if (!skinId) return this.getCharHdTexture();
         if (this._skinHdCache[skinId]) return this._skinHdCache[skinId];
 
-        const size = 512;
+        const mob = (typeof isTouchDevice !== 'undefined' && isTouchDevice);
+        const size = mob ? 256 : 512;
+        const sc = size / 512;
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
@@ -7528,8 +7764,8 @@ const PcUltraGraphics = {
 
         // Pennellate morbide di ombreggiatura materica
         for (let i = 0; i < 360; i++) {
-            const cx = rand() * size, cy = rand() * size, rad = 18 + rand() * 34;
-            const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, rad);
+            const cx = rand() * size, cy = rand() * size, rad = (18 + rand() * 34) * sc;
+            const g = ctx.createRadialGradient(cx, cy, 1 * sc, cx, cy, rad);
             const useAcc = rand() > 0.68;
             g.addColorStop(0, useAcc ? `rgba(${p.accent},0.16)` : `rgba(${p.dark},0.14)`);
             g.addColorStop(1, 'rgba(255,255,255,0)');
@@ -7538,22 +7774,26 @@ const PcUltraGraphics = {
         }
 
         if (p.weave) {
-            ctx.lineWidth = 1.2;
-            for (let x = 0; x < size; x += 6) {
-                ctx.strokeStyle = (x % 12 === 0) ? `rgba(${p.dark},0.11)` : 'rgba(255,255,255,0.16)';
+            const step = Math.max(3, Math.round(6 * sc));
+            ctx.lineWidth = Math.max(0.8, 1.2 * (0.7 + 0.3 * sc));
+            for (let x = 0; x < size; x += step) {
+                ctx.strokeStyle = ((x / step) % 2 === 0) ? `rgba(${p.dark},0.11)` : 'rgba(255,255,255,0.16)';
                 ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size); ctx.stroke();
             }
         } else if (p.hex) {
+            const stepY = Math.max(12, Math.round(24 * sc));
+            const stepX = Math.max(14, Math.round(28 * sc));
+            const boxSz = Math.max(5, Math.round(10 * sc));
             ctx.strokeStyle = `rgba(${p.accent},0.16)`;
             ctx.lineWidth = 1.0;
-            for (let y = 0; y < size; y += 24) {
-                for (let x = (y % 48 === 0 ? 0 : 14); x < size; x += 28) {
-                    ctx.strokeRect(x, y, 10, 10);
+            for (let y = 0; y < size; y += stepY) {
+                for (let x = ((y / stepY) % 2 === 0 ? 0 : Math.floor(stepX * 0.5)); x < size; x += stepX) {
+                    ctx.strokeRect(x, y, boxSz, boxSz);
                 }
             }
         } else if (p.stars) {
             for (let i = 0; i < 120; i++) {
-                const sx = rand() * size, sy = rand() * size, sr = 1.5 + rand() * 3.5;
+                const sx = rand() * size, sy = rand() * size, sr = (1.5 + rand() * 3.5) * sc;
                 const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 2.2);
                 g.addColorStop(0, 'rgba(255,255,255,0.85)');
                 g.addColorStop(0.5, `rgba(${p.accent},0.40)`);
@@ -7563,10 +7803,10 @@ const PcUltraGraphics = {
             }
         } else if (p.forged) {
             for (let i = 0; i < 85; i++) {
-                ctx.lineWidth = 1.0 + rand() * 1.4;
+                ctx.lineWidth = (1.0 + rand() * 1.4) * (0.75 + 0.25 * sc);
                 ctx.strokeStyle = i % 3 === 0 ? `rgba(${p.accent},0.32)` : `rgba(${p.dark},0.28)`;
                 const x = rand() * size, y = rand() * size;
-                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 38, y + (rand() - 0.5) * 24); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 38 * sc, y + (rand() - 0.5) * 24 * sc); ctx.stroke();
             }
         }
 
@@ -7576,7 +7816,7 @@ const PcUltraGraphics = {
         tex.encoding = THREE.sRGBEncoding;
         tex.magFilter = THREE.LinearFilter;
         tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.anisotropy = 8;
+        tex.anisotropy = mob ? 4 : 8;
         this._skinHdCache[skinId] = tex;
         return tex;
     },
@@ -7595,7 +7835,8 @@ const PcUltraGraphics = {
         if (cached && cached._srcImg === tex.image) return cached;
 
         try {
-            const w = 256, h = 256;
+            const mob = (typeof isTouchDevice !== 'undefined' && isTouchDevice);
+            const w = mob ? 128 : 256, h = w;
             const srcCanvas = document.createElement('canvas');
             srcCanvas.width = w; srcCanvas.height = h;
             const sCtx = srcCanvas.getContext('2d');
@@ -7640,7 +7881,7 @@ const PcUltraGraphics = {
             if (tex.repeat) nTex.repeat.copy(tex.repeat);
             nTex.magFilter = THREE.LinearFilter;
             nTex.minFilter = THREE.LinearMipmapLinearFilter;
-            nTex.anisotropy = 8;
+            nTex.anisotropy = mob ? 4 : 8;
             nTex._srcImg = tex.image;
             this._normalCache.set(tex, nTex);
             return nTex;
@@ -7659,14 +7900,14 @@ const PcUltraGraphics = {
         const envScene = new THREE.Scene();
 
         const palettes = {
-            0: { sky: 0x74a888, top: 0xa6e0b8, key: 0xf4ffd8, rim: 0x5aa4dd, ground: 0x3b5938 },
-            1: { sky: 0x7a3428, top: 0xb85838, key: 0xffc888, rim: 0x9944cc, ground: 0x541e16 },
-            2: { sky: 0x6ba8d8, top: 0xb8ecff, key: 0xffffff, rim: 0x6ea6ff, ground: 0x2b5074 }
+            0: { sky: 0x3c614b, top: 0x6ba17e, key: 0xd9f0be, rim: 0x387cb8, ground: 0x1b2e1b },
+            1: { sky: 0x4a1d17, top: 0x853b25, key: 0xf0a868, rim: 0x702fa0, ground: 0x280d09 },
+            2: { sky: 0x3a648a, top: 0x7dbbe0, key: 0xdcf0ff, rim: 0x4580d8, ground: 0x162c45 }
         };
         const pal = palettes[idx];
         envScene.background = new THREE.Color(pal.sky);
 
-        const hemi = new THREE.HemisphereLight(pal.top, pal.ground, 1.35);
+        const hemi = new THREE.HemisphereLight(pal.top, pal.ground, 0.90);
         envScene.add(hemi);
 
         const panelGeo = new THREE.PlaneGeometry(24, 24);
@@ -7694,7 +7935,7 @@ const PcUltraGraphics = {
     applyTerrainShader(mat, isWall = false) {
         if (!mat || mat._ultraTerrainHooked) return mat;
         mat._ultraTerrainHooked = true;
-        mat.customProgramCacheKey = () => isWall ? 'pc_ultra_wall_v1' : 'pc_ultra_floor_v1';
+        mat.customProgramCacheKey = () => isWall ? 'pc_ultra_wall_v2' : 'pc_ultra_floor_v3';
         mat.onBeforeCompile = (shader) => {
             shader.uniforms.uUltra = PcUltraGraphics.uUltra;
             shader.uniforms.uBiomeId = PcUltraGraphics.uBiomeId;
@@ -7729,9 +7970,9 @@ const PcUltraGraphics = {
                     float blockVar = sin(wp.x * 1.3 + cos(wp.y * 1.1) * 1.5) * 0.5 + 0.5;
                     float baseAO = smoothstep(-4.0, 18.0, vUltraWPos.y);
                     float topCrest = smoothstep(26.0, 48.0, vUltraWPos.y);
-                    diffuseColor.rgb *= mix(0.76, 1.14, baseAO) * (0.96 + 0.12 * blockVar + 0.05 * strata);
-                    vec3 rimTint = uBiomeId > 1.5 ? vec3(0.06, 0.14, 0.22) : (uBiomeId > 0.5 ? vec3(0.18, 0.06, 0.02) : vec3(0.08, 0.12, 0.06));
-                    diffuseColor.rgb += rimTint * topCrest * 0.45;
+                    diffuseColor.rgb *= mix(0.68, 1.08, baseAO) * (0.94 + 0.12 * blockVar + 0.05 * strata);
+                    vec3 rimTint = uBiomeId > 1.5 ? vec3(0.05, 0.11, 0.18) : (uBiomeId > 0.5 ? vec3(0.15, 0.05, 0.02) : vec3(0.06, 0.10, 0.05));
+                    diffuseColor.rgb += rimTint * topCrest * 0.28;
                 }
                 `
                 : `
@@ -7739,13 +7980,13 @@ const PcUltraGraphics = {
                 if (uUltra > 0.5) {
                     // Anti-tiling world-space macro variazione che spezza la griglia 64x64 su schermi grandi
                     vec2 wp = vUltraWPos.xz * 0.0085;
-                    float m1 = sin(wp.x * 1.9 + cos(wp.y * 1.6) * 1.4);
-                    float m2 = cos(wp.y * 2.3 - sin(wp.x * 1.4) * 1.3);
-                    float macro = clamp(0.5 + 0.26 * m1 + 0.24 * m2, 0.0, 1.0);
+                    float macroWaveA = sin(wp.x * 1.9 + cos(wp.y * 1.6) * 1.4);
+                    float macroWaveB = cos(wp.y * 2.3 - sin(wp.x * 1.4) * 1.3);
+                    float macro = clamp(0.5 + 0.26 * macroWaveA + 0.24 * macroWaveB, 0.0, 1.0);
                     float micro = sin(vUltraWPos.x * 0.22) * cos(vUltraWPos.z * 0.22) * 0.04;
-                    vec3 coolShift = uBiomeId > 1.5 ? vec3(0.95, 1.00, 1.06) : (uBiomeId > 0.5 ? vec3(0.96, 0.90, 0.92) : vec3(0.94, 1.01, 0.95));
-                    vec3 warmShift = uBiomeId > 1.5 ? vec3(1.04, 1.07, 1.10) : (uBiomeId > 0.5 ? vec3(1.12, 0.98, 0.92) : vec3(1.08, 1.05, 0.94));
-                    diffuseColor.rgb *= mix(coolShift, warmShift, macro) * (0.97 + macro * 0.10 + micro);
+                    vec3 coolShift = uBiomeId > 1.5 ? vec3(0.92, 0.98, 1.05) : (uBiomeId > 0.5 ? vec3(0.93, 0.87, 0.90) : vec3(0.91, 0.99, 0.93));
+                    vec3 warmShift = uBiomeId > 1.5 ? vec3(1.02, 1.05, 1.09) : (uBiomeId > 0.5 ? vec3(1.09, 0.95, 0.89) : vec3(1.05, 1.02, 0.91));
+                    diffuseColor.rgb *= mix(coolShift, warmShift, macro) * (0.91 + macro * 0.11 + micro);
                 }
                 `
             );
@@ -7848,7 +8089,7 @@ const PcUltraGraphics = {
                 void main() {
                     vec2 invRes = 1.0 / max(uResolution, vec2(1.0));
 
-                    // 1. FXAA leggero sui bordi per eliminare la seghettatura post-Bloom su Full HD
+                    // 1. FXAA adattivo sui bordi con early-out sulle zone uniformi (risparmia 4 campionamenti su ~75% dei pixel)
                     vec3 rgbNW = texture2D(tDiffuse, vUv + vec2(-1.0, -1.0) * invRes).rgb;
                     vec3 rgbNE = texture2D(tDiffuse, vUv + vec2( 1.0, -1.0) * invRes).rgb;
                     vec3 rgbSW = texture2D(tDiffuse, vUv + vec2(-1.0,  1.0) * invRes).rgb;
@@ -7863,33 +8104,32 @@ const PcUltraGraphics = {
 
                     float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
                     float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-
-                    vec2 dir;
-                    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
-                    dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-                    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.03125, 0.0078125);
-                    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-                    dir = clamp(dir * rcpDirMin, vec2(-6.0), vec2(6.0)) * invRes;
-
-                    vec3 rgbA = 0.5 * (
-                        texture2D(tDiffuse, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
-                        texture2D(tDiffuse, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
-                    );
-                    vec3 rgbB = rgbA * 0.5 + 0.25 * (
-                        texture2D(tDiffuse, vUv + dir * -0.5).rgb +
-                        texture2D(tDiffuse, vUv + dir *  0.5).rgb
-                    );
-                    float lumaB = getLuma(rgbB);
-                    vec3 col = (lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB;
-
-                    // 2. Contrast-Adaptive Sharpen leggero (esalta i dettagli nitidi senza artefatti)
-                    vec3 n = texture2D(tDiffuse, vUv + vec2(0.0, -invRes.y)).rgb;
-                    vec3 s = texture2D(tDiffuse, vUv + vec2(0.0,  invRes.y)).rgb;
-                    vec3 e = texture2D(tDiffuse, vUv + vec2( invRes.x, 0.0)).rgb;
-                    vec3 w = texture2D(tDiffuse, vUv + vec2(-invRes.x, 0.0)).rgb;
-                    vec3 blur4 = (n + s + e + w) * 0.25;
                     float edgeContrast = lumaMax - lumaMin;
-                    float sharpAmt = mix(0.20, 0.04, smoothstep(0.08, 0.45, edgeContrast));
+
+                    vec3 col = rgbM;
+                    if (edgeContrast >= max(0.03125, lumaMax * 0.125)) {
+                        vec2 dir;
+                        dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+                        dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+                        float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.03125, 0.0078125);
+                        float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+                        dir = clamp(dir * rcpDirMin, vec2(-6.0), vec2(6.0)) * invRes;
+
+                        vec3 rgbA = 0.5 * (
+                            texture2D(tDiffuse, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
+                            texture2D(tDiffuse, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
+                        );
+                        vec3 rgbB = rgbA * 0.5 + 0.25 * (
+                            texture2D(tDiffuse, vUv + dir * -0.5).rgb +
+                            texture2D(tDiffuse, vUv + dir *  0.5).rgb
+                        );
+                        float lumaB = getLuma(rgbB);
+                        col = (lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB;
+                    }
+
+                    // 2. Contrast-Adaptive Sharpen zero-extra-tap: riusa i 4 campioni diagonali già in memoria
+                    vec3 blur4 = (rgbNW + rgbNE + rgbSW + rgbSE) * 0.25;
+                    float sharpAmt = mix(0.11, 0.03, smoothstep(0.08, 0.45, edgeContrast));
                     col = clamp(col + (col - blur4) * sharpAmt, 0.0, 4.0);
 
                     // 3. Aberrazione cromatica radiale sugli impatti pesanti (trauma)
@@ -7901,11 +8141,34 @@ const PcUltraGraphics = {
                         col.b = mix(col.b, texture2D(tDiffuse, vUv - shift).b, 0.65);
                     }
 
-                    // 4. Micro Color Grading per bioma + soft highlight roll-off + codifica sRGB finale
-                    col = (col * (1.06 + 0.25 * col)) / (1.0 + 0.24 * col);
-                    vec3 shadowTint = uBiomeId > 1.5 ? vec3(0.97, 1.00, 1.04) : (uBiomeId > 0.5 ? vec3(1.04, 0.98, 0.97) : vec3(0.98, 1.02, 0.99));
+                    // 4. Bilanciamento Esposizione, Contrasto S-Curve e Tone-Mapping a luminanza preservata (riposante ma vivido)
+                    col = max(col, vec3(0.0)) * 0.95;
+                    float linY = dot(col, vec3(0.2126, 0.7152, 0.0722));
+                    if (linY > 0.0001) {
+                        float percY = sqrt(linY);
+                        float sCurve = -0.028 * sin(min(1.0, percY / 0.88) * 6.2831853) * (1.0 - smoothstep(0.65, 1.0, percY));
+                        float percMapped = max(0.0, percY + sCurve);
+                        float targetY = percMapped * percMapped;
+                        if (targetY > 0.58) {
+                            float overY = targetY - 0.58;
+                            targetY = 0.58 + (0.36 * overY) / (0.36 + overY);
+                        }
+                        col *= (targetY / linY);
+                    }
+                    float gradedY = dot(col, vec3(0.2126, 0.7152, 0.0722));
+                    float maxCh = max(col.r, max(col.g, col.b));
+                    float minCh = min(col.r, min(col.g, col.b));
+                    float satEst = maxCh > 0.0001 ? (maxCh - minCh) / maxCh : 0.0;
+                    float vibAmt = 0.09 * (1.0 - satEst * 0.65) * smoothstep(0.02, 0.12, gradedY) * (1.0 - smoothstep(0.60, 0.92, gradedY));
+                    col = max(vec3(0.0), vec3(gradedY) + (col - vec3(gradedY)) * (1.0 + vibAmt));
+                    if (gradedY > 0.72) {
+                        float hiDesat = smoothstep(0.72, 0.94, gradedY) * 0.16;
+                        col = mix(col, vec3(gradedY), hiDesat);
+                    }
+
+                    vec3 shadowTint = uBiomeId > 1.5 ? vec3(0.96, 1.00, 1.04) : (uBiomeId > 0.5 ? vec3(1.04, 0.98, 0.97) : vec3(0.98, 1.02, 0.99));
                     float lum = getLuma(col);
-                    col *= mix(shadowTint, vec3(1.02, 1.01, 1.00), smoothstep(0.20, 0.80, lum));
+                    col *= mix(shadowTint, vec3(0.99, 0.99, 0.99), smoothstep(0.20, 0.85, lum));
 
                     gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
                     #include <encodings_fragment>
@@ -7918,7 +8181,8 @@ const PcUltraGraphics = {
     applyEnvironment(themeIdx = 0) {
         if (typeof Game === 'undefined' || !Game.scene || !Game.renderer) return;
         this.uBiomeId.value = (themeIdx === 1 || themeIdx === 2) ? themeIdx : 0;
-        if (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) {
+        const isDarkness = !!(Game.isCorrupted && !Game.isBossFloor && Game.corruptedType === 'darkness');
+        if (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC && !isDarkness && !Game.arenaEvolution) {
             Game.scene.environment = this.getEnvMap(Game.renderer, themeIdx);
         } else {
             Game.scene.environment = null;
@@ -7927,6 +8191,7 @@ const PcUltraGraphics = {
 
     syncState() {
         const isUltraPC = (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC);
+        const isDarkness = (typeof Game !== 'undefined' && Game.isCorrupted && !Game.isBossFloor && Game.corruptedType === 'darkness');
         this.uUltra.value = isUltraPC ? 1.0 : 0.0;
 
         const themeIdx = (typeof Game !== 'undefined' && Game.currentThemeIndex !== undefined) ? Game.currentThemeIndex : 0;
@@ -7934,7 +8199,7 @@ const PcUltraGraphics = {
 
         if (typeof Game !== 'undefined') {
             if (Game.rimLight) {
-                Game.rimLight.intensity = isUltraPC ? 0.46 : 0.0;
+                Game.rimLight.intensity = (isUltraPC && !isDarkness && !Game.arenaEvolution) ? 0.20 : 0.0;
                 const rimHex = themeIdx === 2 ? 0x55bbff : (themeIdx === 1 ? 0xff7744 : 0x66cc99);
                 Game.rimLight.color.setHex(rimHex);
             }
@@ -7946,7 +8211,7 @@ const PcUltraGraphics = {
                 }
             }
             if (Game.ambientGpuSystem) {
-                Game.ambientGpuSystem.visible = isUltraPC && (themeIdx !== 2);
+                Game.ambientGpuSystem.visible = isUltraPC && (themeIdx !== 2) && !isDarkness;
                 if (Game.ambientGpuMat && Game.ambientGpuMat.uniforms) {
                     const pr = AppSettings.getTargetPixelRatio();
                     Game.ambientGpuMat.uniforms.uTheme.value = themeIdx;
@@ -7999,7 +8264,7 @@ const PcUltraGraphics = {
                 }
             }
             if (SharedMat.coin) {
-                SharedMat.coin.envMapIntensity = isUltraPC ? 1.35 : 1.0;
+                SharedMat.coin.envMapIntensity = isUltraPC ? 1.18 : 1.0;
             }
         }
 
@@ -9248,7 +9513,7 @@ SharedMat.urn = new THREE.MeshPhongMaterial({ map: createPatternTexture('urn'), 
 const SharedGeoSet = new Set(Object.values(SharedGeo));
 const SharedMatSet = new Set(Object.values(SharedMat));
 function applyCharacterShader(material, rimStrength = 0.65) {
-    material.customProgramCacheKey = () => 'char_rim_ultra_' + rimStrength.toFixed(2);
+    material.customProgramCacheKey = () => 'char_rim_ultra2_' + rimStrength.toFixed(2);
     material.onBeforeCompile = (shader) => {
         shader.uniforms.uUltra = (typeof PcUltraGraphics !== 'undefined') ? PcUltraGraphics.uUltra : { value: 0.0 };
         // Calcola Altezza e Rim Light nel Vertex Shader: 100% compatibile con MeshLambertMaterial (Mobile) e MeshPhongMaterial (PC)
@@ -9277,13 +9542,14 @@ function applyCharacterShader(material, rimStrength = 0.65) {
             '#include <dithering_fragment>',
             `
             // 1. Gradiente Verticale (Ambient Occlusion ai piedi, luce sulla testa)
-            float hLo = mix(0.55, 0.54, uUltra);
-            float hHi = mix(1.18, 1.25, uUltra);
+            float hLo = mix(0.55, 0.50, uUltra);
+            float hHi = mix(1.18, 1.18, uUltra);
             gl_FragColor.rgb *= mix(hLo, hHi, vCharHeight);
 
-            // 2. Stylized Rim Light + micro-contorno morbido sui bordi estremi in PC Ultra
-            float rimMask = mix(vCharRim, smoothstep(0.42, 0.90, vCharRawRim) * 1.18, uUltra);
-            gl_FragColor.rgb += (gl_FragColor.rgb + vec3(0.18)) * rimMask * ${rimStrength.toFixed(2)};
+            // 2. Stylized Rim Light + micro-contorno morbido sui bordi estremi in PC Ultra / MEGA
+            float rimMask = mix(vCharRim, smoothstep(0.47, 0.92, vCharRawRim) * 1.06, uUltra);
+            vec3 rimBias = mix(vec3(0.18), vec3(0.11), uUltra);
+            gl_FragColor.rgb += (gl_FragColor.rgb + rimBias) * rimMask * ${rimStrength.toFixed(2)};
             float inkEdge = smoothstep(0.86, 0.99, vCharRawRim) * uUltra;
             gl_FragColor.rgb *= mix(1.0, 0.72, inkEdge);
 
@@ -11786,7 +12052,7 @@ getEnemy() {
         
         // OTTIMIZZAZIONE SCALABILITÀ: Assegnazione corretta e SICURA della risoluzione al lancio!
         this.renderer = new THREE.WebGLRenderer({ 
-            antialias: !AppSettings.useMobileLimits, 
+            antialias: !isTouchDevice, 
             alpha: false, 
             stencil: false,
             preserveDrawingBuffer: false,
@@ -11815,8 +12081,8 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
         this.scene.add(this.dirLight.target);
         this.updateShadowConfig();
 
-        // Luce di rimbalzo/contorno (Rim Fill) opposta al sole per staccare i modelli su PC Ultra
-        this.rimLight = new THREE.DirectionalLight(0x88bbff, AppSettings.isUltraPC ? 0.46 : 0.0);
+        // Luce di rimbalzo/contorno (Rim Fill) opposta al sole per staccare i modelli su PC Ultra / MEGA
+        this.rimLight = new THREE.DirectionalLight(0x88bbff, AppSettings.isUltraPC ? 0.20 : 0.0);
         this.rimLight.position.set(420, 460, 420);
         this.rimLight.castShadow = false;
         this.scene.add(this.rimLight);
@@ -12083,76 +12349,9 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             this.snowSystem.visible = false;
             this.scene.add(this.snowSystem);
         }
-        // Particelle GPU ambientali per biomi PC Ultra (lucciole in Foresta, braci ascendenti in Lava)
-        if (!AppSettings.useMobileLimits) {
-            const ambCount = 200;
-            const ambPos = new Float32Array(ambCount * 3);
-            const ambData = new Float32Array(ambCount * 3);
-            for (let i = 0; i < ambCount; i++) {
-                ambPos[i * 3] = (Math.random() - 0.5) * 1400;
-                ambPos[i * 3 + 1] = Math.random();
-                ambPos[i * 3 + 2] = (Math.random() - 0.5) * 1400;
-                ambData[i * 3] = Math.random() * 6.2831;
-                ambData[i * 3 + 1] = 0.65 + Math.random() * 0.85;
-                ambData[i * 3 + 2] = 0.7 + Math.random() * 0.7;
-            }
-            const ambGeo = new THREE.BufferGeometry();
-            ambGeo.setAttribute('position', new THREE.BufferAttribute(ambPos, 3));
-            ambGeo.setAttribute('aData', new THREE.BufferAttribute(ambData, 3));
-            this.ambientGpuMat = new THREE.ShaderMaterial({
-                uniforms: {
-                    uTime: { value: 0 },
-                    uFocusPos: { value: new THREE.Vector2(0, 0) },
-                    uTheme: { value: 0 },
-                    uSizeScale: { value: 1950.0 * AppSettings.getTargetPixelRatio() }
-                },
-                vertexShader: `
-                    attribute vec3 aData;
-                    uniform float uTime;
-                    uniform vec2 uFocusPos;
-                    uniform float uTheme;
-                    uniform float uSizeScale;
-                    varying float vAlpha;
-                    varying vec3 vTint;
-                    void main() {
-                        float halfSpan = 700.0;
-                        float span = 1400.0;
-                        float speed = aData.y;
-                        float driftX = sin(uTime * 0.55 * speed + aData.x) * 42.0;
-                        float driftZ = cos(uTime * 0.48 * speed + aData.x * 1.3) * 42.0;
-                        float px = mod(position.x + driftX - uFocusPos.x + halfSpan, span) - halfSpan + uFocusPos.x;
-                        float pz = mod(position.z + driftZ - uFocusPos.y + halfSpan, span) - halfSpan + uFocusPos.y;
-                        float yPhase = fract(position.y + uTime * (uTheme > 0.5 ? 0.14 : 0.025) * speed);
-                        float py = uTheme > 0.5 ? (6.0 + yPhase * 155.0) : (12.0 + sin(uTime * 1.1 * speed + aData.x) * 18.0 + position.y * 85.0);
-                        vec4 mvPos = modelViewMatrix * vec4(px, py, pz, 1.0);
-                        gl_Position = projectionMatrix * mvPos;
-                        float edgeFade = smoothstep(0.0, 0.15, yPhase) * (1.0 - smoothstep(0.75, 1.0, yPhase));
-                        float pulse = 0.55 + 0.45 * sin(uTime * (uTheme > 0.5 ? 6.0 : 2.8) * speed + aData.x);
-                        vAlpha = (uTheme > 0.5 ? edgeFade : (0.35 + 0.65 * pulse)) * 0.85;
-                        vTint = uTheme > 0.5 ? mix(vec3(1.0, 0.28, 0.05), vec3(1.0, 0.78, 0.25), pulse) : mix(vec3(0.45, 1.0, 0.55), vec3(0.95, 1.0, 0.45), pulse);
-                        gl_PointSize = clamp((uSizeScale * aData.z * (uTheme > 0.5 ? 0.34 : 0.42)) / max(1.0, -mvPos.z), 1.5, 14.0);
-                    }
-                `,
-                fragmentShader: `
-                    varying float vAlpha;
-                    varying vec3 vTint;
-                    void main() {
-                        vec2 uv = gl_PointCoord - vec2(0.5);
-                        float d = length(uv);
-                        if (d > 0.5) discard;
-                        float glow = pow(1.0 - d * 2.0, 1.9);
-                        gl_FragColor = vec4(vTint, glow * vAlpha);
-                    }
-                `,
-                transparent: true,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending
-            });
-            this.ambientGpuSystem = new THREE.Points(ambGeo, this.ambientGpuMat);
-            this.ambientGpuSystem.frustumCulled = false;
-            this.ambientGpuSystem.renderOrder = 6;
-            this.ambientGpuSystem.visible = AppSettings.isUltraPC && this.currentThemeIndex !== 2;
-            this.scene.add(this.ambientGpuSystem);
+        // Particelle GPU ambientali per biomi PC Ultra / Mobile MEGA (lucciole in Foresta, braci ascendenti in Lava)
+        if (AppSettings.isUltraPC) {
+            this.ensureAmbientGpuSystem();
         }
        // ^^^ INCOLLA SOPRA QUESTA RIGA ^^^
         this.prewarmShaders(); this.setupInputs(); this.initPools(); 
@@ -12222,7 +12421,7 @@ prewarmShaders() {
                 let tRock = Preloader.textures['rock' + v];
                 let tWall = Preloader.textures['wall' + v];
                 
-                let maxAniso = AppSettings.useMobileLimits ? Math.min(4, this.renderer.capabilities.getMaxAnisotropy()) : this.renderer.capabilities.getMaxAnisotropy();
+                let maxAniso = AppSettings.getTargetAnisotropy(this.renderer.capabilities.getMaxAnisotropy());
                 [tDirt, tGrass, tRock, tWall].forEach(t => {
                     if (t) { t.anisotropy = maxAniso; t.encoding = THREE.sRGBEncoding; }
                 });
@@ -12275,10 +12474,10 @@ prewarmShaders() {
         const isIce = (themeIdx === 2);
         return {
             strength: isIce
-                ? (AppSettings.isUltraPC ? 0.19 : 0.14)
-                : (AppSettings.isUltraPC ? 0.25 : 0.18),
-            radius: isIce ? 0.18 : 0.22,
-            threshold: isIce ? 0.82 : 0.72
+                ? (AppSettings.isUltraPC ? 0.10 : 0.12)
+                : (AppSettings.isUltraPC ? 0.13 : 0.16),
+            radius: isIce ? 0.13 : 0.16,
+            threshold: isIce ? 0.90 : 0.86
         };
     },
     applyBloomSpec(themeIdx = this.currentThemeIndex) {
@@ -12308,10 +12507,85 @@ prewarmShaders() {
         }
         this.applyBloomSpec(this.currentThemeIndex);
     },
+    ensureAmbientGpuSystem() {
+        if (this.ambientGpuSystem || !this.scene) return;
+        const mobSpan = isTouchDevice ? 1250 : 1400;
+        const halfSpan = mobSpan * 0.5;
+        const ambCount = AppSettings.targetAmbientGpuCount;
+        const ambPos = new Float32Array(ambCount * 3);
+        const ambData = new Float32Array(ambCount * 3);
+        for (let i = 0; i < ambCount; i++) {
+            ambPos[i * 3] = (Math.random() - 0.5) * mobSpan;
+            ambPos[i * 3 + 1] = Math.random();
+            ambPos[i * 3 + 2] = (Math.random() - 0.5) * mobSpan;
+            ambData[i * 3] = Math.random() * 6.2831;
+            ambData[i * 3 + 1] = 0.65 + Math.random() * 0.85;
+            ambData[i * 3 + 2] = 0.7 + Math.random() * 0.7;
+        }
+        const ambGeo = new THREE.BufferGeometry();
+        ambGeo.setAttribute('position', new THREE.BufferAttribute(ambPos, 3));
+        ambGeo.setAttribute('aData', new THREE.BufferAttribute(ambData, 3));
+        this.ambientGpuMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uFocusPos: { value: new THREE.Vector2(0, 0) },
+                uTheme: { value: this.currentThemeIndex || 0 },
+                uSizeScale: { value: 1950.0 * AppSettings.getTargetPixelRatio() },
+                uSpan: { value: mobSpan },
+                uHalfSpan: { value: halfSpan }
+            },
+            vertexShader: `
+                attribute vec3 aData;
+                uniform float uTime;
+                uniform vec2 uFocusPos;
+                uniform float uTheme;
+                uniform float uSizeScale;
+                uniform float uSpan;
+                uniform float uHalfSpan;
+                varying float vAlpha;
+                varying vec3 vTint;
+                void main() {
+                    float speed = aData.y;
+                    float driftX = sin(uTime * 0.55 * speed + aData.x) * 42.0;
+                    float driftZ = cos(uTime * 0.48 * speed + aData.x * 1.3) * 42.0;
+                    float px = mod(position.x + driftX - uFocusPos.x + uHalfSpan, uSpan) - uHalfSpan + uFocusPos.x;
+                    float pz = mod(position.z + driftZ - uFocusPos.y + uHalfSpan, uSpan) - uHalfSpan + uFocusPos.y;
+                    float yPhase = fract(position.y + uTime * (uTheme > 0.5 ? 0.14 : 0.025) * speed);
+                    float py = uTheme > 0.5 ? (6.0 + yPhase * 155.0) : (12.0 + sin(uTime * 1.1 * speed + aData.x) * 18.0 + position.y * 85.0);
+                    vec4 mvPos = modelViewMatrix * vec4(px, py, pz, 1.0);
+                    gl_Position = projectionMatrix * mvPos;
+                    float edgeFade = smoothstep(0.0, 0.15, yPhase) * (1.0 - smoothstep(0.75, 1.0, yPhase));
+                    float pulse = 0.55 + 0.45 * sin(uTime * (uTheme > 0.5 ? 6.0 : 2.8) * speed + aData.x);
+                    vAlpha = (uTheme > 0.5 ? edgeFade : (0.35 + 0.65 * pulse)) * 0.85;
+                    vTint = uTheme > 0.5 ? mix(vec3(1.0, 0.28, 0.05), vec3(1.0, 0.78, 0.25), pulse) : mix(vec3(0.45, 1.0, 0.55), vec3(0.95, 1.0, 0.45), pulse);
+                    gl_PointSize = clamp((uSizeScale * aData.z * (uTheme > 0.5 ? 0.34 : 0.42)) / max(1.0, -mvPos.z), 1.5, 14.0);
+                }
+            `,
+            fragmentShader: `
+                varying float vAlpha;
+                varying vec3 vTint;
+                void main() {
+                    vec2 uv = gl_PointCoord - vec2(0.5);
+                    float d = length(uv);
+                    if (d > 0.5) discard;
+                    float glow = pow(1.0 - d * 2.0, 1.9);
+                    gl_FragColor = vec4(vTint, glow * vAlpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        this.ambientGpuSystem = new THREE.Points(ambGeo, this.ambientGpuMat);
+        this.ambientGpuSystem.frustumCulled = false;
+        this.ambientGpuSystem.renderOrder = 6;
+        this.ambientGpuSystem.visible = AppSettings.isUltraPC && this.currentThemeIndex !== 2 && !(this.isCorrupted && !this.isBossFloor && this.corruptedType === 'darkness');
+        this.scene.add(this.ambientGpuSystem);
+    },
     ensureFlashLights() {
-        if (!this.scene || AppSettings.useMobileLimits) return;
+        if (!this.scene || AppSettings.isLow || AppSettings.useMobileLimits) return;
         if (!this.flashLights) this.flashLights = [];
-        const targetCount = 10;
+        const targetCount = AppSettings.targetFlashLights;
         while (this.flashLights.length < targetCount) {
             let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
             this.scene.add(l);
@@ -12353,26 +12627,51 @@ prewarmShaders() {
         }
     },
     ensureMegaPools() {
-        if (AppSettings.useMobileLimits || !this.scene) return;
+        if (AppSettings.isLow || AppSettings.useMobileLimits || !this.scene) return;
         this.ensureComposer();
         this.ensureFlashLights();
-        if (this.particles && this.particles.length < 2500) {
-            while (this.particles.length < 2500) {
+        if (AppSettings.isUltraPC) {
+            this.ensureAmbientGpuSystem();
+            if (window.GLOBAL_THEME_MATS && typeof PcUltraGraphics !== 'undefined') {
+                for (let i = 0; i < window.GLOBAL_THEME_MATS.length; i++) {
+                    const tm = window.GLOBAL_THEME_MATS[i];
+                    if (!tm) continue;
+                    [
+                        [tm.dirt, false], [tm.grass, false],
+                        [tm.rock, false], [tm.wall, true]
+                    ].forEach(([m, isWall]) => {
+                        if (m && !m._ultraTerrainHooked) {
+                            PcUltraGraphics.applyTerrainShader(m, isWall);
+                            m.needsUpdate = true;
+                        }
+                    });
+                }
+            }
+        }
+        const wantParticles = AppSettings.targetParticlePool;
+        if (this.particles && this.particles.length < wantParticles) {
+            while (this.particles.length < wantParticles) {
                 this.particles.push(new Particle());
             }
         }
-        if (this.debris && this.debris.length < 250) {
-            this.initDebrisPool(250, true);
+        if (this.projectiles) {
+            for (let i = 0; i < this.projectiles.length; i++) {
+                if (this.projectiles[i].ensureStreakMesh) this.projectiles[i].ensureStreakMesh();
+            }
+        }
+        const wantDebris = AppSettings.targetDebrisPool;
+        if (this.debris && this.debris.length < wantDebris) {
+            this.initDebrisPool(wantDebris, true);
         }
     },
     initPools() {
-        const maxDynamicDebris = AppSettings.useMobileLimits ? 90 : 250;
+        const maxDynamicDebris = AppSettings.targetDebrisPool;
         this.initDebrisPool(maxDynamicDebris, !AppSettings.useMobileLimits);
         this.enemyPool = Array.from({length: 80}, () => new Enemy()); // Pre-alloca 80 nemici
         // POOL DEI PROPS
         this.propsCrates = Array.from({length: isTouchDevice ? 25 : 60}, (_, i) => new Prop(i, 'crate'));
         this.propsUrns = Array.from({length: isTouchDevice ? 25 : 60}, (_, i) => new Prop(i, 'urn'));
-        this.particles = Array.from({length: AppSettings.useMobileLimits ? 400 : 2500}, () => new Particle());
+        this.particles = Array.from({length: AppSettings.targetParticlePool}, () => new Particle());
         this.projectiles = Array.from({length: 300}, () => new Projectile());
         this.floatingTexts = Array.from({length: 100}, () => new FloatingText());
         this.hazards = Array.from({length: 60}, () => new Hazard());
@@ -12430,10 +12729,11 @@ pushDebris(px, pz, radius, force) {
     },
     spawnLightFlash(x, z, colorHex, intensity, distance, duration = 0.2) {
         if (AppSettings.useMobileLimits || AppSettings.isLow || !this.flashLights || this.flashLights.length === 0) return;
-        const poolCount = this.flashLights.length;
+        const activeCap = AppSettings.targetFlashLights || 0;
+        if (activeCap <= 0) return;
+        const poolCount = Math.min(this.flashLights.length, activeCap);
         let fl = this.flashLights[this._flashLightIdx % poolCount];
         this._flashLightIdx = (this._flashLightIdx + 1) % poolCount;
-        if (AppSettings.useMobileLimits && AppSettings.isBalanced) distance *= 0.85;
         fl.light.color.setHex(colorHex);
         fl.light.intensity = intensity;
         fl.light.distance = distance;
@@ -12633,7 +12933,7 @@ pushDebris(px, pz, radius, force) {
         this.renderer.shadowMap.type = AppSettings.useMobileLimits ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 
         if (enabled) {
-            const targetMapSize = AppSettings.useMobileLimits ? 1024 : 1536;
+            const targetMapSize = isTouchDevice ? 1024 : 1536;
             const aspect = (this.width && this.height) ? (this.width / this.height) : 1.0;
             // Frustum calibrato sull'inquadratura reale (include la diagonale a 45° su smartphone verticale)
             let halfW, halfH;
@@ -12654,10 +12954,10 @@ pushDebris(px, pz, radius, force) {
             this._shadowStepU = (2 * halfW) / targetMapSize;
             this._shadowStepV = (2 * halfH) / (targetMapSize * 0.87038828);
 
-            // normalBias scalato sulle unità mondo (TILE_SIZE = 64): zero acne e ombre incollate alla base
-            this.dirLight.shadow.bias = AppSettings.useMobileLimits ? -0.00025 : -0.0002;
-            this.dirLight.shadow.normalBias = AppSettings.useMobileLimits ? 0.85 : 0.65;
-            this.dirLight.shadow.radius = AppSettings.useMobileLimits ? 1.0 : 1.4;
+            // normalBias calibrato per risoluzione shadow map mobile (1024) e PC (1536): zero acne e ombre incollate alla base
+            this.dirLight.shadow.bias = isTouchDevice ? -0.00025 : -0.0002;
+            this.dirLight.shadow.normalBias = isTouchDevice ? 0.80 : 0.65;
+            this.dirLight.shadow.radius = AppSettings.useMobileLimits ? 1.0 : (AppSettings.isMega ? 1.25 : 1.4);
 
             if (this.dirLight.shadow.mapSize.width !== targetMapSize) {
                 this.dirLight.shadow.mapSize.set(targetMapSize, targetMapSize);
@@ -12923,6 +13223,10 @@ if (this.floor >= 3 && type !== 'dark_prophet' && Math.random() < (this.floor <=
                 this.dirLight.intensity += (0.15 - this.dirLight.intensity) * dt;
                 this.dirLight.color.lerp(Game._colorBrightRed, dt * 0.4); 
             }
+            if (this.rimLight) {
+                this.rimLight.intensity += (0.0 - this.rimLight.intensity) * Math.min(1, dt * 1.5);
+            }
+            if (this.scene.environment) this.scene.environment = null;
             this.scene.background.lerp(Game._colorPitchBlack, dt * 0.4);
             if (this.scene.fog) this.scene.fog.color.lerp(Game._colorPitchBlack, dt * 0.4);
         } else if (Game.bossLightClear) {
@@ -12940,6 +13244,13 @@ if (this.floor >= 3 && type !== 'dark_prophet' && Math.random() < (this.floor <=
             if (this.dirLight) {
                 this.dirLight.intensity += (1.85 - this.dirLight.intensity) * dt * 1.6;
                 this.dirLight.color.lerp(Game._colorDawnLight, dt * 1.4);
+            }
+            if (this.rimLight) {
+                const targetRim = (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) ? 0.20 : 0.0;
+                this.rimLight.intensity += (targetRim - this.rimLight.intensity) * Math.min(1, dt * 1.4);
+            }
+            if (typeof PcUltraGraphics !== 'undefined' && typeof AppSettings !== 'undefined' && AppSettings.isUltraPC && this.scene && !this.scene.environment) {
+                PcUltraGraphics.applyEnvironment(this.currentThemeIndex || 0);
             }
             if (this.scene.background) {
                 this.scene.background.lerp(Game._colorClearSky, dt * 1.2);
@@ -13096,19 +13407,20 @@ loop(timestamp) {
                 else fpsEl.className = "text-red-500 animate-pulse ml-1";
             }
             
-            // AUTO-DEGRADE: Se Android strozza la CPU per il calore (< 25 FPS medi)
+            // AUTO-DEGRADE GRADUALE: Se Android strozza la CPU per il calore (< 25 FPS medi), scala di 1 livello alla volta
             if (isTouchDevice && fps < 25 && this.state === 'PLAYING') {
                 this.lowFpsCounter = (this.lowFpsCounter || 0) + 1;
-                // Se lagga per 4 secondi consecutivi e la grafica non è già al minimo
                 if (this.lowFpsCounter > 4 && AppSettings.mode > 0) {
-                    AppSettings.mode = 0; 
-                    AppSettings.applyGraphics(); 
-                    if(typeof UIManager !== 'undefined') UIManager.updateOptionsUI();
-                    Game.getFloatingText().spawn(this.player.x, this.player.y, "RISPARMIO BATTERIA ATTIVATO", '#ffaa00', 40, true);
-                    this.lowFpsCounter = -999; // Disattiva il check per non spammare il messaggio
+                    AppSettings.mode = Math.max(0, AppSettings.mode - 1);
+                    AppSettings.applyGraphics();
+                    if (typeof UIManager !== 'undefined') UIManager.updateOptionsUI();
+                    Game.getFloatingText().spawn(this.player.x, this.player.y, AppSettings.mode > 0 ? "GRAFICA OTTIMIZZATA" : "RISPARMIO BATTERIA ATTIVATO", '#ffaa00', 40, true);
+                    this.lowFpsCounter = (AppSettings.mode === 0) ? -999 : -5;
                 }
             } else if (this.lowFpsCounter > 0) {
                 this.lowFpsCounter = 0;
+            } else if (this.lowFpsCounter < 0 && this.lowFpsCounter > -999) {
+                this.lowFpsCounter++;
             }
 
             this.fpsLastTime = timestamp;
@@ -13481,7 +13793,6 @@ loop(timestamp) {
         if (this.snowSystem) {
             this.snowSystem.visible = (this.currentThemeIndex === 2);
         }
-        if (typeof PcUltraGraphics !== 'undefined') PcUltraGraphics.syncState();
         if (window.GLOBAL_FOG_MAT) {
             window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.12 : (this.currentThemeIndex === 1 ? 0.13 : 0.15);
             if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
@@ -13626,7 +13937,8 @@ loop(timestamp) {
                 }, 1500); 
             }
         }
-        
+        if (typeof PcUltraGraphics !== 'undefined') PcUltraGraphics.syncState();
+
         if (this.player && this.player.modifiers.shieldActive) this.player.modifiers.autoShieldTimer = 0;
         
         if (this.isBossFloor) {
@@ -13863,9 +14175,9 @@ startGame(diffMult) {
             fromShoreY: 0, toShoreY: 0,
             fromPadY: 0, toPadY: 0,
             hasBloomTr: false,
-            fromBloomStr: 0.25, toBloomStr: 0.25,
-            fromBloomRad: 0.22, toBloomRad: 0.22,
-            fromBloomThresh: 0.72, toBloomThresh: 0.72
+            fromBloomStr: 0.16, toBloomStr: 0.16,
+            fromBloomRad: 0.16, toBloomRad: 0.16,
+            fromBloomThresh: 0.84, toBloomThresh: 0.84
         });
 
         tr.elapsed = 0;
@@ -14998,11 +15310,11 @@ startGame(diffMult) {
 
         // --- AGGIORNAMENTO DERIVA DELLA NEBBIA BASSA ---
         if (this.map && this.map.fogMesh && this.map.fogMesh.visible && this.map.fogMesh.count > 0 && this.map.fogData.length > 0) {
-            if (AppSettings.isUltraPC || Game.frameCount % 2 === 0) {
+            if (AppSettings.isDesktopUltra || Game.frameCount % 2 === 0) {
                 let dummyFog = this._dummyFog;
                 let mapW = this.map.width * TILE_SIZE;
                 let mapH = this.map.height * TILE_SIZE;
-                let timeScale = AppSettings.isUltraPC ? combatDt : (combatDt * 2);
+                let timeScale = AppSettings.isDesktopUltra ? combatDt : (combatDt * 2);
 
                 for(let i=0, fogLim=Math.min(this.map.fogMesh.count, this.map.fogData.length); i<fogLim; i++) {
                     let d = this.map.fogData[i];
@@ -15548,6 +15860,10 @@ startGame(diffMult) {
         if (AppSettings.useMobileLimits && AppSettings.shadowsEnabled) {
             this.renderer.shadowMap.autoUpdate = false;
             if (this.frameCount % 2 === 0) this.renderer.shadowMap.needsUpdate = true;
+        } else if (AppSettings.isMega && AppSettings.shadowsEnabled) {
+            const activeMotion = (this.state === 'PLAYING' || this.state === 'WARPING_IN' || this.state === 'WARPING_OUT') && !(this.hitStopTimer && this.hitStopTimer > 0);
+            this.renderer.shadowMap.autoUpdate = activeMotion;
+            if (!activeMotion && (this.frameCount % 16 === 0)) this.renderer.shadowMap.needsUpdate = true;
         } else {
             this.renderer.shadowMap.autoUpdate = true;
         }
@@ -16712,7 +17028,7 @@ class GameMap {
         let idxInteractiveGrass = 0; const grassPassTag = new Uint8Array(maxGrassClusters);
 
        // --- 2.5 ALLOCHIAMO I DETRITI ---
-        const maxDebris = floorCount * (AppSettings.useMobileLimits ? 8 : 20);
+        const maxDebris = floorCount * (AppSettings.useMobileLimits ? 8 : (AppSettings.isMega ? 14 : 20));
         if (!window.GLOBAL_DEBRIS_GEO) window.GLOBAL_DEBRIS_GEO = new THREE.DodecahedronGeometry(2.5, 0);
         if (!window.GLOBAL_DEBRIS_MAT) {
             window.GLOBAL_DEBRIS_MAT = AppSettings.useMobileLimits
@@ -16724,7 +17040,7 @@ class GameMap {
         }
         const meshDebris = new THREE.InstancedMesh(window.GLOBAL_DEBRIS_GEO, window.GLOBAL_DEBRIS_MAT, maxDebris);
         meshDebris.receiveShadow = true;
-        meshDebris.castShadow = AppSettings.isUltraPC; 
+        meshDebris.castShadow = !isTouchDevice && AppSettings.isUltraPC; 
         let idxDebris = 0;
         
        // --- 2.6 ALLOCHIAMO GLI ALBERI E LE CHIOME ANIMATE ---
@@ -16760,7 +17076,7 @@ class GameMap {
         // ------------------------------------------
 
      // --- NUOVO: DECALCOMANIE PERMANENTI (SANGUE E BRUCIATURE) ---
-        Game.maxBlood = AppSettings.useMobileLimits ? 60 : 150; 
+        Game.maxBlood = AppSettings.targetMaxBlood; 
         if (!window.GLOBAL_BLOOD_GEO) {
             window.GLOBAL_BLOOD_GEO = new THREE.PlaneGeometry(12, 12);
             window.GLOBAL_BLOOD_GEO.rotateX(-Math.PI / 2);
@@ -16786,7 +17102,7 @@ class GameMap {
         // --- INIZIO GESTIONE MATERIALI OTTIMIZZATI ---
         const MapMaterialClass = THREE.MeshPhongMaterial;
         const alphaTex = GLOBAL_ALPHA_TEX; 
-        const maxAnisotropy = AppSettings.useMobileLimits ? Math.min(4, Game.renderer.capabilities.getMaxAnisotropy()) : Game.renderer.capabilities.getMaxAnisotropy();
+        const maxAnisotropy = AppSettings.getTargetAnisotropy(Game.renderer.capabilities.getMaxAnisotropy());
 
         // 1. Creiamo i 3 SET DI MATERIALI una sola volta per non intaccare la RAM
         if (!window.GLOBAL_THEME_MATS) {
@@ -17092,13 +17408,13 @@ class GameMap {
             liquidTex.wrapT = THREE.RepeatWrapping;
             liquidTex.encoding = THREE.sRGBEncoding;
             liquidTex.repeat.set(mapRealWidth / 250, mapRealHeight / 250);
-            liquidTex.needsUpdate = true;
+            if (liquidTex && liquidTex.image) liquidTex.needsUpdate = true;
 
             if (!window.GLOBAL_PIT_MATS[tIdx]) {
                 const themeIdx = tIdx;
                 let pitColor, pitEmissive, pitOpacity, pitRoughness, pitMetalness;
                 if (themeIdx === 0) {
-                    pitColor = 0xffffff; pitEmissive = 0x10588c; pitOpacity = 0.92; pitRoughness = 0.18; pitMetalness = 0.04;
+                    pitColor = 0xffffff; pitEmissive = 0x0c4c82; pitOpacity = 0.94; pitRoughness = 0.22; pitMetalness = 0.04;
                 } else if (themeIdx === 1) {
                     pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
                 } else {
@@ -17108,21 +17424,22 @@ class GameMap {
             const PitMatClass = useMobPit ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.42 : 0.66),
+                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.34 : 0.66),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (useMobPit) {
                 pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 24 : 36);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x18527a : 0x1e4c70));
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x0a3b6e : 0x1e4c70));
             } else {
-                pitMatParams.roughness = themeIdx === 0 ? 0.56 : pitRoughness;
+                pitMatParams.roughness = themeIdx === 0 ? 0.62 : pitRoughness;
                 pitMatParams.metalness = themeIdx === 0 ? 0.02 : pitMetalness;
+                pitMatParams.envMapIntensity = themeIdx === 0 ? 0.22 : 0.68;
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v16_' + themeIdx + (useMobPit ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v20_' + themeIdx + (useMobPit ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -17230,34 +17547,35 @@ class GameMap {
                         float causticSharp = pow(clamp(0.5 + 0.5 * c1 * c3, 0.0, 1.0), 3.0);
                         float fairyShimmer = 0.5 + 0.5 * sin(vPitWPos.x * 0.032 - vPitWPos.y * 0.028 + uTime * 1.45);
 
-                        // Palette Sorgente Fiabesca: azzurri cerulei luminosi, acquamarina soffuso e riflessi celesti
-                        vec3 deepAbyssCol  = vec3(0.095, 0.465, 0.840);
-                        vec3 midLagoonCol  = vec3(0.185, 0.640, 0.940);
-                        vec3 brightAquaCol = vec3(0.360, 0.810, 0.990);
-                        vec3 fairyGlowCol  = vec3(0.540, 0.900, 1.000);
-                        vec3 crestFoamCol  = vec3(0.840, 0.965, 1.000);
+                        // Palette Sorgente Azzurra: azzurro cristallino e vivace calibrato in spazio lineare per Ultra/MEGA
+                        float bBal0 = clamp(uBloomActive, 0.0, 1.0);
+                        vec3 deepAbyssCol  = mix(vec3(0.005, 0.125, 0.450), vec3(0.005, 0.120, 0.435), bBal0);
+                        vec3 midLagoonCol  = mix(vec3(0.011, 0.235, 0.690), vec3(0.010, 0.225, 0.665), bBal0);
+                        vec3 brightAquaCol = mix(vec3(0.022, 0.355, 0.850), vec3(0.020, 0.340, 0.820), bBal0);
+                        vec3 fairyGlowCol  = mix(vec3(0.044, 0.455, 0.920), vec3(0.040, 0.435, 0.890), bBal0);
+                        vec3 crestFoamCol  = mix(vec3(0.115, 0.585, 0.960), vec3(0.100, 0.550, 0.930), bBal0);
 
                         vec3 waterCol = mix(deepAbyssCol, midLagoonCol, smoothstep(0.06, 0.54, waveH));
                         waterCol = mix(waterCol, brightAquaCol, smoothstep(0.36, 0.84, waveH * (0.62 + 0.38 * slopeLit)));
 
-                        // Dettaglio texture virato in azzurro cielo morbido senza mai scurire il fondale
-                        float rawBright = clamp(mix(lA, lB, 0.5), 0.25, 0.95);
-                        vec3 azureTex = vec3(0.14, 0.56, 0.90) + vec3(0.22, 0.34, 0.14) * rawBright;
-                        waterCol = mix(waterCol, azureTex, 0.28);
+                        // Dettaglio texture virato in azzurro luminoso senza sbiancare il fondale
+                        float rawBright = clamp(mix(lA, lB, 0.5), 0.20, 0.94);
+                        vec3 azureTex = vec3(0.005, 0.145, 0.480) + vec3(0.015, 0.200, 0.360) * rawBright;
+                        waterCol = mix(waterCol, azureTex, 0.26);
 
-                        // Modulazione tridimensionale morbida (elimina le ombre dure e il contrasto eccessivo)
+                        // Modulazione tridimensionale morbida e caustiche azzurre calibrate su Ultra/MEGA
                         waterCol *= mix(0.88, 1.12, slopeLit);
-                        waterCol = mix(waterCol, fairyGlowCol, causticMain * (0.34 + 0.14 * fairyShimmer));
-                        waterCol += vec3(0.18, 0.52, 0.72) * (causticSharp * 0.32);
-                        waterCol = mix(waterCol, fairyGlowCol, waveCrest * 0.42);
-                        waterCol = mix(waterCol, crestFoamCol, clamp(foamRidge * 0.52 + sunGlint * 0.38, 0.0, 0.68));
+                        waterCol = mix(waterCol, fairyGlowCol, causticMain * mix(0.30, 0.24, bBal0) * (0.85 + 0.15 * fairyShimmer));
+                        waterCol += vec3(0.018, 0.210, 0.420) * (causticSharp * mix(0.24, 0.18, bBal0));
+                        waterCol = mix(waterCol, fairyGlowCol, waveCrest * mix(0.34, 0.26, bBal0));
+                        waterCol = mix(waterCol, crestFoamCol, clamp(foamRidge * 0.38 + sunGlint * 0.24, 0.0, mix(0.46, 0.36, bBal0)));
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.045, 0.200, 0.380),
-                            vec3(0.130, 0.440, 0.700),
+                            vec3(0.004, 0.095, 0.340),
+                            vec3(0.016, 0.220, 0.540),
                             clamp(waveH * 0.45 + causticMain * 0.45 + fairyShimmer * 0.20, 0.0, 1.0)
-                        ) * 0.55 + vec3(0.12, 0.36, 0.56) * (foamRidge * 0.28 + causticSharp * 0.22);
+                        ) * mix(0.42, 0.28, bBal0) + vec3(0.018, 0.180, 0.380) * (foamRidge * 0.20 + causticSharp * 0.15) * mix(1.0, 0.62, bBal0);
 
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
                             float maxR = mix(40.0, 64.0, moveInt);
@@ -17274,37 +17592,44 @@ class GameMap {
                             float rippleStrength = clamp(delicateRings * 0.58 + meniscus * 0.42, 0.0, 0.65) * uPlayerPit.w;
 
                             diffuseColor.rgb *= (1.0 - ringTrough);
-                            vec3 subtleRippleCol = mix(vec3(0.38, 0.82, 0.99), vec3(0.76, 0.95, 1.00), delicateRings);
-                            diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.72);
-                            totalEmissiveRadiance += vec3(0.08, 0.28, 0.46) * rippleStrength;
+                            vec3 subtleRippleCol = mix(vec3(0.032, 0.400, 0.880), vec3(0.120, 0.620, 0.960), delicateRings);
+                            diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.70);
+                            totalEmissiveRadiance += vec3(0.018, 0.175, 0.380) * rippleStrength * mix(1.0, 0.62, bBal0);
                         }
                         vec3 waterBaseCol = diffuseColor.rgb;
                     ` : (themeIdx === 1 ? `
-                        float m1 = sin(vPitWPos.x * 0.042 + uTime * 0.78 + sin(vPitWPos.y * 0.046 - uTime * 0.60) * 1.4);
-                        float m2 = cos(vPitWPos.y * 0.044 - uTime * 0.70 + cos(vPitWPos.x * 0.038 + uTime * 0.52) * 1.4);
-                        float flow = 0.5 + 0.5 * m1 * m2;
+                        float lavaSw1 = sin(vPitWPos.x * 0.036 + uTime * 0.68 + sin(vPitWPos.y * 0.040 - uTime * 0.52) * 1.2);
+                        float lavaSw2 = cos(vPitWPos.y * 0.038 - uTime * 0.60 + cos(vPitWPos.x * 0.034 + uTime * 0.48) * 1.2);
+                        float flow = 0.5 + 0.5 * lavaSw1 * lavaSw2;
 
                     #ifdef USE_MAP
-                        vec2 lWarp = vec2(m1, m2) * 0.025 + pitRippleGrad * 0.020;
-                        vec2 uvLavaA = vPitWPos / 220.0 + vec2(uTime * 0.018, uTime * 0.012) + lWarp;
-                        vec2 uvLavaB = vPitWPos / 155.0 + vec2(-uTime * 0.014, uTime * 0.019) - lWarp * 0.85;
-                        vec3 lA = ${sampleWaterTex('uvLavaA')}.rgb;
-                        vec3 lB = ${sampleWaterTex('uvLavaB')}.rgb;
-                        vec3 lavaTexCol = mix(lA, lB, 0.42);
-                        float lLumA = dot(lA, vec3(0.299, 0.587, 0.114));
-                        float lLumB = dot(lB, vec3(0.299, 0.587, 0.114));
-                        texLum = mix(lLumA, lLumB, 0.45);
+                        vec2 lWarp = vec2(lavaSw1, lavaSw2) * 0.015 + pitRippleGrad * 0.018;
+                        vec2 uvLavaMain = vPitWPos / 145.0 + vec2(uTime * 0.016, uTime * 0.010) + lWarp;
+                        vec2 uvLavaSub  = vPitWPos / 195.0 + vec2(-uTime * 0.009, uTime * 0.013) - lWarp * 0.5;
+                        vec3 lMain = ${sampleWaterTex('uvLavaMain')}.rgb;
+                        vec3 lSub  = ${sampleWaterTex('uvLavaSub')}.rgb;
+                        float lumMain = dot(lMain, vec3(0.299, 0.587, 0.114));
+                        float lumSub  = dot(lSub, vec3(0.299, 0.587, 0.114));
+                        // Preserva nitida la texture primaria lava_water.png usando il secondo strato solo come lieve profondità
+                        vec3 lavaTexCol = mix(lMain, lSub, 0.18);
+                        texLum = lumMain * 0.82 + lumSub * 0.18;
                     #else
                         vec3 lavaTexCol = diffuseColor.rgb;
                     #endif
 
-                        float heat = clamp(texLum * 0.68 + flow * 0.50, 0.0, 1.0);
-                        vec3 crustCol = mix(vec3(0.075, 0.018, 0.014), lavaTexCol * 0.35, 0.45);
-                        vec3 magmaCol = mix(vec3(0.95, 0.22, 0.02), vec3(1.0, 0.85, 0.24), smoothstep(0.48, 0.88, heat));
-                        magmaCol = mix(magmaCol, lavaTexCol * 1.25, 0.28);
-                        float veinMask = smoothstep(0.32, 0.62, heat);
-                        diffuseColor.rgb = mix(crustCol, magmaCol, veinMask);
-                        totalEmissiveRadiance = mix(vec3(0.05, 0.01, 0.005), magmaCol * 1.28, veinMask);
+                        float texRelief = smoothstep(0.06, 0.54, texLum);
+                        float veinHot = smoothstep(0.30, 0.64, texLum) * (0.82 + 0.36 * flow);
+                        float bBalLava = clamp(uBloomActive, 0.0, 1.0);
+
+                        vec3 crustCol = mix(vec3(0.065, 0.014, 0.010), lavaTexCol * 0.52, 0.72);
+                        vec3 magmaBase = lavaTexCol * mix(1.06, 1.32, texRelief);
+                        vec3 hotTint = mix(vec3(0.96, 0.26, 0.02), vec3(1.00, 0.78, 0.20), clamp(veinHot, 0.0, 1.0));
+                        vec3 magmaCol = mix(magmaBase, hotTint, 0.16 + 0.20 * clamp(veinHot, 0.0, 1.0));
+
+                        vec3 lavaFinal = mix(crustCol, magmaCol, smoothstep(0.08, 0.72, texRelief + (flow - 0.5) * 0.12));
+                        diffuseColor.rgb = lavaFinal * mix(0.86, 0.78, bBalLava);
+                        diffuseColor.a = 0.98;
+                        totalEmissiveRadiance = mix(vec3(0.025, 0.005, 0.003), magmaCol * mix(0.76, 0.54, bBalLava), smoothstep(0.18, 0.85, texRelief));
 
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
                             float coreGlow = exp(-pDist * pDist * 0.0055) * (0.75 + 0.25 * sin(uTime * 3.4));
@@ -17318,8 +17643,8 @@ class GameMap {
                             float moltenHeat = clamp(coreGlow * 0.65 + meniscusRing * 0.55 + lavaRings * 0.55, 0.0, 0.85) * uPlayerPit.w;
                             vec3 stepMagmaCol = mix(vec3(0.90, 0.20, 0.01), vec3(1.0, 0.82, 0.28), smoothstep(0.25, 0.85, moltenHeat));
 
-                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.80);
-                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * 1.25);
+                            diffuseColor.rgb = mix(diffuseColor.rgb, stepMagmaCol, moltenHeat * 0.72);
+                            totalEmissiveRadiance += stepMagmaCol * (moltenHeat * mix(0.95, 0.70, bBalLava));
                         }
                     ` : `
                         vec2 dirFlow = vec2(0.5547, -0.8320);
@@ -17371,25 +17696,34 @@ class GameMap {
                     '#include <dithering_fragment>',
                     `
                     ${themeIdx !== 1 ? `
-                        // Mantiene l'acqua luminosa e fiabesca anche lontano dalla PointLight del giocatore su smartphone
-                        float baseLum = max(0.06, dot(waterBaseCol, vec3(0.299, 0.587, 0.114)));
+                        // Mantiene l'acqua azzurra e nitida anche sotto Bloom / PostPass su Ultra PC e MEGA
+                        float baseLum = max(0.03, dot(waterBaseCol, vec3(0.299, 0.587, 0.114)));
                         float litLum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                        float lumGain = clamp(litLum / baseLum, 0.86, ${themeIdx === 0 ? '1.14' : 'mix(1.14, 1.05, clamp(uBloomActive, 0.0, 1.0))'});
+                        float bLim = clamp(uBloomActive, 0.0, 1.0);
+                        float lumGain = clamp(litLum / baseLum, 0.88, ${themeIdx === 0 ? 'mix(1.10, 1.00, bLim)' : 'mix(1.14, 1.05, bLim)'});
                         gl_FragColor.rgb = waterBaseCol * lumGain;
 
-                        float capLim = ${themeIdx === 0 ? '0.88' : 'mix(0.86, 0.75, clamp(uBloomActive, 0.0, 1.0))'};
+                        float capLim = ${themeIdx === 0 ? 'mix(0.88, 0.84, bLim)' : 'mix(0.86, 0.75, bLim)'};
                         float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
                         if (maxC > capLim) {
-                            ${themeIdx === 0 ? `
-                                float compressed = capLim + (maxC - capLim) / (1.0 + (maxC - capLim) * 2.5);
-                            ` : `
-                                float iceSubHead = mix(0.28, 0.09, clamp(uBloomActive, 0.0, 1.0));
-                                float overSub = maxC - capLim;
-                                float compressed = capLim + (iceSubHead * overSub) / (iceSubHead + overSub);
-                            `}
+                            float waterSubHead = ${themeIdx === 0 ? 'mix(0.24, 0.10, bLim)' : 'mix(0.28, 0.09, bLim)'};
+                            float overSub = maxC - capLim;
+                            float compressed = capLim + (waterSubHead * overSub) / (waterSubHead + overSub);
                             gl_FragColor.rgb *= (compressed / maxC);
                         }
-                    ` : ''}
+                    ` : `
+                        // Compressione morbida delle alte luci sulla lava: mantiene nitida la texture lava_water.png sotto Bloom e PointLight
+                        vec3 lavaLit = gl_FragColor.rgb;
+                        float bLava = clamp(uBloomActive, 0.0, 1.0);
+                        float lavaCap = mix(0.94, 0.84, bLava);
+                        float maxLavaC = max(lavaLit.r, max(lavaLit.g, lavaLit.b));
+                        if (maxLavaC > lavaCap) {
+                            float headLava = mix(0.32, 0.14, bLava);
+                            float overLava = maxLavaC - lavaCap;
+                            float compLava = lavaCap + (headLava * overLava) / (headLava + overLava);
+                            gl_FragColor.rgb = lavaLit * (compLava / maxLavaC);
+                        }
+                    `}
                     #include <dithering_fragment>
                     `
                 );
@@ -17443,7 +17777,7 @@ class GameMap {
         }
 
         if (pitAreaGeo) {
-            const bedHex = (themeIdx === 0) ? 0x0e4f82 : ((themeIdx === 1) ? 0x240602 : 0x0d4a80);
+            const bedHex = (themeIdx === 0) ? 0x08467a : ((themeIdx === 1) ? 0x240602 : 0x0d4a80);
             const pitBedMat = new THREE.MeshBasicMaterial({ color: bedHex });
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
@@ -18225,7 +18559,7 @@ class GameMap {
                 const meshPitBanks = new THREE.Mesh(bankGeo, bankMat);
                 meshPitBanks.renderOrder = -5;
                 meshPitBanks.receiveShadow = true;
-                meshPitBanks.castShadow = AppSettings.shadowsEnabled;
+                meshPitBanks.castShadow = AppSettings.shadowsEnabled && !isTouchDevice;
                 this.meshPitBanks = meshPitBanks;
                 this.mapGroup.add(meshPitBanks);
             }
@@ -18250,7 +18584,7 @@ class GameMap {
                         polygonOffsetUnits: -1
                     });
 
-                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v9_' + themeIdx;
+                    cachedShoreMat.customProgramCacheKey = () => 'pit_shore_v12_' + themeIdx;
                     cachedShoreMat.onBeforeCompile = (shader) => {
                         shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                         shader.uniforms.uBloomActive = InteractiveGrassSystem.uniforms.uBloomActive;
@@ -18286,22 +18620,23 @@ class GameMap {
                                 float ripWave = sin(d * 24.0 - uTime * 1.75 + sin(uArc * 4.0) * 0.70);
                                 float ripples = smoothstep(0.58, 0.95, ripWave) * smoothstep(0.06, 0.18, d) * (1.0 - smoothstep(0.45, 0.94, sDist));
 
-                                // Raccordo sponda foresta fiabesca: aureola celeste-azzurra luminosa e spuma soffusa
-                                vec3 innerAqua = vec3(0.42, 0.85, 1.00);
-                                vec3 midCyan   = vec3(0.24, 0.68, 0.95);
-                                vec3 outerBlue = vec3(0.14, 0.52, 0.86);
+                                // Raccordo sponda foresta azzurra: aureola azzurra luminosa senza alone chiaro sotto Bloom
+                                float sb0 = clamp(uBloomActive, 0.0, 1.0);
+                                vec3 innerAqua = mix(vec3(0.055, 0.380, 0.850), vec3(0.048, 0.350, 0.810), sb0);
+                                vec3 midCyan   = mix(vec3(0.025, 0.250, 0.700), vec3(0.022, 0.230, 0.660), sb0);
+                                vec3 outerBlue = mix(vec3(0.008, 0.130, 0.480), vec3(0.007, 0.120, 0.450), sb0);
                                 vec3 haloCol = mix(outerBlue, midCyan, smoothstep(0.15, 0.60, haloFade));
                                 haloCol = mix(haloCol, innerAqua, smoothstep(0.54, 0.95, haloFade));
-                                haloCol = mix(haloCol, vec3(0.84, 0.97, 1.00), clamp(rimGlow * 0.68 + ripples * 0.52, 0.0, 0.80));
+                                haloCol = mix(haloCol, mix(vec3(0.14, 0.56, 0.94), vec3(0.11, 0.49, 0.89), sb0), clamp(rimGlow * 0.60 + ripples * 0.44, 0.0, 0.72));
 
-                                float haloAlpha = clamp(haloBody * 0.34 + rimGlow * 0.28 + ripples * 0.20, 0.0, 0.58) * (1.0 - smoothstep(0.80, 1.0, sDist));
+                                float haloAlpha = clamp(haloBody * 0.34 + rimGlow * 0.24 + ripples * 0.16, 0.0, mix(0.48, 0.40, sb0)) * (1.0 - smoothstep(0.80, 1.0, sDist));
                                 diffuseColor = vec4(haloCol, haloAlpha);
                             ` : (themeIdx === 1 ? `
                                 float pulse = 0.84 + 0.16 * sin(uTime * 2.6 + uArc * 2.0);
-                                float hotRim = (1.0 - smoothstep(0.06, 0.34, d)) * pulse;
-                                float emberGlow = (1.0 - smoothstep(0.12, 0.84, d));
-                                vec3 glowCol = mix(vec3(0.78, 0.12, 0.01), vec3(1.0, 0.86, 0.32), smoothstep(0.22, 0.84, hotRim));
-                                float glowAlpha = clamp(hotRim * 0.78 + emberGlow * 0.36, 0.0, 0.92) * deepFade;
+                                float hotRim = (1.0 - smoothstep(0.05, 0.30, d)) * pulse;
+                                float emberGlow = (1.0 - smoothstep(0.10, 0.72, d));
+                                vec3 glowCol = mix(vec3(0.78, 0.12, 0.01), vec3(1.0, 0.84, 0.30), smoothstep(0.22, 0.84, hotRim));
+                                float glowAlpha = clamp(hotRim * 0.44 + emberGlow * 0.16, 0.0, 0.48) * deepFade;
                                 diffuseColor = vec4(glowCol, glowAlpha);
                             ` : `
                                 float frostNoise = sin(uArc * 3.0) * 0.08 + cos(uArc * 7.0 + 1.2) * 0.05 + sin(uArc * 11.0) * 0.04;
@@ -19178,7 +19513,7 @@ Game.auras.push({
         // FIX PRESTAZIONI E VISIBILITÀ: La nebbia si adatta al menu Opzioni!
         // Numero aumentato di mini banchi di nebbia distribuiti per la mappa (niente enormi parti omogenee)
         // 0 (Performance) = Niente nebbia. 1 (Bilanciata) = Media. 2 (Ultra) = Densa.
-        let fogCount = AppSettings.useMobileLimits ? 55 : 95; this.maxFogAllocated = fogCount;
+        let fogCount = AppSettings.useMobileLimits ? 56 : (AppSettings.isMega ? 80 : 95); this.maxFogAllocated = fogCount;
         // Allocata alla capienza massima del dispositivo per permettere il cambio live da Opzioni!
         // La visibilità e il .count effettivo sono regolati da AppSettings.targetFogCount
 
@@ -26063,7 +26398,7 @@ if (this.type === 'roller') {
 
         this.mesh.traverse((child) => {
             if (child.isMesh && child.geometry && child.material !== SharedMat.enemyEye) {
-             if (!child.visible || child.material === SharedMat.ringWalkerEdge || (this.modelParts && child === this.modelParts.fireRingDisc)) return;
+             if (!child.visible || child.material === SharedMat.ringWalkerEdge || child.material === SharedMat.prophetShield || child.material === SharedMat.golemShield || (this.modelParts && child === this.modelParts.fireRingDisc)) return;
                 if (Math.random() > 0.75) return;
 
                 child.getWorldPosition(_pos);
@@ -26076,13 +26411,21 @@ if (this.type === 'roller') {
 
                 let isRingPiece = (this.modelParts && child === this.modelParts.fireRingCore);
                 let pieceColor = isRingPiece ? 0xff2200 : cHex;
+                let debrisType = isRingPiece ? 'goblin' : this.type;
+                if (this.type === 'roller' && !isRingPiece) {
+                    if (child.geometry === SharedGeo.cone) debrisType = 'roller_spike';
+                    else if (child.geometry === SharedGeo.torus) debrisType = 'roller_rim';
+                    else debrisType = 'roller_shell';
+                    if (child.material === SharedMat.rollerSpike) pieceColor = 0xe2e8f0;
+                    else if (child.material === SharedMat.enemyDark) pieceColor = 0x444444;
+                }
                 if (pMods.miserPact && pMods.bloodthirst) pieceColor = (pieceIdx % 2 === 0) ? 0xffd700 : 0xaa0011;
                 else if (pMods.miserPact) pieceColor = 0xffd700;
                 else if (pMods.bloodthirst) pieceColor = 0xaa0011;
                 pieceIdx++;
 
                 let debris = Game.getDebris();
-                if (debris) debris.spawn(_pos, _quat, _scale, isRingPiece ? 'goblin' : this.type, pieceColor, this.radius, this.isElite && !pMods.miserPact);
+                if (debris) debris.spawn(_pos, _quat, _scale, debrisType, pieceColor, this.radius, this.isElite && !pMods.miserPact);
             }
         });
 
@@ -26875,32 +27218,35 @@ class Projectile {
         this.groundGlow.visible = false;
         Game.scene.add(this.groundGlow);
 
-        if (!AppSettings.useMobileLimits && typeof PcUltraGraphics !== 'undefined') {
-            if (!window.GLOBAL_STREAK_GEO) {
-                window.GLOBAL_STREAK_GEO = new THREE.PlaneGeometry(1, 1);
-                window.GLOBAL_STREAK_GEO.rotateX(-Math.PI / 2);
-                window.GLOBAL_STREAK_GEO.translate(-0.5, 0, 0);
-            }
-            this.streakMat = new THREE.MeshBasicMaterial({
-                map: PcUltraGraphics.getStreakTexture(),
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.78,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                side: THREE.DoubleSide
-            });
-            this.streakMesh = new THREE.Mesh(window.GLOBAL_STREAK_GEO, this.streakMat);
-            this.streakMesh.matrixAutoUpdate = false;
-            this.streakMesh.visible = false;
-            this.streakMesh.renderOrder = 3;
-            Game.scene.add(this.streakMesh);
-        }
+        this.ensureStreakMesh();
 
         // --- VARIABILI VENTO AGGIUNTE ---
         this.windX = 0;
         this.windZ = 0;
         this.windIntensity = 0;
+    }
+
+    ensureStreakMesh() {
+        if (this.streakMesh || AppSettings.useMobileLimits || typeof PcUltraGraphics === 'undefined') return;
+        if (!window.GLOBAL_STREAK_GEO) {
+            window.GLOBAL_STREAK_GEO = new THREE.PlaneGeometry(1, 1);
+            window.GLOBAL_STREAK_GEO.rotateX(-Math.PI / 2);
+            window.GLOBAL_STREAK_GEO.translate(-0.5, 0, 0);
+        }
+        this.streakMat = new THREE.MeshBasicMaterial({
+            map: PcUltraGraphics.getStreakTexture(),
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.60,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        this.streakMesh = new THREE.Mesh(window.GLOBAL_STREAK_GEO, this.streakMat);
+        this.streakMesh.matrixAutoUpdate = false;
+        this.streakMesh.visible = false;
+        this.streakMesh.renderOrder = 3;
+        if (Game.scene) Game.scene.add(this.streakMesh);
     }
     
     spawn(x, y, angle, speed, damage, owner, type, piercing=false, isCrit=false, sourceEntity=null) {
@@ -26909,6 +27255,9 @@ class Projectile {
         this.isCrit = isCrit;
         this.hitEnemies.clear(); this.target = null; this.canInfect = true;
         this.sourceEntity = sourceEntity; // Salva chi ha sparato!
+        this._age = 0;
+        this._travelDist = 0;
+        this._trailClearDist = (sourceEntity && sourceEntity.radius) ? Math.max(24, sourceEntity.radius + 10) : 26;
         
         this.life = owner === 'player' ? (700 / Math.max(1, speed)) : Math.min(3.0, 600 / Math.max(1, speed));
         this.radius = 6; let mat = SharedMat.arrow; let geo = SharedGeo.sphere;
@@ -26966,21 +27315,22 @@ if (type === 'arrow' || type === 'homing_arrow') {
             
             this.groundGlow.visible = true;
             if (this.streakMesh) {
-                if (AppSettings.isUltraPC && type !== 'orc_club') {
+                if (type !== 'orc_club') {
                     this.streakMat.color.setHex(colorHex);
                     const isHoming = (type === 'homing_arrow');
                     this._streakLen = (isHoming
                         ? Math.max(28, Math.min(46, speed * 0.055))
                         : Math.max(46, Math.min(135, speed * 0.145))) * projScale;
                     this._streakWid = Math.max(isHoming ? 6 : 8, this.radius * (isHoming ? 1.25 : 1.55));
+                    this._streakMaxOpacity = (type === 'explosive_arrow' || type === 'enemy_fireball') ? 0.54 : 0.62;
+                    this.streakMat.opacity = 0;
                     this.streakMesh.position.set(x, 14.5, y);
                     this.streakMesh.rotation.set(0, -angle, 0);
-                    this.streakMesh.scale.set(this._streakLen, 1, this._streakWid);
+                    this.streakMesh.scale.set(0.01, 1, this._streakWid);
                     this.streakMesh.updateMatrix();
-                    this.streakMesh.visible = true;
-                } else {
-                    this.streakMesh.visible = false;
                 }
+                // La scia si forma solo qualche istante dopo il lancio, oltre il corpo del personaggio
+                this.streakMesh.visible = false;
             }
         } else {
             this.groundGlow.visible = false;
@@ -27042,6 +27392,10 @@ if (type === 'arrow' || type === 'homing_arrow') {
             }
         }
        this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; this.group.position.set(this.x, 15, this.y);
+        this._age = (this._age || 0) + dt;
+        this._travelDist = (this._travelDist || 0) + Math.hypot(this.vx * dt, this.vy * dt);
+        const trailClearDist = this._trailClearDist || 26;
+        const trailFormed = (this._age >= 0.035 && this._travelDist > trailClearDist);
         
        // --- AGGIORNAMENTO DEL RIFLESSO A TERRA (FAKE LIGHT) ---
         // FIX THERMAL THROTTLING: Calcola le trasparenze del bagliore SOLO se il proiettile è nell'inquadratura.
@@ -27062,11 +27416,20 @@ if (type === 'arrow' || type === 'homing_arrow') {
             this.groundGlow.visible = false;
         }
         if (this.streakMesh) {
-            if (AppSettings.isUltraPC && this.type !== 'arrow' && this.type !== 'orc_club' && isVisibleToCam) {
-                this.streakMesh.visible = true;
-                this.streakMesh.position.set(this.x, 14.5, this.y);
-                this.streakMesh.rotation.set(0, -this.angle, 0);
-                this.streakMesh.updateMatrix();
+            if (AppSettings.isUltraPC && this.type !== 'arrow' && this.type !== 'orc_club' && isVisibleToCam && trailFormed) {
+                const targetLen = this._streakLen || 40;
+                const formedLen = Math.min(targetLen, this._travelDist - trailClearDist);
+                if (formedLen > 0.5) {
+                    const fadeIn = Math.min(1.0, formedLen / Math.max(18.0, targetLen * 0.45));
+                    this.streakMat.opacity = (this._streakMaxOpacity || 0.62) * fadeIn;
+                    this.streakMesh.visible = true;
+                    this.streakMesh.position.set(this.x, 14.5, this.y);
+                    this.streakMesh.rotation.set(0, -this.angle, 0);
+                    this.streakMesh.scale.set(formedLen, 1, this._streakWid || 8);
+                    this.streakMesh.updateMatrix();
+                } else {
+                    this.streakMesh.visible = false;
+                }
             } else {
                 this.streakMesh.visible = false;
             }
@@ -27167,7 +27530,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
             }
         }
         if (this.life <= 0) this.destroy();
-        if(this.active && this.type !== 'arrow' && (Game.frameCount + this.updateOffset) % (AppSettings.useMobileLimits?6:3) === 0) {
+        if(this.active && trailFormed && this.type !== 'arrow' && (Game.frameCount + this.updateOffset) % (AppSettings.useMobileLimits?6:3) === 0) {
             let pMat = SharedMat.spriteWhite;
             let pType = 'trail'; // Fisica standard (fumo che sale)
 
@@ -27280,6 +27643,9 @@ class Particle {
     
     spawn(x, y, z, mat, type='spark', dirAngle=null) {
         if (Game.particlesThisFrame > AppSettings.maxParticlesPerFrame) return;
+        if (isTouchDevice && type !== 'level' && Game._camFocusX !== undefined) {
+            if (Math.abs(x - Game._camFocusX) > 1200 || Math.abs(z - Game._camFocusZ) > 1300) return;
+        }
         Game.particlesThisFrame = (Game.particlesThisFrame || 0) + 1;
 
         this.active = true; 
@@ -27461,7 +27827,20 @@ class Debris {
             this.sy = MathUtils.randomRange(0.20, 0.32);
             this.sz = MathUtils.randomRange(0.85, 1.25);
             this.isFlatPiece = true;
-        } else if (enemyType === 'golem' || enemyType === 'orc'|| enemyType === 'roller') {
+        } else if (enemyType === 'roller_spike') {
+            this.shapeType = 0; // Spuncioni conici del Roller
+            this.sx = 0.58; this.sy = 1.35; this.sz = 0.58;
+        } else if (enemyType === 'roller_rim') {
+            this.shapeType = 2; // Segmenti dei cerchioni corazzati del Roller
+            this.sx = 1.05; this.sy = 0.50; this.sz = 1.05;
+        } else if (enemyType === 'roller_shell') {
+            this.shapeType = 2; // Guscio sferico sfaccettato del Roller
+            this.sx = 0.95; this.sy = 0.85; this.sz = 0.95;
+        } else if (enemyType === 'roller') {
+            this.shapeType = Math.random() < 0.65 ? 0 : 2;
+            if (this.shapeType === 0) { this.sx = 0.58; this.sy = 1.35; this.sz = 0.58; }
+            else { this.sx = 0.95; this.sy = 0.85; this.sz = 0.95; }
+        } else if (enemyType === 'golem' || enemyType === 'orc') {
             this.shapeType = 1;
         } else if (enemyType === 'slime' || enemyType === 'slime_mini') {
             this.shapeType = 2;
@@ -27833,7 +28212,7 @@ function clearScene() {
         }
     }
     
-    for(let i=0, len=Game.projectiles.length; i<len; i++) { Game.projectiles[i].active = false; Game.projectiles[i].group.visible = false; if (Game.projectiles[i].groundGlow) Game.projectiles[i].groundGlow.visible = false; }
+    for(let i=0, len=Game.projectiles.length; i<len; i++) { Game.projectiles[i].active = false; Game.projectiles[i].group.visible = false; if (Game.projectiles[i].groundGlow) Game.projectiles[i].groundGlow.visible = false; if (Game.projectiles[i].streakMesh) Game.projectiles[i].streakMesh.visible = false; }
     for(let i=0, len=Game.hazards.length; i<len; i++) { Game.hazards[i].active = false; Game.hazards[i].group.visible = false; }
     for(let i=0, len=Game.particles.length; i<len; i++) { Game.particles[i].active = false; Game.particles[i].mesh.visible = false; }
     for(let i=0, len=Game.floatingTexts.length; i<len; i++) { Game.floatingTexts[i].active = false; }
@@ -28290,14 +28669,29 @@ const Preloader = {
         return tex;
     },
     createLiquidTexture(type) {
-        const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+        const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (type === 'lava') {
-            ctx.fillStyle = '#ff2200'; ctx.fillRect(0, 0, 128, 128);
-            for(let i=0; i<250; i++) {
-                ctx.fillStyle = Math.random() > 0.4 ? '#ff9900' : '#550800';
-                ctx.fillRect(Math.random()*128, Math.random()*128, Math.random()*8+2, Math.random()*8+2);
+            canvas.width = 256; canvas.height = 256;
+            const imgData = ctx.createImageData(256, 256);
+            const d = imgData.data;
+            const PI2 = Math.PI * 2;
+            for (let y = 0; y < 256; y++) {
+                const ny = (y / 256) * PI2;
+                for (let x = 0; x < 256; x++) {
+                    const nx = (x / 256) * PI2;
+                    const w1 = Math.sin(nx * 2.0 + Math.cos(ny * 2.0) * 1.4);
+                    const w2 = Math.cos(ny * 2.0 + Math.sin(nx * 3.0) * 1.3);
+                    const cell = Math.abs(Math.sin(nx * 1.5 + w2 * 1.2) * Math.cos(ny * 1.5 - w1 * 1.2));
+                    const heat = Math.pow(Math.max(0.0, Math.min(1.0, 1.0 - cell * 1.15)), 1.6);
+                    const idx = (y * 256 + x) * 4;
+                    d[idx]     = Math.min(255, Math.floor(48 + heat * 207));
+                    d[idx + 1] = Math.min(255, Math.floor(10 + Math.pow(heat, 1.45) * 210));
+                    d[idx + 2] = Math.min(255, Math.floor(4 + Math.pow(heat, 3.2) * 70));
+                    d[idx + 3] = 255;
+                }
             }
+            ctx.putImageData(imgData, 0, 0);
         } else {
             // Procedurale Stylized Water: onde Gerstner fluide, caustiche luminose e creste di schiuma seamless
             canvas.width = 256; canvas.height = 256;
@@ -28347,10 +28741,14 @@ const Preloader = {
         let totalToLoad = 0;
         let loadedCount = 0;
         let loadFinished = false;
+        const pendingFallbacks = [];
 
         const finishLoading = () => {
             if (loadFinished) return;
             loadFinished = true;
+            for (let i = 0; i < pendingFallbacks.length; i++) {
+                pendingFallbacks[i]();
+            }
             if (loadingProgress) loadingProgress.innerText = "100";
             if (typeof onComplete === 'function') {
                 onComplete();
@@ -28383,12 +28781,14 @@ const Preloader = {
             tex.clone = function() {
                 const c = origClone();
                 c.image = tex.image;
-                c.needsUpdate = true;
+                if (tex.image) c.needsUpdate = true;
                 tex._clones.push(c);
                 return c;
             };
 
+            let resolvedReal = false;
             const applyImage = (imgSource) => {
+                if (!imgSource) return;
                 tex.image = imgSource;
                 tex.needsUpdate = true;
                 for (let i = 0; i < tex._clones.length; i++) {
@@ -28400,6 +28800,13 @@ const Preloader = {
                 }
             };
 
+            pendingFallbacks.push(() => {
+                if (!tex.image && fallbackFn) {
+                    const fb = fallbackFn();
+                    if (fb && fb.image) applyImage(fb.image);
+                }
+            });
+
             // Cerca prima nella stessa cartella del codice (GitHub), poi nei percorsi relativi e sottocartelle
             const candidates = [
                 fileName,
@@ -28409,23 +28816,31 @@ const Preloader = {
                 `../terreno/${fileName}`,
                 `../Terreno/${fileName}`,
                 `Texture/${fileName}`,
-                `../Texture/${fileName}`
+                `../Texture/${fileName}`,
+                `www/${fileName}`,
+                `../www/${fileName}`
             ];
             let attempt = 0;
 
             const tryNext = () => {
                 if (attempt >= candidates.length) {
-                    if (fallbackFn) {
+                    if (!resolvedReal && fallbackFn) {
                         const fb = fallbackFn();
-                        applyImage(fb.image);
+                        if (fb && fb.image) applyImage(fb.image);
                     }
                     markOneDone();
                     return;
                 }
                 const img = new Image();
                 img.onload = () => {
-                    applyImage(img);
-                    markOneDone();
+                    if ((img.naturalWidth || img.width) > 0) {
+                        resolvedReal = true;
+                        applyImage(img);
+                        markOneDone();
+                    } else {
+                        attempt++;
+                        tryNext();
+                    }
                 };
                 img.onerror = () => {
                     attempt++;
