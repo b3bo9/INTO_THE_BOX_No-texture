@@ -2823,7 +2823,7 @@ const AppSettings = {
             if (this.mode === 1) return Math.max(0.85, Math.min(dpr * 0.60, 1.0));
             return Math.max(0.68, Math.min(dpr * 0.48, 0.80));
         }
-        return this.mode >= 2 ? Math.min(Math.max(dpr, 1.35), 2.0) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
+        return this.mode >= 1 ? Math.min(dpr, 1.0) : 0.75;
     },
     getTargetUiDpr() {
         const dpr = window.devicePixelRatio || 1;
@@ -12633,7 +12633,7 @@ pushDebris(px, pz, radius, force) {
         this.renderer.shadowMap.type = AppSettings.useMobileLimits ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 
         if (enabled) {
-            const targetMapSize = AppSettings.useMobileLimits ? 1024 : 2048;
+            const targetMapSize = AppSettings.useMobileLimits ? 1024 : 1536;
             const aspect = (this.width && this.height) ? (this.width / this.height) : 1.0;
             // Frustum calibrato sull'inquadratura reale (include la diagonale a 45° su smartphone verticale)
             let halfW, halfH;
@@ -26968,8 +26968,11 @@ if (type === 'arrow' || type === 'homing_arrow') {
             if (this.streakMesh) {
                 if (AppSettings.isUltraPC && type !== 'orc_club') {
                     this.streakMat.color.setHex(colorHex);
-                    this._streakLen = Math.max(46, Math.min(135, speed * 0.145)) * projScale;
-                    this._streakWid = Math.max(8, this.radius * 1.55);
+                    const isHoming = (type === 'homing_arrow');
+                    this._streakLen = (isHoming
+                        ? Math.max(28, Math.min(46, speed * 0.055))
+                        : Math.max(46, Math.min(135, speed * 0.145))) * projScale;
+                    this._streakWid = Math.max(isHoming ? 6 : 8, this.radius * (isHoming ? 1.25 : 1.55));
                     this.streakMesh.position.set(x, 14.5, y);
                     this.streakMesh.rotation.set(0, -angle, 0);
                     this.streakMesh.scale.set(this._streakLen, 1, this._streakWid);
