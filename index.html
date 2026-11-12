@@ -2823,7 +2823,7 @@ const AppSettings = {
             if (this.mode === 1) return Math.max(0.85, Math.min(dpr * 0.60, 1.0));
             return Math.max(0.68, Math.min(dpr * 0.48, 0.80));
         }
-        return this.mode >= 2 ? Math.min(dpr, 1.5) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
+        return this.mode >= 2 ? Math.min(Math.max(dpr, 1.35), 2.0) : (this.mode === 1 ? Math.min(dpr, 1.0) : 0.75);
     },
     getTargetUiDpr() {
         const dpr = window.devicePixelRatio || 1;
@@ -2915,6 +2915,7 @@ const AppSettings = {
     },
     
    get shadowsEnabled() { return this.mode >= 2; },
+   get showContactShadows() { return !this.shadowsEnabled || this.isUltraPC; },
     loadAndDetect() {
         let loaded = false;
         const maxAllowedMode = isTouchDevice ? 3 : 2;
@@ -3015,13 +3016,19 @@ const AppSettings = {
         if (this.isLow) document.body.classList.add('low-spec');
         else document.body.classList.remove('low-spec');
 
-        const wantDesktopBump = !this.useMobileLimits ? CHAR_GRUNGE_TEX : null;
+        const wantCharTex = (typeof PcUltraGraphics !== 'undefined') ? PcUltraGraphics.getCharTex() : CHAR_GRUNGE_TEX;
+        const wantDesktopBump = !this.useMobileLimits ? wantCharTex : null;
         if (typeof SharedMat !== 'undefined') {
-            if (SharedMat.enemyDark && SharedMat.enemyDark.bumpMap !== wantDesktopBump) {
+            if (SharedMat.blobShadow) {
+                SharedMat.blobShadow.opacity = this.isUltraPC ? 0.34 : 0.75;
+            }
+            if (SharedMat.enemyDark && (SharedMat.enemyDark.bumpMap !== wantDesktopBump || SharedMat.enemyDark.map !== wantCharTex)) {
+                SharedMat.enemyDark.map = wantCharTex;
                 SharedMat.enemyDark.bumpMap = wantDesktopBump;
                 SharedMat.enemyDark.needsUpdate = true;
             }
-            if (SharedMat.deadObelisk && SharedMat.deadObelisk.bumpMap !== wantDesktopBump) {
+            if (SharedMat.deadObelisk && (SharedMat.deadObelisk.bumpMap !== wantDesktopBump || SharedMat.deadObelisk.map !== wantCharTex)) {
+                SharedMat.deadObelisk.map = wantCharTex;
                 SharedMat.deadObelisk.bumpMap = wantDesktopBump;
                 SharedMat.deadObelisk.needsUpdate = true;
             }
@@ -3050,10 +3057,10 @@ const AppSettings = {
                 }
             }
 
-            let showFakeShadows = !this.shadowsEnabled;
+            let showFakeShadows = this.showContactShadows;
             if (Game.player && Game.player.shadowMesh) Game.player.shadowMesh.visible = showFakeShadows && !Game.player.dead;
             for (let i = 0; i < Game.enemies.length; i++) {
-                if (Game.enemies[i].shadowMesh) Game.enemies[i].shadowMesh.visible = showFakeShadows && !Game.enemies[i].dead;
+                if (Game.enemies[i].shadowMesh) Game.enemies[i].shadowMesh.visible = showFakeShadows && !Game.enemies[i].dead && Game.enemies[i].type !== 'trapper';
             }
             if (Game.map && Game.map.mapGroup) {
                 Game.map.mapGroup.children.forEach(c => {
@@ -3094,7 +3101,7 @@ const AppSettings = {
                 if (Game.player.light) Game.player.light.distance = this.playerLightRadius;
                 if (Game.player.modelParts && Game.player.modelParts.body && Game.player.modelParts.body.material) {
                     const bodyMat = Game.player.modelParts.body.material;
-                    const wantBump = (!isTouchDevice || this.isUltra) ? CHAR_GRUNGE_TEX : null;
+                    const wantBump = (!isTouchDevice || this.isUltra) ? wantCharTex : null;
                     if (bodyMat.bumpMap !== wantBump) {
                         bodyMat.bumpMap = wantBump;
                         bodyMat.needsUpdate = true;
@@ -3102,11 +3109,14 @@ const AppSettings = {
                 }
                 if (Game.player.modelParts && Game.player.modelParts.scarf && Game.player.modelParts.scarf.material) {
                     const scarfMat = Game.player.modelParts.scarf.material;
-                    const wantScarfBump = !this.useMobileLimits ? (scarfMat.map || CHAR_GRUNGE_TEX) : null;
+                    const wantScarfBump = !this.useMobileLimits ? (scarfMat.map || wantCharTex) : null;
                     if (scarfMat.bumpMap !== wantScarfBump) {
                         scarfMat.bumpMap = wantScarfBump;
                         scarfMat.needsUpdate = true;
                     }
+                }
+                if (typeof applySkinMaterials === 'function' && Game.player.modelParts && typeof SkinSystem !== 'undefined') {
+                    applySkinMaterials(Game.player.modelParts, SkinSystem.getCurrentSkin());
                 }
             }
             if ((this.isLow || this.useMobileLimits) && Game.flashLights) {
@@ -3119,6 +3129,9 @@ const AppSettings = {
         
         if (typeof Game !== 'undefined' && Game.applyBloomSpec) {
             Game.applyBloomSpec(Game.currentThemeIndex);
+        }
+        if (typeof PcUltraGraphics !== 'undefined') {
+            PcUltraGraphics.syncState();
         }
     },
     toggleColorblind() {
@@ -4135,11 +4148,12 @@ const PlayerGeometryBuilder = {
     _prims: null,
     getPrimitives() {
         if (!this._prims) {
+            const hiPoly = (typeof isTouchDevice !== 'undefined') ? !isTouchDevice : true;
             this._prims = {
-                robeFrustum: new THREE.CylinderGeometry(3.8, 12.2, 1, 8),
-                robeHex: new THREE.CylinderGeometry(3.8, 12.4, 1, 6),
-                robePyramid: new THREE.CylinderGeometry(3.8, 13.0, 1, 4),
-                robeVoid: new THREE.CylinderGeometry(5.6, 8.0, 1, 6),
+                robeFrustum: new THREE.CylinderGeometry(3.8, 12.2, 1, hiPoly ? 16 : 8, hiPoly ? 2 : 1),
+                robeHex: new THREE.CylinderGeometry(3.8, 12.4, 1, 6, hiPoly ? 2 : 1),
+                robePyramid: new THREE.CylinderGeometry(3.8, 13.0, 1, 4, hiPoly ? 2 : 1),
+                robeVoid: new THREE.CylinderGeometry(5.6, 8.0, 1, hiPoly ? 12 : 6, hiPoly ? 2 : 1),
                 cone4: new THREE.ConeGeometry(1, 1, 4),
                 octa: new THREE.OctahedronGeometry(1, 0),
                 dodeca: new THREE.DodecahedronGeometry(1, 0),
@@ -7419,6 +7433,588 @@ function createCharacterTexture() {
 }
 const CHAR_GRUNGE_TEX = createCharacterTexture();
 
+// --- PIPELINE GRAFICA DEDICATA PC ULTRA (Texture 512p, Normal Map, IBL/PMREM, Anti-Tiling, Post-FXAA/Sharpen) ---
+const PcUltraGraphics = {
+    uUltra: { value: 0.0 },
+    uBiomeId: { value: 0.0 },
+    uTrauma: { value: 0.0 },
+    _charHdTex: null,
+    _skinHdCache: {},
+    _normalCache: new WeakMap(),
+    _envCache: {},
+    _streakTex: null,
+
+    getCharHdTexture() {
+        if (this._charHdTex) return this._charHdTex;
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        let seed = 4242;
+        const rand = () => { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 0) / 4294967296); };
+
+        // Trama morbida stile pittura a mano (elimina la pixellatura su Full HD)
+        for (let i = 0; i < 420; i++) {
+            const g = ctx.createRadialGradient(rand() * size, rand() * size, 2, rand() * size, rand() * size, 22 + rand() * 36);
+            const alpha = (0.04 + rand() * 0.07).toFixed(3);
+            g.addColorStop(0, rand() > 0.35 ? `rgba(18,22,32,${alpha})` : `rgba(255,255,255,${alpha})`);
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, size, size);
+        }
+
+        // Micro-fibra verticale delicata
+        ctx.lineWidth = 1.2;
+        for (let i = 0; i < 650; i++) {
+            ctx.strokeStyle = rand() > 0.45 ? 'rgba(20,24,36,0.12)' : 'rgba(255,255,255,0.22)';
+            const x = rand() * size, y = rand() * size, len = 10 + rand() * 24;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + (rand() - 0.5) * 4, y + len);
+            ctx.stroke();
+        }
+
+        // Graffi sottili ad alta definizione
+        for (let i = 0; i < 95; i++) {
+            ctx.lineWidth = 0.9 + rand() * 1.1;
+            ctx.strokeStyle = i % 4 === 0 ? 'rgba(255,255,255,0.35)' : 'rgba(12,14,20,0.28)';
+            const x = rand() * size, y = rand() * size;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + (rand() - 0.5) * 32, y + (rand() - 0.5) * 32);
+            ctx.stroke();
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(2, 2);
+        tex.encoding = THREE.sRGBEncoding;
+        tex.magFilter = THREE.LinearFilter;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.anisotropy = 8;
+        this._charHdTex = tex;
+        return tex;
+    },
+
+    getSkinHdTexture(skinId) {
+        if (!skinId) return this.getCharHdTexture();
+        if (this._skinHdCache[skinId]) return this._skinHdCache[skinId];
+
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        let seed = 7331;
+        for (let c = 0; c < skinId.length; c++) seed = (seed * 31 + skinId.charCodeAt(c)) | 0;
+        const rand = () => { seed = (seed * 1664525 + 1013904223) | 0; return ((seed >>> 0) / 4294967296); };
+
+        const presets = {
+            dark_mage:          { dark: '24,14,48',  accent: '168,85,247', weave: true },
+            astral_arcanist:    { dark: '16,38,82',  accent: '125,211,252', stars: true },
+            emerald_warden:     { dark: '14,46,24',  accent: '110,231,183', weave: true },
+            crimson_inquisitor: { dark: '48,10,16',  accent: '248,113,113', forged: true },
+            void_walker:        { dark: '36,10,64',  accent: '216,180,254', stars: true },
+            solar_archon:       { dark: '72,36,8',   accent: '253,224,71',  forged: true },
+            cyber_phantom:      { dark: '14,28,48',  accent: '103,232,249', hex: true }
+        };
+        const p = presets[skinId] || presets.dark_mage;
+
+        // Pennellate morbide di ombreggiatura materica
+        for (let i = 0; i < 360; i++) {
+            const cx = rand() * size, cy = rand() * size, rad = 18 + rand() * 34;
+            const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, rad);
+            const useAcc = rand() > 0.68;
+            g.addColorStop(0, useAcc ? `rgba(${p.accent},0.16)` : `rgba(${p.dark},0.14)`);
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, size, size);
+        }
+
+        if (p.weave) {
+            ctx.lineWidth = 1.2;
+            for (let x = 0; x < size; x += 6) {
+                ctx.strokeStyle = (x % 12 === 0) ? `rgba(${p.dark},0.11)` : 'rgba(255,255,255,0.16)';
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size); ctx.stroke();
+            }
+        } else if (p.hex) {
+            ctx.strokeStyle = `rgba(${p.accent},0.16)`;
+            ctx.lineWidth = 1.0;
+            for (let y = 0; y < size; y += 24) {
+                for (let x = (y % 48 === 0 ? 0 : 14); x < size; x += 28) {
+                    ctx.strokeRect(x, y, 10, 10);
+                }
+            }
+        } else if (p.stars) {
+            for (let i = 0; i < 120; i++) {
+                const sx = rand() * size, sy = rand() * size, sr = 1.5 + rand() * 3.5;
+                const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 2.2);
+                g.addColorStop(0, 'rgba(255,255,255,0.85)');
+                g.addColorStop(0.5, `rgba(${p.accent},0.40)`);
+                g.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(sx, sy, sr * 2.2, 0, Math.PI * 2); ctx.fill();
+            }
+        } else if (p.forged) {
+            for (let i = 0; i < 85; i++) {
+                ctx.lineWidth = 1.0 + rand() * 1.4;
+                ctx.strokeStyle = i % 3 === 0 ? `rgba(${p.accent},0.32)` : `rgba(${p.dark},0.28)`;
+                const x = rand() * size, y = rand() * size;
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 38, y + (rand() - 0.5) * 24); ctx.stroke();
+            }
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(2, 2);
+        tex.encoding = THREE.sRGBEncoding;
+        tex.magFilter = THREE.LinearFilter;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.anisotropy = 8;
+        this._skinHdCache[skinId] = tex;
+        return tex;
+    },
+
+    getCharTex() {
+        return (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) ? this.getCharHdTexture() : CHAR_GRUNGE_TEX;
+    },
+
+    getSkinTex(skinId) {
+        return (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) ? this.getSkinHdTexture(skinId) : getSkinTexture(skinId);
+    },
+
+    getNormalMap(tex, strength = 1.65) {
+        if (!tex || !tex.image || !tex.image.width || !tex.image.height) return null;
+        const cached = this._normalCache.get(tex);
+        if (cached && cached._srcImg === tex.image) return cached;
+
+        try {
+            const w = 256, h = 256;
+            const srcCanvas = document.createElement('canvas');
+            srcCanvas.width = w; srcCanvas.height = h;
+            const sCtx = srcCanvas.getContext('2d');
+            sCtx.drawImage(tex.image, 0, 0, w, h);
+            const src = sCtx.getImageData(0, 0, w, h).data;
+
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width = w; outCanvas.height = h;
+            const oCtx = outCanvas.getContext('2d');
+            const outImg = oCtx.createImageData(w, h);
+            const dst = outImg.data;
+
+            const luma = (px, py) => {
+                const wx = ((px % w) + w) % w;
+                const wy = ((py % h) + h) % h;
+                const idx = (wy * w + wx) * 4;
+                return (src[idx] * 0.299 + src[idx + 1] * 0.587 + src[idx + 2] * 0.114) / 255.0;
+            };
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const tl = luma(x - 1, y - 1), t = luma(x, y - 1), tr = luma(x + 1, y - 1);
+                    const l  = luma(x - 1, y),                           r  = luma(x + 1, y);
+                    const bl = luma(x - 1, y + 1), b = luma(x, y + 1), br = luma(x + 1, y + 1);
+                    const dX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+                    const dY = (bl + 2.0 * b + br) - (tl + 2.0 * t + tr);
+                    let nx = -dX * strength, ny = -dY * strength, nz = 1.0;
+                    const inv = 1.0 / Math.hypot(nx, ny, nz);
+                    nx *= inv; ny *= inv; nz *= inv;
+                    const idx = (y * w + x) * 4;
+                    dst[idx]     = Math.round((nx * 0.5 + 0.5) * 255);
+                    dst[idx + 1] = Math.round((ny * 0.5 + 0.5) * 255);
+                    dst[idx + 2] = Math.round((nz * 0.5 + 0.5) * 255);
+                    dst[idx + 3] = 255;
+                }
+            }
+            oCtx.putImageData(outImg, 0, 0);
+
+            const nTex = new THREE.CanvasTexture(outCanvas);
+            nTex.wrapS = tex.wrapS || THREE.RepeatWrapping;
+            nTex.wrapT = tex.wrapT || THREE.RepeatWrapping;
+            if (tex.repeat) nTex.repeat.copy(tex.repeat);
+            nTex.magFilter = THREE.LinearFilter;
+            nTex.minFilter = THREE.LinearMipmapLinearFilter;
+            nTex.anisotropy = 8;
+            nTex._srcImg = tex.image;
+            this._normalCache.set(tex, nTex);
+            return nTex;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    getEnvMap(renderer, themeIdx = 0) {
+        if (!renderer || typeof THREE.PMREMGenerator === 'undefined') return null;
+        const idx = (themeIdx === 1 || themeIdx === 2) ? themeIdx : 0;
+        if (this._envCache[idx]) return this._envCache[idx];
+
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        pmrem.compileEquirectangularShader();
+        const envScene = new THREE.Scene();
+
+        const palettes = {
+            0: { top: 0x6aa888, key: 0xd8f5b8, rim: 0x2a6699, ground: 0x162414 },
+            1: { top: 0x552218, key: 0xffaa55, rim: 0x662288, ground: 0x2e0904 },
+            2: { top: 0x8ad8ff, key: 0xe6f8ff, rim: 0x3b66cc, ground: 0x102840 }
+        };
+        const pal = palettes[idx];
+        envScene.background = new THREE.Color(pal.ground);
+
+        const panelGeo = new THREE.PlaneGeometry(14, 14);
+        const addPanel = (hex, x, y, z, rx, ry) => {
+            const m = new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide });
+            const mesh = new THREE.Mesh(panelGeo, m);
+            mesh.position.set(x, y, z);
+            mesh.rotation.set(rx, ry, 0);
+            envScene.add(mesh);
+        };
+        addPanel(pal.top, 0, 9, 0, Math.PI / 2, 0);
+        addPanel(pal.key, -8, 4, -7, 0.3, Math.PI / 4);
+        addPanel(pal.rim, 8, 3, 7, -0.2, -Math.PI * 0.75);
+
+        const rt = pmrem.fromScene(envScene, 0.04);
+        panelGeo.dispose();
+        envScene.traverse(c => { if (c.material) c.material.dispose(); });
+        pmrem.dispose();
+
+        this._envCache[idx] = rt.texture;
+        return rt.texture;
+    },
+
+    applyTerrainShader(mat, isWall = false) {
+        if (!mat || mat._ultraTerrainHooked) return mat;
+        mat._ultraTerrainHooked = true;
+        mat.customProgramCacheKey = () => isWall ? 'pc_ultra_wall_v1' : 'pc_ultra_floor_v1';
+        mat.onBeforeCompile = (shader) => {
+            shader.uniforms.uUltra = PcUltraGraphics.uUltra;
+            shader.uniforms.uBiomeId = PcUltraGraphics.uBiomeId;
+
+            shader.vertexShader = `
+                varying vec3 vUltraWPos;
+            ` + shader.vertexShader.replace(
+                '#include <project_vertex>',
+                `
+                vec4 uWp = vec4( transformed, 1.0 );
+                #ifdef USE_INSTANCING
+                    uWp = instanceMatrix * uWp;
+                #endif
+                uWp = modelMatrix * uWp;
+                vUltraWPos = uWp.xyz;
+                #include <project_vertex>
+                `
+            );
+
+            shader.fragmentShader = `
+                uniform float uUltra;
+                uniform float uBiomeId;
+                varying vec3 vUltraWPos;
+            ` + shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                isWall
+                ? `
+                #include <color_fragment>
+                if (uUltra > 0.5) {
+                    vec2 wp = vUltraWPos.xz * 0.018;
+                    float strata = sin(vUltraWPos.y * 0.28 + sin(wp.x * 2.0 + wp.y * 1.7) * 1.6);
+                    float blockVar = sin(wp.x * 1.3 + cos(wp.y * 1.1) * 1.5) * 0.5 + 0.5;
+                    float baseAO = smoothstep(-2.0, 20.0, vUltraWPos.y);
+                    float topCrest = smoothstep(26.0, 48.0, vUltraWPos.y);
+                    diffuseColor.rgb *= mix(0.62, 1.12, baseAO) * (0.92 + 0.14 * blockVar + 0.06 * strata);
+                    vec3 rimTint = uBiomeId > 1.5 ? vec3(0.06, 0.14, 0.22) : (uBiomeId > 0.5 ? vec3(0.18, 0.06, 0.02) : vec3(0.08, 0.12, 0.06));
+                    diffuseColor.rgb += rimTint * topCrest * 0.45;
+                }
+                `
+                : `
+                #include <color_fragment>
+                if (uUltra > 0.5) {
+                    // Anti-tiling world-space macro variazione che spezza la griglia 64x64 su schermi grandi
+                    vec2 wp = vUltraWPos.xz * 0.0085;
+                    float m1 = sin(wp.x * 1.9 + cos(wp.y * 1.6) * 1.4);
+                    float m2 = cos(wp.y * 2.3 - sin(wp.x * 1.4) * 1.3);
+                    float macro = clamp(0.5 + 0.26 * m1 + 0.24 * m2, 0.0, 1.0);
+                    float micro = sin(vUltraWPos.x * 0.22) * cos(vUltraWPos.z * 0.22) * 0.045;
+                    vec3 coolShift = uBiomeId > 1.5 ? vec3(0.88, 0.96, 1.08) : (uBiomeId > 0.5 ? vec3(0.86, 0.78, 0.82) : vec3(0.86, 0.96, 0.88));
+                    vec3 warmShift = uBiomeId > 1.5 ? vec3(1.04, 1.08, 1.12) : (uBiomeId > 0.5 ? vec3(1.14, 0.94, 0.86) : vec3(1.10, 1.05, 0.90));
+                    diffuseColor.rgb *= mix(coolShift, warmShift, macro) * (0.94 + macro * 0.14 + micro);
+                }
+                `
+            );
+        };
+        return mat;
+    },
+
+    createGodRayMaterial() {
+        const mat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1.0,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        mat.onBeforeCompile = (shader) => {
+            shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
+            shader.uniforms.uUltra = PcUltraGraphics.uUltra;
+            shader.vertexShader = 'varying vec2 vRayUv;\nvarying float vRayRimFade;\n' + shader.vertexShader;
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <project_vertex>',
+                `#include <project_vertex>
+                vRayUv = uv;
+                vec3 rNrm = normal;
+                #ifdef USE_INSTANCING
+                    rNrm = mat3(instanceMatrix) * rNrm;
+                #endif
+                vec3 rVN = normalize(normalMatrix * rNrm);
+                vec3 rVV = normalize(-mvPosition.xyz);
+                vRayRimFade = pow(abs(dot(rVN, rVV)), 1.65);`
+            );
+            shader.fragmentShader = 'uniform float uTime;\nuniform float uUltra;\nvarying vec2 vRayUv;\nvarying float vRayRimFade;\n' + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <color_fragment>',
+                `#include <color_fragment>
+                float vFade = smoothstep(0.0, 0.04, vRayUv.y) * pow(1.0 - clamp(vRayUv.y, 0.0, 1.0), 2.4);
+                float shaft = mix(1.0, 0.72 + 0.28 * sin(vRayUv.x * 18.849 + uTime * 0.7), uUltra);
+                diffuseColor.a *= vFade * vRayRimFade * shaft * mix(0.045, 0.085, uUltra);`
+            );
+        };
+        return mat;
+    },
+
+    getStreakTexture() {
+        if (this._streakTex) return this._streakTex;
+        const c = document.createElement('canvas');
+        c.width = 128; c.height = 32;
+        const ctx = c.getContext('2d');
+        const g = ctx.createLinearGradient(0, 0, 128, 0);
+        g.addColorStop(0.0, 'rgba(255,255,255,0.0)');
+        g.addColorStop(0.45, 'rgba(255,255,255,0.42)');
+        g.addColorStop(0.88, 'rgba(255,255,255,0.92)');
+        g.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 128, 32);
+
+        // Sfumatura verticale morbida sui bordi della scia
+        ctx.globalCompositeOperation = 'destination-in';
+        const vg = ctx.createLinearGradient(0, 0, 0, 32);
+        vg.addColorStop(0.0, 'rgba(255,255,255,0.0)');
+        vg.addColorStop(0.5, 'rgba(255,255,255,1.0)');
+        vg.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, 128, 32);
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.encoding = THREE.sRGBEncoding;
+        this._streakTex = tex;
+        return tex;
+    },
+
+    createPostPass() {
+        if (typeof THREE.ShaderPass === 'undefined') return null;
+        const shader = {
+            uniforms: {
+                tDiffuse: { value: null },
+                uResolution: { value: new THREE.Vector2(window.innerWidth || 1920, window.innerHeight || 1080) },
+                uBiomeId: PcUltraGraphics.uBiomeId,
+                uTrauma: PcUltraGraphics.uTrauma
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec2 uResolution;
+                uniform float uBiomeId;
+                uniform float uTrauma;
+                varying vec2 vUv;
+
+                float getLuma(vec3 c) {
+                    return dot(c, vec3(0.299, 0.587, 0.114));
+                }
+
+                void main() {
+                    vec2 invRes = 1.0 / max(uResolution, vec2(1.0));
+
+                    // 1. FXAA leggero sui bordi per eliminare la seghettatura post-Bloom su Full HD
+                    vec3 rgbNW = texture2D(tDiffuse, vUv + vec2(-1.0, -1.0) * invRes).rgb;
+                    vec3 rgbNE = texture2D(tDiffuse, vUv + vec2( 1.0, -1.0) * invRes).rgb;
+                    vec3 rgbSW = texture2D(tDiffuse, vUv + vec2(-1.0,  1.0) * invRes).rgb;
+                    vec3 rgbSE = texture2D(tDiffuse, vUv + vec2( 1.0,  1.0) * invRes).rgb;
+                    vec3 rgbM  = texture2D(tDiffuse, vUv).rgb;
+
+                    float lumaNW = getLuma(rgbNW);
+                    float lumaNE = getLuma(rgbNE);
+                    float lumaSW = getLuma(rgbSW);
+                    float lumaSE = getLuma(rgbSE);
+                    float lumaM  = getLuma(rgbM);
+
+                    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
+                    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+
+                    vec2 dir;
+                    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+                    dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+                    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.03125, 0.0078125);
+                    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+                    dir = clamp(dir * rcpDirMin, vec2(-6.0), vec2(6.0)) * invRes;
+
+                    vec3 rgbA = 0.5 * (
+                        texture2D(tDiffuse, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
+                        texture2D(tDiffuse, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
+                    );
+                    vec3 rgbB = rgbA * 0.5 + 0.25 * (
+                        texture2D(tDiffuse, vUv + dir * -0.5).rgb +
+                        texture2D(tDiffuse, vUv + dir *  0.5).rgb
+                    );
+                    float lumaB = getLuma(rgbB);
+                    vec3 col = (lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB;
+
+                    // 2. Contrast-Adaptive Sharpen leggero (esalta i dettagli nitidi senza artefatti)
+                    vec3 n = texture2D(tDiffuse, vUv + vec2(0.0, -invRes.y)).rgb;
+                    vec3 s = texture2D(tDiffuse, vUv + vec2(0.0,  invRes.y)).rgb;
+                    vec3 e = texture2D(tDiffuse, vUv + vec2( invRes.x, 0.0)).rgb;
+                    vec3 w = texture2D(tDiffuse, vUv + vec2(-invRes.x, 0.0)).rgb;
+                    vec3 blur4 = (n + s + e + w) * 0.25;
+                    float edgeContrast = lumaMax - lumaMin;
+                    float sharpAmt = mix(0.20, 0.04, smoothstep(0.08, 0.45, edgeContrast));
+                    col = clamp(col + (col - blur4) * sharpAmt, 0.0, 1.5);
+
+                    // 3. Aberrazione cromatica radiale sugli impatti pesanti (trauma)
+                    if (uTrauma > 0.08) {
+                        vec2 fromCenter = vUv - vec2(0.5);
+                        float edgeDist = dot(fromCenter, fromCenter);
+                        vec2 shift = fromCenter * (uTrauma * 0.0065 * edgeDist);
+                        col.r = mix(col.r, texture2D(tDiffuse, vUv + shift).r, 0.65);
+                        col.b = mix(col.b, texture2D(tDiffuse, vUv - shift).b, 0.65);
+                    }
+
+                    // 4. Curva Filmic-Arcade morbida sui picchi + micro Color Grading per bioma
+                    col = (col * (1.08 + 0.35 * col)) / (1.0 + 0.42 * col);
+                    vec3 shadowTint = uBiomeId > 1.5 ? vec3(0.95, 0.99, 1.06) : (uBiomeId > 0.5 ? vec3(1.04, 0.96, 0.95) : vec3(0.96, 1.02, 0.97));
+                    float lum = getLuma(col);
+                    col *= mix(shadowTint, vec3(1.02, 1.01, 0.99), smoothstep(0.15, 0.75, lum));
+
+                    gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+                }
+            `
+        };
+        return new THREE.ShaderPass(shader);
+    },
+
+    applyEnvironment(themeIdx = 0) {
+        if (typeof Game === 'undefined' || !Game.scene || !Game.renderer) return;
+        this.uBiomeId.value = (themeIdx === 1 || themeIdx === 2) ? themeIdx : 0;
+        if (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) {
+            Game.scene.environment = this.getEnvMap(Game.renderer, themeIdx);
+        } else {
+            Game.scene.environment = null;
+        }
+    },
+
+    syncState() {
+        const isUltraPC = (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC);
+        this.uUltra.value = isUltraPC ? 1.0 : 0.0;
+
+        const themeIdx = (typeof Game !== 'undefined' && Game.currentThemeIndex !== undefined) ? Game.currentThemeIndex : 0;
+        this.applyEnvironment(themeIdx);
+
+        if (typeof Game !== 'undefined') {
+            if (Game.rimLight) {
+                Game.rimLight.intensity = isUltraPC ? 0.46 : 0.0;
+                const rimHex = themeIdx === 2 ? 0x55bbff : (themeIdx === 1 ? 0xff7744 : 0x66cc99);
+                Game.rimLight.color.setHex(rimHex);
+            }
+            if (Game.ultraPostPass) {
+                Game.ultraPostPass.enabled = isUltraPC;
+                if (Game.ultraPostPass.uniforms && Game.ultraPostPass.uniforms.uResolution && Game.renderer) {
+                    const pr = AppSettings.getTargetPixelRatio();
+                    Game.ultraPostPass.uniforms.uResolution.value.set(Math.max(1, Game.width * pr), Math.max(1, Game.height * pr));
+                }
+            }
+            if (Game.ambientGpuSystem) {
+                Game.ambientGpuSystem.visible = isUltraPC && (themeIdx !== 2);
+                if (Game.ambientGpuMat && Game.ambientGpuMat.uniforms) {
+                    const pr = AppSettings.getTargetPixelRatio();
+                    Game.ambientGpuMat.uniforms.uTheme.value = themeIdx;
+                    Game.ambientGpuMat.uniforms.uSizeScale.value = 1950.0 * pr;
+                }
+            }
+            if (Game.ensureFlashLights) Game.ensureFlashLights();
+        }
+
+        // Normal Maps procedurali su Terreno, Muri e Props solo in PC Ultra
+        if (window.GLOBAL_THEME_MATS && typeof Preloader !== 'undefined' && Preloader.textures) {
+            const variants = ['', '_lava', '_ice'];
+            for (let i = 0; i < window.GLOBAL_THEME_MATS.length; i++) {
+                const mats = window.GLOBAL_THEME_MATS[i];
+                const v = variants[i] || '';
+                if (!mats) continue;
+                const pairs = [
+                    { mat: mats.dirt, tex: Preloader.textures['dirt' + v], str: 1.5, scale: 0.45 },
+                    { mat: mats.rock, tex: Preloader.textures['rock' + v], str: 1.8, scale: 0.55 },
+                    { mat: mats.wall, tex: Preloader.textures['wall' + v] || Preloader.textures['rock' + v], str: 2.1, scale: 0.65 }
+                ];
+                for (let j = 0; j < pairs.length; j++) {
+                    const pr = pairs[j];
+                    if (!pr.mat) continue;
+                    const wantNm = isUltraPC ? this.getNormalMap(pr.tex, pr.str) : null;
+                    if (!!pr.mat.normalMap !== !!wantNm || pr.mat.normalMap !== wantNm) {
+                        const changedPresence = (!!pr.mat.normalMap !== !!wantNm);
+                        pr.mat.normalMap = wantNm;
+                        if (wantNm && pr.mat.normalScale) pr.mat.normalScale.set(pr.scale, pr.scale);
+                        if (changedPresence) pr.mat.needsUpdate = true;
+                    }
+                }
+            }
+        }
+
+        if (typeof SharedMat !== 'undefined') {
+            const propPairs = [
+                { mat: SharedMat.crate, str: 1.7, scale: 0.50 },
+                { mat: SharedMat.urn, str: 1.5, scale: 0.42 }
+            ];
+            for (let i = 0; i < propPairs.length; i++) {
+                const pm = propPairs[i];
+                if (!pm.mat) continue;
+                const wantNm = isUltraPC ? this.getNormalMap(pm.mat.map, pm.str) : null;
+                if (pm.mat.normalMap !== wantNm) {
+                    const changedPresence = (!!pm.mat.normalMap !== !!wantNm);
+                    pm.mat.normalMap = wantNm;
+                    if (wantNm && pm.mat.normalScale) pm.mat.normalScale.set(pm.scale, pm.scale);
+                    if (changedPresence) pm.mat.needsUpdate = true;
+                }
+            }
+            if (SharedMat.coin) {
+                SharedMat.coin.envMapIntensity = isUltraPC ? 1.35 : 1.0;
+            }
+        }
+
+        if (typeof Game !== 'undefined' && Game.enemies) {
+            const cTex = this.getCharTex();
+            for (let i = 0; i < Game.enemies.length; i++) {
+                const e = Game.enemies[i];
+                if (!e || !e.mat || e.type === 'crystal' || e.isPursuer) continue;
+                const wantBump = !AppSettings.useMobileLimits ? cTex : null;
+                if (e.mat.map !== cTex || e.mat.bumpMap !== wantBump) {
+                    const chg = (!!e.mat.bumpMap !== !!wantBump);
+                    e.mat.map = cTex;
+                    e.mat.bumpMap = wantBump;
+                    if (chg) e.mat.needsUpdate = true;
+                }
+            }
+        }
+    }
+};
+
 // --- TEXTURE E MATERIALI PROCEDURALI COERENTI PER OGNI SKIN (Stile Miniatura/Materico Coerente) ---
 const SKIN_TEX_CACHE = {};
 function getSkinTexture(skinId) {
@@ -7527,14 +8123,17 @@ function isStarterHatSkin(skinOrId) {
 
 function applySkinMaterials(parts, skin) {
     if (!parts || !skin) return;
-    const tex = getSkinTexture(skin.id);
+    const isUltraPC = (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC);
+    const tex = (typeof PcUltraGraphics !== 'undefined') ? PcUltraGraphics.getSkinTex(skin.id) : getSkinTexture(skin.id);
     const cfg = getSkinMatConfig(skin.id);
+    const metalBoost = isUltraPC ? 0.14 : 0.0;
     if (parts.body && parts.body.material && parts.body.material.isMeshStandardMaterial) {
         const m = parts.body.material;
         m.color.setHex(skin.colors.body);
         m.map = tex;
         m.roughness = cfg.bodyRough;
-        m.metalness = cfg.bodyMetal;
+        m.metalness = Math.min(0.85, cfg.bodyMetal + metalBoost * 0.6);
+        m.envMapIntensity = isUltraPC ? 1.15 : 1.0;
         if (m.bumpMap) { m.bumpMap = tex; m.bumpScale = cfg.bumpScale; }
         m.needsUpdate = true;
     }
@@ -7543,7 +8142,8 @@ function applySkinMaterials(parts, skin) {
         m.color.setHex(skin.colors.head);
         m.map = tex;
         m.roughness = cfg.headRough;
-        m.metalness = cfg.headMetal;
+        m.metalness = Math.min(0.85, cfg.headMetal + metalBoost * 0.5);
+        m.envMapIntensity = isUltraPC ? 1.15 : 1.0;
         m.needsUpdate = true;
     }
     if (parts.scarf && parts.scarf.material && parts.scarf.material.isMeshStandardMaterial) {
@@ -7552,6 +8152,7 @@ function applySkinMaterials(parts, skin) {
         m.map = tex;
         m.roughness = cfg.scarfRough;
         m.metalness = cfg.scarfMetal;
+        m.envMapIntensity = isUltraPC ? 1.05 : 1.0;
         if (m.bumpMap) m.bumpMap = tex;
         m.needsUpdate = true;
     }
@@ -7560,7 +8161,8 @@ function applySkinMaterials(parts, skin) {
         m.color.setHex(skin.colors.staff);
         m.map = tex;
         m.roughness = cfg.staffRough;
-        m.metalness = cfg.staffMetal;
+        m.metalness = Math.min(0.95, cfg.staffMetal + metalBoost);
+        m.envMapIntensity = isUltraPC ? 1.35 : 1.0;
         m.needsUpdate = true;
     }
     if (isStarterHatSkin(skin)) {
@@ -7735,6 +8337,17 @@ function createAuraIcon(type) {
     return tex;
 }
 function createObeliskGeometry() {
+    const hiPoly = (typeof isTouchDevice !== 'undefined') ? !isTouchDevice : true;
+    if (hiPoly) {
+        let plinth = new THREE.BoxGeometry(26, 4, 26); plinth.translate(0, 2, 0);
+        let base = new THREE.BoxGeometry(21, 7, 21); base.translate(0, 7.5, 0);
+        let shaft = new THREE.CylinderGeometry(6, 10, 48, 4); shaft.rotateY(Math.PI/4); shaft.translate(0, 35, 0);
+        let collar = new THREE.BoxGeometry(10.5, 2.5, 10.5); collar.translate(0, 59.5, 0);
+        let cap = new THREE.ConeGeometry(6.2 * Math.SQRT2, 12.5, 4); cap.rotateY(Math.PI/4); cap.translate(0, 66.8, 0);
+        let merged = THREE.BufferGeometryUtils.mergeBufferGeometries([plinth, base, shaft, collar, cap]);
+        merged.computeVertexNormals();
+        return merged;
+    }
     let base = new THREE.BoxGeometry(22, 10, 22); base.translate(0, 5, 0);
     let shaft = new THREE.CylinderGeometry(6, 10, 50, 4); shaft.rotateY(Math.PI/4); shaft.translate(0, 35, 0);
     let cap = new THREE.ConeGeometry(6 * Math.SQRT2, 12, 4); cap.rotateY(Math.PI/4); cap.translate(0, 66, 0);
@@ -7786,11 +8399,15 @@ const SharedGeo = {
         parts.forEach(g => g.dispose());
         return merged;
     })(),
-    box: new THREE.BoxGeometry(1, 1, 1), sphere: new THREE.SphereGeometry(1, 8, 8), cylinder: new THREE.CylinderGeometry(1, 1, 1, 8), 
-    cone: new THREE.ConeGeometry(1, 1, 8), icosahedron: new THREE.IcosahedronGeometry(1, 0), torus: new THREE.TorusGeometry(1, 0.1, 8, 24),
+    box: new THREE.BoxGeometry(1, 1, 1),
+    sphere: new THREE.SphereGeometry(1, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 18 : 8, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 14 : 8),
+    cylinder: new THREE.CylinderGeometry(1, 1, 1, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 16 : 8),
+    cone: new THREE.ConeGeometry(1, 1, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 16 : 8),
+    icosahedron: new THREE.IcosahedronGeometry(1, 0),
+    torus: new THREE.TorusGeometry(1, 0.1, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 12 : 8, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 36 : 24),
     tetrahedron: new THREE.TetrahedronGeometry(1, 0), bloodPlane: new THREE.PlaneGeometry(40, 40), rockDebris: new THREE.DodecahedronGeometry(1.5, 0),
     heart: (function(){ const shape = new THREE.Shape(); shape.moveTo(0, 1.5); shape.bezierCurveTo(2, 3.5, 4, 1.5, 0, -2.5); shape.bezierCurveTo(-4, 1.5, -2, 3.5, 0, 1.5); const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.5, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.2, bevelThickness: 0.2 }); geo.center(); return geo; })(),
-    coin: new THREE.CylinderGeometry(10, 10, 2, 16),
+    coin: new THREE.CylinderGeometry(10, 10, 2, (typeof isTouchDevice !== 'undefined' && !isTouchDevice) ? 24 : 16),
     energyOrb: (function() {
         const parts = [
             new THREE.IcosahedronGeometry(0.75, 1),
@@ -8626,12 +9243,14 @@ SharedMat.urn = new THREE.MeshPhongMaterial({ map: createPatternTexture('urn'), 
 const SharedGeoSet = new Set(Object.values(SharedGeo));
 const SharedMatSet = new Set(Object.values(SharedMat));
 function applyCharacterShader(material, rimStrength = 0.65) {
-    material.customProgramCacheKey = () => 'char_rim_' + rimStrength.toFixed(2);
+    material.customProgramCacheKey = () => 'char_rim_ultra_' + rimStrength.toFixed(2);
     material.onBeforeCompile = (shader) => {
+        shader.uniforms.uUltra = (typeof PcUltraGraphics !== 'undefined') ? PcUltraGraphics.uUltra : { value: 0.0 };
         // Calcola Altezza e Rim Light nel Vertex Shader: 100% compatibile con MeshLambertMaterial (Mobile) e MeshPhongMaterial (PC)
         shader.vertexShader = `
             varying float vCharHeight;
             varying float vCharRim;
+            varying float vCharRawRim;
         ` + shader.vertexShader.replace(
             '#include <project_vertex>',
             `
@@ -8640,20 +9259,28 @@ function applyCharacterShader(material, rimStrength = 0.65) {
             vec3 charN = normalize( transformedNormal );
             vec3 charV = normalize( -mvPosition.xyz );
             float rawRim = 1.0 - max( dot( charV, charN ), 0.0 );
+            vCharRawRim = rawRim;
             vCharRim = smoothstep( 0.50, 1.0, rawRim );
             `
         );
         shader.fragmentShader = `
+            uniform float uUltra;
             varying float vCharHeight;
             varying float vCharRim;
+            varying float vCharRawRim;
         ` + shader.fragmentShader.replace(
             '#include <dithering_fragment>',
             `
             // 1. Gradiente Verticale (Ambient Occlusion ai piedi, luce sulla testa)
-            gl_FragColor.rgb *= mix(0.55, 1.18, vCharHeight);
+            float hLo = mix(0.55, 0.45, uUltra);
+            float hHi = mix(1.18, 1.24, uUltra);
+            gl_FragColor.rgb *= mix(hLo, hHi, vCharHeight);
 
-            // 2. Fresnel Rim Light pre-calcolata sui bordi della silhouette
-            gl_FragColor.rgb += (gl_FragColor.rgb + vec3(0.18)) * vCharRim * ${rimStrength.toFixed(2)};
+            // 2. Stylized Rim Light + micro-contorno scuro sui bordi estremi in PC Ultra
+            float rimMask = mix(vCharRim, smoothstep(0.42, 0.90, vCharRawRim) * 1.15, uUltra);
+            gl_FragColor.rgb += (gl_FragColor.rgb + vec3(0.18)) * rimMask * ${rimStrength.toFixed(2)};
+            float inkEdge = smoothstep(0.84, 0.99, vCharRawRim) * uUltra;
+            gl_FragColor.rgb *= mix(1.0, 0.52, inkEdge);
 
             #include <dithering_fragment>
             `
@@ -11183,6 +11810,12 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
         this.scene.add(this.dirLight.target);
         this.updateShadowConfig();
 
+        // Luce di rimbalzo/contorno (Rim Fill) opposta al sole per staccare i modelli su PC Ultra
+        this.rimLight = new THREE.DirectionalLight(0x88bbff, AppSettings.isUltraPC ? 0.46 : 0.0);
+        this.rimLight.position.set(420, 460, 420);
+        this.rimLight.castShadow = false;
+        this.scene.add(this.rimLight);
+
         // OTTIMIZZAZIONE VRAM MOBILE: Istanzia EffectComposer e UnrealBloomPass su PC o Mobile MEGA
         this.ensureComposer();
         this.uiCtx = this.uiCanvas.getContext('2d'); this.resize(); window.addEventListener('resize', () => this.resize());
@@ -11445,6 +12078,77 @@ this.dirLight = new THREE.DirectionalLight(0x335577, 1.4);
             this.snowSystem.visible = false;
             this.scene.add(this.snowSystem);
         }
+        // Particelle GPU ambientali per biomi PC Ultra (lucciole in Foresta, braci ascendenti in Lava)
+        if (!AppSettings.useMobileLimits) {
+            const ambCount = 200;
+            const ambPos = new Float32Array(ambCount * 3);
+            const ambData = new Float32Array(ambCount * 3);
+            for (let i = 0; i < ambCount; i++) {
+                ambPos[i * 3] = (Math.random() - 0.5) * 1400;
+                ambPos[i * 3 + 1] = Math.random();
+                ambPos[i * 3 + 2] = (Math.random() - 0.5) * 1400;
+                ambData[i * 3] = Math.random() * 6.2831;
+                ambData[i * 3 + 1] = 0.65 + Math.random() * 0.85;
+                ambData[i * 3 + 2] = 0.7 + Math.random() * 0.7;
+            }
+            const ambGeo = new THREE.BufferGeometry();
+            ambGeo.setAttribute('position', new THREE.BufferAttribute(ambPos, 3));
+            ambGeo.setAttribute('aData', new THREE.BufferAttribute(ambData, 3));
+            this.ambientGpuMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uFocusPos: { value: new THREE.Vector2(0, 0) },
+                    uTheme: { value: 0 },
+                    uSizeScale: { value: 1950.0 * AppSettings.getTargetPixelRatio() }
+                },
+                vertexShader: `
+                    attribute vec3 aData;
+                    uniform float uTime;
+                    uniform vec2 uFocusPos;
+                    uniform float uTheme;
+                    uniform float uSizeScale;
+                    varying float vAlpha;
+                    varying vec3 vTint;
+                    void main() {
+                        float halfSpan = 700.0;
+                        float span = 1400.0;
+                        float speed = aData.y;
+                        float driftX = sin(uTime * 0.55 * speed + aData.x) * 42.0;
+                        float driftZ = cos(uTime * 0.48 * speed + aData.x * 1.3) * 42.0;
+                        float px = mod(position.x + driftX - uFocusPos.x + halfSpan, span) - halfSpan + uFocusPos.x;
+                        float pz = mod(position.z + driftZ - uFocusPos.y + halfSpan, span) - halfSpan + uFocusPos.y;
+                        float yPhase = fract(position.y + uTime * (uTheme > 0.5 ? 0.14 : 0.025) * speed);
+                        float py = uTheme > 0.5 ? (6.0 + yPhase * 155.0) : (12.0 + sin(uTime * 1.1 * speed + aData.x) * 18.0 + position.y * 85.0);
+                        vec4 mvPos = modelViewMatrix * vec4(px, py, pz, 1.0);
+                        gl_Position = projectionMatrix * mvPos;
+                        float edgeFade = smoothstep(0.0, 0.15, yPhase) * (1.0 - smoothstep(0.75, 1.0, yPhase));
+                        float pulse = 0.55 + 0.45 * sin(uTime * (uTheme > 0.5 ? 6.0 : 2.8) * speed + aData.x);
+                        vAlpha = (uTheme > 0.5 ? edgeFade : (0.35 + 0.65 * pulse)) * 0.85;
+                        vTint = uTheme > 0.5 ? mix(vec3(1.0, 0.28, 0.05), vec3(1.0, 0.78, 0.25), pulse) : mix(vec3(0.45, 1.0, 0.55), vec3(0.95, 1.0, 0.45), pulse);
+                        gl_PointSize = clamp((uSizeScale * aData.z * (uTheme > 0.5 ? 0.34 : 0.42)) / max(1.0, -mvPos.z), 1.5, 14.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying float vAlpha;
+                    varying vec3 vTint;
+                    void main() {
+                        vec2 uv = gl_PointCoord - vec2(0.5);
+                        float d = length(uv);
+                        if (d > 0.5) discard;
+                        float glow = pow(1.0 - d * 2.0, 1.9);
+                        gl_FragColor = vec4(vTint, glow * vAlpha);
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            this.ambientGpuSystem = new THREE.Points(ambGeo, this.ambientGpuMat);
+            this.ambientGpuSystem.frustumCulled = false;
+            this.ambientGpuSystem.renderOrder = 6;
+            this.ambientGpuSystem.visible = AppSettings.isUltraPC && this.currentThemeIndex !== 2;
+            this.scene.add(this.ambientGpuSystem);
+        }
        // ^^^ INCOLLA SOPRA QUESTA RIGA ^^^
         this.prewarmShaders(); this.setupInputs(); this.initPools(); 
         
@@ -11527,6 +12231,17 @@ prewarmShaders() {
                     rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 15 : 12, specular: isIceBiom ? 0x142433 : 0x161616, alphaMap: GLOBAL_ALPHA_TEX, transparent: true, depthWrite: false, alphaTest: 0.03 }),
                     wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 12 : 8, specular: isIceBiom ? 0x101d29 : 0x121212, flatShading: true })
                 };
+                if (!AppSettings.useMobileLimits) {
+                    PcUltraGraphics.applyTerrainShader(mats.dirt, false);
+                    PcUltraGraphics.applyTerrainShader(mats.grass, false);
+                    PcUltraGraphics.applyTerrainShader(mats.rock, false);
+                    PcUltraGraphics.applyTerrainShader(mats.wall, true);
+                    if (AppSettings.isUltraPC) {
+                        mats.dirt.normalMap = PcUltraGraphics.getNormalMap(tDirt, 1.5); if (mats.dirt.normalMap && mats.dirt.normalScale) mats.dirt.normalScale.set(0.45, 0.45);
+                        mats.rock.normalMap = PcUltraGraphics.getNormalMap(tRock, 1.8); if (mats.rock.normalMap && mats.rock.normalScale) mats.rock.normalScale.set(0.55, 0.55);
+                        mats.wall.normalMap = PcUltraGraphics.getNormalMap(tWall || tRock, 2.1); if (mats.wall.normalMap && mats.wall.normalScale) mats.wall.normalScale.set(0.65, 0.65);
+                    }
+                }
                 window.GLOBAL_THEME_MATS.push(mats);
                 
                 // Mettiamo i nuovi materiali nella finta scena per dirgli "Compilali Subito!"
@@ -11578,14 +12293,21 @@ prewarmShaders() {
         const bSpec = this.getBloomSpec(this.currentThemeIndex);
         this.bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(Math.max(1, this.width / 2), Math.max(1, this.height / 2)), bSpec.strength, bSpec.radius, bSpec.threshold);
         this.composer = new THREE.EffectComposer(this.renderer);
+        if (this.composer.setPixelRatio) this.composer.setPixelRatio(AppSettings.getTargetPixelRatio());
         this.composer.addPass(renderScene);
         this.composer.addPass(this.bloomPass);
+        this.ultraPostPass = PcUltraGraphics.createPostPass();
+        if (this.ultraPostPass) {
+            this.ultraPostPass.enabled = AppSettings.isUltraPC;
+            this.composer.addPass(this.ultraPostPass);
+        }
         this.applyBloomSpec(this.currentThemeIndex);
     },
     ensureFlashLights() {
         if (!this.scene || AppSettings.useMobileLimits) return;
         if (!this.flashLights) this.flashLights = [];
-        while (this.flashLights.length < 3) {
+        const targetCount = 10;
+        while (this.flashLights.length < targetCount) {
             let l = new THREE.PointLight(0xffffff, 0, 400, 2.0);
             this.scene.add(l);
             this.flashLights.push({ light: l, life: 0, maxLife: 0 });
@@ -11703,8 +12425,9 @@ pushDebris(px, pz, radius, force) {
     },
     spawnLightFlash(x, z, colorHex, intensity, distance, duration = 0.2) {
         if (AppSettings.useMobileLimits || AppSettings.isLow || !this.flashLights || this.flashLights.length === 0) return;
-        let fl = this.flashLights[this._flashLightIdx];
-        this._flashLightIdx = (this._flashLightIdx + 1) % (AppSettings.useMobileLimits && AppSettings.isBalanced ? 2 : 3);
+        const poolCount = this.flashLights.length;
+        let fl = this.flashLights[this._flashLightIdx % poolCount];
+        this._flashLightIdx = (this._flashLightIdx + 1) % poolCount;
         if (AppSettings.useMobileLimits && AppSettings.isBalanced) distance *= 0.85;
         fl.light.color.setHex(colorHex);
         fl.light.intensity = intensity;
@@ -11968,8 +12691,18 @@ pushDebris(px, pz, radius, force) {
             this.uiCtx.imageSmoothingEnabled = false; 
         }
         
-        if (this.composer) this.composer.setSize(this.width, this.height);
+        if (this.composer) {
+            if (this.composer.setPixelRatio) this.composer.setPixelRatio(AppSettings.getTargetPixelRatio());
+            this.composer.setSize(this.width, this.height);
+        }
         if (this.bloomPass) this.bloomPass.setSize(Math.max(1, Math.floor(this.width / 2)), Math.max(1, Math.floor(this.height / 2)));
+        if (this.ultraPostPass && this.ultraPostPass.uniforms && this.ultraPostPass.uniforms.uResolution) {
+            const pr = AppSettings.getTargetPixelRatio();
+            this.ultraPostPass.uniforms.uResolution.value.set(Math.max(1, this.width * pr), Math.max(1, this.height * pr));
+        }
+        if (this.ambientGpuMat && this.ambientGpuMat.uniforms && this.ambientGpuMat.uniforms.uSizeScale) {
+            this.ambientGpuMat.uniforms.uSizeScale.value = 1950.0 * AppSettings.getTargetPixelRatio();
+        }
         if (this.scene && this.scene.fog && !(this.isCorrupted && this.corruptedType === 'darkness')) {
             let fScale = Math.max(1.05, this.getMobileAspectScale());
             this.scene.fog.near = 700 * fScale;
@@ -12281,6 +13014,11 @@ if (this.floor >= 3 && type !== 'dark_prophet' && Math.random() < (this.floor <=
             this.snowMat.uniforms.uTime.value = this.snowTime;
             this.snowMat.uniforms.uFocusPos.value.set(this._camFocusX, this._camFocusZ);
         }
+        if (this.ambientGpuSystem && this.ambientGpuSystem.visible && this.ambientGpuMat) {
+            this.ambientTime = (this.ambientTime || 0) + dt;
+            this.ambientGpuMat.uniforms.uTime.value = this.ambientTime;
+            this.ambientGpuMat.uniforms.uFocusPos.value.set(this._camFocusX, this._camFocusZ);
+        }
     },
     
     updateMouseWorld() {
@@ -12393,7 +13131,7 @@ loop(timestamp) {
                 this.player.mesh.updateMatrix();
                 this.player.mesh.updateMatrixWorld(true);
 
-                if (this.player.shadowMesh && !AppSettings.shadowsEnabled) {
+                if (this.player.shadowMesh && AppSettings.showContactShadows) {
                     this.player.shadowMesh.visible = true;
                     let dropShadowScale = (SkinSystem.selectedId === 'void_walker' ? 30 : 36) * (0.25 + 0.75 * dropCurve);
                     this.player.shadowMesh.position.set(this.player.x + 2, 0.45, this.player.y + 3);
@@ -12738,6 +13476,7 @@ loop(timestamp) {
         if (this.snowSystem) {
             this.snowSystem.visible = (this.currentThemeIndex === 2);
         }
+        if (typeof PcUltraGraphics !== 'undefined') PcUltraGraphics.syncState();
         if (window.GLOBAL_FOG_MAT) {
             window.GLOBAL_FOG_MAT.opacity = (this.currentThemeIndex === 2) ? 0.12 : (this.currentThemeIndex === 1 ? 0.13 : 0.15);
             if (currentTheme.groundMist) window.GLOBAL_FOG_MAT.color.setHex(currentTheme.groundMist);
@@ -12924,7 +13663,7 @@ loop(timestamp) {
                 if (!this.player.shadowMesh.parent) Game.scene.add(this.player.shadowMesh);
                 this.player.shadowMesh.position.set(this.player.x + 2, 0.45, this.player.y + 3);
                 this.player.shadowMesh.updateMatrix();
-                this.player.shadowMesh.visible = !AppSettings.shadowsEnabled;
+                this.player.shadowMesh.visible = AppSettings.showContactShadows;
             }
             // Reset totale delle essenze attive e dei buff temporanei ad ogni nuovo piano
             this.player.essenceList.length = 0;
@@ -13058,6 +13797,7 @@ startGame(diffMult) {
         if (this.snowSystem) {
             this.snowSystem.visible = (targetThemeIdx === 2);
         }
+        if (typeof PcUltraGraphics !== 'undefined') PcUltraGraphics.syncState();
 
         const map = this.map;
         const prevMats = (map && map.meshDirt && map.meshDirt.material) ? {
@@ -14460,7 +15200,7 @@ startGame(diffMult) {
                 let distToCamSq = (camX - e.x) * (camX - e.x) + (camY - e.y) * (camY - e.y);
                 let isVisible = (distToCamSq < 1600000); // circa 1250 unità di distanza visiva
                 e.mesh.visible = isVisible;
-                if (e.shadowMesh) e.shadowMesh.visible = isVisible && !AppSettings.shadowsEnabled;
+                if (e.shadowMesh) e.shadowMesh.visible = isVisible && AppSettings.showContactShadows;
                 
                 if (!isVisible) {
                     e.mesh.matrixAutoUpdate = false;
@@ -14808,6 +15548,7 @@ startGame(diffMult) {
         }
 
         if (!AppSettings.isLow && !AppSettings.useMobileLimits && this.composer) {
+            PcUltraGraphics.uTrauma.value = this.trauma || 0;
             this.composer.render();
         } else {
             this.renderer.render(this.scene, this.camera); 
@@ -16074,6 +16815,18 @@ class GameMap {
                     rock: new MapMaterialClass({ map: tRock, shininess: isIceBiom ? 15 : 12, specular: isIceBiom ? 0x142433 : 0x161616, alphaMap: alphaTex, transparent: true, depthWrite: false, alphaTest: 0.03 }),
                     wall: new MapMaterialClass({ map: tWall || tRock, shininess: isIceBiom ? 12 : 8, specular: isIceBiom ? 0x101d29 : 0x121212, flatShading: true })
                 };
+                if (!AppSettings.useMobileLimits) {
+                    const tm = window.GLOBAL_THEME_MATS[i];
+                    PcUltraGraphics.applyTerrainShader(tm.dirt, false);
+                    PcUltraGraphics.applyTerrainShader(tm.grass, false);
+                    PcUltraGraphics.applyTerrainShader(tm.rock, false);
+                    PcUltraGraphics.applyTerrainShader(tm.wall, true);
+                    if (AppSettings.isUltraPC) {
+                        tm.dirt.normalMap = PcUltraGraphics.getNormalMap(tDirt, 1.5); if (tm.dirt.normalMap && tm.dirt.normalScale) tm.dirt.normalScale.set(0.45, 0.45);
+                        tm.rock.normalMap = PcUltraGraphics.getNormalMap(tRock, 1.8); if (tm.rock.normalMap && tm.rock.normalScale) tm.rock.normalScale.set(0.55, 0.55);
+                        tm.wall.normalMap = PcUltraGraphics.getNormalMap(tWall || tRock, 2.1); if (tm.wall.normalMap && tm.wall.normalScale) tm.wall.normalScale.set(0.65, 0.65);
+                    }
+                }
             }
         }
 
@@ -16136,7 +16889,7 @@ class GameMap {
         if (!window.GLOBAL_RUNE_GEO) window.GLOBAL_RUNE_GEO = new THREE.PlaneGeometry(160, 160).rotateX(-Math.PI/2); // Runa base ingrandita
         if (!window.GLOBAL_GODRAY_GEO) {
             // Cilindro ESTREMAMENTE ALTO (2000) per evitare che si veda la faccia tagliata in cima!
-            window.GLOBAL_GODRAY_GEO = new THREE.CylinderGeometry(5, 90, 2000, 8, 1, true).translate(0, 1000, 0);
+            window.GLOBAL_GODRAY_GEO = new THREE.CylinderGeometry(5, 90, 2000, !isTouchDevice ? 20 : 8, 1, true).translate(0, 1000, 0);
             window.GLOBAL_FLOORGLOW_GEO = new THREE.PlaneGeometry(80, 80).rotateX(-Math.PI/2);
         }
         // Colori base bianchi (0xffffff) per supportare colori individuali per ogni obelisco tramite setColorAt!
@@ -16145,7 +16898,7 @@ class GameMap {
         
        // Materiali rigorosamente Additive e senza scrittura sul Depth Buffer (per non buggare le particelle dietro)
         let runeMat = new THREE.MeshBasicMaterial({map: RUNE_TEX, color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false});
-        let rayMat = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.03, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide});
+        let rayMat = !AppSettings.useMobileLimits ? PcUltraGraphics.createGodRayMaterial() : new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.03, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide});
         let floorGlowMat = new THREE.MeshBasicMaterial({map: GLOW_TEX, color: 0xffffff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false});
         let imRunes = new THREE.InstancedMesh(window.GLOBAL_RUNE_GEO, runeMat, pillarCount + 1); 
         this.runesMesh = imRunes; // Salviamo il riferimento per scurirle dopo
@@ -16213,22 +16966,24 @@ class GameMap {
         }
         
        if (!window.GLOBAL_WALL_GEO) {
-            // Formazione rocciosa organica più alta e massiccia per i bordi perimetrali
+            // Formazione rocciosa organica più alta e massiccia per i bordi perimetrali (più dettagliata su Desktop)
+            const wallDet = !isTouchDevice ? 2 : 1;
             const sculptRock = (geo, sx, sy, sz, ox, oy, oz) => {
                 geo.scale(sx, sy, sz);
                 const pos = geo.attributes.position;
                 for (let i = 0; i < pos.count; i++) {
                     let vx = pos.getX(i), vy = pos.getY(i), vz = pos.getZ(i);
                     if (vy > 12) vy = 12 + (vy - 12) * 0.65;
-                    let n = 1.0 + Math.sin(vx * 0.14 + vz * 0.11) * 0.12 + Math.cos(vy * 0.18 - vx * 0.09) * 0.08;
+                    let strata = !isTouchDevice ? (Math.sin(vy * 0.35 + vx * 0.08) * 0.055) : 0;
+                    let n = 1.0 + Math.sin(vx * 0.14 + vz * 0.11) * 0.12 + Math.cos(vy * 0.18 - vx * 0.09) * 0.08 + strata;
                     pos.setXYZ(i, vx * n + ox, vy + oy, vz * n + oz);
                 }
                 geo.clearGroups();
                 return geo;
             };
-            let rMain = sculptRock(new THREE.DodecahedronGeometry(34, 1), 1.24, 0.92, 1.24, 0, 5, 0);
-            let rSub1 = sculptRock(new THREE.DodecahedronGeometry(24, 1), 1.20, 0.80, 1.18, -14, 1, 12);
-            let rSub2 = sculptRock(new THREE.DodecahedronGeometry(22, 1), 1.18, 0.75, 1.20, 15, 0, -13);
+            let rMain = sculptRock(new THREE.DodecahedronGeometry(34, wallDet), 1.24, 0.92, 1.24, 0, 5, 0);
+            let rSub1 = sculptRock(new THREE.DodecahedronGeometry(24, wallDet), 1.20, 0.80, 1.18, -14, 1, 12);
+            let rSub2 = sculptRock(new THREE.DodecahedronGeometry(22, wallDet), 1.18, 0.75, 1.20, 15, 0, -13);
             window.GLOBAL_WALL_GEO = THREE.BufferGeometryUtils.mergeBufferGeometries([rMain, rSub1, rSub2]);
             window.GLOBAL_WALL_GEO.computeVertexNormals();
             window.GLOBAL_WALL_GEO.boundingSphere = window.GLOBAL_GIANT_SPHERE;
@@ -18298,7 +19053,7 @@ Game.auras.push({
         this.treeCanopyMesh = meshTreeCanopy;
         meshTreeShadows.count = idxTree;
         meshTreeShadows.instanceMatrix.needsUpdate = true;
-       meshTreeShadows.visible = !AppSettings.shadowsEnabled; // Setta la visibilità di base
+       meshTreeShadows.visible = AppSettings.showContactShadows; // Ombra di contatto persistente su PC Ultra
         
         if (idxTree > 0) {
             this.mapGroup.add(meshTrees);
@@ -18315,8 +19070,8 @@ Game.auras.push({
         this.crateShadowMesh.instanceMatrix.needsUpdate = true;
         this.urnShadowMesh.instanceMatrix.needsUpdate = true;
         
-        this.crateShadowMesh.visible = !AppSettings.shadowsEnabled; // Setta la visibilità di base
-        this.urnShadowMesh.visible = !AppSettings.shadowsEnabled;
+        this.crateShadowMesh.visible = AppSettings.showContactShadows;
+        this.urnShadowMesh.visible = AppSettings.showContactShadows;
 
         if(cPropIdx > 0) {
             this.mapGroup.add(this.crateMesh);
@@ -19261,8 +20016,8 @@ class Player extends Entity {
                 color: 0x555555, 
                 roughness: 0.7, 
                 metalness: 0.1, 
-                map: CHAR_GRUNGE_TEX, 
-                bumpMap: (!isTouchDevice || AppSettings.isUltra) ? CHAR_GRUNGE_TEX : null, 
+                map: PcUltraGraphics.getCharTex(), 
+                bumpMap: (!isTouchDevice || AppSettings.isUltra) ? PcUltraGraphics.getCharTex() : null, 
                 bumpScale: 0.08
             }), 
             new THREE.MeshPhongMaterial({color: 0xffff00, emissive: 0xffff00})
@@ -19344,7 +20099,7 @@ class Player extends Entity {
         this.modelParts.staffGem.add(this.weaponCoreBloom);
       // Attiva e scala l'ombra per il giocatore
         this.shadowMesh.scale.set(32, 1, 32); 
-        this.shadowMesh.visible = !AppSettings.shadowsEnabled;
+        this.shadowMesh.visible = AppSettings.showContactShadows;
         
        // --- PRE-ALLOCAZIONE SMEMBRAMENTO GIOCATORE (Zero-Allocation Death) ---
         this.deadBody = new THREE.Mesh(this.modelParts.body.geometry, this.modelParts.body.material);
@@ -21674,6 +22429,10 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             mf.spawn(muzzleX, 24, muzzleZ, mMat, 'spark', this.angle);
             mf.baseSize = isCrit ? 14 : 9;
             mf.life = 0.09; mf.maxLife = 0.09;
+            if (AppSettings.isUltraPC && isCrit) {
+                const mFlashHex = this.essence === 'red' ? 0xff4411 : (this.essence === 'blue' ? 0x22ccff : (this.essence === 'green' ? 0x44ff66 : 0xffe066));
+                Game.spawnLightFlash(muzzleX, muzzleZ, mFlashHex, 3.2, 220, 0.09);
+            }
         }
         
         let projSpeed = (projType === 'explosive_arrow') ? 400 : 800;
@@ -22630,13 +23389,13 @@ class Enemy extends Entity {
                     useMobEnemyMat
                         ? new THREE.MeshLambertMaterial({
                             color: color,
-                            map: CHAR_GRUNGE_TEX
+                            map: PcUltraGraphics.getCharTex()
                         })
                         : new THREE.MeshPhongMaterial({
                             color: color,
                             shininess: desiredShininess,
-                            map: CHAR_GRUNGE_TEX,
-                            bumpMap: CHAR_GRUNGE_TEX,
+                            map: PcUltraGraphics.getCharTex(),
+                            bumpMap: PcUltraGraphics.getCharTex(),
                             bumpScale: 0.06
                         }),
                     type === 'ring_walker' ? 0.85 : 0.75
@@ -22780,7 +23539,7 @@ class Enemy extends Entity {
         this.shadowMesh.position.set(x + 2, 0.45, y + 3);
         this.shadowMesh.scale.set(initShadowSize, 1, initShadowSize);
         this.shadowMesh.updateMatrix();
-        this.shadowMesh.visible = (type !== 'trapper') && !AppSettings.shadowsEnabled;
+        this.shadowMesh.visible = (type !== 'trapper') && AppSettings.showContactShadows;
 
         if (this.isMegaElite) {
             this.megaAuraRadius = Math.round(this.radius * 2.25 + 36);
@@ -25189,6 +25948,10 @@ if (this.type === 'roller') {
         if (this.trapperAuraGlow) this.trapperAuraGlow.visible = false;
         if (this.megaAuraGlow) this.megaAuraGlow.visible = false;
         if (this.megaAuraRing) this.megaAuraRing.visible = false;
+        if (AppSettings.isUltraPC) {
+            const deathColorHex = (this.mat && this.mat.color) ? this.mat.color.getHex() : 0xffaa44;
+            Game.spawnLightFlash(this.x, this.y, deathColorHex, this.isElite ? 4.5 : 2.4, this.isElite ? 300 : 190, 0.14);
+        }
 
         if (this.beams) {
             for (let i = 0; i < 3; i++) {
@@ -25799,7 +26562,7 @@ class BossEnemy extends Enemy {
         this.solarBurnTimer = 0;
         this.obeliskBurnTimer = 0;
         this.hideAuras();
-        if (!AppSettings.shadowsEnabled && this.shadowMesh) this.shadowMesh.visible = true;
+        if (AppSettings.showContactShadows && this.shadowMesh) this.shadowMesh.visible = true;
 
         // Scollega il Boss dalla griglia collisioni così i proiettili a ricerca non lo bersagliano più
         if (Game.enemyGrid) Game.enemyGrid.remove(this);
@@ -26107,6 +26870,28 @@ class Projectile {
         this.groundGlow.visible = false;
         Game.scene.add(this.groundGlow);
 
+        if (!AppSettings.useMobileLimits && typeof PcUltraGraphics !== 'undefined') {
+            if (!window.GLOBAL_STREAK_GEO) {
+                window.GLOBAL_STREAK_GEO = new THREE.PlaneGeometry(1, 1);
+                window.GLOBAL_STREAK_GEO.rotateX(-Math.PI / 2);
+                window.GLOBAL_STREAK_GEO.translate(-0.5, 0, 0);
+            }
+            this.streakMat = new THREE.MeshBasicMaterial({
+                map: PcUltraGraphics.getStreakTexture(),
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.78,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+            this.streakMesh = new THREE.Mesh(window.GLOBAL_STREAK_GEO, this.streakMat);
+            this.streakMesh.matrixAutoUpdate = false;
+            this.streakMesh.visible = false;
+            this.streakMesh.renderOrder = 3;
+            Game.scene.add(this.streakMesh);
+        }
+
         // --- VARIABILI VENTO AGGIUNTE ---
         this.windX = 0;
         this.windZ = 0;
@@ -26175,8 +26960,23 @@ if (type === 'arrow' || type === 'homing_arrow') {
             this.groundGlow.updateMatrix();
             
             this.groundGlow.visible = true;
+            if (this.streakMesh) {
+                if (AppSettings.isUltraPC && type !== 'orc_club') {
+                    this.streakMat.color.setHex(colorHex);
+                    this._streakLen = Math.max(46, Math.min(135, speed * 0.145)) * projScale;
+                    this._streakWid = Math.max(8, this.radius * 1.55);
+                    this.streakMesh.position.set(x, 14.5, y);
+                    this.streakMesh.rotation.set(0, -angle, 0);
+                    this.streakMesh.scale.set(this._streakLen, 1, this._streakWid);
+                    this.streakMesh.updateMatrix();
+                    this.streakMesh.visible = true;
+                } else {
+                    this.streakMesh.visible = false;
+                }
+            }
         } else {
             this.groundGlow.visible = false;
+            if (this.streakMesh) this.streakMesh.visible = false;
         }
         // --- FINE EFFETTO RIFLESSO ---
 
@@ -26252,6 +27052,16 @@ if (type === 'arrow' || type === 'homing_arrow') {
         } else {
             // Spegne il piano invisibile per salvare fill-rate
             this.groundGlow.visible = false;
+        }
+        if (this.streakMesh) {
+            if (AppSettings.isUltraPC && this.type !== 'arrow' && this.type !== 'orc_club' && isVisibleToCam) {
+                this.streakMesh.visible = true;
+                this.streakMesh.position.set(this.x, 14.5, this.y);
+                this.streakMesh.rotation.set(0, -this.angle, 0);
+                this.streakMesh.updateMatrix();
+            } else {
+                this.streakMesh.visible = false;
+            }
         }
 
       if (this.type === 'orc_club') {
@@ -26394,6 +27204,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
    neutralize() {
         if (!this.active) return;
         this.groundGlow.visible = false;
+        if (this.streakMesh) this.streakMesh.visible = false;
         this.active = false;
         this.windIntensity = 0;
         this.group.visible = false;
@@ -26409,6 +27220,7 @@ if (type === 'arrow' || type === 'homing_arrow') {
     }
     destroy() {
         this.groundGlow.visible = false;
+        if (this.streakMesh) this.streakMesh.visible = false;
         this.active = false; 
         if (this.type === 'explosive_arrow' || this.type === 'enemy_fireball' || this.type === 'fire_shape') {
             this.windX = this.x;
@@ -27096,7 +27908,7 @@ function respawnPlayer() {
         for (let c = 0; c < pChildren.length; c++) pChildren[c].visible = true;
         if (Game.player.shadowMesh) {
             if (!Game.player.shadowMesh.parent) Game.scene.add(Game.player.shadowMesh);
-            Game.player.shadowMesh.visible = !AppSettings.shadowsEnabled;
+            Game.player.shadowMesh.visible = AppSettings.showContactShadows;
         }
         Game.player.shieldMesh.visible = false;
         Game.player.glacialShieldMesh.visible = false;
@@ -27574,6 +28386,9 @@ const Preloader = {
                 for (let i = 0; i < tex._clones.length; i++) {
                     tex._clones[i].image = imgSource;
                     tex._clones[i].needsUpdate = true;
+                }
+                if (typeof PcUltraGraphics !== 'undefined' && typeof AppSettings !== 'undefined' && AppSettings.isUltraPC) {
+                    PcUltraGraphics.syncState();
                 }
             };
 
