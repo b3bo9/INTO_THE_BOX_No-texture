@@ -7659,14 +7659,17 @@ const PcUltraGraphics = {
         const envScene = new THREE.Scene();
 
         const palettes = {
-            0: { top: 0x6aa888, key: 0xd8f5b8, rim: 0x2a6699, ground: 0x162414 },
-            1: { top: 0x552218, key: 0xffaa55, rim: 0x662288, ground: 0x2e0904 },
-            2: { top: 0x8ad8ff, key: 0xe6f8ff, rim: 0x3b66cc, ground: 0x102840 }
+            0: { sky: 0x74a888, top: 0xa6e0b8, key: 0xf4ffd8, rim: 0x5aa4dd, ground: 0x3b5938 },
+            1: { sky: 0x7a3428, top: 0xb85838, key: 0xffc888, rim: 0x9944cc, ground: 0x541e16 },
+            2: { sky: 0x6ba8d8, top: 0xb8ecff, key: 0xffffff, rim: 0x6ea6ff, ground: 0x2b5074 }
         };
         const pal = palettes[idx];
-        envScene.background = new THREE.Color(pal.ground);
+        envScene.background = new THREE.Color(pal.sky);
 
-        const panelGeo = new THREE.PlaneGeometry(14, 14);
+        const hemi = new THREE.HemisphereLight(pal.top, pal.ground, 1.35);
+        envScene.add(hemi);
+
+        const panelGeo = new THREE.PlaneGeometry(24, 24);
         const addPanel = (hex, x, y, z, rx, ry) => {
             const m = new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide });
             const mesh = new THREE.Mesh(panelGeo, m);
@@ -7674,9 +7677,10 @@ const PcUltraGraphics = {
             mesh.rotation.set(rx, ry, 0);
             envScene.add(mesh);
         };
-        addPanel(pal.top, 0, 9, 0, Math.PI / 2, 0);
-        addPanel(pal.key, -8, 4, -7, 0.3, Math.PI / 4);
-        addPanel(pal.rim, 8, 3, 7, -0.2, -Math.PI * 0.75);
+        addPanel(pal.top, 0, 10, 0, Math.PI / 2, 0);
+        addPanel(pal.ground, 0, -10, 0, -Math.PI / 2, 0);
+        addPanel(pal.key, -9, 5, -8, 0.3, Math.PI / 4);
+        addPanel(pal.rim, 9, 4, 8, -0.2, -Math.PI * 0.75);
 
         const rt = pmrem.fromScene(envScene, 0.04);
         panelGeo.dispose();
@@ -7723,9 +7727,9 @@ const PcUltraGraphics = {
                     vec2 wp = vUltraWPos.xz * 0.018;
                     float strata = sin(vUltraWPos.y * 0.28 + sin(wp.x * 2.0 + wp.y * 1.7) * 1.6);
                     float blockVar = sin(wp.x * 1.3 + cos(wp.y * 1.1) * 1.5) * 0.5 + 0.5;
-                    float baseAO = smoothstep(-2.0, 20.0, vUltraWPos.y);
+                    float baseAO = smoothstep(-4.0, 18.0, vUltraWPos.y);
                     float topCrest = smoothstep(26.0, 48.0, vUltraWPos.y);
-                    diffuseColor.rgb *= mix(0.62, 1.12, baseAO) * (0.92 + 0.14 * blockVar + 0.06 * strata);
+                    diffuseColor.rgb *= mix(0.76, 1.14, baseAO) * (0.96 + 0.12 * blockVar + 0.05 * strata);
                     vec3 rimTint = uBiomeId > 1.5 ? vec3(0.06, 0.14, 0.22) : (uBiomeId > 0.5 ? vec3(0.18, 0.06, 0.02) : vec3(0.08, 0.12, 0.06));
                     diffuseColor.rgb += rimTint * topCrest * 0.45;
                 }
@@ -7738,10 +7742,10 @@ const PcUltraGraphics = {
                     float m1 = sin(wp.x * 1.9 + cos(wp.y * 1.6) * 1.4);
                     float m2 = cos(wp.y * 2.3 - sin(wp.x * 1.4) * 1.3);
                     float macro = clamp(0.5 + 0.26 * m1 + 0.24 * m2, 0.0, 1.0);
-                    float micro = sin(vUltraWPos.x * 0.22) * cos(vUltraWPos.z * 0.22) * 0.045;
-                    vec3 coolShift = uBiomeId > 1.5 ? vec3(0.88, 0.96, 1.08) : (uBiomeId > 0.5 ? vec3(0.86, 0.78, 0.82) : vec3(0.86, 0.96, 0.88));
-                    vec3 warmShift = uBiomeId > 1.5 ? vec3(1.04, 1.08, 1.12) : (uBiomeId > 0.5 ? vec3(1.14, 0.94, 0.86) : vec3(1.10, 1.05, 0.90));
-                    diffuseColor.rgb *= mix(coolShift, warmShift, macro) * (0.94 + macro * 0.14 + micro);
+                    float micro = sin(vUltraWPos.x * 0.22) * cos(vUltraWPos.z * 0.22) * 0.04;
+                    vec3 coolShift = uBiomeId > 1.5 ? vec3(0.95, 1.00, 1.06) : (uBiomeId > 0.5 ? vec3(0.96, 0.90, 0.92) : vec3(0.94, 1.01, 0.95));
+                    vec3 warmShift = uBiomeId > 1.5 ? vec3(1.04, 1.07, 1.10) : (uBiomeId > 0.5 ? vec3(1.12, 0.98, 0.92) : vec3(1.08, 1.05, 0.94));
+                    diffuseColor.rgb *= mix(coolShift, warmShift, macro) * (0.97 + macro * 0.10 + micro);
                 }
                 `
             );
@@ -7838,7 +7842,7 @@ const PcUltraGraphics = {
                 varying vec2 vUv;
 
                 float getLuma(vec3 c) {
-                    return dot(c, vec3(0.299, 0.587, 0.114));
+                    return dot(sqrt(max(c, vec3(0.0))), vec3(0.299, 0.587, 0.114));
                 }
 
                 void main() {
@@ -7886,7 +7890,7 @@ const PcUltraGraphics = {
                     vec3 blur4 = (n + s + e + w) * 0.25;
                     float edgeContrast = lumaMax - lumaMin;
                     float sharpAmt = mix(0.20, 0.04, smoothstep(0.08, 0.45, edgeContrast));
-                    col = clamp(col + (col - blur4) * sharpAmt, 0.0, 1.5);
+                    col = clamp(col + (col - blur4) * sharpAmt, 0.0, 4.0);
 
                     // 3. Aberrazione cromatica radiale sugli impatti pesanti (trauma)
                     if (uTrauma > 0.08) {
@@ -7897,13 +7901,14 @@ const PcUltraGraphics = {
                         col.b = mix(col.b, texture2D(tDiffuse, vUv - shift).b, 0.65);
                     }
 
-                    // 4. Curva Filmic-Arcade morbida sui picchi + micro Color Grading per bioma
-                    col = (col * (1.08 + 0.35 * col)) / (1.0 + 0.42 * col);
-                    vec3 shadowTint = uBiomeId > 1.5 ? vec3(0.95, 0.99, 1.06) : (uBiomeId > 0.5 ? vec3(1.04, 0.96, 0.95) : vec3(0.96, 1.02, 0.97));
+                    // 4. Micro Color Grading per bioma + soft highlight roll-off + codifica sRGB finale
+                    col = (col * (1.06 + 0.25 * col)) / (1.0 + 0.24 * col);
+                    vec3 shadowTint = uBiomeId > 1.5 ? vec3(0.97, 1.00, 1.04) : (uBiomeId > 0.5 ? vec3(1.04, 0.98, 0.97) : vec3(0.98, 1.02, 0.99));
                     float lum = getLuma(col);
-                    col *= mix(shadowTint, vec3(1.02, 1.01, 0.99), smoothstep(0.15, 0.75, lum));
+                    col *= mix(shadowTint, vec3(1.02, 1.01, 1.00), smoothstep(0.20, 0.80, lum));
 
                     gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+                    #include <encodings_fragment>
                 }
             `
         };
@@ -8126,7 +8131,7 @@ function applySkinMaterials(parts, skin) {
     const isUltraPC = (typeof AppSettings !== 'undefined' && AppSettings.isUltraPC);
     const tex = (typeof PcUltraGraphics !== 'undefined') ? PcUltraGraphics.getSkinTex(skin.id) : getSkinTexture(skin.id);
     const cfg = getSkinMatConfig(skin.id);
-    const metalBoost = isUltraPC ? 0.14 : 0.0;
+    const metalBoost = isUltraPC ? 0.06 : 0.0;
     if (parts.body && parts.body.material && parts.body.material.isMeshStandardMaterial) {
         const m = parts.body.material;
         m.color.setHex(skin.colors.body);
@@ -9272,15 +9277,15 @@ function applyCharacterShader(material, rimStrength = 0.65) {
             '#include <dithering_fragment>',
             `
             // 1. Gradiente Verticale (Ambient Occlusion ai piedi, luce sulla testa)
-            float hLo = mix(0.55, 0.45, uUltra);
-            float hHi = mix(1.18, 1.24, uUltra);
+            float hLo = mix(0.55, 0.54, uUltra);
+            float hHi = mix(1.18, 1.25, uUltra);
             gl_FragColor.rgb *= mix(hLo, hHi, vCharHeight);
 
-            // 2. Stylized Rim Light + micro-contorno scuro sui bordi estremi in PC Ultra
-            float rimMask = mix(vCharRim, smoothstep(0.42, 0.90, vCharRawRim) * 1.15, uUltra);
+            // 2. Stylized Rim Light + micro-contorno morbido sui bordi estremi in PC Ultra
+            float rimMask = mix(vCharRim, smoothstep(0.42, 0.90, vCharRawRim) * 1.18, uUltra);
             gl_FragColor.rgb += (gl_FragColor.rgb + vec3(0.18)) * rimMask * ${rimStrength.toFixed(2)};
-            float inkEdge = smoothstep(0.84, 0.99, vCharRawRim) * uUltra;
-            gl_FragColor.rgb *= mix(1.0, 0.52, inkEdge);
+            float inkEdge = smoothstep(0.86, 0.99, vCharRawRim) * uUltra;
+            gl_FragColor.rgb *= mix(1.0, 0.72, inkEdge);
 
             #include <dithering_fragment>
             `
