@@ -921,6 +921,7 @@ body.colorblind-mode .stack-dot.active.green {
         #optionsModal, #optionsModal *,
         #skinModal, #skinModal *,
         #infoModal, #infoModal *,
+        #confirmResetModal, #confirmResetModal *,
         #highScoreScreen, #highScoreScreen *,
         #collectedRelicsModal, #collectedRelicsModal *,
         #reforgeSelectModal, #reforgeSelectModal *,
@@ -1249,6 +1250,8 @@ body.colorblind-mode .stack-dot.active.green {
         body.force-rotate-landscape #highScoreScreen,
         body.mobile-landscape #collectedRelicsModal,
         body.force-rotate-landscape #collectedRelicsModal,
+        body.mobile-landscape #confirmResetModal,
+        body.force-rotate-landscape #confirmResetModal,
         body.mobile-landscape #reforgeSelectModal,
         body.force-rotate-landscape #reforgeSelectModal {
             display: flex !important;
@@ -1267,6 +1270,8 @@ body.colorblind-mode .stack-dot.active.green {
         body.force-rotate-landscape #highScoreScreen.hidden,
         body.mobile-landscape #collectedRelicsModal.hidden,
         body.force-rotate-landscape #collectedRelicsModal.hidden,
+        body.mobile-landscape #confirmResetModal.hidden,
+        body.force-rotate-landscape #confirmResetModal.hidden,
         body.mobile-landscape #reforgeSelectModal.hidden,
         body.force-rotate-landscape #reforgeSelectModal.hidden {
             display: none !important;
@@ -1282,6 +1287,8 @@ body.colorblind-mode .stack-dot.active.green {
         body.force-rotate-landscape #highScoreScreen .modal-enter,
         body.mobile-landscape #collectedRelicsModal .modal-enter,
         body.force-rotate-landscape #collectedRelicsModal .modal-enter,
+        body.mobile-landscape #confirmResetModal .modal-enter,
+        body.force-rotate-landscape #confirmResetModal .modal-enter,
         body.mobile-landscape #reforgeSelectModal .modal-enter,
         body.force-rotate-landscape #reforgeSelectModal .modal-enter {
             display: flex !important;
@@ -1309,17 +1316,24 @@ body.colorblind-mode .stack-dot.active.green {
             margin-top: 1px !important;
         }
         body.mobile-landscape #pauseModal .modal-enter,
-        body.force-rotate-landscape #pauseModal .modal-enter {
+        body.force-rotate-landscape #pauseModal .modal-enter,
+        body.mobile-landscape #confirmResetModal .modal-enter,
+        body.force-rotate-landscape #confirmResetModal .modal-enter {
             max-width: 480px !important;
             padding: 10px 14px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter > div:last-child,
-        body.force-rotate-landscape #pauseModal .modal-enter > div:last-child {
-            flex-direction: row !important;
-            gap: 8px !important;
+        body.mobile-landscape #pauseModal #pause-btn-grid,
+        body.force-rotate-landscape #pauseModal #pause-btn-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
         }
-        body.mobile-landscape #pauseModal .modal-enter > div:last-child button,
-        body.force-rotate-landscape #pauseModal .modal-enter > div:last-child button {
+        body.mobile-landscape #pauseModal #pause-btn-grid > button:first-child,
+        body.force-rotate-landscape #pauseModal #pause-btn-grid > button:first-child {
+            grid-column: 1 / -1 !important;
+        }
+        body.mobile-landscape #pauseModal #pause-btn-grid button,
+        body.force-rotate-landscape #pauseModal #pause-btn-grid button {
             margin-top: 0 !important;
             padding: 8px 10px !important;
             font-size: 11px !important;
@@ -1340,10 +1354,6 @@ body.colorblind-mode .stack-dot.active.green {
             min-height: 32px !important;
             font-size: 10.5px !important;
         }
-        body.mobile-landscape #optionsModal #btn-opt-end-run,
-        body.force-rotate-landscape #optionsModal #btn-opt-end-run {
-            grid-column: 1 / -1 !important;
-        }
         body.mobile-landscape #optionsModal .modal-enter > button:last-child,
         body.force-rotate-landscape #optionsModal .modal-enter > button:last-child,
         body.mobile-landscape #infoModal .modal-enter > button:last-child,
@@ -1362,29 +1372,19 @@ body.colorblind-mode .stack-dot.active.green {
             flex-shrink: 0 !important;
             font-size: 11px !important;
         }
-        body.mobile-landscape #infoModal #info-tabs,
-        body.force-rotate-landscape #infoModal #info-tabs {
-            gap: 4px !important;
-            margin-bottom: 6px !important;
-        }
-        body.mobile-landscape #infoModal #info-tabs button,
-        body.force-rotate-landscape #infoModal #info-tabs button {
-            padding: 4px 6px !important;
-            font-size: 9.5px !important;
-        }
-        body.mobile-landscape #infoModal #info-tab-panels,
-        body.force-rotate-landscape #infoModal #info-tab-panels {
-            max-height: calc(var(--app-h, 100vh) - 132px) !important;
+        body.mobile-landscape #infoModal #info-scroll-body,
+        body.force-rotate-landscape #infoModal #info-scroll-body {
+            max-height: calc(var(--app-h, 100vh) - 96px) !important;
             padding-right: 4px !important;
         }
-        body.mobile-landscape #infoModal .info-tab-grid,
-        body.force-rotate-landscape #infoModal .info-tab-grid {
+        body.mobile-landscape #infoModal #info-cards-grid,
+        body.force-rotate-landscape #infoModal #info-cards-grid {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 6px !important;
         }
-        body.mobile-landscape #infoModal .info-full-span,
-        body.force-rotate-landscape #infoModal .info-full-span {
+        body.mobile-landscape #infoModal #info-card-objective,
+        body.force-rotate-landscape #infoModal #info-card-objective {
             grid-column: 1 / -1 !important;
         }
         body.mobile-landscape #skinListContainer,
@@ -1405,13 +1405,21 @@ body.colorblind-mode .stack-dot.active.green {
             flex: 1 1 auto !important;
             gap: 4px !important;
         }
+        body.mobile-landscape #collectedRelicsModal #inventoryScrollBody,
+        body.force-rotate-landscape #collectedRelicsModal #inventoryScrollBody {
+            max-height: calc(var(--app-h, 100vh) - 148px) !important;
+            padding-right: 4px !important;
+        }
         body.mobile-landscape #collectedRelicsGrid,
         body.force-rotate-landscape #collectedRelicsGrid,
         body.mobile-landscape #reforgeSelectGrid,
         body.force-rotate-landscape #reforgeSelectGrid {
             grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
-            max-height: 105px !important;
             gap: 4px !important;
+        }
+        body.mobile-landscape #reforgeSelectGrid,
+        body.force-rotate-landscape #reforgeSelectGrid {
+            max-height: 105px !important;
         }
         body.mobile-landscape #collectedRelicsGrid > div,
         body.force-rotate-landscape #collectedRelicsGrid > div,
@@ -1420,11 +1428,11 @@ body.colorblind-mode .stack-dot.active.green {
             width: 36px !important;
             height: 36px !important;
         }
-        html body.mobile-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
-        html body.force-rotate-landscape #collectedRelicsModal .modal-enter > div:nth-child(3),
+        html body.mobile-landscape #collectedRelicsModal #relic-detail-box,
+        html body.force-rotate-landscape #collectedRelicsModal #relic-detail-box,
         html body.mobile-landscape #reforgeSelectModal .modal-enter > div:nth-child(3),
         html body.force-rotate-landscape #reforgeSelectModal .modal-enter > div:nth-child(3) {
-            min-height: 52px !important;
+            min-height: 48px !important;
             padding: 5px 8px !important;
             margin-top: 5px !important;
         }
@@ -2300,149 +2308,59 @@ body.colorblind-mode .stack-dot.active.green {
     </div>
 
     <div id="infoModal" class="absolute inset-0 bg-black/90 z-[250] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-       <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/60 rounded-2xl p-3.5 sm:p-5 w-full max-w-[540px] max-h-[90vh] flex flex-col shadow-[0_0_45px_rgba(34,211,238,0.3)] relative overflow-hidden">
+       <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/60 rounded-2xl p-4 sm:p-5 w-full max-w-[480px] max-h-[90vh] flex flex-col shadow-[0_0_45px_rgba(34,211,238,0.3)] relative overflow-hidden">
 
-            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-2.5 shadow-[0_0_22px_rgba(34,211,238,0.25)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Codex Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Manuale di Gioco</h2></div><div class="flex items-center gap-2"><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-book-open text-lg"></i></div><button onclick="UIManager.hideModal('infoModal')" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi"><i class="fa-solid fa-xmark text-base"></i></button></div></div>
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_22px_rgba(34,211,238,0.25)] shrink-0 relative z-10"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] sm:text-[10px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Codex Arcano</span></div><h2 class="text-lg sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">Manuale Rapido</h2></div><div class="flex items-center gap-2"><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.4)]"><i class="fa-solid fa-book-open text-lg"></i></div><button onclick="UIManager.hideModal('infoModal')" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi"><i class="fa-solid fa-xmark text-base"></i></button></div></div>
 
-            <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none z-0"></div>
+            <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-cyan-900/20 to-transparent pointer-events-none z-0"></div>
 
-            <div id="info-tabs" class="grid grid-cols-5 gap-1.5 mb-2.5 shrink-0 relative z-10">
-                <button type="button" data-tab="basics" onclick="UIManager.setInfoTab('basics')" class="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.28)]"><i class="fa-solid fa-gamepad"></i><span>Basi</span></button>
-                <button type="button" data-tab="defense" onclick="UIManager.setInfoTab('defense')" class="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-slate-900/80 border-white/15 text-gray-400 hover:text-white"><i class="fa-solid fa-shield-halved"></i><span>Difesa</span></button>
-                <button type="button" data-tab="magic" onclick="UIManager.setInfoTab('magic')" class="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-slate-900/80 border-white/15 text-gray-400 hover:text-white"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Magie</span></button>
-                <button type="button" data-tab="enemies" onclick="UIManager.setInfoTab('enemies')" class="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-slate-900/80 border-white/15 text-gray-400 hover:text-white"><i class="fa-solid fa-skull"></i><span>Nemici</span></button>
-                <button type="button" data-tab="forge" onclick="UIManager.setInfoTab('forge')" class="flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-slate-900/80 border-white/15 text-gray-400 hover:text-white"><i class="fa-solid fa-hammer"></i><span>Forgia</span></button>
-            </div>
+            <div id="info-scroll-body" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5 relative z-10">
+                <div id="info-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] sm:text-xs text-gray-300 leading-snug">
 
-            <div id="info-tab-panels" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 text-[11px] sm:text-xs text-gray-300 leading-snug relative z-10">
-
-                <div data-tab-panel="basics" class="info-tab-grid space-y-2">
-                    <div class="info-full-span bg-gradient-to-r from-cyan-950/50 via-slate-900/80 to-blue-950/40 p-2.5 rounded-xl border border-cyan-500/35">
-                        <div class="flex items-center gap-2 text-cyan-300 font-black uppercase text-[11px] tracking-wider mb-1"><i class="fa-solid fa-compass"></i><span>Obiettivo in 4 Passi</span></div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px] font-bold">
-                            <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5 text-center"><span class="text-cyan-300 block">1. Pulisci</span><span class="text-gray-300">Elimina i nemici</span></div>
-                            <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5 text-center"><span class="text-amber-300 block">2. Raccogli</span><span class="text-gray-300">Monete, XP &amp; Sfere</span></div>
-                            <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5 text-center"><span class="text-purple-300 block">3. Potenzia</span><span class="text-gray-300">Forgia &amp; Reliquie</span></div>
-                            <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5 text-center"><span class="text-red-400 block">4. Boss (x5)</span><span class="text-gray-300">Ogni 5 piani!</span></div>
-                        </div>
-                    </div>
-
-                    <div id="info-controls-grid" class="info-full-span bg-slate-900/75 p-2.5 rounded-xl border border-white/15 space-y-1.5"></div>
-
-                    <div class="info-full-span flex items-start gap-2.5 bg-gradient-to-r from-amber-950/40 to-black/50 p-2.5 rounded-xl border border-amber-500/30">
-                        <div class="text-amber-400 text-base mt-0.5 shrink-0"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div id="info-card-objective" class="sm:col-span-2 flex items-center gap-3 bg-gradient-to-r from-purple-950/55 via-slate-900/85 to-fuchsia-950/40 p-2.5 sm:p-3 rounded-xl border-2 border-purple-500/45 shadow-[0_0_18px_rgba(168,85,247,0.18)]">
+                        <div class="w-10 h-10 rounded-xl bg-purple-950/90 border border-purple-400/60 flex items-center justify-center text-purple-300 text-lg shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.45)]"><i class="fa-solid fa-crosshairs"></i></div>
                         <div>
-                            <h3 class="text-amber-300 font-black uppercase text-[11px] tracking-wide">Regola d'Oro per Sopravvivere</h3>
-                            <p class="text-gray-300 mt-0.5">Muoviti sempre in cerchio attorno all'orda e osserva i <span class="text-red-400 font-bold">segnali rossi/gialli sul pavimento</span>: indicano dove sta per abbattersi un attacco letale.</p>
+                            <h3 class="text-purple-200 font-display font-black uppercase text-xs tracking-wider">Obiettivo del Piano</h3>
+                            <p class="text-gray-300 mt-0.5">Abbatti i nemici per riempire la <span class="text-fuchsia-300 font-black">barra viola</span> in alto: al <span class="text-white font-bold">100%</span> si apre il <span class="text-cyan-300 font-bold">Portale</span> per scendere al piano successivo!</p>
                         </div>
                     </div>
-                </div>
 
-                <div data-tab-panel="defense" class="info-tab-grid space-y-2 hidden">
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-amber-900/25 to-black/50 p-2.5 rounded-xl border border-amber-600/35">
-                        <div class="text-amber-400 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="flex items-start gap-2.5 bg-gradient-to-br from-sky-950/45 to-slate-950/90 p-2.5 rounded-xl border border-sky-500/40">
+                        <div class="w-9 h-9 rounded-lg bg-sky-950/90 border border-sky-400/50 flex items-center justify-center text-sky-300 text-base shrink-0 mt-0.5"><i id="info-ctrl-icon" class="fa-solid fa-gamepad"></i></div>
                         <div>
-                            <h3 class="text-amber-300 font-black uppercase text-xs tracking-wide">Perfect Dodge</h3>
-                            <p class="text-gray-300 mt-0.5">Scatta (<span id="info-dodge-btn" class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/25 font-black text-[9px] uppercase"></span>) un attimo prima dell'impatto. <span class="text-amber-200 font-bold">Azzera subito il cooldown del Dash</span>, rallenta il tempo e dona <span class="text-white font-bold">+2 Combo</span>!</p>
+                            <h3 class="text-sky-300 font-black uppercase text-xs tracking-wide">Movimento</h3>
+                            <p id="info-controls-desc" class="text-gray-300 mt-0.5"></p>
                         </div>
                     </div>
 
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-cyan-900/25 to-black/50 p-2.5 rounded-xl border border-cyan-500/35">
-                        <div class="text-cyan-400 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="flex items-start gap-2.5 bg-gradient-to-br from-cyan-950/45 to-slate-950/90 p-2.5 rounded-xl border border-cyan-500/40">
+                        <div class="w-9 h-9 rounded-lg bg-cyan-950/90 border border-cyan-400/50 flex items-center justify-center text-cyan-300 text-base shrink-0 mt-0.5"><i class="fa-solid fa-shield-halved"></i></div>
                         <div>
-                            <h3 class="text-cyan-300 font-black uppercase text-xs tracking-wide">Scudo Cinetico (3s)</h3>
-                            <p class="text-gray-300 mt-0.5">Attivalo (<span id="info-shield-btn" class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/25 font-black text-[9px] uppercase"></span>) per ridurre i danni, <span class="text-white font-bold">distruggere i proiettili</span> e curarti del <span class="text-cyan-300 font-bold">3% HP</span> a colpo bloccato (max 5 colpi).</p>
+                            <h3 class="text-cyan-300 font-black uppercase text-xs tracking-wide">Abilità Attive</h3>
+                            <p class="text-gray-300 mt-0.5"><strong class="text-white">Teletrasporto</strong> (<span id="info-dodge-btn" class="text-amber-200 bg-white/10 px-1 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase"></span>): scatta oltre i pericoli. <strong class="text-white">Scudo</strong> (<span id="info-shield-btn" class="text-cyan-200 bg-white/10 px-1 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase"></span>): blocca i colpi curandoti!</p>
                         </div>
                     </div>
 
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-fuchsia-900/25 to-black/50 p-2.5 rounded-xl border border-fuchsia-500/35">
-                        <div class="text-fuchsia-400 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                    <div class="flex items-start gap-2.5 bg-gradient-to-br from-fuchsia-950/45 to-slate-950/90 p-2.5 rounded-xl border border-fuchsia-500/40">
+                        <div class="w-9 h-9 rounded-lg bg-fuchsia-950/90 border border-fuchsia-400/50 flex items-center justify-center text-fuchsia-300 text-base shrink-0 mt-0.5"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                         <div>
-                            <h3 class="text-fuchsia-300 font-black uppercase text-xs tracking-wide">Contatore Combo (HITS)</h3>
-                            <p class="text-gray-300 mt-0.5">Colpire e schivare fa crescere la <span class="text-white font-bold">Combo</span> potenziando attacchi e portali speciali. <span class="text-red-400 font-bold">Subire danni la azzera</span>: usa Scudo e Dash per difenderla!</p>
+                            <h3 class="text-fuchsia-300 font-black uppercase text-xs tracking-wide">Essenze &amp; Overdrive</h3>
+                            <p class="text-gray-300 mt-0.5">Combina le sfere <span class="text-red-400 font-bold">Rosse</span>, <span class="text-sky-400 font-bold">Blu</span> e <span class="text-emerald-400 font-bold">Verdi</span> per magie esplosive, oppure allineane <span class="text-white font-bold">3 uguali</span> per l'<span class="text-fuchsia-300 font-black">Overdrive</span>!</p>
                         </div>
                     </div>
 
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-sky-900/25 to-black/50 p-2.5 rounded-xl border border-sky-500/35">
-                        <div class="text-sky-300 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-sun"></i></div>
+                    <div class="flex items-start gap-2.5 bg-gradient-to-br from-amber-950/40 to-slate-950/90 p-2.5 rounded-xl border border-amber-500/45">
+                        <div class="w-9 h-9 rounded-lg bg-amber-950/90 border border-amber-400/50 flex items-center justify-center text-amber-300 text-base shrink-0 mt-0.5"><i class="fa-solid fa-gem"></i></div>
                         <div>
-                            <h3 class="text-sky-200 font-black uppercase text-xs tracking-wide">Ultimate / Ascesa</h3>
-                            <p class="text-gray-300 mt-0.5">Si ricarica combattendo. Quando la barra arriva al 100% attivala per diventare più veloce, scatenare colpi potenziati e rigenerare <span class="text-emerald-300 font-bold">2% HP/s</span>!</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div data-tab-panel="magic" class="info-tab-grid space-y-2 hidden">
-                    <div class="info-full-span bg-slate-900/80 p-2.5 rounded-xl border border-fuchsia-500/35">
-                        <div class="flex items-center gap-2 text-fuchsia-300 font-black uppercase text-xs tracking-wide"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Come Funzionano le Essenze</span></div>
-                        <p class="text-gray-300 mt-1">I nemici lasciano sfere <span class="text-red-400 font-bold">Rosse</span>, <span class="text-sky-400 font-bold">Blu</span> e <span class="text-emerald-400 font-bold">Verdi</span>. Riempendo tutti e <span class="text-white font-bold">3 gli slot</span> sotto la barra vita scatta in automatico una magia!</p>
-                    </div>
-
-                    <div class="bg-gradient-to-r from-red-950/45 via-slate-900/80 to-black/60 p-2.5 rounded-xl border border-red-500/40 space-y-1.5">
-                        <div class="text-[10px] text-amber-300 font-black uppercase tracking-wider">3 Uguali = Overdrive Temporaneo</div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-red-500/30"><span class="text-red-400 font-black">🔴🔴🔴 INFERNO:</span> <span class="text-gray-300">Soffio lanciafiamme + scie di fuoco quando scatti.</span></div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-sky-500/30"><span class="text-sky-400 font-black">🔵🔵🔵 TEMPESTA:</span> <span class="text-gray-300">Velocità d'attacco 3x, frecce perforanti e Dash gratis.</span></div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-emerald-500/30"><span class="text-emerald-400 font-black">🟢🟢🟢 PANDEMIA:</span> <span class="text-gray-300">+2 frecce laterali a ricerca che infettano i nemici.</span></div>
-                    </div>
-
-                    <div class="bg-gradient-to-r from-purple-950/45 via-slate-900/80 to-black/60 p-2.5 rounded-xl border border-purple-500/40 space-y-1.5">
-                        <div class="text-[10px] text-fuchsia-300 font-black uppercase tracking-wider">Elementi Misti = Esplosione Immediata</div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-white/10"><span class="text-red-400 font-bold">🔴</span>+<span class="text-sky-400 font-bold">🔵</span> <span class="text-white font-black">ONDA D'URTO:</span> <span class="text-gray-300">Onda shock + fulmini a catena.</span></div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-white/10"><span class="text-sky-400 font-bold">🔵</span>+<span class="text-emerald-400 font-bold">🟢</span> <span class="text-white font-black">GLACIAZIONE:</span> <span class="text-gray-300">Congela l'area + schegge di ghiaccio.</span></div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-white/10"><span class="text-red-400 font-bold">🔴</span>+<span class="text-emerald-400 font-bold">🟢</span> <span class="text-white font-black">NOVA TOSSICA:</span> <span class="text-gray-300">Nube acida esplosiva + pozze velenose.</span></div>
-                        <div class="bg-black/45 rounded-lg p-1.5 border border-fuchsia-400/35"><span class="text-red-400 font-bold">🔴</span>+<span class="text-sky-400 font-bold">🔵</span>+<span class="text-emerald-400 font-bold">🟢</span> <span class="text-fuchsia-300 font-black">CAOS ELEMENTALE:</span> <span class="text-gray-200">Cataclisma totale!</span></div>
-                    </div>
-                </div>
-
-                <div data-tab-panel="enemies" class="info-tab-grid space-y-2 hidden">
-                    <div class="bg-slate-900/75 p-2.5 rounded-xl border border-cyan-500/30">
-                        <h3 class="text-cyan-300 font-black uppercase text-xs"><i class="fa-solid fa-shield mr-1"></i>Golem con Scudo</h3>
-                        <p class="text-gray-300 mt-0.5">Lo scudo frontale azzera quasi tutti i danni e i critici. <span class="text-white font-bold">Scatta alle sue spalle</span> e colpisci il nucleo luminoso posteriore!</p>
-                    </div>
-
-                    <div class="bg-slate-900/75 p-2.5 rounded-xl border border-orange-500/30">
-                        <h3 class="text-orange-300 font-black uppercase text-xs"><i class="fa-solid fa-hammer mr-1"></i>Orco con Clava</h3>
-                        <p class="text-gray-300 mt-0.5">Schiva la sua spazzata per punirlo mentre recupera. Sotto il <span class="text-red-400 font-bold">30% HP</span> va in <span class="text-red-400 font-black">FURENTE!</span>, <span class="text-white font-bold">lancia la clava</span> e carica veloce.</p>
-                    </div>
-
-                    <div class="bg-slate-900/75 p-2.5 rounded-xl border border-red-500/30">
-                        <h3 class="text-red-300 font-black uppercase text-xs"><i class="fa-solid fa-circle-dot mr-1"></i>Dominatore &amp; Profeta</h3>
-                        <p class="text-gray-300 mt-0.5">Il <span class="text-white font-bold">Dominatore</span> apre lo scudo per <span class="text-amber-300 font-bold">5s</span> dopo il muro di fuoco. Elimina subito il <span class="text-orange-300 font-bold">Profeta Oscuro</span> per spezzare gli scudi fino a 3 nemici!</p>
-                    </div>
-
-                    <div class="bg-gradient-to-r from-red-950/35 via-slate-900/80 to-emerald-950/35 p-2.5 rounded-xl border border-purple-500/35 space-y-1">
-                        <h3 class="text-purple-300 font-black uppercase text-xs"><i class="fa-solid fa-crown mr-1"></i>Boss Elementali (Piani 5, 10, 15...)</h3>
-                        <p><span class="text-red-400 font-black">Colosso Rosso:</span> Fatti caricare verso i muri per provocare <span class="text-white font-bold">SCHIANTO!</span> o paralo con lo Scudo.</p>
-                        <p><span class="text-sky-400 font-black">Arconte Blu:</span> Distruggi i <span class="text-white font-bold">Piloni Arcani</span> per causare un <span class="text-sky-200 font-bold">CORTOCIRCUITO!</span></p>
-                        <p><span class="text-emerald-400 font-black">Sovrana Verde:</span> Distruggi i <span class="text-white font-bold">Bozzoli</span> verdi per aprire la fase <span class="text-emerald-200 font-bold">VULNERABILE!</span></p>
-                    </div>
-                </div>
-
-                <div data-tab-panel="forge" class="info-tab-grid space-y-2 hidden">
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-amber-900/25 to-black/50 p-2.5 rounded-xl border border-amber-500/35">
-                        <div class="text-amber-400 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-hammer"></i></div>
-                        <div>
-                            <h3 class="text-amber-300 font-black uppercase text-xs tracking-wide">Forgia &amp; Nodi Maestria</h3>
-                            <p class="text-gray-300 mt-0.5">Tra un piano e l'altro spendi <span class="text-amber-200 font-bold">Monete</span> su Danno, Vita, Velocità e Rateo. Ai ranghi <span class="text-white font-bold">5 e 10</span> sblocchi potenti <span class="text-amber-300 font-bold">Maestrie</span> extra!</p>
+                            <h3 class="text-amber-300 font-black uppercase text-xs tracking-wide">Reliquie Arcane</h3>
+                            <p class="text-gray-300 mt-0.5">Decine di reliquie uniche ti aspettano tra i piani e i Boss: combinale per stravolgere i tuoi poteri e scoprire build sempre nuove!</p>
                         </div>
                     </div>
 
-                    <div class="flex items-start gap-2.5 bg-gradient-to-r from-purple-900/25 to-black/50 p-2.5 rounded-xl border border-purple-500/35">
-                        <div class="text-purple-400 text-lg mt-0.5 shrink-0"><i class="fa-solid fa-gem"></i></div>
-                        <div>
-                            <h3 class="text-purple-300 font-black uppercase text-xs tracking-wide">Reliquie &amp; Rarità Boss</h3>
-                            <p class="text-gray-300 mt-0.5">Le reliquie vanno da <span class="text-gray-200">Comuni</span> a <span class="text-amber-300 font-bold">Leggendarie</span>. I <span class="text-white font-bold">Boss</span> garantiscono probabilità molto più alte di trovare reliquie <span class="text-fuchsia-300 font-bold">Epiche/Leggendarie</span>!</p>
-                        </div>
-                    </div>
-
-                    <div class="info-full-span bg-gradient-to-r from-fuchsia-950/45 via-slate-900/80 to-indigo-950/45 p-2.5 rounded-xl border border-fuchsia-500/40">
-                        <h3 class="text-fuchsia-300 font-black uppercase text-xs tracking-wide"><i class="fa-solid fa-dungeon mr-1"></i>Portali Normali vs Portali Corrotti (Viola)</h3>
-                        <p class="text-gray-300 mt-1">Alla fine del piano scegli il portale: i <span class="text-fuchsia-300 font-bold">Portali Corrotti (Viola)</span> applicano sfide estreme (<span class="text-white">OSCURITÀ, INSTABILE, MASSA CRITICA, COMBO, NEMESI, CORROSIONE, RAPPRESAGLIA, SNAKE</span>) ma premiano i giocatori abili!</p>
-                    </div>
                 </div>
             </div>
 
-            <button onclick="UIManager.hideModal('infoModal')" class="mt-3 w-full py-3 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.6)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
+            <button onclick="UIManager.hideModal('infoModal')" class="mt-3.5 w-full py-3 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.6)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
                 Torna al menu
             </button>
         </div>
@@ -2479,10 +2397,6 @@ body.colorblind-mode .stack-dot.active.green {
                 <button id="btn-opt-dmgnum" onclick="AppSettings.toggleDamageNumbers(); UIManager.updateOptionsUI(); AudioEngine.playClick();" class="btn-cyber bg-slate-950/90 border-2 border-cyan-500/40 hover:border-cyan-400 rounded-xl w-full py-3 text-[11px] sm:text-xs text-white justify-between px-4 shadow-[0_0_14px_rgba(34,211,238,0.12)]">
                     <span>Numeri Danno</span> <span id="opt-dmgnum-text" class="text-green-400">ON</span>
                 </button>
-                <button id="btn-opt-end-run" onclick="RunSaveSystem.terminateRunFromOptions()" class="hidden btn-cyber bg-red-950/85 border-2 border-red-500/75 hover:border-red-300 rounded-xl w-full py-3 text-[11px] sm:text-xs text-red-200 justify-between px-4 shadow-[0_0_16px_rgba(239,68,68,0.28)]">
-                    <span><i class="fa-solid fa-skull-crossbones text-red-400 mr-1.5"></i>Termina Partita</span>
-                    <span class="text-red-400 font-black">RESETTA</span>
-                </button>
             </div>
 
            <button onclick="UIManager.hideModal('optionsModal')" class="mt-4 w-full py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_22px_rgba(56,189,248,0.6)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">
@@ -2506,18 +2420,48 @@ body.colorblind-mode .stack-dot.active.green {
     </div>
 
    <div id="pauseModal" class="absolute inset-0 bg-black/80 z-[270] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
-        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/55 rounded-2xl p-5 sm:p-6 w-full max-w-[370px] flex flex-col items-center shadow-[0_0_45px_rgba(34,211,238,0.28)] relative overflow-hidden">
-            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-5 shadow-[0_0_22px_rgba(34,211,238,0.25)]"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Stasi Temporale</span></div><h2 class="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">In Pausa</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300"><i class="fa-solid fa-pause text-base"></i></div></div>
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-cyan-400/55 rounded-2xl p-5 sm:p-6 w-full max-w-[400px] flex flex-col items-center shadow-[0_0_45px_rgba(34,211,238,0.28)] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-cyan-400/55 rounded-xl px-4 py-2.5 mb-4 shadow-[0_0_22px_rgba(34,211,238,0.25)]"><div class="flex flex-col text-left"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span><span class="text-[9px] text-cyan-300 font-black tracking-[0.22em] uppercase leading-none">Stasi Temporale</span></div><h2 class="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">In Pausa</h2></div><div class="w-10 h-10 rounded-lg bg-cyan-950/80 border-2 border-cyan-400/70 flex items-center justify-center text-cyan-300"><i class="fa-solid fa-pause text-base"></i></div></div>
 
-          <div class="w-full flex flex-col gap-3">
-                <button onclick="UIManager.togglePause()" class="w-full py-3.5 sm:py-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_24px_rgba(56,189,248,0.65)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95">
+            <div id="pause-btn-grid" class="w-full grid grid-cols-2 gap-2.5">
+                <button onclick="UIManager.togglePause()" class="col-span-2 w-full py-3.5 sm:py-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 border-2 border-white shadow-[0_0_24px_rgba(56,189,248,0.65)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95">
                     <i class="fa-solid fa-play"></i> Riprendi
                 </button>
-                <button onclick="UIManager.showModal('optionsModal')" class="btn-cyber bg-slate-950/90 border-2 border-cyan-400/45 rounded-xl box-glow-blue w-full py-3.5 text-xs font-display font-black text-cyan-100">
-                    <i class="fa-solid fa-gear"></i> Opzioni
+                <button onclick="UIManager.showCollectedRelics()" class="btn-cyber bg-purple-950/75 border-2 border-purple-400/60 hover:border-purple-300 rounded-xl box-glow-purple w-full py-3.5 text-[11px] sm:text-xs font-display font-black text-purple-100 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-gem text-purple-300"></i> Inventario
                 </button>
-                <button onclick="UIManager.quitFromPause()" class="btn-cyber bg-red-950/60 border-2 border-red-500/60 rounded-xl box-glow-red w-full py-3.5 text-xs font-display font-black text-red-300 mt-2">
-                    <i class="fa-solid fa-right-from-bracket"></i> Abbandona
+                <button onclick="UIManager.showModal('optionsModal')" class="btn-cyber bg-slate-950/90 border-2 border-cyan-400/45 rounded-xl box-glow-blue w-full py-3.5 text-[11px] sm:text-xs font-display font-black text-cyan-100 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-gear text-cyan-300"></i> Opzioni
+                </button>
+                <button onclick="UIManager.quitFromPause()" class="btn-cyber bg-slate-950/90 border-2 border-amber-500/55 hover:border-amber-300 rounded-xl w-full py-3 text-[11px] sm:text-xs font-display font-black text-amber-200 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket text-amber-300"></i> Abbandona
+                </button>
+                <button id="btn-pause-reset-run" onclick="RunSaveSystem.requestResetRun()" class="btn-cyber bg-red-950/75 border-2 border-red-500/70 hover:border-red-300 rounded-xl box-glow-red w-full py-3 text-[11px] sm:text-xs font-display font-black text-red-200 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left text-red-400"></i> Resetta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmResetModal" class="absolute inset-0 bg-black/90 z-[285] flex items-center justify-center backdrop-blur-md pointer-events-auto hidden p-3">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-red-500/70 rounded-2xl p-5 w-full max-w-[390px] flex flex-col items-center text-center shadow-[0_0_45px_rgba(239,68,68,0.35)] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-3 bg-slate-950/90 border-2 border-red-500/55 rounded-xl px-4 py-2.5 mb-3 shadow-[0_0_20px_rgba(239,68,68,0.25)]">
+                <div class="flex flex-col text-left">
+                    <span class="text-[9px] text-red-300 font-black tracking-[0.22em] uppercase leading-none">Attenzione</span>
+                    <h2 class="text-lg sm:text-xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Resetta Partita</h2>
+                </div>
+                <div class="w-9 h-9 rounded-lg bg-red-950/85 border-2 border-red-400/70 flex items-center justify-center text-red-300 shrink-0"><i class="fa-solid fa-triangle-exclamation text-base"></i></div>
+            </div>
+            <p class="text-xs sm:text-sm text-gray-300 font-bold leading-relaxed mb-4 px-1">
+                Vuoi davvero resettare la partita in corso?<br>
+                <span class="text-red-300">Perderai il piano attuale, le reliquie e tutti i potenziamenti</span> di questa run.
+            </p>
+            <div class="w-full grid grid-cols-2 gap-2.5">
+                <button onclick="UIManager.hideModal('confirmResetModal')" class="btn-cyber bg-slate-950/90 border-2 border-gray-600/80 hover:border-white rounded-xl py-3 text-xs font-display font-black text-gray-200 uppercase tracking-wider cursor-pointer active:scale-95">
+                    Annulla
+                </button>
+                <button onclick="RunSaveSystem.confirmResetRun()" class="btn-cyber bg-gradient-to-r from-red-700 to-rose-600 hover:from-red-600 hover:to-rose-500 border-2 border-red-300 rounded-xl box-glow-red py-3 text-xs font-display font-black text-white uppercase tracking-wider cursor-pointer active:scale-95 shadow-[0_0_18px_rgba(239,68,68,0.5)]">
+                    Conferma Reset
                 </button>
             </div>
         </div>
@@ -2737,32 +2681,54 @@ body.colorblind-mode .stack-dot.active.green {
         </div>
     </div>
 
-    <div id="collectedRelicsModal" class="absolute inset-0 bg-black/95 z-[260] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-2.5 sm:p-4">
-        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-3 sm:p-5 w-full max-w-[420px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[92vh] relative overflow-hidden">
-            <div class="w-full flex items-center justify-between gap-2 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-3 py-2 mb-2.5 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0">
+    <div id="collectedRelicsModal" class="absolute inset-0 bg-black/95 z-[280] flex flex-col items-center justify-center backdrop-blur-md pointer-events-auto hidden p-2.5 sm:p-4">
+        <div class="modal-enter bg-gradient-to-b from-slate-900/95 via-slate-950/98 to-black border-2 border-purple-400/65 rounded-2xl p-3 sm:p-5 w-full max-w-[490px] shadow-[0_0_45px_rgba(168,85,247,0.35)] flex flex-col max-h-[92vh] relative overflow-hidden">
+            <div class="w-full flex items-center justify-between gap-2 bg-slate-950/90 border-2 border-purple-400/55 rounded-xl px-3.5 py-2 mb-2.5 shadow-[0_0_22px_rgba(168,85,247,0.28)] shrink-0">
                 <div class="flex flex-col text-left">
                     <div class="flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
-                        <span class="text-[8px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Collezione Attiva</span>
+                        <span class="text-[8px] sm:text-[10px] text-purple-300 font-black tracking-[0.22em] uppercase leading-none">Arsenale &amp; Maestrie</span>
                     </div>
-                    <h2 class="text-base sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Arsenale Reliquie</h2>
+                    <h2 class="text-base sm:text-2xl font-display font-black text-white uppercase tracking-wider leading-none mt-1 m-0">Inventario</h2>
                 </div>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300 shrink-0">
-                    <i class="fa-solid fa-gem text-sm sm:text-lg"></i>
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-950/80 border-2 border-purple-400 flex items-center justify-center text-purple-300">
+                        <i class="fa-solid fa-gem text-sm sm:text-lg"></i>
+                    </div>
+                    <button onclick="UIManager.hideModal('collectedRelicsModal')" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-all active:scale-95" title="Chiudi">
+                        <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Griglia 6 colonne: ospita tutte le 27 reliquie su 5 righe compatte senza scroll su smartphone -->
-            <div id="collectedRelicsGrid" class="grid grid-cols-6 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar p-1 justify-items-center content-start shrink-0">
+            <div id="inventoryScrollBody" class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5 space-y-2.5">
+                <div class="bg-slate-950/85 border border-amber-400/35 rounded-xl p-2 sm:p-2.5">
+                    <div class="flex items-center justify-between border-b border-amber-500/20 pb-1.5 mb-2">
+                        <span class="text-[10px] sm:text-xs font-display font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt"></i> Peak Statistiche
+                        </span>
+                        <span id="inventoryPeakBadge" class="text-[9px] sm:text-[10px] font-black text-amber-200 bg-amber-950/60 border border-amber-400/40 px-2 py-0.5 rounded-md uppercase tracking-wider">0/10 Sbloccati</span>
+                    </div>
+                    <div id="inventoryMasteryPanel" class="grid grid-cols-5 gap-1 sm:gap-1.5"></div>
+                </div>
 
+                <div class="bg-slate-950/85 border border-purple-400/35 rounded-xl p-2 sm:p-2.5">
+                    <div class="flex items-center justify-between border-b border-purple-500/20 pb-1.5 mb-2">
+                        <span class="text-[10px] sm:text-xs font-display font-black text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-gem"></i> Reliquie in Possesso
+                        </span>
+                        <span id="inventoryRelicCount" class="text-[9px] sm:text-[10px] font-black text-purple-200 bg-purple-950/60 border border-purple-400/40 px-2 py-0.5 rounded-md uppercase tracking-wider">0</span>
+                    </div>
+                    <div id="collectedRelicsGrid" class="grid grid-cols-6 gap-1.5 sm:gap-2 p-0.5 justify-items-center content-start"></div>
+                </div>
             </div>
 
-            <div class="mt-2.5 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-2.5 min-h-[72px] sm:min-h-[82px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0">
-                <h3 id="relic-detail-name" class="text-xs sm:text-sm font-black text-gray-300 uppercase tracking-widest mb-0.5">IL TUO ARSENALE</h3>
-                <p id="relic-detail-desc" class="text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0">Tocca un'icona per leggerne i dettagli.</p>
+            <div id="relic-detail-box" class="mt-2.5 bg-slate-950/90 border-2 border-purple-400/45 rounded-xl p-2.5 min-h-[70px] sm:min-h-[80px] shadow-[0_0_18px_rgba(168,85,247,0.2)] flex flex-col justify-center items-center text-center shrink-0">
+                <h3 id="relic-detail-name" class="text-xs sm:text-sm font-black text-gray-300 uppercase tracking-widest mb-0.5">IL TUO INVENTARIO</h3>
+                <p id="relic-detail-desc" class="text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0">Tocca un Peak o una Reliquia per leggerne l'effetto.</p>
             </div>
 
-            <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-2.5 w-full py-2.5 sm:py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">Chiudi</button>
+            <button onclick="UIManager.hideModal('collectedRelicsModal')" class="mt-2.5 w-full py-2.5 sm:py-3 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-widest text-slate-950 bg-gradient-to-r from-purple-300 via-fuchsia-400 to-purple-500 border-2 border-white shadow-[0_0_24px_rgba(168,85,247,0.65)] flex items-center justify-center gap-2 shrink-0 z-10 cursor-pointer transition-all active:scale-95">Chiudi</button>
         </div>
     </div>
 
@@ -6677,12 +6643,21 @@ const DeathSceneSystem = {
         }
     },
 
-    terminateRunFromOptions() {
+    requestResetRun() {
+        AudioEngine.playClick();
+        const modal = document.getElementById('confirmResetModal');
+        if (modal) modal.classList.remove('hidden');
+    },
+
+    confirmResetRun() {
         AudioEngine.playClick();
         this.clearSavedRun();
         ShopSystem.reset();
 
-        document.getElementById('optionsModal').classList.add('hidden');
+        ['confirmResetModal', 'collectedRelicsModal', 'pauseModal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
 
         if (Game.state === 'MENU') {
             this.updateMainMenuButton();
@@ -6693,27 +6668,6 @@ const DeathSceneSystem = {
     }
 };
 const UIManager = {
-    activeInfoTab: 'basics',
-    setInfoTab(tabId, silent = false) {
-        if (!silent && typeof AudioEngine !== 'undefined') AudioEngine.playClick();
-        this.activeInfoTab = tabId;
-        const tabBtns = document.querySelectorAll('#info-tabs button[data-tab]');
-        for (let i = 0; i < tabBtns.length; i++) {
-            const btn = tabBtns[i];
-            const isActive = (btn.getAttribute('data-tab') === tabId);
-            btn.className = isActive
-                ? 'flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.28)]'
-                : 'flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-lg border text-[10px] sm:text-[11px] font-black uppercase tracking-wide cursor-pointer transition-all bg-slate-900/80 border-white/15 text-gray-400 hover:text-white';
-        }
-        const panels = document.querySelectorAll('#info-tab-panels > div[data-tab-panel]');
-        for (let i = 0; i < panels.length; i++) {
-            const p = panels[i];
-            if (p.getAttribute('data-tab-panel') === tabId) p.classList.remove('hidden');
-            else p.classList.add('hidden');
-        }
-        const scroller = document.getElementById('info-tab-panels');
-        if (scroller) scroller.scrollTop = 0;
-    },
     updateInfoModal() {
         const touchMode = (typeof isTouchDevice !== 'undefined') && isTouchDevice;
         const dodgeBtn = document.getElementById('info-dodge-btn');
@@ -6721,29 +6675,14 @@ const UIManager = {
         const shieldBtn = document.getElementById('info-shield-btn');
         if (shieldBtn) shieldBtn.innerText = touchMode ? "Tasto Scudo" : "Shift";
 
-        const grid = document.getElementById('info-controls-grid');
-        if (!grid) return;
-        if (touchMode) {
-            grid.innerHTML = `
-                <div class="flex items-center justify-between text-[10px] text-cyan-300 font-black uppercase tracking-wider mb-1"><span><i class="fa-solid fa-mobile-screen-button mr-1"></i>Comandi Touch</span><span class="text-gray-400">Dual Stick</span></div>
-                <div class="grid grid-cols-2 gap-1.5 text-[10.5px]">
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase">Stick SX</span> <span class="text-gray-300 ml-1">Muovi</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase">Stick DX</span> <span class="text-gray-300 ml-1">Mira e Spara</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-amber-300 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-400/30 font-black text-[9px] uppercase">2x Tap / Dash</span> <span class="text-gray-300 ml-1">Schivata</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-400/30 font-black text-[9px] uppercase">Scudo / Ult</span> <span class="text-gray-300 ml-1">Parata &amp; Ascesa</span></div>
-                </div>
-            `;
-        } else {
-            grid.innerHTML = `
-                <div class="flex items-center justify-between text-[10px] text-cyan-300 font-black uppercase tracking-wider mb-1"><span><i class="fa-solid fa-keyboard mr-1"></i>Comandi PC</span><span class="text-gray-400">Tastiera &amp; Mouse</span></div>
-                <div class="grid grid-cols-2 gap-1.5 text-[10.5px]">
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase">W A S D</span> <span class="text-gray-300 ml-1">Muovi</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-white bg-white/10 px-1.5 py-0.5 rounded border border-white/20 font-black text-[9px] uppercase">Click SX</span> <span class="text-gray-300 ml-1">Mira e Spara</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-amber-300 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-400/30 font-black text-[9px] uppercase">Spazio</span> <span class="text-gray-300 ml-1">Dash / Dodge</span></div>
-                    <div class="bg-black/45 border border-white/10 rounded-lg px-2 py-1.5"><span class="text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-400/30 font-black text-[9px] uppercase">Shift / Click DX</span> <span class="text-gray-300 ml-1">Scudo &amp; Ult</span></div>
-                </div>
-            `;
-        }
+        const ctrlIcon = document.getElementById('info-ctrl-icon');
+        if (ctrlIcon) ctrlIcon.className = touchMode ? "fa-solid fa-mobile-screen-button" : "fa-solid fa-keyboard";
+
+        const ctrlDesc = document.getElementById('info-controls-desc');
+        if (!ctrlDesc) return;
+        ctrlDesc.innerHTML = touchMode
+            ? '<strong class="text-white">Stick SX</strong> per muoverti, <strong class="text-white">Stick DX</strong> per mirare e sparare, <strong class="text-fuchsia-300">Tasto Ult</strong> per l\'abilità suprema.'
+            : '<strong class="text-white">W A S D</strong> per muoverti, <strong class="text-white">Mouse + Click SX</strong> per mirare e sparare, <strong class="text-fuchsia-300">Click DX</strong> per l\'abilità suprema.';
     },
     showModal(id) {
         AudioEngine.playClick();
@@ -6752,7 +6691,8 @@ const UIManager = {
         if(id === 'skinModal') SkinSystem.renderModal();
         if(id === 'infoModal') {
             this.updateInfoModal();
-            this.setInfoTab(this.activeInfoTab || 'basics', true);
+            const scroller = document.getElementById('info-scroll-body');
+            if (scroller) scroller.scrollTop = 0;
         }
     },
     hideModal(id) {
@@ -6793,51 +6733,133 @@ const UIManager = {
         const notif = document.getElementById('relic-notif');
         if (notif) notif.remove();
 
+        const masteryPanel = document.getElementById('inventoryMasteryPanel');
+        const peakBadge = document.getElementById('inventoryPeakBadge');
+        const relicCountBadge = document.getElementById('inventoryRelicCount');
         const grid = document.getElementById('collectedRelicsGrid');
         const detailName = document.getElementById('relic-detail-name');
         const detailDesc = document.getElementById('relic-detail-desc');
+        const scrollBody = document.getElementById('inventoryScrollBody');
+
+        if (scrollBody) scrollBody.scrollTop = 0;
+
+        const clearSelection = () => {
+            if (masteryPanel) {
+                masteryPanel.querySelectorAll('[data-peak-btn]').forEach(el => el.classList.remove('ring-2', 'ring-white', 'scale-105'));
+            }
+            if (grid) {
+                Array.from(grid.children).forEach(el => el.classList.remove('ring-2', 'ring-white', 'scale-105'));
+            }
+        };
+
+        const showDetail = (el, titleText, titleClass, descText, descClass) => {
+            AudioEngine.playHover();
+            clearSelection();
+            el.classList.add('ring-2', 'ring-white', 'scale-105');
+            detailName.innerText = titleText;
+            detailName.className = titleClass;
+            detailDesc.innerText = descText;
+            detailDesc.className = descClass;
+        };
+
+        // Sezione Peak Statistiche sbloccati / bloccati (5 rami x 2 tier)
+        let unlockedPeaks = 0;
+        if (masteryPanel && typeof ShopSystem !== 'undefined' && ShopSystem.branches) {
+            masteryPanel.innerHTML = '';
+            ['hp', 'dmg', 'speed', 'atkSpeed', 'crit'].forEach(key => {
+                const b = ShopSystem.branches[key];
+                if (!b) return;
+                const lvl = (ShopSystem.levels && ShopSystem.levels[key]) ? ShopSystem.levels[key] : 0;
+
+                const col = document.createElement('div');
+                col.className = 'flex flex-col items-center gap-1 rounded-lg bg-slate-900/75 border border-white/10 p-1 sm:p-1.5';
+                col.innerHTML = `
+                    <div class="flex flex-col items-center leading-tight w-full pb-1 border-b border-white/10">
+                        <i class="fa-solid ${b.icon} text-[10px] sm:text-xs" style="color:${b.color}"></i>
+                        <span class="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-tight truncate max-w-full mt-0.5">${b.short}</span>
+                        <span class="text-[8px] font-bold text-gray-400">Lv.${lvl}</span>
+                    </div>
+                `;
+
+                [1, 2].forEach(tier => {
+                    const req = tier === 1 ? 5 : 10;
+                    const tData = tier === 1 ? b.tier1 : b.tier2;
+                    const unlocked = ShopSystem.hasMastery(key, tier);
+                    if (unlocked) unlockedPeaks++;
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.setAttribute('data-peak-btn', `${key}_${tier}`);
+                    btn.className = unlocked
+                        ? 'w-full py-1 px-0.5 rounded-md border border-amber-400 bg-amber-950/75 text-amber-200 shadow-[0_0_10px_rgba(251,191,36,0.3)] flex items-center justify-center gap-1 text-[8px] sm:text-[9px] font-black cursor-pointer transition-all hover:scale-105'
+                        : 'w-full py-1 px-0.5 rounded-md border border-white/15 bg-slate-950/85 text-gray-500 opacity-65 flex items-center justify-center gap-1 text-[8px] sm:text-[9px] font-bold cursor-pointer transition-all hover:opacity-90';
+                    btn.innerHTML = unlocked
+                        ? `<i class="fa-solid ${tData.icon}"></i><span>Lv.${req}</span>`
+                        : `<i class="fa-solid fa-lock text-[8px]"></i><span>Lv.${req}</span>`;
+
+                    const handlePeakSelect = () => showDetail(
+                        btn,
+                        unlocked ? `${tData.name} • ${b.name} Lv.${req} (Attivo)` : `${tData.name} • Richiede ${b.name} Lv.${req}`,
+                        `text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5 ${unlocked ? 'text-amber-300' : 'text-gray-400'}`,
+                        unlocked ? tData.desc : `${tData.desc} (Attuale: Lv.${lvl}/${req})`,
+                        `text-[10px] sm:text-xs font-bold leading-snug m-0 ${unlocked ? 'text-white' : 'text-gray-400'}`
+                    );
+                    btn.onmouseenter = handlePeakSelect;
+                    btn.onclick = handlePeakSelect;
+                    col.appendChild(btn);
+                });
+
+                masteryPanel.appendChild(col);
+            });
+        }
+        if (peakBadge) {
+            peakBadge.innerText = `${unlockedPeaks}/10 Sbloccati`;
+            peakBadge.className = unlockedPeaks > 0
+                ? 'text-[9px] sm:text-[10px] font-black text-amber-300 bg-amber-950/75 border border-amber-400/55 px-2 py-0.5 rounded-md uppercase tracking-wider'
+                : 'text-[9px] sm:text-[10px] font-black text-gray-400 bg-slate-900/80 border border-white/15 px-2 py-0.5 rounded-md uppercase tracking-wider';
+        }
+
+        // Sezione Reliquie in Possesso
+        const ownedRelics = (Game.player && Game.player.relics) ? Game.player.relics : [];
+        if (relicCountBadge) {
+            relicCountBadge.innerText = `${ownedRelics.length}/${RelicSystem.allRelics.length}`;
+        }
 
         grid.innerHTML = '';
-        detailName.innerText = `IL TUO ARSENALE (${Game.player && Game.player.relics ? Game.player.relics.length : 0}/${RelicSystem.allRelics.length})`;
+        detailName.innerText = 'IL TUO INVENTARIO';
         detailName.className = "text-xs sm:text-sm font-black text-gray-300 uppercase tracking-widest mb-0.5";
+        detailDesc.innerText = "Tocca un Peak o una Reliquia per leggerne l'effetto.";
+        detailDesc.className = "text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0";
 
-        if (!Game.player || !Game.player.relics || Game.player.relics.length === 0) {
-            grid.className = "flex items-center justify-center py-6 text-gray-500 text-xs font-bold";
-            detailDesc.innerText = "Non hai ancora raccolto nessuna reliquia.";
-            detailDesc.className = "text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0";
+        if (ownedRelics.length === 0) {
+            grid.className = "flex items-center justify-center py-4 text-gray-500 text-[11px] font-bold text-center";
+            grid.innerHTML = '<span>Nessuna reliquia raccolta in questa run.</span>';
         } else {
-            grid.className = "grid grid-cols-6 gap-1.5 sm:gap-2 overflow-y-auto custom-scrollbar p-1 justify-items-center content-start shrink-0";
-            detailDesc.innerText = "Tocca un'icona per leggerne il potere.";
-            detailDesc.className = "text-[10px] sm:text-xs text-gray-400 font-bold leading-snug m-0";
+            grid.className = "grid grid-cols-6 gap-1.5 sm:gap-2 p-0.5 justify-items-center content-start";
+            const rarityStyles = {
+                legendary: ['border-amber-400', 'text-amber-400'],
+                epic: ['border-purple-400', 'text-purple-400'],
+                rare: ['border-blue-400', 'text-blue-400'],
+                common: ['border-green-400', 'text-green-400']
+            };
 
-            Game.player.relics.forEach(relic => {
-                let colorClass = relic.rarity === 'legendary' ? 'border-amber-400' :
-                                 relic.rarity === 'epic' ? 'border-purple-400' :
-                                 relic.rarity === 'rare' ? 'border-blue-400' :
-                                 'border-green-400';
-
-                let textColor = relic.rarity === 'legendary' ? 'text-amber-400' :
-                                relic.rarity === 'epic' ? 'text-purple-400' :
-                                relic.rarity === 'rare' ? 'text-blue-400' :
-                                'text-green-400';
+            ownedRelics.forEach(relic => {
+                const [colorClass, textColor] = rarityStyles[relic.rarity] || rarityStyles.common;
 
                 let imgBox = document.createElement('div');
                 imgBox.className = `w-11 h-11 sm:w-13 sm:h-13 aspect-square rounded-lg border-2 bg-slate-950 ${colorClass} overflow-hidden cursor-pointer transition-all hover:scale-105 hover:border-white flex items-center justify-center relative`;
                 imgBox.innerHTML = `<img src="${relic.image}" alt="${relic.name}" class="w-full h-full object-cover pointer-events-none" onerror="window.handleRelicImgError(this, false)"><i class="fa-solid ${relic.icon || 'fa-gem'} text-base sm:text-xl ${textColor} pointer-events-none" style="display:none;"></i>`;
 
-                const updateDetails = () => {
-                    AudioEngine.playHover();
-                    Array.from(grid.children).forEach(el => el.classList.remove('ring-2', 'ring-white', 'scale-105'));
-                    imgBox.classList.add('ring-2', 'ring-white', 'scale-105');
-                    detailName.innerText = relic.name;
-                    detailName.className = `text-xs sm:text-sm font-black uppercase tracking-widest mb-0.5 ${textColor}`;
-                    detailDesc.innerText = relic.desc;
-                    detailDesc.className = "text-[10px] sm:text-xs text-white font-bold leading-snug m-0";
-                };
+                const updateDetails = () => showDetail(
+                    imgBox,
+                    relic.name,
+                    `text-xs sm:text-sm font-black uppercase tracking-widest mb-0.5 ${textColor}`,
+                    relic.desc,
+                    "text-[10px] sm:text-xs text-white font-bold leading-snug m-0"
+                );
 
                 imgBox.onmouseenter = updateDetails;
                 imgBox.onclick = updateDetails;
-                imgBox.ontouchstart = (e) => { e.preventDefault(); updateDetails(); };
 
                 grid.appendChild(imgBox);
             });
@@ -6912,13 +6934,18 @@ const UIManager = {
                 orientTxt.className = "text-cyan-300 font-black";
             }
         }
-
-        const btnEndRun = document.getElementById('btn-opt-end-run');
-        if (btnEndRun) {
-            const hasActiveOrSavedRun = (Game.state !== 'MENU' && Game.state !== 'DEAD') || RunSaveSystem.hasSavedRun();
-            btnEndRun.classList.toggle('hidden', !hasActiveOrSavedRun);
-            btnEndRun.classList.toggle('flex', hasActiveOrSavedRun);
+    },
+    closeTopModal() {
+        const subModals = ['confirmResetModal', 'collectedRelicsModal', 'optionsModal', 'infoModal', 'skinModal', 'reforgeSelectModal'];
+        for (let i = 0; i < subModals.length; i++) {
+            const id = subModals[i];
+            const el = document.getElementById(id);
+            if (el && !el.classList.contains('hidden')) {
+                this.hideModal(id);
+                return true;
+            }
         }
+        return false;
     }
 };
 window.handleRelicImgError = function(img, isReforgeSlot) {
@@ -13321,7 +13348,11 @@ pushDebris(px, pz, radius, force) {
             this.keys[e.key.toLowerCase()] = true;
             if (e.code === 'Space' && this.state === 'PLAYING' && this.player && !this.player.dead) this.player.dash();
             if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && this.state === 'PLAYING' && this.player && !this.player.dead) this.player.activateShield();
-            if (e.code === 'Escape' && (this.state === 'PLAYING' || this.state === 'PAUSED')) UIManager.togglePause();
+            if (e.code === 'Escape') {
+                if (this.state === 'PLAYING') UIManager.togglePause();
+                else if (UIManager.closeTopModal()) return;
+                else if (this.state === 'PAUSED') UIManager.togglePause();
+            }
         });
         window.addEventListener('keyup', e => { this.keys[e.key.toLowerCase()] = false; });
         window.addEventListener('mousemove', e => { this.mouse.x = e.clientX; this.mouse.y = e.clientY; });
@@ -29840,23 +29871,11 @@ window.addEventListener('popstate', function (event) {
     if (Game.state === 'PLAYING') {
         UIManager.togglePause();
     }
+    else if (UIManager.closeTopModal()) {
+        return;
+    }
     else if (!document.getElementById('pauseModal').classList.contains('hidden')) {
         UIManager.togglePause();
-    }
-    else if (!document.getElementById('optionsModal').classList.contains('hidden')) {
-        UIManager.hideModal('optionsModal');
-    }
-    else if (!document.getElementById('infoModal').classList.contains('hidden')) {
-        UIManager.hideModal('infoModal');
-    }
-    else if (!document.getElementById('skinModal').classList.contains('hidden')) {
-        UIManager.hideModal('skinModal');
-    }
-    else if (!document.getElementById('reforgeSelectModal').classList.contains('hidden')) {
-        UIManager.hideModal('reforgeSelectModal');
-    }
-    else if (!document.getElementById('collectedRelicsModal').classList.contains('hidden')) {
-        UIManager.hideModal('collectedRelicsModal');
     }
     else if (!document.getElementById('highScoreScreen').classList.contains('hidden')) {
         hideHighScores();
