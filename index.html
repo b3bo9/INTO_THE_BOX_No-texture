@@ -1197,34 +1197,34 @@ body.colorblind-mode .stack-dot.active.green {
         body.force-rotate-landscape #mainMenu > div.z-10 {
             width: 100% !important;
             height: 100% !important;
-            padding: 8px 20px !important;
+            padding: clamp(8px, 2.4vh, 16px) clamp(16px, 3.5vw, 28px) !important;
             display: flex !important;
             flex-direction: row !important;
             justify-content: flex-end !important;
-            align-items: center !important;
+            align-items: stretch !important;
             box-sizing: border-box !important;
         }
         body.mobile-landscape #menu-scrim-side,
         body.force-rotate-landscape #menu-scrim-side {
             display: block !important;
-            width: 54% !important;
+            width: 56% !important;
         }
         body.mobile-landscape #menu-scrim-top,
         body.force-rotate-landscape #menu-scrim-top,
         body.mobile-landscape #menu-scrim-bottom,
         body.force-rotate-landscape #menu-scrim-bottom {
-            opacity: 0.25 !important;
+            opacity: 0.22 !important;
         }
         body.mobile-landscape #menu-ui-col,
         body.force-rotate-landscape #menu-ui-col {
-            width: min(360px, 46%) !important;
-            height: auto !important;
+            width: min(430px, 47vw) !important;
+            height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
-            justify-content: center !important;
+            justify-content: space-between !important;
             align-items: center !important;
-            gap: 6px !important;
-            margin: auto 0 !important;
+            gap: clamp(4px, 1.8vh, 10px) !important;
+            margin: 0 !important;
         }
         body.mobile-landscape #menu-center-spacer,
         body.force-rotate-landscape #menu-center-spacer {
@@ -1233,92 +1233,177 @@ body.colorblind-mode .stack-dot.active.green {
         body.mobile-landscape #menu-title-wrap,
         body.force-rotate-landscape #menu-title-wrap {
             padding-top: 0 !important;
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
         body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub,
         body.force-rotate-landscape #mainMenu .title-3d-text span.mc-word-sub {
-            font-size: 1.15rem !important;
+            font-size: clamp(1.55rem, min(4.2vw, 6.8vh), 2.4rem) !important;
         }
         body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word,
         body.force-rotate-landscape #mainMenu .title-3d-text h1.mc-block-word {
-            font-size: 1.95rem !important;
-            margin-top: 1px !important;
+            font-size: clamp(2.55rem, min(7.6vw, 11.8vh), 4.0rem) !important;
+            margin-top: 2px !important;
         }
         body.mobile-landscape #menu-actions-card,
         body.force-rotate-landscape #menu-actions-card {
             width: 100% !important;
-            max-width: 360px !important;
-            gap: 4px !important;
+            max-width: min(410px, 100%) !important;
+            flex: 0 0 auto !important;
+            gap: clamp(6px, 1.8vh, 10px) !important;
             margin: 0 !important;
         }
         body.mobile-landscape #mainMenu #btn-menu-skins,
         body.force-rotate-landscape #mainMenu #btn-menu-skins {
-            padding: 4px 10px !important;
+            padding: clamp(5px, 1.4vh, 9px) 12px !important;
+        }
+        body.mobile-landscape #mainMenu #btn-menu-crystals,
+        body.force-rotate-landscape #mainMenu #btn-menu-crystals {
+            padding: clamp(5px, 1.4vh, 9px) 14px !important;
         }
         body.mobile-landscape #mainMenu #menu-skin-frame,
         body.force-rotate-landscape #mainMenu #menu-skin-frame {
-            width: 30px !important;
-            height: 30px !important;
+            width: clamp(32px, 8.5vh, 42px) !important;
+            height: clamp(32px, 8.5vh, 42px) !important;
         }
         body.mobile-landscape #mainMenu .anim-play-pulse,
         body.force-rotate-landscape #mainMenu .anim-play-pulse {
-            padding-top: 6px !important;
-            padding-bottom: 6px !important;
-            font-size: 1.1rem !important;
+            padding-top: clamp(9px, 2.6vh, 15px) !important;
+            padding-bottom: clamp(9px, 2.6vh, 15px) !important;
+            font-size: clamp(1.25rem, 4.8vh, 1.75rem) !important;
+        }
+        body.mobile-landscape #mainMenu #btn-main-play-icon,
+        body.force-rotate-landscape #mainMenu #btn-main-play-icon {
+            font-size: clamp(1.05rem, 4vh, 1.45rem) !important;
         }
         body.mobile-landscape #mainMenu .grid-cols-3 button,
         body.force-rotate-landscape #mainMenu .grid-cols-3 button {
-            height: 32px !important;
+            height: clamp(36px, 9.6vh, 46px) !important;
+            font-size: clamp(10px, 2.8vh, 12px) !important;
         }
 
-        /* PC & Schermi Widescreen: Focus scena 3D a sinistra, Titolo + Tasti compatti a destra */
+        /* Solo il tasto GIOCA (#btn-main-play) è animato nel menù principale; gli altri restano statici */
+        #mainMenu #menu-actions-card button:not(#btn-main-play),
+        #mainMenu #btn-menu-crystals,
+        #mainMenu #skin-new-badge {
+            animation: none !important;
+            transform: none !important;
+            transition: border-color 0.14s ease, filter 0.14s ease !important;
+        }
+        #mainMenu #menu-actions-card button:not(#btn-main-play):hover,
+        #mainMenu #menu-actions-card button:not(#btn-main-play):active,
+        #mainMenu #btn-menu-crystals:hover,
+        #mainMenu #menu-actions-card button:not(#btn-main-play) *,
+        #mainMenu #btn-menu-crystals * {
+            animation: none !important;
+            transform: none !important;
+        }
+
+        /* PC & Schermi Widescreen: Focus scena 3D a sinistra, Titolo grande + Tasti proporzionati a tutta altezza a destra */
         @media (min-width: 760px) and (min-aspect-ratio: 112/100) {
             body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu > div.z-10 {
                 flex-direction: row !important;
                 justify-content: flex-end !important;
-                align-items: center !important;
-                padding: clamp(18px, 3vh, 42px) clamp(24px, 5vw, 76px) !important;
+                align-items: stretch !important;
+                padding: clamp(18px, 3.6vh, 46px) clamp(24px, 4.5vw, 72px) !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-side {
                 display: block !important;
+                width: 58% !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-top,
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-bottom {
-                opacity: 0.35 !important;
+                opacity: 0.25 !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-ui-col {
-                width: min(460px, 43vw) !important;
-                height: auto !important;
-                justify-content: center !important;
+                width: min(620px, 46vw) !important;
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
                 align-items: center !important;
-                gap: clamp(16px, 2.8vh, 30px) !important;
-                margin: auto 0 !important;
+                gap: clamp(14px, 2.5vh, 30px) !important;
+                margin: 0 !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-center-spacer {
                 display: none !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-title-wrap {
                 padding-top: 0 !important;
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .title-3d-text span.mc-word-sub {
-                font-size: clamp(2.0rem, 3.4vw, 3.25rem) !important;
+                font-size: clamp(2.4rem, min(4.6vw, 6.6vh), 4.5rem) !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .title-3d-text h1.mc-block-word {
-                font-size: clamp(3.2rem, 5.4vw, 5.15rem) !important;
+                font-size: clamp(3.9rem, min(7.7vw, 11.2vh), 7.2rem) !important;
             }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-actions-card {
                 width: 100% !important;
-                max-width: 440px !important;
+                max-width: min(520px, 100%) !important;
+                flex: 0 0 auto !important;
+                gap: clamp(12px, 2.2vh, 24px) !important;
                 margin-bottom: 0 !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #btn-menu-skins {
+                padding: clamp(10px, 1.7vh, 18px) clamp(14px, 1.5vw, 22px) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #btn-menu-crystals {
+                padding: clamp(10px, 1.7vh, 18px) clamp(16px, 1.6vw, 24px) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #menu-skin-frame {
+                width: clamp(46px, 6.2vh, 64px) !important;
+                height: clamp(46px, 6.2vh, 64px) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #menu-skin-name {
+                font-size: clamp(0.85rem, 1.55vh, 1.15rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #menu-crystals-count {
+                font-size: clamp(0.95rem, 1.8vh, 1.35rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .anim-play-pulse {
+                padding-top: clamp(18px, 3vh, 34px) !important;
+                padding-bottom: clamp(18px, 3vh, 34px) !important;
+                font-size: clamp(1.75rem, min(2.9vw, 3.6vh), 2.75rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu #btn-main-play-icon {
+                font-size: clamp(1.35rem, 2.6vh, 2.1rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .grid-cols-3 {
+                gap: clamp(10px, 1.4vw, 16px) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .grid-cols-3 button {
+                height: clamp(50px, 7.2vh, 76px) !important;
+                font-size: clamp(0.76rem, 1.42vh, 1.0rem) !important;
+                gap: 0.5rem !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .grid-cols-3 button i {
+                font-size: clamp(0.92rem, 1.75vh, 1.25rem) !important;
             }
         }
         @media (min-width: 760px) and (min-aspect-ratio: 112/100) and (max-height: 620px) {
             body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-ui-col {
                 gap: 10px !important;
             }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-actions-card {
+                gap: 8px !important;
+            }
             body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .anim-play-pulse {
-                padding-top: 10px !important;
-                padding-bottom: 10px !important;
+                padding-top: 12px !important;
+                padding-bottom: 12px !important;
                 font-size: 1.5rem !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .grid-cols-3 button {
+                height: 44px !important;
             }
         }
 
@@ -2314,15 +2399,17 @@ body.colorblind-mode .stack-dot.active.green {
 
                 <div id="menu-title-wrap" class="relative w-full flex flex-col items-center justify-start pt-2 sm:pt-4 pointer-events-none select-none">
 
-                    <div class="title-magic-backdrop">
-                        <div class="title-magic-glow"></div>
-                        <div class="title-magic-smoke layer-1"></div>
-                        <div class="title-magic-smoke layer-2"></div>
-                    </div>
+                    <div class="relative inline-flex flex-col items-center justify-center">
+                        <div class="title-magic-backdrop">
+                            <div class="title-magic-glow"></div>
+                            <div class="title-magic-smoke layer-1"></div>
+                            <div class="title-magic-smoke layer-2"></div>
+                        </div>
 
-                    <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
-                        <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.06em] text-[12vw] sm:text-6xl md:text-7xl leading-none whitespace-nowrap z-10 m-0">INTO</span>
-                        <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-1 sm:mt-1.5 whitespace-nowrap z-20 m-0">THE BOX</h1>
+                        <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
+                            <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.06em] text-[12vw] sm:text-6xl md:text-7xl leading-none whitespace-nowrap z-10 m-0">INTO</span>
+                            <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-1 sm:mt-1.5 whitespace-nowrap z-20 m-0">THE BOX</h1>
+                        </div>
                     </div>
                 </div>
 
@@ -2334,11 +2421,11 @@ body.colorblind-mode .stack-dot.active.green {
 
                 <div class="flex items-stretch gap-2.5 w-full relative z-10">
 
-                    <button id="btn-menu-skins" onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/88 border-2 border-purple-400/55 shadow-[0_0_20px_rgba(168,85,247,0.28)] flex items-center justify-between gap-3 cursor-pointer group hover:border-purple-300 transition-all text-left relative">
-                        <span id="skin-new-badge" class="hidden absolute -top-1.5 -right-1.5 w-3 h-3 bg-amber-400 rounded-full animate-ping"></span>
+                    <button id="btn-menu-skins" onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950/88 border-2 border-purple-400/55 shadow-[0_0_20px_rgba(168,85,247,0.28)] flex items-center justify-between gap-3 cursor-pointer group hover:border-purple-300 text-left relative">
+                        <span id="skin-new-badge" class="hidden absolute -top-1.5 -right-1.5 w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_8px_#fbbf24]"></span>
 
                         <div class="flex items-center gap-3 min-w-0">
-                            <div id="menu-skin-frame" class="w-11 h-11 rounded-lg bg-black/90 border-2 border-gray-600 flex items-center justify-center shrink-0 transition-all">
+                            <div id="menu-skin-frame" class="w-11 h-11 rounded-lg bg-black/90 border-2 border-gray-600 flex items-center justify-center shrink-0">
                                 <svg id="menu-skin-svg" viewBox="0 0 40 40" class="w-9 h-9"></svg>
                             </div>
                             <div class="flex flex-col min-w-0">
@@ -2346,16 +2433,16 @@ body.colorblind-mode .stack-dot.active.green {
                                     <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_#c084fc]"></span>
                                     <span class="text-[9px] text-purple-300/90 font-extrabold uppercase tracking-[0.2em] leading-none">In Uso</span>
                                 </div>
-                                <span id="menu-skin-name" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider truncate mt-1 group-hover:text-purple-200 transition-colors">Mago Oscuro</span>
+                                <span id="menu-skin-name" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider truncate mt-1 group-hover:text-purple-200">Mago Oscuro</span>
                             </div>
                         </div>
 
-                        <div class="w-7 h-7 rounded-md bg-white/5 border border-white/10 group-hover:border-purple-400/40 group-hover:bg-purple-950/40 flex items-center justify-center shrink-0 transition-all">
+                        <div class="w-7 h-7 rounded-md bg-white/5 border border-white/10 group-hover:border-purple-400/40 group-hover:bg-purple-950/40 flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-repeat text-[10px] text-gray-400 group-hover:text-purple-300"></i>
                         </div>
                     </button>
 
-                    <div onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="px-4 py-2.5 rounded-xl bg-purple-950/80 border-2 border-purple-400/75 shadow-[0_0_18px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2.5 shrink-0 cursor-pointer hover:border-white transition-all" title="Cristalli Viola">
+                    <div id="btn-menu-crystals" onclick="UIManager.showModal('skinModal')" onmouseenter="AudioEngine.playHover()" class="px-4 py-2.5 rounded-xl bg-purple-950/80 border-2 border-purple-400/75 shadow-[0_0_18px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2.5 shrink-0 cursor-pointer hover:border-white" title="Cristalli Viola">
                         <i class="fa-solid fa-gem text-purple-400 text-sm sm:text-base drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]"></i>
                         <span id="menu-crystals-count" class="text-sm sm:text-base font-black text-purple-100 tracking-wider">0</span>
                     </div>
@@ -6192,7 +6279,7 @@ const SkinSystem = {
             const effDist = Math.hypot(camDist, camHeight - lookY);
             const halfW = effDist * Math.tan((targetFov * Math.PI) / 360) * aspect;
             const isMobLand = document.body && (document.body.classList.contains('mobile-landscape') || document.body.classList.contains('force-rotate-landscape'));
-            panShift = halfW * (isMobLand ? 0.31 : 0.34);
+            panShift = halfW * (isMobLand ? 0.34 : 0.37);
         }
 
         const orbitA = this.camAngle + this.parallaxCur.x * 0.14;
