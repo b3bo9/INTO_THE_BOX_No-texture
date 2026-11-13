@@ -2553,7 +2553,7 @@ body.colorblind-mode .stack-dot.active.green {
                         <h2 class="font-display font-black text-sm sm:text-xl text-amber-300 tracking-wider uppercase leading-none m-0 truncate">
                             SCEGLI UNA RELIQUIA
                         </h2>
-                        <p class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5 truncate">
+                        <p id="relic-screen-subtitle" class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5 truncate">
                             Potenzia la tua discesa con un artefatto antico
                         </p>
                     </div>
@@ -5912,7 +5912,7 @@ const DeathSceneSystem = {
             baseSize *= 1.22;
         }
 
-        const builtEnemy = ModelFactory.buildEnemy(eType, baseSize, eMat);
+        const builtEnemy = ModelFactory.buildEnemy(eType, baseSize, eMat, eType === 'boss' ? { bossElement: k.bossElement || 'red' } : null);
         this.enemyGroup = builtEnemy.group;
         this.enemyParts = builtEnemy.parts;
         this.prepareModelForReflection(this.enemyGroup);
@@ -6799,7 +6799,43 @@ const RelicSystem = {
         if (r <= 92) return 'epic';
         return 'legendary';
     },
-   getChoices() {
+    getBossRarity(floor = (typeof Game !== 'undefined' ? Game.floor : 5), slotIndex = 0) {
+        let bossTier = Math.max(0, Math.floor((Math.max(5, floor) - 5) / 5));
+        // Slot 0 garantito almeno Epico, con peso Leggendario crescente ai piani alti
+        if (slotIndex === 0) {
+            let legPct = Math.min(82, 22 + bossTier * 14);
+            return (Math.random() * 100 < legPct) ? 'legendary' : 'epic';
+        }
+        let commonW = Math.max(8, 30 - bossTier * 5);
+        let rareW = Math.max(15, 32 - bossTier * 3);
+        let legendaryW = Math.min(40, 12 + bossTier * 5);
+        let epicW = Math.max(15, 100 - commonW - rareW - legendaryW);
+        let total = commonW + rareW + epicW + legendaryW;
+        let roll = Math.random() * total;
+        if (roll < commonW) return 'common';
+        if (roll < commonW + rareW) return 'rare';
+        if (roll < commonW + rareW + epicW) return 'epic';
+        return 'legendary';
+    },
+    pickRelicFromPool(availablePool, targetRarity, preferHighTier = false) {
+        if (!availablePool || availablePool.length === 0) return null;
+        let poolForRarity = availablePool.filter(r => r.rarity === targetRarity);
+        if (poolForRarity.length === 0 && preferHighTier) {
+            const fallbackOrder = {
+                legendary: ['epic', 'rare', 'common'],
+                epic: ['legendary', 'rare', 'common'],
+                rare: ['epic', 'legendary', 'common'],
+                common: ['rare', 'epic', 'legendary']
+            }[targetRarity] || [];
+            for (let i = 0; i < fallbackOrder.length; i++) {
+                poolForRarity = availablePool.filter(r => r.rarity === fallbackOrder[i]);
+                if (poolForRarity.length > 0) break;
+            }
+        }
+        if (poolForRarity.length === 0) poolForRarity = availablePool;
+        return poolForRarity[Math.floor(Math.random() * poolForRarity.length)];
+    },
+    getChoices(isBossReward = (typeof Game !== 'undefined' && !!Game.isBossFloor)) {
         let choices = [];
         // Filtra via le reliquie che il giocatore possiede già (Senza allocare funzioni in RAM)
         let availablePool = [];
@@ -6814,15 +6850,20 @@ const RelicSystem = {
 
         if (availablePool.length === 0) return [];
 
-        for(let i=0; i<3; i++) {
+        for (let i = 0; i < 3; i++) {
             if (availablePool.length === 0) break;
-            let targetRarity = this.getRandomRarity(); let poolForRarity = availablePool.filter(r => r.rarity === targetRarity);
-            if (poolForRarity.length === 0) poolForRarity = availablePool;
-            let randomIndex = Math.floor(Math.random() * poolForRarity.length); let selectedRelic = poolForRarity[randomIndex];
-            choices.push(selectedRelic); availablePool = availablePool.filter(r => r.id !== selectedRelic.id);
-        } return choices;
+            let targetRarity = isBossReward ? this.getBossRarity(Game.floor, i) : this.getRandomRarity();
+            let selectedRelic = this.pickRelicFromPool(availablePool, targetRarity, isBossReward);
+            choices.push(selectedRelic);
+            availablePool = availablePool.filter(r => r.id !== selectedRelic.id);
+        }
+        for (let i = choices.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            let tmp = choices[i]; choices[i] = choices[j]; choices[j] = tmp;
+        }
+        return choices;
     },
-  hasReforged: false,
+   hasReforged: false,
     selectedForReforge: null,
     currentChoices: [],
     selectedMainRelic: null,
@@ -6834,7 +6875,18 @@ const RelicSystem = {
         let restored = Array.isArray(savedChoiceIds)
             ? savedChoiceIds.map(id => this.allRelics.find(r => r.id === id)).filter(Boolean)
             : [];
-        this.currentChoices = restored.length > 0 ? restored : this.getChoices();
+        this.currentChoices = restored.length > 0 ? restored : this.getChoices(!!Game.isBossFloor);
+
+        const subEl = document.getElementById('relic-screen-subtitle');
+        if (subEl) {
+            if (Game.isBossFloor) {
+                subEl.innerText = `Bottino Boss (P.${Game.floor}): 1+ Epica/Leggendaria Garantita`;
+                subEl.className = "text-[9px] sm:text-[11px] text-amber-300/95 font-bold uppercase tracking-widest m-0 mt-0.5 truncate";
+            } else {
+                subEl.innerText = "Potenzia la tua discesa con un artefatto antico";
+                subEl.className = "text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-widest m-0 mt-0.5 truncate";
+            }
+        }
 
         const container = document.getElementById('relicCardsContainer');
         container.innerHTML = '';
@@ -9233,7 +9285,7 @@ const ModelFactory = {
 
         return { group, staffGem, halo, weaponGroup, body, head, scarf, staff, accentMesh, headAccentMesh, hatBandMesh, auraMesh, auraMat };
     },
-    buildEnemy(type, size, mat) {
+    buildEnemy(type, size, mat, options = null) {
         if (SharedMat._accentMobileLimits !== AppSettings.useMobileLimits) {
             SharedMat._accentMobileLimits = AppSettings.useMobileLimits;
             SharedMat.pyroObsidian = null;
@@ -9980,19 +10032,392 @@ const ModelFactory = {
             parts.fireRingCoreMat = fireRingCoreMat;
             parts.ringGlowMat = ringGlowMat;
         } else if (type === 'boss') {
-            let torso = new THREE.Mesh(SharedGeo.box, darkMat); torso.scale.set(size*1.5, size*1.5, size); torso.position.y = size*1.5;
-            let core = new THREE.Mesh(SharedGeo.icosahedron, mat); core.scale.set(size, size, size); core.position.set(0, size*1.5, size*0.5);
-            let head = new THREE.Mesh(SharedGeo.box, darkMat); head.scale.set(size*0.5, size*0.5, size*0.5); head.position.set(0, size*2.8, size*0.2);
-            let crown = new THREE.Mesh(SharedGeo.torus, mat); crown.scale.set(size*0.8, size*0.8, size*0.2); crown.position.set(0, size*3.2, size*0.2); crown.rotation.x = Math.PI/2;
-            let armL = new THREE.Mesh(SharedGeo.cylinder, darkMat); armL.scale.set(size*0.4, size*1.8, size*0.4); armL.position.set(-size*1.2, size*1.5, 0);
+            let elem = (options && options.bossElement) ? options.bossElement : 'red';
+            let useMob = AppSettings.useMobileLimits;
+            const makeGlowMat = (colHex, emHex, emInt = 1.35, shine = 85) => useMob
+                ? new THREE.MeshLambertMaterial({ color: colHex, emissive: emHex, emissiveIntensity: emInt })
+                : new THREE.MeshPhongMaterial({ color: colHex, emissive: emHex, emissiveIntensity: emInt, shininess: shine, flatShading: true });
 
-            // FIX SCALA GERARCHICA: Group per il braccio destro così la spada non eredita la scala del cilindro
-            let armR = new THREE.Group(); armR.position.set(size*1.2, size*1.5, 0);
-            let armRMesh = new THREE.Mesh(SharedGeo.cylinder, darkMat); armRMesh.scale.set(size*0.4, size*1.8, size*0.4);
-            let sword = new THREE.Mesh(SharedGeo.box, mat); sword.scale.set(size*0.2, size*2.4, size*0.5); sword.position.set(0, -size*0.7, size*1.1); sword.rotation.x = Math.PI/2;
-            armR.add(armRMesh, sword);
-            group.add(torso, core, head, crown, armL, armR);
-            parts.armL = armL; parts.armR = armR; parts.crown = crown;
+            if (elem === 'blue') {
+                // ARCONTE CINETICO (BLU): assetto fluttuante angolare con ali a ventaglio, lame energetiche e alone giroscopico
+                let coreMat = makeGlowMat(0xe0f2fe, 0x00ddff, 1.65, 110);
+                let trimMat = makeGlowMat(0x38bdf8, 0x0284c7, 1.25, 95);
+                let bodyPivot = new THREE.Group();
+
+                let keel = new THREE.Mesh(SharedGeo.cone, darkMat);
+                keel.scale.set(size * 0.85, size * 1.35, size * 0.85);
+                keel.position.set(0, size * 0.92, 0);
+                keel.rotation.x = Math.PI;
+
+                let thruster = new THREE.Mesh(SharedGeo.icosahedron, coreMat);
+                thruster.scale.setScalar(size * 0.34);
+                thruster.position.set(0, size * 0.42, 0);
+
+                let torso = new THREE.Mesh(SharedGeo.icosahedron, mat);
+                torso.scale.set(size * 0.95, size * 1.15, size * 0.72);
+                torso.position.set(0, size * 2.02, 0);
+
+                let chestFrame = new THREE.Mesh(SharedGeo.box, darkMat);
+                chestFrame.scale.set(size * 1.50, size * 0.48, size * 0.86);
+                chestFrame.position.set(0, size * 2.38, 0);
+
+                let core = new THREE.Mesh(SharedGeo.energyOrb, coreMat);
+                core.scale.setScalar(size * 0.46);
+                core.position.set(0, size * 2.02, size * 0.56);
+
+                let coreGlow = new THREE.Sprite(SharedMat.spriteBlue);
+                coreGlow.scale.set(size * 3.8, size * 3.8, 1);
+                coreGlow.position.set(0, size * 2.02, size * 0.78);
+
+                let head = new THREE.Mesh(SharedGeo.icosahedron, mat);
+                head.scale.set(size * 0.46, size * 0.56, size * 0.50);
+                head.position.set(0, size * 3.04, size * 0.08);
+
+                let visor = new THREE.Mesh(SharedGeo.box, coreMat);
+                visor.scale.set(size * 0.52, size * 0.14, size * 0.20);
+                visor.position.set(0, size * 3.04, size * 0.44);
+
+                let hornL = new THREE.Mesh(SharedGeo.cone, trimMat);
+                hornL.scale.set(size * 0.12, size * 0.75, size * 0.12);
+                hornL.position.set(-size * 0.32, size * 3.45, -size * 0.05);
+                hornL.rotation.set(-0.35, 0, 0.42);
+                let hornR = new THREE.Mesh(SharedGeo.cone, trimMat);
+                hornR.scale.set(size * 0.12, size * 0.75, size * 0.12);
+                hornR.position.set(size * 0.32, size * 3.45, -size * 0.05);
+                hornR.rotation.set(-0.35, 0, -0.42);
+
+                let crown = new THREE.Group();
+                crown.position.set(0, size * 3.62, 0.0);
+                crown.rotation.x = Math.PI / 2;
+                let crownOuter = new THREE.Mesh(SharedGeo.torus, trimMat);
+                crownOuter.scale.set(size * 0.92, size * 0.92, size * 0.24);
+                let crownInner = new THREE.Mesh(SharedGeo.torus, coreMat);
+                crownInner.scale.set(size * 0.56, size * 0.56, size * 0.22);
+                crownInner.rotation.y = 0.55;
+                crown.add(crownOuter, crownInner);
+
+                const buildWing = (side) => {
+                    let wg = new THREE.Group();
+                    wg.position.set(side * size * 0.42, size * 2.38, -size * 0.45);
+                    for (let f = 0; f < 3; f++) {
+                        let fin = new THREE.Mesh(SharedGeo.box, f === 1 ? trimMat : mat);
+                        fin.scale.set(size * (1.28 - f * 0.18), size * 0.20, size * 0.09);
+                        fin.position.set(side * (size * (0.72 + f * 0.10)), size * (0.50 - f * 0.42), -size * 0.10 * f);
+                        fin.rotation.z = side * (0.55 - f * 0.34);
+                        wg.add(fin);
+                    }
+                    return wg;
+                };
+                let wingL = buildWing(-1);
+                let wingR = buildWing(1);
+
+                const buildArcArm = (side) => {
+                    let ag = new THREE.Group();
+                    ag.position.set(side * size * 1.05, size * 2.25, 0);
+                    let pauldron = new THREE.Mesh(SharedGeo.cone, mat);
+                    pauldron.scale.set(size * 0.36, size * 0.65, size * 0.36);
+                    pauldron.rotation.z = -side * 0.65;
+                    pauldron.position.set(side * size * 0.08, size * 0.18, 0);
+                    let forearm = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                    forearm.scale.set(size * 0.20, size * 1.15, size * 0.20);
+                    forearm.position.set(0, -size * 0.42, size * 0.16);
+                    forearm.rotation.x = 0.42;
+                    let blade = new THREE.Mesh(SharedGeo.cone, coreMat);
+                    blade.scale.set(size * 0.14, size * 1.65, size * 0.26);
+                    blade.position.set(0, -size * 0.72, size * 1.08);
+                    blade.rotation.x = Math.PI / 2;
+                    ag.add(pauldron, forearm, blade);
+                    return ag;
+                };
+                let armL = buildArcArm(-1);
+                let armR = buildArcArm(1);
+
+                bodyPivot.add(keel, thruster, torso, chestFrame, core, coreGlow, head, visor, hornL, hornR, crown, wingL, wingR, armL, armR);
+                group.add(bodyPivot);
+                parts.bodyPivot = bodyPivot; parts.torso = torso; parts.core = core; parts.coreGlow = coreGlow;
+                parts.crown = crown; parts.crownInner = crownInner;
+                parts.wingL = wingL; parts.wingR = wingR; parts.armL = armL; parts.armR = armR;
+                parts.coreMat = coreMat; parts.trimMat = trimMat;
+            } else if (elem === 'green') {
+                // SOVRANA DELL'ALVEARE (VERDE): matriarca chitinosa a 4 zampe con sacca spore, bozzoli dorsali e falci
+                let coreMat = makeGlowMat(0xd9f99d, 0x33ff22, 1.50, 80);
+                let trimMat = makeGlowMat(0x22c55e, 0x15803d, 1.15, 70);
+
+                let pelvis = new THREE.Mesh(SharedGeo.box, darkMat);
+                pelvis.scale.set(size * 1.35, size * 0.48, size * 1.25);
+                pelvis.position.set(0, size * 1.15, -size * 0.10);
+
+                const buildBioLeg = (xOff, zOff, tiltZ, tiltX) => {
+                    let lg = new THREE.Group();
+                    lg.position.set(xOff, size * 1.18, zOff);
+                    lg.rotation.set(tiltX, 0, tiltZ);
+                    let upper = new THREE.Mesh(SharedGeo.triLeg, mat);
+                    upper.scale.set(size * 0.56, size * 1.38, size * 0.56);
+                    let tip = new THREE.Mesh(SharedGeo.cone, darkMat);
+                    tip.scale.set(size * 0.16, size * 0.55, size * 0.16);
+                    tip.position.set(0, -size * 1.18, 0);
+                    tip.rotation.x = Math.PI;
+                    lg.add(upper, tip);
+                    return lg;
+                };
+                let legFL = buildBioLeg(-size * 0.78, size * 0.35, -0.32, 0.22);
+                let legFR = buildBioLeg(size * 0.78, size * 0.35, 0.32, 0.22);
+                let legBL = buildBioLeg(-size * 0.85, -size * 0.55, -0.38, -0.25);
+                let legBR = buildBioLeg(size * 0.85, -size * 0.55, 0.38, -0.25);
+
+                let torso = new THREE.Mesh(SharedGeo.icosahedron, mat);
+                torso.scale.set(size * 1.08, size * 0.92, size * 0.92);
+                torso.position.set(0, size * 1.92, size * 0.08);
+
+                let sac = new THREE.Group();
+                sac.position.set(0, size * 1.62, -size * 0.96);
+                let sacCore = new THREE.Mesh(SharedGeo.icosahedron, coreMat);
+                sacCore.scale.set(size * 0.74, size * 0.68, size * 0.96);
+                let sacRing = new THREE.Mesh(SharedGeo.torus, darkMat);
+                sacRing.scale.set(size * 0.78, size * 0.78, size * 0.28);
+                sac.add(sacCore, sacRing);
+
+                let core = new THREE.Mesh(SharedGeo.energyOrb, coreMat);
+                core.scale.setScalar(size * 0.44);
+                core.position.set(0, size * 1.92, size * 0.88);
+
+                let coreGlow = new THREE.Sprite(SharedMat.spriteGreen);
+                coreGlow.scale.set(size * 3.9, size * 3.9, 1);
+                coreGlow.position.set(0, size * 1.92, size * 1.05);
+
+                let pods = [];
+                for (let p = 0; p < 3; p++) {
+                    let px = (p - 1) * size * 0.78;
+                    let podBase = new THREE.Mesh(SharedGeo.cone, darkMat);
+                    podBase.scale.set(size * 0.24, size * 0.72, size * 0.24);
+                    podBase.position.set(px, size * 2.66, -size * (p === 1 ? 0.22 : 0.05));
+                    podBase.rotation.z = -(p - 1) * 0.35;
+                    let podTip = new THREE.Mesh(SharedGeo.icosahedron, coreMat);
+                    podTip.scale.setScalar(size * 0.19);
+                    podTip.position.set(px * 1.15, size * 2.98, -size * (p === 1 ? 0.22 : 0.05));
+                    group.add(podBase, podTip);
+                    pods.push(podTip);
+                }
+
+                let head = new THREE.Mesh(SharedGeo.icosahedron, darkMat);
+                head.scale.set(size * 0.56, size * 0.50, size * 0.58);
+                head.position.set(0, size * 2.86, size * 0.34);
+
+                let brow = new THREE.Mesh(SharedGeo.box, mat);
+                brow.scale.set(size * 0.92, size * 0.24, size * 0.65);
+                brow.position.set(0, size * 3.06, size * 0.38);
+
+                for (let eIdx = -1; eIdx <= 1; eIdx++) {
+                    let eye = new THREE.Mesh(SharedGeo.box, coreMat);
+                    eye.scale.set(size * 0.13, size * (eIdx === 0 ? 0.14 : 0.10), size * 0.08);
+                    eye.position.set(eIdx * size * 0.20, size * (eIdx === 0 ? 2.90 : 2.80), size * 0.86);
+                    group.add(eye);
+                }
+
+                let mandL = new THREE.Mesh(SharedGeo.cone, SharedMat.leaperTeeth);
+                mandL.scale.set(size * 0.10, size * 0.38, size * 0.10);
+                mandL.position.set(-size * 0.20, size * 2.58, size * 0.84);
+                mandL.rotation.set(0.95, 0, -0.25);
+                let mandR = new THREE.Mesh(SharedGeo.cone, SharedMat.leaperTeeth);
+                mandR.scale.set(size * 0.10, size * 0.38, size * 0.10);
+                mandR.position.set(size * 0.20, size * 2.58, size * 0.84);
+                mandR.rotation.set(0.95, 0, 0.25);
+
+                let crown = new THREE.Group();
+                crown.position.set(0, size * 3.38, size * 0.28);
+                crown.rotation.x = Math.PI / 2;
+                let crownRing = new THREE.Mesh(SharedGeo.torus, trimMat);
+                crownRing.scale.set(size * 0.72, size * 0.72, size * 0.22);
+                crown.add(crownRing);
+                for (let s = 0; s < 6; s++) {
+                    let sa = (Math.PI * 2 / 6) * s;
+                    let thorn = new THREE.Mesh(SharedGeo.cone, coreMat);
+                    thorn.scale.set(size * 0.11, size * 0.42, size * 0.11);
+                    thorn.position.set(Math.cos(sa) * size * 0.76, Math.sin(sa) * size * 0.76, -size * 0.16);
+                    thorn.rotation.x = -Math.PI / 2;
+                    crown.add(thorn);
+                }
+
+                const buildScytheArm = (side) => {
+                    let ag = new THREE.Group();
+                    ag.position.set(side * size * 1.15, size * 2.02, size * 0.12);
+                    let shoulder = new THREE.Mesh(SharedGeo.icosahedron, mat);
+                    shoulder.scale.setScalar(size * 0.34);
+                    let forearm = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                    forearm.scale.set(size * 0.18, size * 1.05, size * 0.18);
+                    forearm.position.set(0, -size * 0.45, size * 0.20);
+                    forearm.rotation.x = 0.48;
+                    let scythe = new THREE.Mesh(SharedGeo.cone, trimMat);
+                    scythe.scale.set(size * 0.18, size * 1.55, size * 0.32);
+                    scythe.position.set(-side * size * 0.08, -size * 0.85, size * 0.96);
+                    scythe.rotation.set(Math.PI / 2 + 0.15, 0, side * 0.18);
+                    ag.add(shoulder, forearm, scythe);
+                    return ag;
+                };
+                let armL = buildScytheArm(-1);
+                let armR = buildScytheArm(1);
+
+                group.add(pelvis, legFL, legFR, legBL, legBR, torso, sac, core, coreGlow, head, brow, mandL, mandR, crown, armL, armR);
+                parts.torso = torso; parts.sac = sac; parts.core = core; parts.coreGlow = coreGlow;
+                parts.crown = crown; parts.pods = pods; parts.armL = armL; parts.armR = armR;
+                parts.legFL = legFL; parts.legFR = legFR; parts.legBL = legBL; parts.legBR = legBR;
+                parts.coreMat = coreMat; parts.trimMat = trimMat;
+            } else {
+                // COLOSSO DELLA FORGIA (ROSSO): titano vulcanico corazzato con fornaci dorsali, costole apribili e spadone lavico
+                let coreMat = makeGlowMat(0xffcc33, 0xff5500, 1.55, 90);
+                let trimMat = makeGlowMat(0xff3300, 0xff1100, 1.15, 75);
+
+                let pelvis = new THREE.Mesh(SharedGeo.box, darkMat);
+                pelvis.scale.set(size * 1.48, size * 0.46, size * 0.96);
+                pelvis.position.set(0, size * 1.02, 0);
+
+                const buildTitanLeg = (side) => {
+                    let lg = new THREE.Group();
+                    lg.position.set(side * size * 0.56, size * 1.02, 0);
+                    let legCol = new THREE.Mesh(SharedGeo.box, darkMat);
+                    legCol.scale.set(size * 0.46, size * 1.02, size * 0.54);
+                    legCol.position.set(0, -size * 0.51, 0);
+                    let greave = new THREE.Mesh(SharedGeo.box, mat);
+                    greave.scale.set(size * 0.52, size * 0.58, size * 0.62);
+                    greave.position.set(0, -size * 0.68, size * 0.04);
+                    let knee = new THREE.Mesh(SharedGeo.cone, trimMat);
+                    knee.scale.set(size * 0.16, size * 0.36, size * 0.16);
+                    knee.position.set(0, -size * 0.36, size * 0.38);
+                    knee.rotation.x = Math.PI / 2;
+                    lg.add(legCol, greave, knee);
+                    return lg;
+                };
+                let legL = buildTitanLeg(-1);
+                let legR = buildTitanLeg(1);
+
+                let spineBack = new THREE.Mesh(SharedGeo.box, darkMat);
+                spineBack.scale.set(size * 1.52, size * 1.42, size * 0.58);
+                spineBack.position.set(0, size * 1.92, -size * 0.24);
+
+                let shoulderBar = new THREE.Mesh(SharedGeo.box, mat);
+                shoulderBar.scale.set(size * 2.15, size * 0.36, size * 0.88);
+                shoulderBar.position.set(0, size * 2.58, -size * 0.06);
+
+                const buildCageDoor = (side) => {
+                    let door = new THREE.Group();
+                    door.position.set(side * size * 0.72, size * 1.92, size * 0.38);
+                    let plate = new THREE.Mesh(SharedGeo.box, mat);
+                    plate.scale.set(size * 0.66, size * 1.24, size * 0.24);
+                    plate.position.set(-side * size * 0.34, 0, 0);
+                    for (let r = -1; r <= 1; r++) {
+                        let rib = new THREE.Mesh(SharedGeo.box, darkMat);
+                        rib.scale.set(size * 0.68, size * 0.14, size * 0.30);
+                        rib.position.set(-side * size * 0.34, r * size * 0.38, size * 0.04);
+                        door.add(rib);
+                    }
+                    door.add(plate);
+                    return door;
+                };
+                let cageL = buildCageDoor(-1);
+                let cageR = buildCageDoor(1);
+
+                let core = new THREE.Mesh(SharedGeo.energyOrb, coreMat);
+                core.scale.setScalar(size * 0.54);
+                core.position.set(0, size * 1.92, size * 0.28);
+
+                let coreGlow = new THREE.Sprite(SharedMat.spriteYellow);
+                coreGlow.scale.set(size * 4.4, size * 4.4, 1);
+                coreGlow.position.set(0, size * 1.92, size * 0.62);
+
+                const buildStack = (side) => {
+                    let st = new THREE.Group();
+                    st.position.set(side * size * 0.96, size * 2.75, -size * 0.26);
+                    st.rotation.z = -side * 0.24;
+                    let pipe = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                    pipe.scale.set(size * 0.24, size * 0.82, size * 0.24);
+                    pipe.position.y = size * 0.38;
+                    let flame = new THREE.Mesh(SharedGeo.cone, coreMat);
+                    flame.scale.set(size * 0.22, size * 0.48, size * 0.22);
+                    flame.position.y = size * 0.96;
+                    st.add(pipe, flame);
+                    return st;
+                };
+                let stackL = buildStack(-1);
+                let stackR = buildStack(1);
+
+                let head = new THREE.Mesh(SharedGeo.box, darkMat);
+                head.scale.set(size * 0.64, size * 0.58, size * 0.62);
+                head.position.set(0, size * 2.98, size * 0.10);
+
+                let helmBrow = new THREE.Mesh(SharedGeo.box, mat);
+                helmBrow.scale.set(size * 0.72, size * 0.22, size * 0.68);
+                helmBrow.position.set(0, size * 3.22, size * 0.12);
+
+                let eyeL = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+                eyeL.scale.set(size * 0.16, size * 0.10, size * 0.08);
+                eyeL.position.set(-size * 0.17, size * 2.98, size * 0.43);
+                let eyeR = new THREE.Mesh(SharedGeo.box, SharedMat.enemyEye);
+                eyeR.scale.set(size * 0.16, size * 0.10, size * 0.08);
+                eyeR.position.set(size * 0.17, size * 2.98, size * 0.43);
+
+                let hornL = new THREE.Mesh(SharedGeo.cone, trimMat);
+                hornL.scale.set(size * 0.18, size * 0.92, size * 0.18);
+                hornL.position.set(-size * 0.45, size * 3.40, size * 0.12);
+                hornL.rotation.set(0.32, 0, 0.48);
+                let hornR = new THREE.Mesh(SharedGeo.cone, trimMat);
+                hornR.scale.set(size * 0.18, size * 0.92, size * 0.18);
+                hornR.position.set(size * 0.45, size * 3.40, size * 0.12);
+                hornR.rotation.set(0.32, 0, -0.48);
+
+                let crown = new THREE.Group();
+                crown.position.set(0, size * 3.62, size * 0.10);
+                crown.rotation.x = Math.PI / 2;
+                let crownRing = new THREE.Mesh(SharedGeo.torus, trimMat);
+                crownRing.scale.set(size * 0.78, size * 0.78, size * 0.24);
+                crown.add(crownRing);
+                for (let k = 0; k < 4; k++) {
+                    let ka = (Math.PI / 2) * k;
+                    let spike = new THREE.Mesh(SharedGeo.cone, coreMat);
+                    spike.scale.set(size * 0.12, size * 0.36, size * 0.12);
+                    spike.position.set(Math.cos(ka) * size * 0.78, Math.sin(ka) * size * 0.78, -size * 0.16);
+                    spike.rotation.x = -Math.PI / 2;
+                    crown.add(spike);
+                }
+
+                let armL = new THREE.Group();
+                armL.position.set(-size * 1.32, size * 2.25, 0);
+                let pauldronL = new THREE.Mesh(SharedGeo.box, mat);
+                pauldronL.scale.set(size * 0.56, size * 0.46, size * 0.62);
+                let armLMesh = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                armLMesh.scale.set(size * 0.30, size * 1.45, size * 0.30);
+                armLMesh.position.y = -size * 0.65;
+                let fistL = new THREE.Mesh(SharedGeo.box, trimMat);
+                fistL.scale.set(size * 0.42, size * 0.44, size * 0.42);
+                fistL.position.y = -size * 1.32;
+                armL.add(pauldronL, armLMesh, fistL);
+
+                let armR = new THREE.Group();
+                armR.position.set(size * 1.32, size * 2.25, 0);
+                let pauldronR = new THREE.Mesh(SharedGeo.box, mat);
+                pauldronR.scale.set(size * 0.56, size * 0.46, size * 0.62);
+                let armRMesh = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                armRMesh.scale.set(size * 0.30, size * 1.45, size * 0.30);
+                armRMesh.position.y = -size * 0.65;
+                let swordHilt = new THREE.Mesh(SharedGeo.box, darkMat);
+                swordHilt.scale.set(size * 0.68, size * 0.16, size * 0.24);
+                swordHilt.position.set(0, -size * 1.25, size * 0.38);
+                let sword = new THREE.Mesh(SharedGeo.box, mat);
+                sword.scale.set(size * 0.20, size * 2.45, size * 0.52);
+                sword.position.set(0, -size * 1.25, size * 1.55);
+                sword.rotation.x = Math.PI / 2;
+                let swordEdge = new THREE.Mesh(SharedGeo.box, coreMat);
+                swordEdge.scale.set(size * 0.10, size * 2.52, size * 0.22);
+                swordEdge.position.set(0, -size * 1.25, size * 1.62);
+                swordEdge.rotation.x = Math.PI / 2;
+                armR.add(pauldronR, armRMesh, swordHilt, sword, swordEdge);
+
+                group.add(pelvis, legL, legR, spineBack, shoulderBar, cageL, cageR, core, coreGlow, stackL, stackR, head, helmBrow, eyeL, eyeR, hornL, hornR, crown, armL, armR);
+                parts.legL = legL; parts.legR = legR; parts.cageL = cageL; parts.cageR = cageR;
+                parts.core = core; parts.coreGlow = coreGlow; parts.crown = crown;
+                parts.stackL = stackL; parts.stackR = stackR;
+                parts.armL = armL; parts.armR = armR;
+                parts.coreMat = coreMat; parts.trimMat = trimMat;
+            }
         }
 
         this.setupShadows(group);
@@ -10617,7 +11042,8 @@ class Hazard {
             }
 
             if ((Game.frameCount + this.updateOffset) % 5 === 0 && !AppSettings.useMobileLimits && this.activationTimer <= 0) {
-                let mat = (this.type === 'fire' || this.type === 'poison') ? SharedMat.spriteGreen : SharedMat.spriteRed;
+                let isGreenHazard = (this.type === 'fire' || this.type === 'poison' || (this.planeMat && this.planeMat.color && this.planeMat.color.getHex() === 0x33ff00));
+                let mat = isGreenHazard ? SharedMat.spriteGreen : SharedMat.spriteRed;
                 if (this.type === 'crystal_fire' || this.type === 'snake_fire') mat = SharedMat.spritePink;
                 Game.getParticle().spawn(this.x + MathUtils.randomRange(-this.radius, this.radius), 2, this.y + MathUtils.randomRange(-this.radius, this.radius), mat, 'trail');
             }
@@ -10661,7 +11087,7 @@ class Hazard {
                             let pCd = this.hitCooldown.get('player') || 0;
                             if (Game.playTime >= pCd) {
                                 let playerDmg = this.type === 'crystal_fire' ? Math.max(16, Game.player.stats.maxHp * 0.15) : this.damage;
-                                Game.player.takeDamage(playerDmg, 'hazard');
+                                Game.player.takeDamage(playerDmg, this.sourceEnemy || 'hazard');
                                 this.hitCooldown.set('player', Game.playTime + 1.0);
                             }
                         }
@@ -15219,12 +15645,12 @@ startGame(diffMult) {
 
       for (let i = 0, len = this.enemies.length; i < len; i++) {
             let e = this.enemies[i];
-            if (e.type === 'crystal' || e.isDying) continue;
+            if ((e.type === 'crystal' && !e.isBossNode) || e.isDying) continue;
 
             // Culling preventivo: usa _lastAuraType già calcolato in update()
             let isDamaged = (e.stats.hp < e.stats.maxHp);
             let auraType = e._lastAuraType;
-            if (!isDamaged && !auraType && !e.isBoss && !e.isMegaElite) continue;
+            if (!isDamaged && !auraType && !e.isBoss && !e.isMegaElite && !e.isBossNode) continue;
 
             let dx = refX - e.x;
             let dy = refY - e.y;
@@ -15232,11 +15658,11 @@ startGame(diffMult) {
 
             let maxUiDistSq = (e.isBoss || e.isMegaElite) ? 1800000 : 1000000;
             if (distToCamSq < maxUiDistSq) {
-                let yOffset = e.isBoss ? (e.radius * 3.4) : (e.type === 'ring_walker' ? (e.radius * (e.isMegaElite ? 3.72 : 3.55)) : (e.radius + (e.isMegaElite ? 58 : (e.isElite ? 44 : 35))));
+                let yOffset = e.isBoss ? (e.radius * 3.7) : (e.type === 'ring_walker' ? (e.radius * (e.isMegaElite ? 3.72 : 3.55)) : (e.radius + (e.isMegaElite ? 58 : (e.isElite ? 44 : 35))));
                 let pos = this.toScreenPosition(e.x, yOffset, e.y);
 
                 if (pos.z < 1 && pos.x > -60 && pos.x < this.width + 60 && pos.y > -60 && pos.y < this.height + 60) {
-                    if ((isDamaged || e.isBoss || e.isMegaElite) && this._hpBarCount < this._hpBars.length) {
+                    if ((isDamaged || e.isBoss || e.isMegaElite || e.isBossNode) && this._hpBarCount < this._hpBars.length) {
                         let bar = this._hpBars[this._hpBarCount];
                         bar.x = pos.x;
                         bar.y = pos.y;
@@ -15247,6 +15673,8 @@ startGame(diffMult) {
                         bar.isBoss = !!e.isBoss;
                         bar.bossElement = e.bossElement;
                         bar.isEnraged = !!e.isEnraged;
+                        bar.isStaggered = !!(e.staggerTimer && e.staggerTimer > 0);
+                        bar.bossShieldCount = e.activeNodeCount || 0;
                         bar.flash = e.flashTimer > 0;
                         this._hpBarCount++;
                     }
@@ -15348,18 +15776,18 @@ startGame(diffMult) {
                     else this._bossCatchupPct += (b.pct - this._bossCatchupPct) * 0.08;
 
                     let bossCol = b.bossElement === 'blue' ? '#00ccff' : (b.bossElement === 'green' ? '#22ff44' : '#ff1838');
-                    let frameCol = b.isEnraged ? '#ff3300' : '#fbbf24';
+                    let frameCol = b.isStaggered ? '#fde047' : (b.isEnraged ? '#ff3300' : '#fbbf24');
 
                     this.uiCtx.fillStyle = 'rgba(5, 5, 10, 0.95)';
                     this.uiCtx.fillRect(bx - 3, by - 3, w + 6, h + 6);
                     this.uiCtx.strokeStyle = frameCol;
-                    this.uiCtx.lineWidth = 1.5;
+                    this.uiCtx.lineWidth = b.isStaggered ? 2.2 : 1.5;
                     this.uiCtx.strokeRect(bx - 2.5, by - 2.5, w + 5, h + 5);
 
                     this.uiCtx.fillStyle = '#ffffff';
                     this.uiCtx.fillRect(bx, by, w * this._bossCatchupPct, h);
 
-                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : bossCol;
+                    this.uiCtx.fillStyle = b.flash ? '#ffffff' : (b.isStaggered ? '#facc15' : bossCol);
                     this.uiCtx.fillRect(bx, by, w * b.pct, h);
                     if (!b.flash && b.pct > 0) {
                         this.uiCtx.fillStyle = 'rgba(255, 255, 255, 0.32)';
@@ -15379,6 +15807,20 @@ startGame(diffMult) {
                     this.uiCtx.lineTo(b.x - 5, by - 4);
                     this.uiCtx.closePath();
                     this.uiCtx.fill();
+
+                    if (b.isStaggered) {
+                        this.uiCtx.font = 'bold 9px sans-serif';
+                        this.uiCtx.textAlign = 'center';
+                        this.uiCtx.fillStyle = '#fde047';
+                        this.uiCtx.fillText('VULNERABILE!', b.x, by - 12);
+                    } else if (b.bossShieldCount > 0) {
+                        let pipCol = b.bossElement === 'blue' ? '#38bdf8' : '#4ade80';
+                        this.uiCtx.fillStyle = pipCol;
+                        let startX = b.x + 10;
+                        for (let p = 0; p < Math.min(3, b.bossShieldCount); p++) {
+                            this.uiCtx.fillRect(startX + p * 7, by - 7, 5, 4);
+                        }
+                    }
                } else if (b.isMegaElite) {
 
                     let w = 68;
@@ -22352,14 +22794,20 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
             }
         }
 
+                let activeBoss = (Game.isBossFloor && Game.enemies) ? Game.enemies.find(e => e && e.isBoss) : null;
+                let fallbackBossElem = activeBoss ? activeBoss.bossElement : 'red';
                 let killerEntity = (source && typeof source === 'object' && source.type) ? source : null;
                 if (killerEntity && killerEntity.owner === 'enemy') {
-                    const projToEnemy = { arrow: 'skeleton_archer', enemy_bolt: 'mage', enemy_fireball: 'fire_demon', fire_shape: 'pyromancer', orc_club: 'orc', homing_arrow: 'boss' };
-                    killerEntity = { type: projToEnemy[killerEntity.type] || 'orc' };
+                    if (killerEntity.sourceEntity && killerEntity.sourceEntity.type) {
+                        killerEntity = killerEntity.sourceEntity;
+                    } else {
+                        const projToEnemy = { arrow: 'skeleton_archer', enemy_bolt: 'mage', enemy_fireball: 'fire_demon', fire_shape: 'pyromancer', orc_club: 'orc', homing_arrow: 'boss' };
+                        killerEntity = { type: projToEnemy[killerEntity.type] || 'orc', bossElement: fallbackBossElem };
+                    }
                 }
                 if (!killerEntity || killerEntity.type === 'crate' || killerEntity.type === 'urn') {
                     if (Game.isBossFloor) {
-                        killerEntity = { type: 'boss', bossElement: 'red' };
+                        killerEntity = { type: 'boss', bossElement: fallbackBossElem };
                     } else {
                         let closestE = null, minDSq = Infinity;
                         for (let i = 0; i < Game.enemies.length; i++) {
@@ -22377,7 +22825,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     slime: 0xaa00ff, slime_mini: 0xcc33ff, leaper: 0xaa00ff,
                     crystal: 0xff00ff, pyromancer: 0xff3300, fire_demon: 0xff4400,
                     mage: 0x00aaff, trapper: 0x00e5ff, golem: 0x00aaff, ring_walker: 0x141418,
-                    roller: 0xd97706, dark_prophet: 0xff5500, boss: 0x550000
+                    roller: 0xd97706, dark_prophet: 0xff5500, boss: 0x8c1818
                 };
                 const enemyNamesIT = {
                     orc: 'Orco Guerriero',
@@ -22397,7 +22845,15 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
                     dark_prophet: 'Profeta Oscuro',
                     boss: 'Signore del Dungeon'
                 };
-                let killerName = enemyNamesIT[killerEntity.type] || 'Entità Oscura';
+                const bossNamesIT = {
+                    red: 'Colosso della Forgia',
+                    blue: 'Arconte Cinetico',
+                    green: "Sovrana dell'Alveare"
+                };
+                let killerBossElem = killerEntity.bossElement || fallbackBossElem;
+                let killerName = (killerEntity.type === 'boss' && bossNamesIT[killerBossElem])
+                    ? bossNamesIT[killerBossElem]
+                    : (enemyNamesIT[killerEntity.type] || 'Entità Oscura');
                 if (killerEntity.isPursuer) killerName = 'Inseguitore Immortale';
                 else if (killerEntity.isMegaElite) killerName += ' (Mega Elite)';
                 else if (killerEntity.isGolden) killerName += ' (Dorato)';
@@ -22408,6 +22864,7 @@ if (Game.ultimateActive) currentSpeed *= 1.35; currentSpeed = Math.min(currentSp
 
                 Game.lastKillerInfo = {
                     type: killerEntity.type || 'orc',
+                    bossElement: killerBossElem,
                     color: (killerEntity.mat && killerEntity.mat.color) ? killerEntity.mat.color.getHex() : (defaultColors[killerEntity.type] || 0x5c4033),
                     isElite: !!killerEntity.isElite,
                     isMegaElite: !!killerEntity.isMegaElite,
@@ -22547,9 +23004,12 @@ class Enemy extends Entity {
         this.mat = null;
     }
 
-  spawn(x, y, type, level, disableElite = false) {
+  spawn(x, y, type, level, disableElite = false, modelOpts = null) {
         this.active = true;
         this.dead = false;
+        this.isBossNode = false;
+        this.bossNodeKind = null;
+        this.bossRef = null;
         this.thinkOffset = Math.floor(Math.random() * 5);
         this.animPhase = Math.random() * Math.PI * 2;
         this.animSpeed = MathUtils.randomRange(0.82, 1.32);
@@ -22717,7 +23177,8 @@ class Enemy extends Entity {
 
         const useMobEnemyMat = AppSettings.useMobileLimits;
         const desiredShininess = AppSettings.isUltraPC ? 60 : 30;
-        if (this.currentType !== type || this._matMobileLimits !== useMobEnemyMat || (!useMobEnemyMat && this._matShininess !== desiredShininess)) {
+        const requestedBossElem = (type === 'boss' && modelOpts && modelOpts.bossElement) ? modelOpts.bossElement : null;
+        if (this.currentType !== type || (type === 'boss' && this._builtBossElement !== requestedBossElem) || this._matMobileLimits !== useMobEnemyMat || (!useMobEnemyMat && this._matShininess !== desiredShininess)) {
             for (let i = this.mesh.children.length - 1; i >= 0; i--) {
                 let child = this.mesh.children[i];
                 if (child === this.shadowMesh || child === this.telegraphMesh || child === this.auraRingMesh || child === this.auraGlow) continue;
@@ -22750,10 +23211,11 @@ class Enemy extends Entity {
                     type === 'ring_walker' ? 0.85 : 0.75
                 );
 
-            let modelData = ModelFactory.buildEnemy(type, baseModelSize, this.mat);
+            let modelData = ModelFactory.buildEnemy(type, baseModelSize, this.mat, modelOpts);
             this.mesh.add(modelData.group);
             this.modelParts = modelData.parts;
             this.currentType = type;
+            this._builtBossElement = requestedBossElem;
             this._matMobileLimits = useMobEnemyMat;
             this._matShininess = desiredShininess;
 
@@ -23666,7 +24128,18 @@ class Enemy extends Entity {
         }
 
         if (this.infected && Game.frameCount % 10 === 0 && !AppSettings.useMobileLimits) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteGreen, 'trail');
-        if (this.type === 'crystal') return;
+        if (this.type === 'crystal') {
+            if (this.isBossNode && this.modelParts) {
+                if (this.modelParts.ring) this.modelParts.ring.rotation.z += dt * 3.8;
+                if (this.modelParts.gem) {
+                    this.modelParts.gem.rotation.y += dt * 2.4;
+                    this.modelParts.gem.position.y = (this.baseModelSize || 12) * 1.8 + Math.sin(Game.playTime * 4.5 + (this.animPhase || 0)) * 3.5;
+                }
+                this.syncFakeShadow(0);
+                this.mesh.updateMatrix();
+            }
+            return;
+        }
 
         if (this.clubRecoveryTimer > 0) {
             this.clubRecoveryTimer -= dt;
@@ -25279,6 +25752,38 @@ if (this.type === 'roller') {
         }
 
         if (this.type === 'crystal') {
+            if (this.isBossNode) {
+                let boss = this.bossRef;
+                let isPylon = (this.bossNodeKind === 'pylon');
+                let nodeColorStr = isPylon ? '#00ddff' : '#33ff44';
+                let nodeColorHex = isPylon ? 0x00ddff : 0x33ff44;
+                let pMat = isPylon ? SharedMat.spriteBlue : SharedMat.spriteGreen;
+                Game.addTrauma(0.45);
+                let pCount = AppSettings.isLow ? 6 : (AppSettings.useMobileLimits ? 12 : 22);
+                for (let i = 0; i < pCount; i++) Game.getParticle().spawn(this.x, 22, this.y, pMat, 'spark');
+                let bNova = Game.getParticle();
+                bNova.spawn(this.x, 18, this.y, pMat, 'nova');
+                bNova.baseSize = 115;
+                AudioEngine.playShoot('chain_lightning');
+                if (boss && !boss.dead && !boss.isDying && boss.active) {
+                    let shatterDmg = boss.stats.maxHp * (isPylon ? 0.095 : 0.105);
+                    boss.applyDirectMechanicDamage(shatterDmg, isPylon ? "PILONE DISTRUTTO!" : "BOZZOLO INFRANTO!", nodeColorStr);
+                    boss.triggerStagger(isPylon ? 2.2 : 1.9, isPylon ? "CORTOCIRCUITO!" : "LEGAME SPEZZATO!");
+                    let dxB = boss.x - this.x;
+                    let dyB = boss.y - this.y;
+                    let distB = Math.hypot(dxB, dyB) || 1;
+                    Game.getDashLine().spawn((this.x + boss.x) * 0.5, (this.y + boss.y) * 0.5, distB, Math.atan2(dyB, dxB), nodeColorHex, 7.5, 0.30);
+                    let ess = Game.getEssence();
+                    if (ess) ess.spawn(this.x, this.y, isPylon ? 'blue' : 'green');
+                }
+                this.isBossNode = false;
+                this.bossNodeKind = null;
+                this.bossRef = null;
+                if (this.shadowMesh) this.shadowMesh.visible = false;
+                this.active = false;
+                this.mesh.visible = false;
+                return;
+            }
             Game.getHazard().spawn(this.x, this.y, 100, 0.5, 300 * Game.difficultyMult, 0xaa00ff, 'crystal_fire');
             let projCount = 3;
             let speed = 250 * Game.difficultyMult;
@@ -25559,31 +26064,328 @@ if (this.type === 'roller') {
 class BossEnemy extends Enemy {
     constructor(x, y, level, element = 'red') {
         super();
-        this.spawn(x, y, 'boss', level);
-        this.isBoss = true; this.radius = 35; this.aggroRange = 2000; this.attackRange = 600;
-        this.spawnMinionTimer = 2.0; this.hazardTimer = 4.0;
         this.bossElement = element;
+        this.spawn(x, y, 'boss', level, false, { bossElement: element });
+        this.isBoss = true;
+        this.radius = 35;
+        this.aggroRange = 2000;
+        this.attackRange = element === 'blue' ? 560 : 580;
 
-       let exponentialScale = Math.pow(1.15, Math.max(0, level - 5));
-        this.stats.maxHp = Math.floor(1750 * (0.9 + (level / 5) + exponentialScale) * Game.difficultyMult);
-
-        if (this.bossElement === 'green') this.stats.maxHp *= 1.25;
+        // Curva HP fluida: evita muri spugna oltre il piano 15 mantenendo sfida sui boss iniziali
+        let effLvl = Math.max(0, level - 5);
+        let softExp = level <= 15
+            ? Math.pow(1.11, effLvl)
+            : (Math.pow(1.11, 10) * Math.pow(1.072, level - 15));
+        let elemHpMult = element === 'red' ? 1.05 : (element === 'blue' ? 0.90 : 1.00);
+        this.stats.maxHp = Math.floor(1550 * (0.95 + (level / 5) * 0.85 + softExp) * elemHpMult * Game.difficultyMult);
         this.stats.hp = this.stats.maxHp;
 
-        this.stats.minDmg = Math.floor(15 * (1 + (level/5) * 0.3) * Game.difficultyMult); this.stats.maxDmg = Math.floor(25 * (1 + (level/5) * 0.3) * Game.difficultyMult);
-        this.baseSpeed = this.bossElement === 'blue' ? 190 : 140;
-        this.speed = this.baseSpeed; this.xpValue = 1000 * (level/5);
+        let dmgCurve = 1 + (level / 5) * 0.28;
+        let elemDmgMult = element === 'red' ? 1.12 : (element === 'blue' ? 0.92 : 0.96);
+        this.stats.minDmg = Math.floor(15 * dmgCurve * elemDmgMult * Game.difficultyMult);
+        this.stats.maxDmg = Math.floor(24 * dmgCurve * elemDmgMult * Game.difficultyMult);
 
-        if (this.bossElement === 'red') this.mat.color.setHex(0x550000);
-        else if (this.bossElement === 'blue') this.mat.color.setHex(0x002255);
-        else if (this.bossElement === 'green') this.mat.color.setHex(0x004400);
+        let spdScale = Math.min(1.22, 1.0 + Math.max(0, level - 5) * 0.008);
+        this.baseSpeed = (element === 'blue' ? 175 : (element === 'red' ? 132 : 128)) * spdScale;
+        this.speed = this.baseSpeed;
+        this.xpValue = Math.floor(1000 * (level / 5) * (1 + Math.max(0, level - 10) * 0.03));
 
-        this.aggroRangeSq = this.aggroRange * this.aggroRange; this.attackRangeSq = this.attackRange * this.attackRange;
+        let baseColorHex = element === 'blue' ? 0x1d4ed8 : (element === 'green' ? 0x15803d : 0x991b1b);
+        if (this.mat) this.mat.color.setHex(baseColorHex);
+
+        this.aggroRangeSq = this.aggroRange * this.aggroRange;
+        this.attackRangeSq = this.attackRange * this.attackRange;
         this.isEnraged = false;
         this.isDying = false;
         this.deathTimer = 0;
+        this.fightTimer = 0;
+        this.staggerTimer = 0;
+        this.bossState = 'normal';
+        this.stateTimer = 0;
+        this.chargeAngle = 0;
+        this.chargePoolTick = 0;
+        this.blitzRemaining = 0;
+        this.blitzMidShot = false;
+        this.nodeHealUiTick = 0;
+        this._telegraphLaser = null;
 
-        this.bossLeapCooldown = level >= 10 ? (this.bossElement === 'blue' ? 3.0 : 6.0) : 999.0;
+        this.bossNodes = [];
+        this.bossTethers = [];
+        this.tetherMat = null;
+        this.activeNodeCount = 0;
+        this.blueThresholdTriggered = false;
+
+        this.spawnMinionTimer = element === 'green' ? 6.0 : (element === 'red' ? 7.5 : 8.5);
+        this.hazardTimer = element === 'green' ? 3.8 : 4.6;
+        this.specialTimer = element === 'red' ? 5.6 : (element === 'blue' ? 4.8 : 99.0);
+        this.nodeTimer = element === 'green' ? 3.0 : (element === 'blue' ? 7.5 : 99.0);
+        this.bossLeapCooldown = level >= 10 ? (element === 'red' ? 7.5 : 9.0) : 999.0;
+    }
+
+    clearTelegraphLaser() {
+        if (this._telegraphLaser) {
+            this._telegraphLaser.active = false;
+            this._telegraphLaser.mesh.visible = false;
+            this._telegraphLaser = null;
+        }
+    }
+
+    spawnForwardTelegraph(dist, angle, colorHex, thickness, duration) {
+        this.clearTelegraphLaser();
+        let line = Game.getDashLine();
+        if (line) {
+            let cx = this.x + Math.cos(angle) * (dist * 0.5);
+            let cy = this.y + Math.sin(angle) * (dist * 0.5);
+            line.spawn(cx, cy, dist, angle, colorHex, thickness, duration);
+            this._telegraphLaser = line;
+        }
+    }
+
+    ensureTethers() {
+        if (this.tetherMat) return;
+        let tColor = this.bossElement === 'blue' ? 0x00ddff : 0x33ff44;
+        this.tetherMat = new THREE.MeshBasicMaterial({
+            color: tColor,
+            transparent: true,
+            opacity: 0.72,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        for (let i = 0; i < 3; i++) {
+            let beam = new THREE.Mesh(SharedGeo.box, this.tetherMat);
+            beam.matrixAutoUpdate = false;
+            beam.visible = false;
+            beam.renderOrder = 10;
+            if (Game.scene) Game.scene.add(beam);
+            this.bossTethers.push(beam);
+        }
+    }
+
+    updateTethers(dt) {
+        for (let i = this.bossNodes.length - 1; i >= 0; i--) {
+            let n = this.bossNodes[i];
+            if (!n || !n.active || n.dead || !n.isBossNode) {
+                this.bossNodes.splice(i, 1);
+            }
+        }
+        this.activeNodeCount = this.bossNodes.length;
+        if (this.activeNodeCount > 0) this.ensureTethers();
+        if (this.tetherMat) {
+            this.tetherMat.opacity = 0.52 + Math.sin(Game.playTime * 9.0) * 0.22;
+        }
+        for (let i = 0; i < this.bossTethers.length; i++) {
+            let beam = this.bossTethers[i];
+            if (i < this.bossNodes.length) {
+                let n = this.bossNodes[i];
+                let dx = n.x - this.x;
+                let dz = n.y - this.y;
+                let dist = Math.hypot(dx, dz) || 1;
+                let ang = Math.atan2(dz, dx);
+                let pulseW = 2.6 + Math.sin(Game.playTime * 12.0 + i) * 0.8;
+                beam.position.set(this.x + dx * 0.5, 24, this.y + dz * 0.5);
+                beam.scale.set(dist, pulseW, pulseW);
+                beam.rotation.set(0, -ang, 0);
+                beam.updateMatrix();
+                beam.visible = true;
+            } else {
+                beam.visible = false;
+            }
+        }
+    }
+
+    disposeTethers() {
+        for (let i = 0; i < this.bossTethers.length; i++) {
+            let b = this.bossTethers[i];
+            b.visible = false;
+            if (Game.scene) Game.scene.remove(b);
+        }
+        this.bossTethers.length = 0;
+        if (this.tetherMat) {
+            this.tetherMat.dispose();
+            this.tetherMat = null;
+        }
+    }
+
+    triggerStagger(duration = 2.0, label = "VULNERABILE!") {
+        if (this.dead || this.isDying) return;
+        this.clearTelegraphLaser();
+        this.bossState = 'normal';
+        this.state = 'walk';
+        this.telegraphTimer = 0;
+        this.mesh.position.y = 0;
+        this.mesh.rotation.x = 0;
+        this.staggerTimer = Math.max(this.staggerTimer || 0, duration);
+
+        Game.addTrauma(0.45);
+        AudioEngine.playHit('crit');
+        let sNova = Game.getParticle();
+        sNova.spawn(this.x, 26, this.y, SharedMat.spriteYellow, 'nova');
+        sNova.baseSize = 140;
+        let spCount = AppSettings.isLow ? 4 : 12;
+        for (let i = 0; i < spCount; i++) {
+            Game.getParticle().spawn(this.x, 28, this.y, SharedMat.spriteYellow, 'spark');
+        }
+        Game.getFloatingText().spawn(this.x, this.y + 42, label, '#fde047', 38, true);
+    }
+
+    applyDirectMechanicDamage(dmg, label = null, colorHexStr = '#fde047') {
+        if (this.dead || this.isDying) return;
+        let actualDmg = Math.max(1, Math.floor(dmg));
+        this.stats.hp = Math.max(0, this.stats.hp - actualDmg);
+        this.flashTimer = 0.14;
+        if (Game.matchStats) Game.matchStats.dmgDealt += actualDmg;
+        if (label) Game.getFloatingText().spawn(this.x, this.y + 62, label, colorHexStr, 30, true);
+        Game.getFloatingText().spawn(this.x, this.y + 22, `-${actualDmg}`, '#fde047', 34, true);
+        if (this.stats.hp <= 0 && !this.isDying) {
+            this.startDeathSequence();
+        }
+    }
+
+    spawnBossNodes(kind, maxTotal = 2) {
+        for (let i = this.bossNodes.length - 1; i >= 0; i--) {
+            let n = this.bossNodes[i];
+            if (!n || !n.active || n.dead || !n.isBossNode) this.bossNodes.splice(i, 1);
+        }
+        let needed = maxTotal - this.bossNodes.length;
+        if (needed <= 0) return;
+
+        let mapMin = TILE_SIZE * 2.4;
+        let mapMaxX = Game.map ? (Game.map.width - 2.4) * TILE_SIZE : this.x + 350;
+        let mapMaxY = Game.map ? (Game.map.height - 2.4) * TILE_SIZE : this.y + 350;
+        let pMat = kind === 'pylon' ? SharedMat.spriteBlue : SharedMat.spriteGreen;
+        let nodeHex = kind === 'pylon' ? 0x00ddff : 0x22ff44;
+        let spawnedCount = 0;
+
+        for (let k = 0; k < needed; k++) {
+            let placedX = null, placedY = null;
+            let baseA = Math.random() * Math.PI * 2 + (k * Math.PI * 2 / needed);
+            for (let att = 0; att < 18; att++) {
+                let ang = baseA + att * 0.42;
+                let dist = MathUtils.randomRange(175, 290);
+                let cx = Math.max(mapMin, Math.min(mapMaxX, this.x + Math.cos(ang) * dist));
+                let cy = Math.max(mapMin, Math.min(mapMaxY, this.y + Math.sin(ang) * dist));
+                if (Game.map && (Game.map.isSolid(cx, cy) || Game.map.isSolid(cx + 22, cy) || Game.map.isSolid(cx - 22, cy) || Game.map.isSolid(cx, cy + 22) || Game.map.isSolid(cx, cy - 22))) continue;
+                if (Game.player && MathUtils.distanceSq({ x: cx, y: cy }, Game.player) < 110 * 110) continue;
+                let tooClose = false;
+                for (let j = 0; j < this.bossNodes.length; j++) {
+                    if (MathUtils.distanceSq({ x: cx, y: cy }, this.bossNodes[j]) < 95 * 95) { tooClose = true; break; }
+                }
+                if (tooClose) continue;
+                placedX = cx; placedY = cy;
+                break;
+            }
+            if (placedX === null) continue;
+
+            let node = Game.getEnemy();
+            if (!node) continue;
+            node.spawn(placedX, placedY, 'crystal', this.level, true);
+            node.isBossNode = true;
+            node.bossNodeKind = kind;
+            node.bossRef = this;
+            let nodeHp = Math.max(65, Math.floor(this.stats.maxHp * (kind === 'cocoon' ? 0.065 : 0.075)));
+            node.stats.maxHp = nodeHp;
+            node.stats.hp = nodeHp;
+            node.radius = 22;
+            if (node.mat) {
+                node.mat.emissive.setHex(nodeHex);
+                node.mat.emissiveIntensity = 1.65;
+            }
+            node.mesh.scale.setScalar(1.35);
+            Game.enemies.push(node);
+            Game.enemyGrid.insert(node);
+            Game.floorMaxKills++;
+            this.bossNodes.push(node);
+            spawnedCount++;
+
+            let sNova = Game.getParticle();
+            sNova.spawn(placedX, 18, placedY, pMat, 'nova');
+            sNova.baseSize = 95;
+        }
+        if (spawnedCount > 0) {
+            Game.getFloatingText().spawn(this.x, this.y + 44, kind === 'pylon' ? "PILONI ARCANI!" : "BOZZOLI SIMBIOTICI!", kind === 'pylon' ? '#38bdf8' : '#4ade80', 34, true);
+            AudioEngine.playShoot('chain_lightning');
+        }
+    }
+
+    updateElementModelVisuals(dt, coreExposed = false, isStagger = false) {
+        let p = this.modelParts;
+        if (!p) return;
+        let t = Game.playTime;
+
+        if (p.core) {
+            let coreSpin = (isStagger || coreExposed) ? 10.5 : (this.isEnraged ? 5.2 : 2.6);
+            p.core.rotation.x += dt * coreSpin;
+            p.core.rotation.y += dt * (coreSpin * 1.3);
+            let coreScale = (this.baseModelSize || 35) * (this.bossElement === 'red' ? 0.54 : 0.45) * ((coreExposed || isStagger) ? (1.18 + Math.sin(t * 24) * 0.14) : 1.0);
+            p.core.scale.setScalar(coreScale);
+        }
+        if (p.coreGlow) {
+            let gBase = (this.baseModelSize || 35) * ((coreExposed || isStagger) ? 5.4 : (this.isEnraged ? 4.4 : 3.7));
+            let gPulse = gBase * (1.0 + Math.sin(t * (isStagger ? 20 : 8)) * 0.12);
+            p.coreGlow.scale.set(gPulse, gPulse, 1);
+        }
+        if (p.crown) {
+            let cRate = isStagger ? 0.35 : (this.isEnraged ? 5.5 : 2.2);
+            p.crown.rotation.z += dt * cRate;
+            if (p.crownInner) p.crownInner.rotation.z -= dt * (cRate * 1.6);
+        }
+
+        if (this.bossElement === 'red') {
+            let targetOpen = (coreExposed || isStagger) ? 1.08 : (this.isEnraged ? 0.25 : 0.0);
+            if (p.cageL) p.cageL.rotation.y += (-targetOpen - p.cageL.rotation.y) * Math.min(1.0, dt * 10);
+            if (p.cageR) p.cageR.rotation.y += (targetOpen - p.cageR.rotation.y) * Math.min(1.0, dt * 10);
+            if (p.legL && p.legR) {
+                let gait = (this.bossState === 'normal' && !isStagger && this.speed > 0 && this.state !== 'leaping') ? Math.sin(t * 7.5) * 0.38 : 0;
+                p.legL.rotation.x = gait;
+                p.legR.rotation.x = -gait;
+            }
+        } else if (this.bossElement === 'blue') {
+            if (p.bodyPivot) {
+                let targetY = isStagger ? -10 : (6 + Math.sin(t * 4.5) * 4.5);
+                p.bodyPivot.position.y += (targetY - p.bodyPivot.position.y) * Math.min(1.0, dt * 9);
+            }
+            let targetWingY = (this.bossState === 'blitz_windup' || this.bossState === 'blitz_dash') ? 0.85 : (isStagger ? -0.45 : (0.18 + Math.sin(t * 6.0) * 0.10));
+            if (p.wingL) p.wingL.rotation.y += (targetWingY - p.wingL.rotation.y) * Math.min(1.0, dt * 12);
+            if (p.wingR) p.wingR.rotation.y += (-targetWingY - p.wingR.rotation.y) * Math.min(1.0, dt * 12);
+        } else if (this.bossElement === 'green') {
+            if (p.sac) {
+                let sacPulse = 1.0 + Math.sin(t * (this.activeNodeCount > 0 ? 7.5 : 4.2)) * 0.08 + (this.activeNodeCount * 0.06);
+                p.sac.scale.setScalar(sacPulse);
+            }
+            let gait = (this.bossState === 'normal' && !isStagger && this.speed > 0 && this.state !== 'leaping') ? Math.sin(t * 9.0) * 0.28 : 0;
+            if (p.legFL) p.legFL.rotation.x = 0.22 + gait;
+            if (p.legFR) p.legFR.rotation.x = 0.22 - gait;
+            if (p.legBL) p.legBL.rotation.x = -0.25 - gait;
+            if (p.legBR) p.legBR.rotation.x = -0.25 + gait;
+            if (p.pods) {
+                let podScale = (this.baseModelSize || 35) * 0.19 * (1.0 + Math.sin(t * 8.0) * 0.14);
+                for (let i = 0; i < p.pods.length; i++) p.pods[i].scale.setScalar(podScale);
+            }
+        }
+
+        if (this.flashTimer <= 0 && this.frozenTimer <= 0) {
+            if (isStagger) {
+                let pulseInt = 0.75 + Math.sin(t * 18) * 0.35;
+                if (this.mat && this.mat.emissive) {
+                    this.mat.emissive.setHex(0x92400e);
+                    this.mat.emissiveIntensity = pulseInt;
+                }
+                if (p.coreMat) p.coreMat.emissiveIntensity = 2.6 + Math.sin(t * 22) * 0.7;
+            } else if (this.isEnraged) {
+                let enrageHex = this.bossElement === 'blue' ? 0x0284c7 : (this.bossElement === 'green' ? 0x15803d : 0x7f1d1d);
+                if (this.mat && this.mat.emissive) {
+                    this.mat.emissive.setHex(enrageHex);
+                    this.mat.emissiveIntensity = 0.85;
+                }
+                if (p.coreMat) p.coreMat.emissiveIntensity = 2.1;
+            } else {
+                if (this.mat && this.mat.emissive) {
+                    this.mat.emissive.setHex(0x000000);
+                    this.mat.emissiveIntensity = 0.0;
+                }
+                if (p.coreMat) p.coreMat.emissiveIntensity = 1.5;
+            }
+        }
     }
 
     update(dt) {
@@ -25593,244 +26395,479 @@ class BossEnemy extends Enemy {
             return;
         }
 
-      if (this.fightTimer === undefined) this.fightTimer = 0;
-       this.fightTimer += dt;
+        this.updateTethers(dt);
+        if (this.fightTimer === undefined) this.fightTimer = 0;
+        this.fightTimer += dt;
 
-     let enrageTimeLimit = this.level <= 5 ? 55.0 : 45.0;
-        if (!this.isEnraged && (this.stats.hp <= this.stats.maxHp * 0.5 || this.fightTimer > enrageTimeLimit)) {
+        // Se congelato da essenza Blu, annulla eventuali laser/windup pendenti
+        if (this.frozenTimer > 0) {
+            if (this.bossState !== 'normal') {
+                this.clearTelegraphLaser();
+                this.bossState = 'normal';
+            }
+            super.update(dt);
+            return;
+        }
+
+        // Fase 2 (Furente): nessuna schivata frustrante con Profeti Oscuri, ma potenziamento meccanico chiaro
+        let enrageTimeLimit = this.level <= 5 ? 52.0 : 45.0;
+        if (!this.isEnraged && (this.stats.hp <= this.stats.maxHp * 0.50 || this.fightTimer > enrageTimeLimit)) {
             this.isEnraged = true;
             Game.arenaEvolution = true;
-            this.baseSpeed *= 1.35;
+            this.baseSpeed *= 1.25;
             this.speed = this.baseSpeed;
 
-            if (this.bossElement === 'red') { this.mat.color.setHex(0xff1100); if (this.modelParts.crown) this.modelParts.crown.material.emissive.setHex(0xffaa00); }
-            else if (this.bossElement === 'blue') { this.mat.color.setHex(0x0055ff); if (this.modelParts.crown) this.modelParts.crown.material.emissive.setHex(0x00ffff); }
-            else if (this.bossElement === 'green') { this.mat.color.setHex(0x33cc00); if (this.modelParts.crown) this.modelParts.crown.material.emissive.setHex(0xaaff00); }
-
-            Game.getFloatingText().spawn(this.x, this.y, "FURENTE!", this.bossElement === 'blue' ? '#00DDFF' : (this.bossElement === 'green' ? '#33FF00' : '#ff0000'), 60, true);
-            Game.addTrauma(1.5);
-            AudioEngine.playGameOverSound();
-
-            let prophetCount = this.level <= 5 ? 1 : (this.level <= 10 ? 2 : 3);
-            let spawnRadius = 250;
-            let baseAngle = Math.random() * Math.PI * 2;
-            for (let i = 0; i < prophetCount; i++) {
-                let angle = baseAngle + (Math.PI * 2 / prophetCount) * i;
-                let sx = this.x + Math.cos(angle) * spawnRadius;
-                let sy = this.y + Math.sin(angle) * spawnRadius;
-
-                if (Game.map.isSolid(sx, sy)) {
-                    sx = this.x + Math.cos(angle) * (spawnRadius * 0.5);
-                    sy = this.y + Math.sin(angle) * (spawnRadius * 0.5);
-                }
-
-               let prophet = Game.getEnemy();
-                if (prophet) { // <-- FIX CRITICO: Previene il crash se il pool è esaurito
-                    prophet.spawn(sx, sy, 'dark_prophet', this.level);
-
-                    prophet.buffTargets.push(this);
-                    this.isProphetBuffed = true;
-
-                    Game.enemies.push(prophet);
-                    Game.enemyGrid.insert(prophet);
-                    Game.floorMaxKills++;
-
-                    Game.getParticle().spawn(sx, 20, sy, SharedMat.spriteRed, 'nova');
-                }
-                }
-            Game.getFloatingText().spawn(this.x, this.y + 40, "RITUALE OSCURO!", '#ff5500', 40, true);
-
-        }
-
-        if (this.modelParts.armL && this.speed > 0 && this.state !== 'leaping') {
-            this.modelParts.armL.rotation.x = Game.animArm * (this.isEnraged ? 2 : 1);
-            this.modelParts.armR.rotation.x = -Game.animArm * (this.isEnraged ? 2 : 1);
-        }
-        if(this.modelParts.crown) this.modelParts.crown.rotation.z += dt * (this.isEnraged ? 6 : 2);
-
-        this.spawnMinionTimer -= dt;
-        if (this.spawnMinionTimer <= 0) {
-            this.spawnMinions();
-            let baseTimer = this.bossElement === 'green' ? 5.0 : 7.0;
-            this.spawnMinionTimer = (this.isEnraged ? baseTimer - 2.0 : baseTimer) + Math.random() * 2.0;
-        }
-
-        this.hazardTimer -= dt;
-        if (this.hazardTimer <= 0) {
             if (this.bossElement === 'red') {
-                Game.getHazard().spawn(Game.player.x, Game.player.y, this.isEnraged ? 50 : 40, 3.0, this.stats.maxDmg * 0.3, 0xff3300, 'enemy_fire');
-           } else if (this.bossElement === 'green') {
-
-                Game.getHazard().spawn(Game.player.x, Game.player.y, this.isEnraged ? 80 : 50, 5.0, this.stats.maxDmg * 0.2, 0xff0000, 'enemy_fire');
-            }
-            // Il boss Blu non usa trappole a terra, punta tutto sulla velocità
-            this.hazardTimer = this.isEnraged ? 3.0 : 5.0;
-        }
-
-       this.bossLeapCooldown -= dt;
-
-        if (this.level >= 10 && this.bossLeapCooldown <= 0 && this.state !== 'leaping' && !Game.player.dead && MathUtils.distanceSq(this, Game.player) > 300*300) {
-            this.state = 'leaping';
-            this.leapTimer = 0;
-            this.leapAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
-
-            if (this.bossElement === 'blue') {
-                this.leapDuration = 0.3;
-                this.bossLeapCooldown = this.isEnraged ? 3.0 : 5.0;
-
+                this.mat.color.setHex(0xdc2626);
+                if (this.modelParts && this.modelParts.trimMat) this.modelParts.trimMat.emissiveIntensity = 2.0;
+            } else if (this.bossElement === 'blue') {
+                this.mat.color.setHex(0x2563eb);
+                if (this.modelParts && this.modelParts.trimMat) this.modelParts.trimMat.emissiveIntensity = 2.0;
             } else {
-                this.leapDuration = 0.8;
-                this.bossLeapCooldown = this.isEnraged ? 5.0 : 8.0;
+                this.mat.color.setHex(0x16a34a);
+                if (this.modelParts && this.modelParts.trimMat) this.modelParts.trimMat.emissiveIntensity = 2.0;
+            }
 
+            let eColStr = this.bossElement === 'blue' ? '#00DDFF' : (this.bossElement === 'green' ? '#33FF00' : '#ff3300');
+            let eColHex = this.bossElement === 'blue' ? 0x00ddff : (this.bossElement === 'green' ? 0x33ff00 : 0xff3300);
+            Game.getFloatingText().spawn(this.x, this.y, "FASE II: FURENTE!", eColStr, 54, true);
+            Game.addTrauma(1.1);
+            AudioEngine.playShoot('explosive_arrow');
+            Game.getHazard().spawn(this.x, this.y, 260, 0.45, 0, eColHex, 'nova_ring');
+
+            let waveCount = 10;
+            let projType = this.bossElement === 'blue' ? 'enemy_bolt' : (this.bossElement === 'green' ? 'homing_arrow' : 'enemy_fireball');
+            let projSpd = this.bossElement === 'blue' ? 340 : (this.bossElement === 'green' ? 195 : 220);
+            for (let i = 0; i < waveCount; i++) {
+                let a = (Math.PI * 2 / waveCount) * i;
+                Game.getProjectile().spawn(this.x, this.y, a, projSpd, this.stats.maxDmg * 0.75, 'enemy', projType, false, false, this);
+            }
+
+            if (this.bossElement === 'red') {
+                this.specialTimer = Math.min(this.specialTimer, 1.4);
+                if (Game.player && !Game.player.dead) {
+                    Game.getHazard().spawn(Game.player.x, Game.player.y, 65, 3.5, this.stats.maxDmg * 0.40, 0xff3300, 'enemy_fire', 0, this);
+                }
+            } else if (this.bossElement === 'blue') {
+                this.spawnBossNodes('pylon', this.level >= 15 ? 3 : 2);
+                this.specialTimer = Math.min(this.specialTimer, 1.8);
+            } else if (this.bossElement === 'green') {
+                this.spawnBossNodes('cocoon', this.level >= 15 ? 3 : 2);
             }
         }
 
-        if (this.state === 'leaping') {
-            this.leapTimer += dt;
-            let progress = this.leapTimer / this.leapDuration;
+        // Boss Verde rigenera lentamente finché ha Bozzoli Simbiotici attivi
+        if (this.bossElement === 'green' && this.activeNodeCount > 0 && this.stats.hp < this.stats.maxHp && this.staggerTimer <= 0) {
+            let healPerSec = this.stats.maxHp * 0.0055 * this.activeNodeCount;
+            this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + healPerSec * dt);
+            this.nodeHealUiTick += dt;
+            if (this.nodeHealUiTick >= 1.6) {
+                this.nodeHealUiTick = 0;
+                Game.getFloatingText().spawn(this.x, this.y + 30, `+${Math.max(1, Math.floor(healPerSec * 1.6))} RIGENERA`, '#4ade80', 19);
+            }
+        }
 
-            if (progress >= 1) {
-                this.state = 'walk';
-                this.mesh.position.y = 0;
+        // Finestra di Stagger / Vulnerabilità: il boss resta stordito e subisce danni maggiorati
+        if (this.staggerTimer > 0) {
+            this.staggerTimer = Math.max(0, this.staggerTimer - dt);
+            this.speed = 0;
+            this.updateFlash(dt);
+            this.mesh.rotation.x = 0.24;
+            if (this.modelParts && this.modelParts.armL) {
+                this.modelParts.armL.rotation.x = 0.45;
+                this.modelParts.armR.rotation.x = 0.45;
+            }
+            this.updateElementModelVisuals(dt, true, true);
+            if (Game.frameCount % 6 === 0 && !AppSettings.isLow) {
+                Game.getParticle().spawn(this.x + MathUtils.randomRange(-20, 20), 32, this.y + MathUtils.randomRange(-20, 20), SharedMat.spriteYellow, 'spark');
+            }
+            if (this.staggerTimer <= 0) {
                 this.mesh.rotation.x = 0;
-                Game.addTrauma(this.bossElement === 'blue' ? 0.5 : 1.5);
-                AudioEngine.playShoot(this.bossElement === 'blue' ? 'chain_lightning' : 'explosive_arrow');
-
-                if (MathUtils.distanceSq(this, Game.player) < 160*160) {
-                    Game.player.takeDamage(this.stats.maxDmg * (this.bossElement === 'blue' ? 0.8 : 1.0), this);
-                }
-
-               if (this.bossElement === 'red') {
-                    for(let i=0; i<12; i++) { let a = (Math.PI*2/12) * i; Game.getProjectile().spawn(this.x, this.y, a, 220, this.stats.maxDmg * 0.8, 'enemy', 'enemy_fireball', false, false, this); }
-                    if (this.level >= 10 && Game.player && !Game.player.dead) {
-                        let fwAng = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
-                        Game.getHazard().spawn(this.x, this.y, 400, 2.1, this.stats.maxDmg * 1.15, 0xff1e00, 'enemy_firewall', fwAng, this);
-                        AudioEngine.playFireWall();
-                    }
-                } else if (this.bossElement === 'blue') {
-                    for(let i=0; i<8; i++) { let a = (Math.PI*2/8) * i; Game.getProjectile().spawn(this.x, this.y, a, 400, this.stats.maxDmg * 0.5, 'enemy', 'enemy_bolt', false, false, this); }
-                }
-            } else {
-                if (this.bossElement === 'blue') {
-
-                    this.push(Math.cos(this.leapAngle), Math.sin(this.leapAngle), (this.isEnraged ? 1200 : 900) * dt);
-                    this.mesh.rotation.y = -this.leapAngle + Math.PI / 2;
-                    this.mesh.updateMatrix();
-                } else {
-
-                    let currentHeight = Math.sin(progress * Math.PI) * 200;
-                    this.push(Math.cos(this.leapAngle), Math.sin(this.leapAngle), (this.isEnraged ? 550 : 400) * dt);
-                    this.mesh.position.set(this.x, currentHeight, this.y);
-                    this.mesh.rotation.y = -this.leapAngle + Math.PI / 2;
-                    this.mesh.rotation.x = -Math.cos(progress * Math.PI) * 0.5;
-                }
+                this.speed = this.baseSpeed;
             }
-            if (this.shadowMesh.visible) {
-                let bossJumpScale = this.radius * 2.8 * Math.max(0.45, 1.0 - (this.mesh.position.y || 0) / 320);
-                this.shadowMesh.position.set(this.x + 3, 0.45, this.y + 4);
-                this.shadowMesh.scale.set(bossJumpScale, 1, bossJumpScale);
-                this.shadowMesh.updateMatrix();
-            }
+            this.syncFakeShadow(this.mesh.position.y || 0);
             this.mesh.updateMatrix();
             return;
         }
 
-        super.update(dt);
-    }
+        // Stato Speciale Boss Rosso: Carica con laser telegrafato + Stagger se sbatte contro un muro
+        if (this.bossState === 'magma_windup') {
+            this.stateTimer -= dt;
+            this.speed = 0;
+            this.updateFlash(dt);
+            this.mesh.rotation.y = -this.chargeAngle + Math.PI / 2;
+            this.updateElementModelVisuals(dt, true, false);
+            if (Game.frameCount % 3 === 0 && !AppSettings.isLow) {
+                Game.getParticle().spawn(this.x, 28, this.y, SharedMat.spriteRed, 'flame');
+            }
+            if (this.stateTimer <= 0) {
+                this.clearTelegraphLaser();
+                this.bossState = 'magma_charge';
+                this.stateTimer = 0.68;
+                this.chargePoolTick = 0;
+                this.chargeHitPlayer = false;
+                AudioEngine.playDash();
+            }
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
 
-   spawnMinions() {
+        if (this.bossState === 'magma_charge') {
+            this.stateTimer -= dt;
+            this.updateFlash(dt);
+            let chargeSpd = this.isEnraged ? 820 : 680;
+            let step = chargeSpd * dt;
+            let cx = Math.cos(this.chargeAngle);
+            let cy = Math.sin(this.chargeAngle);
+            let probeX = this.x + cx * (this.radius * 0.9 + step);
+            let probeY = this.y + cy * (this.radius * 0.9 + step);
 
-        let count = isTouchDevice ? (this.isEnraged ? 2 : 1) : (this.isEnraged ? 3 : 2);
-        if (this.bossElement === 'green') count += 2;
+            this.mesh.rotation.y = -this.chargeAngle + Math.PI / 2;
+            this.updateElementModelVisuals(dt, true, false);
 
-        let spawned = false;
-        for(let i=0; i<count; i++) {
-            let angle = Math.random() * Math.PI * 2; let dist = this.radius + 80; let sx = this.x + Math.cos(angle) * dist; let sy = this.y + Math.sin(angle) * dist;
-            if (!Game.map.isSolid(sx, sy)) {
-                let minionType = null;
+            if (Game.map && Game.map.isSolid(probeX, probeY)) {
+                // Impatto contro un ostacolo: auto-danno e lunga apertura di Stagger!
+                this.specialTimer = this.isEnraged ? 6.5 : 8.5;
+                Game.getHazard().spawn(this.x, this.y, 160, 0.35, 0, 0xffaa00, 'nova_ring');
+                Game.addTrauma(1.1);
+                this.applyDirectMechanicDamage(this.stats.maxHp * 0.03, "SCHIANTO!", '#fbbf24');
+                if (!this.dead && !this.isDying) {
+                    this.triggerStagger(2.8, "NUCLEO ESPOSTO!");
+                }
+                return;
+            }
 
-                if (this.level >= 10) {
-                    if (this.bossElement === 'red') {
-                        let mr = Math.random();
-                        minionType = mr < 0.28 ? 'orc' : (mr < 0.55 ? 'roller' : (mr < 0.80 ? 'ring_walker' : 'pyromancer'));
+            this.push(cx, cy, step);
+
+            this.chargePoolTick += dt;
+            if (this.chargePoolTick >= 0.18) {
+                this.chargePoolTick = 0;
+                if (!Game.map || !Game.map.isSolid(this.x, this.y)) {
+                    Game.getHazard().spawn(this.x, this.y, 38, 2.5, this.stats.maxDmg * 0.35, 0xff3300, 'enemy_fire', 0, this);
+                }
+            }
+
+            if (Game.player && !Game.player.dead && !Game.player.isDashing && !this.chargeHitPlayer) {
+                let hitRad = this.radius + Game.player.radius + 8;
+                if (MathUtils.distanceSq(this, Game.player) <= hitRad * hitRad) {
+                    this.chargeHitPlayer = true;
+                    if (Game.player.activeShieldTimer > 0) {
+                        Game.player.shieldAbsorbed++;
+                        Game.player.shieldFlashTimer = 0.15;
+                        AudioEngine.playCollect();
+                        this.specialTimer = this.isEnraged ? 6.5 : 8.5;
+                        this.triggerStagger(2.0, "PARATO!");
+                        return;
                     }
-                    else if (this.bossElement === 'blue') minionType = Math.random() > 0.5 ? 'mage' : 'skeleton_archer';
-                    else if (this.bossElement === 'green') minionType = 'leaper';
+                    Game.player.takeDamage(this.stats.maxDmg * 1.15, this);
+                    Game.player.push(cx, cy, 45);
                 }
+            }
 
-                if(minionType) {
-                    let enemy = Game.getEnemy();
-                    if (!enemy) continue;
-                    enemy.spawn(sx, sy, minionType, this.level);
-                    Game.enemies.push(enemy); Game.enemyGrid.insert(enemy);
-                } else {
-                    Game.spawnSpecificEnemy(sx, sy, this.level);
+            if (this.stateTimer <= 0) {
+                this.specialTimer = this.isEnraged ? 6.5 : 8.5;
+                this.triggerStagger(1.0, "SURRISCALDATO!");
+                return;
+            }
+            this.syncFakeShadow(0);
+            this.mesh.updateMatrix();
+            return;
+        }
+
+        // Stato Speciale Boss Blu: Scatto Fulmineo a catena -> Surriscaldamento prevedibile
+        if (this.bossState === 'blitz_windup') {
+            this.stateTimer -= dt;
+            this.speed = 0;
+            this.updateFlash(dt);
+            this.mesh.rotation.y = -this.chargeAngle + Math.PI / 2;
+            this.updateElementModelVisuals(dt, true, false);
+            if (this.stateTimer <= 0) {
+                this.clearTelegraphLaser();
+                this.bossState = 'blitz_dash';
+                this.stateTimer = 0.22;
+                this.blitzMidShot = false;
+                this.chargeHitPlayer = false;
+                AudioEngine.playDash();
+            }
+            this.syncFakeShadow(this.mesh.position.y || 0);
+            this.mesh.updateMatrix();
+            return;
+        }
+
+        if (this.bossState === 'blitz_dash') {
+            this.stateTimer -= dt;
+            this.updateFlash(dt);
+            let dashSpd = (this.isEnraged ? 1320 : 1120) * (1 + this.activeNodeCount * 0.08);
+            let step = dashSpd * dt;
+            let cx = Math.cos(this.chargeAngle);
+            let cy = Math.sin(this.chargeAngle);
+            this.push(cx, cy, step);
+            this.mesh.rotation.y = -this.chargeAngle + Math.PI / 2;
+            this.updateElementModelVisuals(dt, true, false);
+
+            if (Game.frameCount % 2 === 0 && !AppSettings.isLow) {
+                Game.getParticle().spawn(this.x, 22, this.y, SharedMat.spriteBlue, 'spark');
+            }
+            if (!this.blitzMidShot && this.stateTimer <= 0.11 && (this.isEnraged || this.level >= 10)) {
+                this.blitzMidShot = true;
+                Game.getProjectile().spawn(this.x, this.y, this.chargeAngle + Math.PI * 0.5, 340, this.stats.maxDmg * 0.65, 'enemy', 'enemy_bolt', false, false, this);
+                Game.getProjectile().spawn(this.x, this.y, this.chargeAngle - Math.PI * 0.5, 340, this.stats.maxDmg * 0.65, 'enemy', 'enemy_bolt', false, false, this);
+            }
+            if (Game.player && !Game.player.dead && !Game.player.isDashing && !this.chargeHitPlayer) {
+                let hitRad = this.radius + Game.player.radius + 4;
+                if (MathUtils.distanceSq(this, Game.player) <= hitRad * hitRad) {
+                    this.chargeHitPlayer = true;
+                    if (Game.player.activeShieldTimer > 0) {
+                        Game.player.shieldAbsorbed++;
+                        Game.player.shieldFlashTimer = 0.15;
+                        AudioEngine.playCollect();
+                    } else {
+                        Game.player.takeDamage(this.stats.maxDmg * 0.85, this);
+                    }
                 }
-                Game.floorMaxKills++; spawned = true;
+            }
+
+            if (this.stateTimer <= 0) {
+                this.blitzRemaining--;
+                if (this.blitzRemaining > 0 && Game.player && !Game.player.dead) {
+                    this.chargeAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                    let wDur = this.isEnraged ? 0.38 : 0.46;
+                    this.bossState = 'blitz_windup';
+                    this.stateTimer = wDur;
+                    this.spawnForwardTelegraph(620, this.chargeAngle, 0x00ddff, 5.5, wDur);
+                } else {
+                    this.specialTimer = this.isEnraged ? 6.2 : 8.2;
+                    this.triggerStagger(2.1, "SOVRACCARICO!");
+                }
+                return;
+            }
+            this.syncFakeShadow(this.mesh.position.y || 0);
+            this.mesh.updateMatrix();
+            return;
+        }
+
+        // Salto parabolico (Boss Rosso & Verde dal piano 10+)
+        if (this.state === 'leaping') {
+            this.leapTimer += dt;
+            let progress = this.leapTimer / this.leapDuration;
+            if (progress >= 1) {
+                this.state = 'walk';
+                this.mesh.position.y = 0;
+                this.mesh.rotation.x = 0;
+                Game.addTrauma(1.25);
+                AudioEngine.playShoot('explosive_arrow');
+
+                if (Game.player && !Game.player.dead && !Game.player.isDashing && MathUtils.distanceSq(this, Game.player) < 150 * 150) {
+                    Game.player.takeDamage(this.stats.maxDmg, this);
+                }
+                if (this.bossElement === 'red') {
+                    for (let i = 0; i < 10; i++) {
+                        let a = (Math.PI * 2 / 10) * i;
+                        Game.getProjectile().spawn(this.x, this.y, a, 230, this.stats.maxDmg * 0.78, 'enemy', 'enemy_fireball', false, false, this);
+                    }
+                    if (Game.player && !Game.player.dead) {
+                        let fwAng = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                        Game.getHazard().spawn(this.x, this.y, 380, 2.0, this.stats.maxDmg * 1.1, 0xff1e00, 'enemy_firewall', fwAng, this);
+                        AudioEngine.playFireWall();
+                    }
+                } else if (this.bossElement === 'green') {
+                    for (let i = 0; i < 6; i++) {
+                        let a = (Math.PI * 2 / 6) * i;
+                        Game.getProjectile().spawn(this.x, this.y, a, 190, this.stats.maxDmg * 0.7, 'enemy', 'homing_arrow', false, false, this);
+                    }
+                    Game.getHazard().spawn(this.x, this.y, 75, 4.0, this.stats.maxDmg * 0.35, 0x33ff00, 'enemy_fire', 0, this);
+                }
+            } else {
+                let currentHeight = Math.sin(progress * Math.PI) * 190;
+                this.push(Math.cos(this.leapAngle), Math.sin(this.leapAngle), (this.isEnraged ? 520 : 390) * dt);
+                this.mesh.position.set(this.x, currentHeight, this.y);
+                this.mesh.rotation.y = -this.leapAngle + Math.PI / 2;
+                this.mesh.rotation.x = -Math.cos(progress * Math.PI) * 0.45;
+            }
+            this.syncFakeShadow(this.mesh.position.y || 0);
+            this.mesh.updateMatrix();
+            return;
+        }
+
+        // Gestione attivazione attacchi speciali / nodi / minion limitati
+        if (this.modelParts && this.modelParts.armL && this.speed > 0) {
+            this.modelParts.armL.rotation.x = Game.animArm * (this.isEnraged ? 1.8 : 1);
+            this.modelParts.armR.rotation.x = -Game.animArm * (this.isEnraged ? 1.8 : 1);
+        }
+
+        if (Game.player && !Game.player.dead) {
+            this.specialTimer -= dt;
+            if (this.specialTimer <= 0 && (this.bossElement === 'red' || this.bossElement === 'blue')) {
+                this.chargeAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                if (this.bossElement === 'red') {
+                    let wDur = this.isEnraged ? 0.70 : 0.82;
+                    this.bossState = 'magma_windup';
+                    this.stateTimer = wDur;
+                    this.spawnForwardTelegraph(580, this.chargeAngle, 0xff4400, 9.0, wDur);
+                    return;
+                } else if (this.bossElement === 'blue') {
+                    this.blitzRemaining = (this.isEnraged || this.level >= 10) ? 3 : 2;
+                    let wDur = this.isEnraged ? 0.44 : 0.54;
+                    this.bossState = 'blitz_windup';
+                    this.stateTimer = wDur;
+                    this.spawnForwardTelegraph(620, this.chargeAngle, 0x00ddff, 5.5, wDur);
+                    return;
+                }
+            }
+
+            if (this.bossElement === 'blue' && !this.blueThresholdTriggered && this.stats.hp <= this.stats.maxHp * 0.78) {
+                this.blueThresholdTriggered = true;
+                this.spawnBossNodes('pylon', 2);
+                this.nodeTimer = 18.0;
+            }
+            if ((this.bossElement === 'green' || (this.bossElement === 'blue' && this.blueThresholdTriggered))) {
+                this.nodeTimer -= dt;
+                if (this.nodeTimer <= 0) {
+                    if (this.activeNodeCount === 0) {
+                        let desired = (this.isEnraged && this.level >= 15) ? 3 : 2;
+                        this.spawnBossNodes(this.bossElement === 'green' ? 'cocoon' : 'pylon', desired);
+                    }
+                    this.nodeTimer = 16.5;
+                }
+            }
+
+            this.spawnMinionTimer -= dt;
+            if (this.spawnMinionTimer <= 0) {
+                this.spawnMinions();
+                this.spawnMinionTimer = (this.isEnraged ? 6.5 : 8.5) + Math.random() * 2.0;
+            }
+
+            if (this.bossElement === 'red' || this.bossElement === 'green') {
+                this.hazardTimer -= dt;
+                if (this.hazardTimer <= 0) {
+                    let hCol = this.bossElement === 'green' ? 0x33ff00 : 0xff3300;
+                    let hRad = this.isEnraged ? 62 : 48;
+                    let hDur = this.bossElement === 'green' ? 4.5 : 3.2;
+                    Game.getHazard().spawn(Game.player.x, Game.player.y, hRad, hDur, this.stats.maxDmg * 0.30, hCol, 'enemy_fire', 0, this);
+                    if (this.isEnraged) {
+                        let offA = Math.random() * Math.PI * 2;
+                        let ox = Game.player.x + Math.cos(offA) * 105;
+                        let oy = Game.player.y + Math.sin(offA) * 105;
+                        if (!Game.map || !Game.map.isSolid(ox, oy)) {
+                            Game.getHazard().spawn(ox, oy, hRad * 0.85, hDur, this.stats.maxDmg * 0.28, hCol, 'enemy_fire', 0, this);
+                        }
+                    }
+                    this.hazardTimer = this.isEnraged ? 3.4 : 4.8;
+                }
+            }
+
+            this.bossLeapCooldown -= dt;
+            if (this.level >= 10 && this.bossLeapCooldown <= 0 && (this.bossElement === 'red' || this.bossElement === 'green') && MathUtils.distanceSq(this, Game.player) > 300 * 300) {
+                this.state = 'leaping';
+                this.leapTimer = 0;
+                this.leapDuration = 0.78;
+                this.leapAngle = Math.atan2(Game.player.y - this.y, Game.player.x - this.x);
+                this.bossLeapCooldown = this.isEnraged ? 6.5 : 9.0;
             }
         }
-        if(spawned) {
-            let colorHex = this.bossElement === 'blue' ? '#00DDFF' : (this.bossElement === 'green' ? '#33FF00' : '#ff0000');
 
+        super.update(dt);
+        this.updateElementModelVisuals(dt, false, false);
+    }
+
+    spawnMinions() {
+        let activeMinions = 0;
+        for (let i = 0; i < Game.enemies.length; i++) {
+            let e = Game.enemies[i];
+            if (e && !e.dead && !e.isBoss && !e.isBossNode) activeMinions++;
+        }
+        let maxCap = (this.isEnraged && this.level >= 15) ? 3 : 2;
+        if (activeMinions >= maxCap) return;
+
+        let count = Math.min(maxCap - activeMinions, this.isEnraged ? 2 : 1);
+        for (let i = 0; i < count; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let dist = this.radius + 85;
+            let sx = this.x + Math.cos(angle) * dist;
+            let sy = this.y + Math.sin(angle) * dist;
+            if (!Game.map || !Game.map.isSolid(sx, sy)) {
+                let minionType = 'orc';
+                if (this.bossElement === 'red') {
+                    minionType = Math.random() < 0.5 ? 'roller' : (this.level >= 10 ? 'pyromancer' : 'orc');
+                } else if (this.bossElement === 'blue') {
+                    minionType = Math.random() < 0.55 ? 'mage' : 'skeleton_archer';
+                } else {
+                    minionType = Math.random() < 0.55 ? 'leaper' : 'slime';
+                }
+                let enemy = Game.getEnemy();
+                if (!enemy) continue;
+                enemy.spawn(sx, sy, minionType, this.level);
+                Game.enemies.push(enemy);
+                Game.enemyGrid.insert(enemy);
+                Game.floorMaxKills++;
+            }
         }
     }
 
     attack() {
-        this.attackCooldown = this.isEnraged ? 1.5 : 2.0;
-        let speed = this.isEnraged ? 220 : 180;
+        this.attackCooldown = this.isEnraged ? 1.65 : 2.15;
+        let speed = this.isEnraged ? 215 : 185;
 
         if (this.bossElement === 'red') {
             AudioEngine.playShoot('enemy_fireball');
-            let projCount = this.level >= 10 ? (this.isEnraged ? 16 : 12) : 10;
-            for(let i=0; i<projCount; i++) {
-                let a = this.angle + (Math.PI*2/projCount) * i;
-                Game.getProjectile().spawn(this.x, this.y, a, speed, this.stats.maxDmg, 'enemy', 'enemy_fireball', false, false, this);
+            let projCount = this.isEnraged ? 12 : (this.level >= 10 ? 10 : 8);
+            for (let i = 0; i < projCount; i++) {
+                let a = this.angle + (Math.PI * 2 / projCount) * i;
+                Game.getProjectile().spawn(this.x, this.y, a, speed, this.stats.maxDmg * 0.9, 'enemy', 'enemy_fireball', false, false, this);
             }
             if (this.level >= 10) {
                 setTimeout(() => {
-                    if (this.dead || Game.state !== 'PLAYING') return;
+                    if (this.dead || this.isDying || this.staggerTimer > 0 || Game.state !== 'PLAYING') return;
                     AudioEngine.playShoot('enemy_fireball');
-                    for(let i=0; i<projCount; i++) {
-                        let a = this.angle + (Math.PI*2/projCount) * i + (Math.PI/projCount);
-                        Game.getProjectile().spawn(this.x, this.y, a, speed * 1.2, this.stats.maxDmg, 'enemy', 'enemy_fireball', false, false, this);
+                    for (let i = 0; i < projCount; i++) {
+                        let a = this.angle + (Math.PI * 2 / projCount) * i + (Math.PI / projCount);
+                        Game.getProjectile().spawn(this.x, this.y, a, speed * 1.15, this.stats.maxDmg * 0.85, 'enemy', 'enemy_fireball', false, false, this);
                     }
-                }, 600);
+                }, 550);
             }
-        }
-        else if (this.bossElement === 'blue') {
-
+        } else if (this.bossElement === 'blue') {
             AudioEngine.playShoot('enemy_bolt');
-            let coneSpread = Math.PI / 2;
-            for(let i=0; i<8; i++) {
-                let a = this.angle - (coneSpread/2) + (coneSpread/7) * i;
-                Game.getProjectile().spawn(this.x, this.y, a, speed * 2.2, this.stats.maxDmg * 0.8, 'enemy', 'enemy_bolt', false, false, this);
+            let fanCount = this.isEnraged ? 7 : 5;
+            let coneSpread = Math.PI * 0.44;
+            for (let i = 0; i < fanCount; i++) {
+                let a = this.angle - (coneSpread * 0.5) + (coneSpread / Math.max(1, fanCount - 1)) * i;
+                Game.getProjectile().spawn(this.x, this.y, a, speed * 2.0, this.stats.maxDmg * 0.78, 'enemy', 'enemy_bolt', false, false, this);
             }
-        }
-        else if (this.bossElement === 'green') {
-
+        } else if (this.bossElement === 'green') {
             AudioEngine.playShoot('homing_arrow');
-            for(let i=0; i<8; i++) {
-                let a = this.angle + (Math.PI*2/8) * i;
-                Game.getProjectile().spawn(this.x, this.y, a, speed * 0.9, this.stats.maxDmg * 0.7, 'enemy', 'homing_arrow', false, false, this);
+            let sporeCount = this.isEnraged ? 5 : 3;
+            let arc = this.isEnraged ? 1.15 : 0.75;
+            for (let i = 0; i < sporeCount; i++) {
+                let a = this.angle - (arc * 0.5) + (arc / Math.max(1, sporeCount - 1)) * i;
+                Game.getProjectile().spawn(this.x, this.y, a, speed * 0.98, this.stats.maxDmg * 0.72, 'enemy', 'homing_arrow', false, false, this);
             }
         }
     }
-  takeDamage(amount, source, isCrit = false, canInfect = true) {
+
+    takeDamage(amount, source, isCrit = false, canInfect = true) {
         if (this.isDying || this.dead) return;
 
-        let dynamicResist = Math.max(0.40, 0.75 - (this.level * 0.015));
+        let isStaggered = (this.staggerTimer > 0);
+        let dynamicResist = isStaggered ? 1.0 : Math.max(0.55, 0.82 - (this.level * 0.010));
         amount *= dynamicResist;
 
-        if (Game.ultimateActive) {
-            amount *= 0.50;
+        if (this.activeNodeCount > 0 && !isStaggered) {
+            amount *= Math.max(0.38, 1.0 - this.activeNodeCount * 0.20);
+            if (Game.frameCount % 4 === 0) Game.getParticle().spawn(this.x, 32, this.y, SharedMat.spriteWhite, 'spark');
         }
 
-        // 3. Anti-Burst Equo (protegge da cheese istantanei senza punire le build a colpi lenti/critici)
-        let burstCapPct = Math.max(0.030, 0.075 - (this.level * 0.0018)) * (isCrit ? 1.35 : 1.0);
+        if (isStaggered) {
+            amount *= 1.45;
+        } else if (Game.ultimateActive) {
+            amount *= 0.85;
+        }
+
+        let burstCapPct = Math.max(0.045, 0.095 - (this.level * 0.0016)) * (isCrit ? 1.40 : 1.0) * (isStaggered ? 1.45 : 1.0);
         let burstCap = this.stats.maxHp * burstCapPct;
 
         if (amount > burstCap) {
-            amount = burstCap + (amount - burstCap) * 0.25;
+            amount = burstCap + (amount - burstCap) * 0.28;
             if (Game.frameCount % 2 === 0) {
                 Game.getParticle().spawn(this.x, 40, this.y, SharedMat.spriteWhite, 'spark');
             }
@@ -25845,6 +26882,11 @@ class BossEnemy extends Enemy {
     }
 
     startDeathSequence() {
+        this.clearTelegraphLaser();
+        this.bossState = 'normal';
+        for (let i = 0; i < this.bossNodes.length; i++) {
+            if (this.bossNodes[i]) this.bossNodes[i].bossRef = null;
+        }
         this.isDying = true;
         this.deathTimer = 0;
         this.deathDuration = 2.4;
@@ -25943,7 +26985,7 @@ class BossEnemy extends Enemy {
             }
             if (this.modelParts.crown) {
                 this.modelParts.crown.rotation.z += dt * 22;
-                this.modelParts.crown.position.y = (this.radius * 3.2) + progress * 18;
+                this.modelParts.crown.position.y = (this.radius * 3.6) + progress * 18;
             }
         }
 
@@ -26009,6 +27051,8 @@ class BossEnemy extends Enemy {
     }
 
     onDeath() {
+        this.clearTelegraphLaser();
+        this.disposeTethers();
         this.shadowMesh.visible = false;
         AudioEngine.stopBossMusic();
         AudioEngine.playEnemyDeath();
@@ -26092,22 +27136,23 @@ class BossEnemy extends Enemy {
         Game.getFloatingText().spawn(this.x, this.y, "VITTORIA!", '#ffaa00', 80, true);
         Game.bossDefeatedTimer = 5.0;
 
-        if (Math.random() < 0.10) {
+        // Drop bonus reliquia dal Boss: probabilità e rarità crescenti con il piano
+        let bossTier = Math.max(0, Math.floor((Math.max(5, this.level) - 5) / 5));
+        let bonusRelicChance = Math.min(0.42, 0.14 + bossTier * 0.05);
+        if (Math.random() < bonusRelicChance) {
             let availablePool = RelicSystem.allRelics.filter(r => !Game.player.relics.some(pr => pr.id === r.id));
             if (availablePool.length > 0) {
-                let targetRarity = RelicSystem.getRandomRarity();
-                let poolForRarity = availablePool.filter(r => r.rarity === targetRarity);
-                if (poolForRarity.length === 0) poolForRarity = availablePool;
-                let extraRelic = poolForRarity[Math.floor(Math.random() * poolForRarity.length)];
+                let targetRarity = RelicSystem.getBossRarity(this.level, 0);
+                let extraRelic = RelicSystem.pickRelicFromPool(availablePool, targetRarity, true);
 
                 setTimeout(() => {
-                    if (Game.player && !Game.player.dead) {
+                    if (Game.player && !Game.player.dead && extraRelic) {
                         extraRelic.apply(Game.player);
                         Game.player.relics.push(extraRelic);
                         Game.getFloatingText().spawn(this.x, this.y + 40, "DROP BONUS: " + extraRelic.name.toUpperCase(), '#fbbf24', 45, true);
                         const relicCountEl = document.getElementById('relic-screen-count');
-                if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
-                AudioEngine.playRelicDrop();
+                        if (relicCountEl) relicCountEl.innerText = Game.player.relics.length;
+                        AudioEngine.playRelicDrop();
                         let bonusParticles = AppSettings.isLow ? 10 : 40;
                         for (let i = 0; i < bonusParticles; i++) Game.getParticle().spawn(this.x, 20, this.y, SharedMat.spriteLevel, 'spark');
                     }
@@ -26117,7 +27162,10 @@ class BossEnemy extends Enemy {
 
         for (let i = 0, len = Game.enemies.length; i < len; i++) {
             let e = Game.enemies[i];
-            if (!e.isBoss && !e.dead) e.takeDamage(999999, Game.player, false, false);
+            if (!e.isBoss && !e.dead) {
+                e.bossRef = null;
+                e.takeDamage(999999, Game.player, false, false);
+            }
         }
         for (let i = 0; i < Game.hazards.length; i++) {
             let h = Game.hazards[i];
@@ -27074,8 +28122,11 @@ function clearScene() {
         let e = Game.enemies[i];
 
       if (e.isBoss) {
+          if (e.clearTelegraphLaser) e.clearTelegraphLaser();
+          if (e.disposeTethers) e.disposeTethers();
+          if (e.bossNodes) e.bossNodes = [];
           e.mesh.traverse(child => {
-                if (child.isMesh) {
+                if (child.isMesh || child.isSprite) {
                     if (child.geometry && !SharedGeoSet.has(child.geometry)) child.geometry.dispose();
                     if (child.material && !SharedMatSet.has(child.material)) {
                         if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
