@@ -1197,28 +1197,58 @@ body.colorblind-mode .stack-dot.active.green {
         body.force-rotate-landscape #mainMenu > div.z-10 {
             width: 100% !important;
             height: 100% !important;
-            padding: 4px 18px !important;
+            padding: 8px 20px !important;
             display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
+            flex-direction: row !important;
+            justify-content: flex-end !important;
             align-items: center !important;
             box-sizing: border-box !important;
         }
+        body.mobile-landscape #menu-scrim-side,
+        body.force-rotate-landscape #menu-scrim-side {
+            display: block !important;
+            width: 54% !important;
+        }
+        body.mobile-landscape #menu-scrim-top,
+        body.force-rotate-landscape #menu-scrim-top,
+        body.mobile-landscape #menu-scrim-bottom,
+        body.force-rotate-landscape #menu-scrim-bottom {
+            opacity: 0.25 !important;
+        }
+        body.mobile-landscape #menu-ui-col,
+        body.force-rotate-landscape #menu-ui-col {
+            width: min(360px, 46%) !important;
+            height: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin: auto 0 !important;
+        }
+        body.mobile-landscape #menu-center-spacer,
+        body.force-rotate-landscape #menu-center-spacer {
+            display: none !important;
+        }
+        body.mobile-landscape #menu-title-wrap,
+        body.force-rotate-landscape #menu-title-wrap {
+            padding-top: 0 !important;
+        }
         body.mobile-landscape #mainMenu .title-3d-text span.mc-word-sub,
         body.force-rotate-landscape #mainMenu .title-3d-text span.mc-word-sub {
-            font-size: 1.25rem !important;
+            font-size: 1.15rem !important;
         }
         body.mobile-landscape #mainMenu .title-3d-text h1.mc-block-word,
         body.force-rotate-landscape #mainMenu .title-3d-text h1.mc-block-word {
             font-size: 1.95rem !important;
             margin-top: 1px !important;
         }
-        body.mobile-landscape #mainMenu > div.z-10 > div:last-child,
-        body.force-rotate-landscape #mainMenu > div.z-10 > div:last-child {
+        body.mobile-landscape #menu-actions-card,
+        body.force-rotate-landscape #menu-actions-card {
             width: 100% !important;
-            max-width: 500px !important;
+            max-width: 360px !important;
             gap: 4px !important;
-            margin: 0 auto 2px auto !important;
+            margin: 0 !important;
         }
         body.mobile-landscape #mainMenu #btn-menu-skins,
         body.force-rotate-landscape #mainMenu #btn-menu-skins {
@@ -1238,6 +1268,58 @@ body.colorblind-mode .stack-dot.active.green {
         body.mobile-landscape #mainMenu .grid-cols-3 button,
         body.force-rotate-landscape #mainMenu .grid-cols-3 button {
             height: 32px !important;
+        }
+
+        /* PC & Schermi Widescreen: Focus scena 3D a sinistra, Titolo + Tasti compatti a destra */
+        @media (min-width: 760px) and (min-aspect-ratio: 112/100) {
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu > div.z-10 {
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                padding: clamp(18px, 3vh, 42px) clamp(24px, 5vw, 76px) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-side {
+                display: block !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-top,
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-scrim-bottom {
+                opacity: 0.35 !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-ui-col {
+                width: min(460px, 43vw) !important;
+                height: auto !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: clamp(16px, 2.8vh, 30px) !important;
+                margin: auto 0 !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-center-spacer {
+                display: none !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-title-wrap {
+                padding-top: 0 !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .title-3d-text span.mc-word-sub {
+                font-size: clamp(2.0rem, 3.4vw, 3.25rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .title-3d-text h1.mc-block-word {
+                font-size: clamp(3.2rem, 5.4vw, 5.15rem) !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-actions-card {
+                width: 100% !important;
+                max-width: 440px !important;
+                margin-bottom: 0 !important;
+            }
+        }
+        @media (min-width: 760px) and (min-aspect-ratio: 112/100) and (max-height: 620px) {
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #menu-ui-col {
+                gap: 10px !important;
+            }
+            body:not(.mobile-landscape):not(.force-rotate-landscape) #mainMenu .anim-play-pulse {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+                font-size: 1.5rem !important;
+            }
         }
 
         body.mobile-landscape #optionsModal,
@@ -2222,28 +2304,31 @@ body.colorblind-mode .stack-dot.active.green {
 
         <div id="title-3d-canvas-container" class="absolute inset-0 w-full h-full z-0"></div>
 
-        <div class="absolute inset-x-0 top-0 h-36 sm:h-40 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none z-[1]"></div>
-        <div class="absolute inset-x-0 bottom-0 h-44 sm:h-52 bg-gradient-to-t from-black/88 via-black/38 to-transparent pointer-events-none z-[1]"></div>
+        <div id="menu-scrim-top" class="absolute inset-x-0 top-0 h-36 sm:h-40 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none z-[1]"></div>
+        <div id="menu-scrim-bottom" class="absolute inset-x-0 bottom-0 h-44 sm:h-52 bg-gradient-to-t from-black/88 via-black/38 to-transparent pointer-events-none z-[1]"></div>
+        <div id="menu-scrim-side" class="hidden absolute inset-y-0 right-0 w-[56%] bg-gradient-to-l from-black/82 via-black/48 to-transparent pointer-events-none z-[1]"></div>
 
-        <div class="w-full h-full flex flex-col justify-between items-center z-10 px-4 py-4 sm:py-6 pointer-events-none">
+        <div id="mainMenu-layout" class="w-full h-full flex flex-col justify-between items-center z-10 px-4 py-4 sm:py-6 pointer-events-none">
 
-            <div class="relative w-full flex flex-col items-center justify-start pt-2 sm:pt-4 pointer-events-none select-none">
+            <div id="menu-ui-col" class="w-full h-full flex flex-col justify-between items-center pointer-events-none">
 
-                <div class="title-magic-backdrop">
-                    <div class="title-magic-glow"></div>
-                    <div class="title-magic-smoke layer-1"></div>
-                    <div class="title-magic-smoke layer-2"></div>
+                <div id="menu-title-wrap" class="relative w-full flex flex-col items-center justify-start pt-2 sm:pt-4 pointer-events-none select-none">
+
+                    <div class="title-magic-backdrop">
+                        <div class="title-magic-glow"></div>
+                        <div class="title-magic-smoke layer-1"></div>
+                        <div class="title-magic-smoke layer-2"></div>
+                    </div>
+
+                    <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
+                        <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.06em] text-[12vw] sm:text-6xl md:text-7xl leading-none whitespace-nowrap z-10 m-0">INTO</span>
+                        <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-1 sm:mt-1.5 whitespace-nowrap z-20 m-0">THE BOX</h1>
+                    </div>
                 </div>
 
-                <div class="title-3d-text relative z-10 flex flex-col items-center leading-none">
-                    <span data-text="INTO" class="mc-block-word mc-word-sub tracking-[0.06em] text-[12vw] sm:text-6xl md:text-7xl leading-none whitespace-nowrap z-10 m-0">INTO</span>
-                    <h1 data-text="THE BOX" class="mc-block-word tracking-[-0.02em] text-[18.5vw] sm:text-8xl md:text-9xl leading-none mt-1 sm:mt-1.5 whitespace-nowrap z-20 m-0">THE BOX</h1>
-                </div>
-            </div>
+                <div id="menu-center-spacer" class="flex-1 w-full min-h-[25px]"></div>
 
-            <div class="flex-1 w-full min-h-[25px]"></div>
-
-            <div class="w-full max-w-[440px] flex flex-col gap-2.5 pointer-events-auto shrink-0 relative z-20 mb-1 sm:mb-4">
+                <div id="menu-actions-card" class="w-full max-w-[440px] flex flex-col gap-2.5 pointer-events-auto shrink-0 relative z-20 mb-1 sm:mb-4">
 
                 <div class="absolute -inset-6 bg-gradient-to-r from-[#FF1838]/15 via-[#00CCFF]/15 to-[#22FF44]/15 blur-2xl pointer-events-none"></div>
 
@@ -2302,6 +2387,7 @@ body.colorblind-mode .stack-dot.active.green {
 
                 <div class="text-center mt-0.5 relative z-10">
                     <p class="text-white/40 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase pointer-events-none whitespace-nowrap m-0">b3bo 2026 - Build 150</p>
+                </div>
                 </div>
             </div>
         </div>
@@ -4735,6 +4821,16 @@ const SkinSystem = {
     isCubeHovered: false, _lastHoverCheck: 0,
     mouseNDC: { x: 0, y: 0 }, parallaxCur: { x: 0, y: 0 },
     raycaster: new THREE.Raycaster(), mouse: new THREE.Vector2(),
+    _tmpVec3: new THREE.Vector3(),
+
+    isSplitLayout() {
+        const vp = (typeof AppSettings !== 'undefined' && AppSettings.getViewportSize)
+            ? AppSettings.getViewportSize()
+            : { width: window.innerWidth || 1, height: window.innerHeight || 1 };
+        const aspect = vp.width / Math.max(1, vp.height);
+        const isMobLand = document.body && (document.body.classList.contains('mobile-landscape') || document.body.classList.contains('force-rotate-landscape'));
+        return aspect >= 1.12 && (vp.width >= 760 || isMobLand);
+    },
 
     THEME_PRESETS: [
         {
@@ -5274,6 +5370,29 @@ const SkinSystem = {
         this.scene.add(this.gpuParticles);
     },
 
+    disposeComposer() {
+        if (!this.composer) return;
+        if (this.composer.passes) {
+            for (let i = 0; i < this.composer.passes.length; i++) {
+                const p = this.composer.passes[i];
+                if (p && p.dispose) p.dispose();
+                if (p && p.fsQuad && p.fsQuad.dispose) p.fsQuad.dispose();
+                if (p && p.material && p.material.dispose) p.material.dispose();
+            }
+        }
+        if (this.composer.copyPass) {
+            if (this.composer.copyPass.dispose) this.composer.copyPass.dispose();
+            if (this.composer.copyPass.fsQuad && this.composer.copyPass.fsQuad.dispose) this.composer.copyPass.fsQuad.dispose();
+            if (this.composer.copyPass.material && this.composer.copyPass.material.dispose) this.composer.copyPass.material.dispose();
+        }
+        if (this.composer.renderTarget1) this.composer.renderTarget1.dispose();
+        if (this.composer.renderTarget2) this.composer.renderTarget2.dispose();
+        if (this.composer.dispose) this.composer.dispose();
+        this.composer = null;
+        this.bloomPass = null;
+        this.ultraPostPass = null;
+    },
+
     ensureMenuComposer() {
         if (this.composer || !this.renderer || !this.scene || !this.camera) return;
         if (typeof THREE.EffectComposer === 'undefined' || typeof THREE.RenderPass === 'undefined') return;
@@ -5356,6 +5475,8 @@ const SkinSystem = {
             } else {
                 this.useComposer = false;
             }
+        } else if (this.composer) {
+            this.disposeComposer();
         }
 
         // Environment PBR e Normal Map su Ultra / Mega
@@ -5428,7 +5549,11 @@ const SkinSystem = {
         this.renderer.setSize(w, h, false);
         this.renderer.setPixelRatio(this.getMenuPixelRatio());
         this.renderer.outputEncoding = THREE.sRGBEncoding;
-        this.container.appendChild(this.renderer.domElement);
+        if (this.container.replaceChildren) this.container.replaceChildren(this.renderer.domElement);
+        else {
+            while (this.container.firstChild) this.container.removeChild(this.container.firstChild);
+            this.container.appendChild(this.renderer.domElement);
+        }
 
         this.hemiLight = new THREE.HemisphereLight(0xe8ffbb, 0x1a1812, 0.88);
         this.hemiLight.position.set(0, 400, 0);
@@ -5655,17 +5780,16 @@ const SkinSystem = {
         this.grassInst.instanceMatrix.needsUpdate = true;
         this.worldGroup.add(this.grassInst);
 
-        // Alberi asimmetrici a boschetti attorno all'isola
+        // Alberi proporzionati in boschetti perimetrali asimmetrici: mai davanti alla linea di vista della camera
         if (!window.GLOBAL_TREE_GEO) window.GLOBAL_TREE_GEO = createDarkTreeGeometry();
         const menuTreeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x1c1812, roughness: 0.9 });
         this.menuCanopyMat = this.createMenuFoliageMaterial(preset0.canopy, true);
 
         const treeSpots = [
-            { x: -176, z: -48, s: 2.35 }, { x: -158, z: -84, s: 1.95 }, { x: -186, z: 22, s: 2.15 },
-            { x: -162, z: 76, s: 2.40 },  { x: -124, z: 128, s: 1.90 }, { x: -48, z: 174, s: 2.25 },
-            { x: 14, z: 186, s: 1.95 },   { x: 162, z: 112, s: 2.15 }, { x: 184, z: 48, s: 2.35 },
-            { x: 172, z: -64, s: 2.20 },  { x: 136, z: -128, s: 2.05 }, { x: 76, z: -172, s: 2.35 },
-            { x: -24, z: -182, s: 2.10 }, { x: -116, z: -146, s: 1.85 }
+            { x: -178, z: -48, s: 1.44 }, { x: -156, z: -102, s: 1.30 }, { x: -116, z: -150, s: 1.38 },
+            { x: -172, z: 68, s: 1.46 },  { x: -128, z: 132, s: 1.28 },  { x: -48, z: 180, s: 1.40 },
+            { x: 18, z: 188, s: 1.32 },   { x: 162, z: 118, s: 1.42 },  { x: 190, z: 46, s: 1.35 },
+            { x: 174, z: -64, s: 1.44 },  { x: 132, z: -134, s: 1.28 }, { x: 56, z: -182, s: 1.38 }
         ];
         const treeCount = treeSpots.length;
         this.meshTrees = new THREE.InstancedMesh(window.GLOBAL_TREE_GEO, menuTreeTrunkMat, treeCount);
@@ -5678,7 +5802,7 @@ const SkinSystem = {
         for (let i = 0; i < treeCount; i++) {
             const ts = treeSpots[i];
             const gy = this.getTerrainHeight(ts.x, ts.z);
-            const sy = ts.s * (1.12 + (i % 3) * 0.08);
+            const sy = ts.s * (1.06 + (i % 3) * 0.045);
 
             dummy.position.set(ts.x, gy - 0.5, ts.z);
             dummy.scale.set(ts.s, sy, ts.s);
@@ -5687,8 +5811,8 @@ const SkinSystem = {
             this.meshTrees.setMatrixAt(i, dummy.matrix);
             this.meshCanopy.setMatrixAt(i, dummy.matrix);
 
-            dummy.position.set(ts.x + 3, gy + 0.35, ts.z + 3);
-            dummy.scale.set(ts.s * 18, 1, ts.s * 18);
+            dummy.position.set(ts.x + 2.5, gy + 0.35, ts.z + 2.5);
+            dummy.scale.set(ts.s * 16, 1, ts.s * 16);
             dummy.rotation.set(0, 0, 0);
             dummy.updateMatrix();
             this.meshTreeShadows.setMatrixAt(i, dummy.matrix);
@@ -5897,6 +6021,12 @@ const SkinSystem = {
                         this.container.style.cursor = this.isCubeHovered ? 'pointer' : 'default';
                     }
                 });
+                this.container.addEventListener('pointerleave', () => {
+                    this.isCubeHovered = false;
+                    this.mouseNDC.x = 0;
+                    this.mouseNDC.y = 0;
+                    if (this.container) this.container.style.cursor = 'default';
+                });
             }
             window.addEventListener('resize', () => this.resize());
         }
@@ -5904,6 +6034,7 @@ const SkinSystem = {
         this.initialized = true;
         this.active = true;
         this.syncQuality();
+        this.updateCameraTransform();
     },
 
     buildHeroModel() {
@@ -6037,6 +6168,50 @@ const SkinSystem = {
         if (typeof Haptics !== 'undefined') Haptics.vibrate([20, 30, 20]);
     },
 
+    updateCameraTransform() {
+        if (!this.camera) return;
+        const aspect = this.camera.aspect || 0.6;
+        const isSplit = this.isSplitLayout();
+
+        // Inquadratura sopra le chiome perimetrali: nessun albero copre mai la linea di vista lungo i 360°
+        let targetFov = 46, camDist = 238, camHeight = 132, lookY = 22;
+        if (aspect < 0.78) {
+            targetFov = 46; camDist = 296; camHeight = 166; lookY = 23;
+        } else if (aspect < 1.12) {
+            targetFov = 46; camDist = 266; camHeight = 148; lookY = 22;
+        } else if (aspect > 1.85) {
+            targetFov = 49; camDist = 248; camHeight = 134; lookY = 22;
+        }
+        if (Math.abs(this.camera.fov - targetFov) > 0.1) {
+            this.camera.fov = targetFov;
+            this.camera.updateProjectionMatrix();
+        }
+
+        let panShift = 0;
+        if (isSplit) {
+            const effDist = Math.hypot(camDist, camHeight - lookY);
+            const halfW = effDist * Math.tan((targetFov * Math.PI) / 360) * aspect;
+            const isMobLand = document.body && (document.body.classList.contains('mobile-landscape') || document.body.classList.contains('force-rotate-landscape'));
+            panShift = halfW * (isMobLand ? 0.31 : 0.34);
+        }
+
+        const orbitA = this.camAngle + this.parallaxCur.x * 0.14;
+        const bobY = Math.sin(this.time * 0.65) * 3.8 + this.parallaxCur.y * 6.5;
+        const rightX = Math.sin(orbitA);
+        const rightZ = -Math.cos(orbitA);
+
+        this.camera.position.set(
+            Math.cos(orbitA) * camDist + rightX * panShift,
+            camHeight + bobY,
+            Math.sin(orbitA) * camDist + rightZ * panShift
+        );
+        this.camera.lookAt(
+            rightX * panShift + this.parallaxCur.x * 5.0,
+            lookY,
+            rightZ * panShift
+        );
+    },
+
     resize() {
         if (!this.container || !this.renderer || !this.camera) return;
         const vp = AppSettings.getViewportSize();
@@ -6047,6 +6222,7 @@ const SkinSystem = {
             this.camera.updateProjectionMatrix();
             if (this.initialized) this.syncQuality();
             else this.renderer.setSize(w, h, false);
+            this.updateCameraTransform();
             if (this.scene) {
                 if (this.useComposer && this.composer) this.composer.render();
                 else this.renderer.render(this.scene, this.camera);
@@ -6116,7 +6292,7 @@ const SkinSystem = {
         if (this.isExploding) {
             this.explosionTime += safeDt;
             if (this.camera) {
-                this.camera.position.lerp(new THREE.Vector3(0, 44, 62), safeDt * 6.0);
+                this.camera.position.lerp(this._tmpVec3.set(0, 48, 66), safeDt * 6.0);
                 this.camera.lookAt(0, 24, 0);
             }
             if (this.boxGroup) {
@@ -6143,28 +6319,7 @@ const SkinSystem = {
         this.parallaxCur.x += (targetPx - this.parallaxCur.x) * pLerp;
         this.parallaxCur.y += (targetPy - this.parallaxCur.y) * pLerp;
 
-        const aspect = this.camera.aspect || 0.6;
-        let targetFov = 47, camDist = 238, camHeight = 110, lookY = 21;
-        if (aspect < 0.78) {
-            targetFov = 46; camDist = 296; camHeight = 144; lookY = 23;
-        } else if (aspect < 1.15) {
-            targetFov = 46; camDist = 266; camHeight = 126; lookY = 22;
-        } else if (aspect > 1.85) {
-            targetFov = 50; camDist = 250; camHeight = 110; lookY = 21;
-        }
-        if (Math.abs(this.camera.fov - targetFov) > 0.1) {
-            this.camera.fov = targetFov;
-            this.camera.updateProjectionMatrix();
-        }
-
-        const orbitA = this.camAngle + this.parallaxCur.x * 0.14;
-        const bobY = Math.sin(this.time * 0.65) * 4.5 + this.parallaxCur.y * 8.0;
-        this.camera.position.set(
-            Math.cos(orbitA) * camDist,
-            camHeight + bobY,
-            Math.sin(orbitA) * camDist
-        );
-        this.camera.lookAt(this.parallaxCur.x * 6.0, lookY, 0);
+        this.updateCameraTransform();
 
         if (this.heroGroup && this.heroParts) {
             const curSkin = SkinSystem.selectedId;
@@ -6385,18 +6540,18 @@ const SkinSystem = {
             this.rimLight.shadow.map = null;
         }
 
-        if (this.composer) {
-            if (this.bloomPass && this.bloomPass.dispose) this.bloomPass.dispose();
-            if (this.ultraPostPass && this.ultraPostPass.dispose) this.ultraPostPass.dispose();
-            if (this.composer.renderTarget1) this.composer.renderTarget1.dispose();
-            if (this.composer.renderTarget2) this.composer.renderTarget2.dispose();
-            this.composer = null;
-        }
-        this.bloomPass = null;
-        this.ultraPostPass = null;
+        this.disposeComposer();
         this.useComposer = false;
 
         if (this._ownedTextures && this._ownedTextures.length) {
+            const ownedSet = new Set(this._ownedTextures);
+            if (typeof Preloader !== 'undefined' && Preloader.textures) {
+                Object.values(Preloader.textures).forEach(pt => {
+                    if (pt && Array.isArray(pt._clones) && pt._clones.length) {
+                        pt._clones = pt._clones.filter(c => !ownedSet.has(c));
+                    }
+                });
+            }
             this._ownedTextures.forEach(t => { if (t && t.dispose) t.dispose(); });
         }
         this._ownedTextures = [];
@@ -6418,12 +6573,26 @@ const SkinSystem = {
             });
         }
         if (this.renderer) {
+            if (typeof PcUltraGraphics !== 'undefined' && PcUltraGraphics.disposeRendererEnvMaps) {
+                PcUltraGraphics.disposeRendererEnvMaps(this.renderer);
+            }
+            if (this.renderer.renderLists && this.renderer.renderLists.dispose) {
+                this.renderer.renderLists.dispose();
+            }
             this.renderer.dispose();
+            if (this.renderer.forceContextLoss) {
+                try { this.renderer.forceContextLoss(); } catch (e) {}
+            }
             if (this.renderer.domElement && this.renderer.domElement.parentNode) {
                 this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
             }
             this.renderer = null;
         }
+        this.isCubeHovered = false;
+        this.mouseNDC.x = 0;
+        this.mouseNDC.y = 0;
+        this.parallaxCur.x = 0;
+        this.parallaxCur.y = 0;
 
         this.scene = null;
         this.camera = null;
@@ -8335,6 +8504,7 @@ const PcUltraGraphics = {
     _skinHdCache: {},
     _normalCache: new WeakMap(),
     _envCache: {},
+    _envCacheByRenderer: new WeakMap(),
     _streakTex: null,
 
     getCharHdTexture() {
@@ -8549,10 +8719,26 @@ const PcUltraGraphics = {
         }
     },
 
+    disposeRendererEnvMaps(renderer) {
+        if (!renderer || !this._envCacheByRenderer) return;
+        const cache = this._envCacheByRenderer.get(renderer);
+        if (cache) {
+            Object.values(cache).forEach(rt => {
+                if (rt && rt.dispose) rt.dispose();
+            });
+            this._envCacheByRenderer.delete(renderer);
+        }
+    },
+
     getEnvMap(renderer, themeIdx = 0) {
         if (!renderer || typeof THREE.PMREMGenerator === 'undefined') return null;
         const idx = (themeIdx === 1 || themeIdx === 2) ? themeIdx : 0;
-        if (this._envCache[idx]) return this._envCache[idx];
+        let cache = this._envCacheByRenderer.get(renderer);
+        if (!cache) {
+            cache = {};
+            this._envCacheByRenderer.set(renderer, cache);
+        }
+        if (cache[idx]) return cache[idx].texture;
 
         const pmrem = new THREE.PMREMGenerator(renderer);
         pmrem.compileEquirectangularShader();
@@ -8587,7 +8773,7 @@ const PcUltraGraphics = {
         envScene.traverse(c => { if (c.material) c.material.dispose(); });
         pmrem.dispose();
 
-        this._envCache[idx] = rt.texture;
+        cache[idx] = rt;
         return rt.texture;
     },
 
