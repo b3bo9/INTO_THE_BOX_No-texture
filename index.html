@@ -4932,7 +4932,7 @@ const SkinSystem = {
         let waterTex = (typeof Preloader !== 'undefined' && Preloader.textures.water) ? Preloader.textures.water : CHAR_GRUNGE_TEX;
 
         this.waterMat = new THREE.MeshStandardMaterial({
-            color: 0x2ca2eb, emissive: 0x0e4f82, emissiveIntensity: 0.48, roughness: 0.16, metalness: 0.06,
+            color: 0x38bdf8, emissive: 0x167bb8, emissiveIntensity: 0.45, roughness: 0.28, metalness: 0.02, envMapIntensity: 0.28,
             map: waterTex, transparent: true, opacity: 0.92
         });
         let poolGeo = new THREE.CircleGeometry(42, 24).rotateX(-Math.PI / 2);
@@ -4945,7 +4945,7 @@ const SkinSystem = {
         this.waterMesh.position.y = 0.1;
 
         this.waterGlowMat = new THREE.MeshBasicMaterial({
-            map: GLOW_TEX, color: 0x0ea5e9, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false
+            map: GLOW_TEX, color: 0x38bdf8, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false
         });
         let waterGlow = new THREE.Mesh(new THREE.PlaneGeometry(102, 102).rotateX(-Math.PI / 2), this.waterGlowMat);
         waterGlow.position.y = 0.05;
@@ -5164,7 +5164,7 @@ const SkinSystem = {
             grass: new THREE.Color(0x8eb07c),
             foliage: new THREE.Color(0x13380d),
             canopy: new THREE.Color(0x153b0f),
-            water: new THREE.Color(0x2ca2eb),
+            water: new THREE.Color(0x38bdf8),
             elem: new THREE.Color(0x22FF44)
         };
 
@@ -5240,7 +5240,7 @@ const SkinSystem = {
         this.themeCycle = (this.themeCycle + 1) % 3;
         const presets = [
 
-            { fog: 0x090414, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x2ca2eb, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
+            { fog: 0x090414, dirt: 0x828c78, grass: 0x8eb07c, foliage: 0x13380d, canopy: 0x153b0f, water: 0x38bdf8, elem: 0x22FF44, sprite: SharedMat.spriteGreen, ring: SharedMat.auraGreenRing, grassRoot: 0x194310 },
 
             { fog: 0x120412, dirt: 0x8c5e52, grass: 0xa85c4a, foliage: 0x52140a, canopy: 0x441006, water: 0xff4500, elem: 0xFF1838, sprite: SharedMat.spriteRed, ring: SharedMat.auraRedRing, grassRoot: 0x350704 },
 
@@ -5248,6 +5248,14 @@ const SkinSystem = {
         ];
         const p = presets[this.themeCycle];
 
+        if (this.waterMat) {
+            if ('roughness' in this.waterMat) {
+                this.waterMat.roughness = this.themeCycle === 1 ? 0.94 : 0.28;
+                this.waterMat.metalness = this.themeCycle === 1 ? 0.0 : 0.02;
+                this.waterMat.envMapIntensity = this.themeCycle === 1 ? 0.03 : 0.28;
+            }
+            if ('shininess' in this.waterMat) this.waterMat.shininess = this.themeCycle === 1 ? 4 : 32;
+        }
         const v = ['', '_lava', '_ice'][this.themeCycle];
         if (typeof Preloader !== 'undefined') {
             if (this.groundDirtMat && Preloader.textures['dirt' + v]) { this.groundDirtMat.map = Preloader.textures['dirt' + v]; this.groundDirtMat.needsUpdate = true; }
@@ -5447,6 +5455,10 @@ const SkinSystem = {
                 if (m.parts && m.parts.armL) {
                     m.parts.armL.rotation.x = Math.sin(t * 1.6) * 0.45;
                     m.parts.armR.rotation.x = -Math.sin(t * 1.6) * 0.45;
+                }
+                if (m.parts && m.parts.legL && m.parts.legR) {
+                    m.parts.legL.rotation.x = -Math.sin(t * 1.6) * 0.28;
+                    m.parts.legR.rotation.x = Math.sin(t * 1.6) * 0.28;
                 }
                 if (m.parts && m.parts.ringPivot) {
                     m.parts.fireRingDisc.rotation.y -= safeDt * 3.2;
@@ -9070,8 +9082,15 @@ const GLOBAL_ALPHA_TEX = createOrganicAlphaMap();
     auraCorruptedDome: new THREE.MeshBasicMaterial({color: 0xaa00ff, transparent: true, opacity: 0.04, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending}),
     auraCorruptedRing: new THREE.MeshBasicMaterial({color: 0xcc33ff, transparent: true, opacity: 0.8, depthWrite: false}),
     prophetGem: new THREE.MeshBasicMaterial({color: 0xff5500}),
-    golemHead: new THREE.MeshPhongMaterial({color: 0x002244, emissive: 0x00ffff, emissiveIntensity: 1.5}),
-    golemShield: new THREE.MeshPhongMaterial({color: 0x00ffff, transparent: true, opacity: 0.4, emissive: 0x0088ff}),
+    golemHead: new THREE.MeshPhongMaterial({color: 0x002244, emissive: 0x00ffff, emissiveIntensity: 1.5, flatShading: true}),
+    golemArmor: (typeof AppSettings !== 'undefined' && AppSettings.useMobileLimits)
+        ? new THREE.MeshLambertMaterial({color: 0x3b4859, emissive: 0x07111c, flatShading: true})
+        : new THREE.MeshPhongMaterial({color: 0x3b4859, emissive: 0x07111c, shininess: 32, specular: 0x30455c, flatShading: true}),
+    golemShieldFrame: (typeof AppSettings !== 'undefined' && AppSettings.useMobileLimits)
+        ? new THREE.MeshLambertMaterial({color: 0x1e293b, emissive: 0x051423, flatShading: true})
+        : new THREE.MeshPhongMaterial({color: 0x1e293b, emissive: 0x051423, shininess: 46, specular: 0x4b7094, flatShading: true}),
+    golemCore: new THREE.MeshPhongMaterial({color: 0x38f2ff, emissive: 0x00d9ff, emissiveIntensity: 1.4, flatShading: true}),
+    golemShield: new THREE.MeshPhongMaterial({color: 0x00ffff, transparent: true, opacity: 0.42, emissive: 0x0088ff, flatShading: true}),
     golemShieldGlow: new THREE.SpriteMaterial({color: 0x00ffff, map: GLOW_TEX, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false}),
     iconTime: new THREE.SpriteMaterial({map: createAuraIcon('blue'), color: 0xffffff, transparent: true, depthWrite: false}),
     iconMountain: new THREE.SpriteMaterial({map: createAuraIcon('green'), color: 0xffffff, transparent: true, depthWrite: false}),
@@ -9936,22 +9955,253 @@ const ModelFactory = {
             parts.wheelGroup = wheelGroup;
             parts.torso = armorPlates;
           } else if (type === 'golem') {
-            let torso = new THREE.Mesh(SharedGeo.box, mat); torso.scale.set(size*1.8, size*2.0, size*1.5); torso.position.y = size*1.5;
-            let head = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead); head.scale.set(size*0.9, size*0.9, size*0.9); head.position.set(0, size*2.8, size*0.2);
+            const hasShield = !(options && options.hasShield === false);
 
-            let armL = new THREE.Mesh(SharedGeo.box, darkMat); armL.scale.set(size*0.7, size*1.8, size*0.7); armL.position.set(-size*1.4, size*1.6, 0);
-            let armR = new THREE.Mesh(SharedGeo.box, darkMat); armR.scale.set(size*0.7, size*1.8, size*0.7); armR.position.set(size*1.4, size*1.6, 0);
+            // Pelvi e grembiule corazzato inferiore
+            let pelvis = new THREE.Mesh(SharedGeo.box, darkMat);
+            pelvis.scale.set(size * 1.48, size * 0.42, size * 1.15);
+            pelvis.position.set(0, size * 0.92, 0);
+            group.add(pelvis);
 
-            let shield = new THREE.Mesh(SharedGeo.box, SharedMat.golemShield);
-            shield.scale.set(size*3.2, size*2.5, size*0.2);
-            shield.position.set(0, size*1.5, size*1.0);
+            let waistPlate = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+            waistPlate.scale.set(size * 0.72, size * 0.56, size * 0.44);
+            waistPlate.position.set(0, size * 0.72, size * 0.50);
+            waistPlate.rotation.x = -0.14;
+            group.add(waistPlate);
 
-            let shieldGlow = new THREE.Sprite(SharedMat.golemShieldGlow);
-            shieldGlow.scale.set(size*5, size*4, 1);
-            shieldGlow.position.set(0, size*1.5, size*1.2);
+            // Gambe pesanti da carro armato incernierate sui fianchi
+            const buildTankLeg = (side) => {
+                const legPivot = new THREE.Group();
+                legPivot.position.set(side * size * 0.78, size * 0.88, 0);
 
-            group.add(torso); group.add(head); group.add(armL); group.add(armR); group.add(shield); group.add(shieldGlow);
-            parts.armL = armL; parts.armR = armR; parts.shield = shield;
+                let hipDrum = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                hipDrum.rotation.z = Math.PI / 2;
+                hipDrum.scale.set(size * 0.28, size * 0.36, size * 0.28);
+                legPivot.add(hipDrum);
+
+                let thigh = new THREE.Mesh(SharedGeo.box, mat);
+                thigh.scale.set(size * 0.58, size * 0.46, size * 0.66);
+                thigh.position.set(0, -size * 0.20, size * 0.04);
+                legPivot.add(thigh);
+
+                let kneeGuard = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+                kneeGuard.scale.set(size * 0.62, size * 0.34, size * 0.28);
+                kneeGuard.position.set(0, -size * 0.38, size * 0.44);
+                kneeGuard.rotation.x = -0.22;
+                legPivot.add(kneeGuard);
+
+                let greave = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+                greave.scale.set(size * 0.72, size * 0.54, size * 0.84);
+                greave.position.set(0, -size * 0.56, size * 0.08);
+                legPivot.add(greave);
+
+                let boot = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+                boot.scale.set(size * 0.84, size * 0.28, size * 1.08);
+                boot.position.set(0, -size * 0.76, size * 0.16);
+                legPivot.add(boot);
+
+                return legPivot;
+            };
+            let legL = buildTankLeg(-1);
+            let legR = buildTankLeg(1);
+            group.add(legL); group.add(legR);
+
+            // Scafo massiccio con piastra frontale inclinata e nucleo incassato
+            let torso = new THREE.Mesh(SharedGeo.box, mat);
+            torso.scale.set(size * 2.15, size * 1.38, size * 1.46);
+            torso.position.set(0, size * 1.80, -size * 0.02);
+            group.add(torso);
+
+            let abdomen = new THREE.Mesh(SharedGeo.box, darkMat);
+            abdomen.scale.set(size * 1.56, size * 0.54, size * 1.18);
+            abdomen.position.set(0, size * 1.24, size * 0.08);
+            group.add(abdomen);
+
+            let chestGlacis = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+            chestGlacis.scale.set(size * 1.92, size * 0.92, size * 0.52);
+            chestGlacis.position.set(0, size * 2.02, size * 0.56);
+            chestGlacis.rotation.x = -0.28;
+            group.add(chestGlacis);
+
+            let coreHousing = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+            coreHousing.rotation.x = Math.PI / 2;
+            coreHousing.scale.set(size * 0.36, size * 0.24, size * 0.36);
+            coreHousing.position.set(0, size * 1.72, size * 0.66);
+            group.add(coreHousing);
+
+            let coreCollar = new THREE.Mesh(SharedGeo.torus, SharedMat.golemShieldFrame);
+            coreCollar.scale.set(size * 0.36, size * 0.36, size * 0.65);
+            coreCollar.position.set(0, size * 1.72, size * 0.76);
+            group.add(coreCollar);
+
+            let core = new THREE.Mesh(SharedGeo.icosahedron, SharedMat.golemCore);
+            core.scale.setScalar(size * 0.24);
+            core.position.set(0, size * 1.72, size * 0.72);
+            group.add(core);
+
+            // Reattore dorsale, scarichi gemelli e punto debole posteriore leggibile
+            let backPack = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+            backPack.scale.set(size * 1.48, size * 1.06, size * 0.58);
+            backPack.position.set(0, size * 1.88, -size * 0.86);
+            backPack.rotation.x = 0.10;
+            group.add(backPack);
+
+            [-1, 1].forEach((side) => {
+                let stack = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                stack.scale.set(size * 0.16, size * 0.56, size * 0.16);
+                stack.position.set(side * size * 0.50, size * 2.46, -size * 0.92);
+                stack.rotation.x = -0.18;
+                group.add(stack);
+
+                let stackCap = new THREE.Mesh(SharedGeo.cylinder, SharedMat.golemShieldFrame);
+                stackCap.scale.set(size * 0.21, size * 0.12, size * 0.21);
+                stackCap.position.set(side * size * 0.50, size * 2.72, -size * 0.97);
+                stackCap.rotation.x = -0.18;
+                group.add(stackCap);
+            });
+
+            let rearCore = new THREE.Mesh(SharedGeo.box, SharedMat.golemCore);
+            rearCore.scale.set(size * 0.34, size * 0.68, size * 0.14);
+            rearCore.position.set(0, size * 1.86, -size * 1.15);
+            group.add(rearCore);
+
+            // Collare corazzato ed elmo a feritoia incassato (allineato anche agli occhi del Pursuer)
+            let gorget = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+            gorget.scale.set(size * 1.24, size * 0.36, size * 1.02);
+            gorget.position.set(0, size * 2.48, size * 0.08);
+            group.add(gorget);
+
+            let head = new THREE.Mesh(SharedGeo.box, mat);
+            head.scale.set(size * 0.96, size * 0.68, size * 0.80);
+            head.position.set(0, size * 2.74, size * 0.12);
+            group.add(head);
+
+            let visor = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead);
+            visor.scale.set(size * 0.70, size * 0.18, size * 0.14);
+            visor.position.set(0, size * 2.76, size * 0.48);
+            group.add(visor);
+
+            let brow = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+            brow.scale.set(size * 1.06, size * 0.24, size * 0.92);
+            brow.position.set(0, size * 3.02, size * 0.16);
+            brow.rotation.x = 0.14;
+            group.add(brow);
+
+            let jawGuard = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+            jawGuard.scale.set(size * 0.82, size * 0.24, size * 0.56);
+            jawGuard.position.set(0, size * 2.54, size * 0.28);
+            group.add(jawGuard);
+
+            // Spallacci torreggianti e magli d'assedio incernierati sulle spalle
+            const buildTankArm = (side) => {
+                const armPivot = new THREE.Group();
+                armPivot.position.set(side * size * 1.48, size * 2.18, 0);
+
+                let shoulderJoint = new THREE.Mesh(SharedGeo.cylinder, darkMat);
+                shoulderJoint.rotation.z = Math.PI / 2;
+                shoulderJoint.scale.set(size * 0.24, size * 0.34, size * 0.24);
+                shoulderJoint.position.set(-side * size * 0.24, 0, 0);
+                armPivot.add(shoulderJoint);
+
+                let pauldron = new THREE.Mesh(SharedGeo.box, SharedMat.golemArmor);
+                pauldron.scale.set(size * 0.88, size * 0.72, size * 1.08);
+                pauldron.position.set(side * size * 0.04, size * 0.22, 0);
+                pauldron.rotation.z = -side * 0.24;
+                armPivot.add(pauldron);
+
+                let pauldronCrest = new THREE.Mesh(SharedGeo.box, mat);
+                pauldronCrest.scale.set(size * 0.74, size * 0.28, size * 0.88);
+                pauldronCrest.position.set(side * size * 0.10, size * 0.56, 0);
+                pauldronCrest.rotation.z = -side * 0.32;
+                armPivot.add(pauldronCrest);
+
+                let upperArm = new THREE.Mesh(SharedGeo.box, darkMat);
+                upperArm.scale.set(size * 0.48, size * 0.62, size * 0.52);
+                upperArm.position.set(side * size * 0.04, -size * 0.34, 0);
+                armPivot.add(upperArm);
+
+                let gauntlet = new THREE.Mesh(SharedGeo.box, mat);
+                gauntlet.scale.set(size * 0.78, size * 0.94, size * 0.84);
+                gauntlet.position.set(side * size * 0.08, -size * 0.96, size * 0.14);
+                gauntlet.rotation.x = -0.14;
+                armPivot.add(gauntlet);
+
+                let knuckleRam = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+                knuckleRam.scale.set(size * 0.84, size * 0.34, size * 0.92);
+                knuckleRam.position.set(side * size * 0.08, -size * 1.32, size * 0.20);
+                knuckleRam.rotation.x = -0.14;
+                armPivot.add(knuckleRam);
+
+                let armVent = new THREE.Mesh(SharedGeo.box, SharedMat.golemHead);
+                armVent.scale.set(size * 0.16, size * 0.46, size * 0.16);
+                armVent.position.set(side * size * 0.46, -size * 0.88, size * 0.16);
+                armPivot.add(armVent);
+
+                return armPivot;
+            };
+            let armL = buildTankArm(-1);
+            let armR = buildTankArm(1);
+            group.add(armL); group.add(armR);
+
+            // Scudo baluardo sfaccettato con vomere inferiore e piloni proiettori
+            let shield = null;
+            if (hasShield) {
+                shield = new THREE.Group();
+                shield.position.set(0, size * 1.48, size * 1.18);
+
+                let lowerPlow = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+                lowerPlow.scale.set(size * 2.68, size * 0.38, size * 0.36);
+                lowerPlow.position.set(0, -size * 0.96, size * 0.06);
+                lowerPlow.rotation.x = -0.22;
+                shield.add(lowerPlow);
+
+                let upperBrow = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+                upperBrow.scale.set(size * 2.48, size * 0.26, size * 0.32);
+                upperBrow.position.set(0, size * 1.04, size * 0.02);
+                upperBrow.rotation.x = 0.18;
+                shield.add(upperBrow);
+
+                [-1, 1].forEach((side) => {
+                    let pylon = new THREE.Mesh(SharedGeo.box, SharedMat.golemShieldFrame);
+                    pylon.scale.set(size * 0.26, size * 2.04, size * 0.30);
+                    pylon.position.set(side * size * 1.24, 0, -size * 0.06);
+                    pylon.rotation.y = -side * 0.34;
+                    shield.add(pylon);
+
+                    let emitter = new THREE.Mesh(SharedGeo.box, SharedMat.golemCore);
+                    emitter.scale.set(size * 0.16, size * 1.46, size * 0.14);
+                    emitter.position.set(side * size * 1.16, 0, size * 0.02);
+                    emitter.rotation.y = -side * 0.34;
+                    shield.add(emitter);
+                });
+
+                let centerPane = new THREE.Mesh(SharedGeo.box, SharedMat.golemShield);
+                centerPane.scale.set(size * 1.72, size * 1.88, size * 0.12);
+                centerPane.position.set(0, size * 0.04, size * 0.08);
+                shield.add(centerPane);
+
+                let leftPane = new THREE.Mesh(SharedGeo.box, SharedMat.golemShield);
+                leftPane.scale.set(size * 0.92, size * 1.78, size * 0.12);
+                leftPane.position.set(-size * 1.08, size * 0.04, -size * 0.10);
+                leftPane.rotation.y = 0.44;
+                shield.add(leftPane);
+
+                let rightPane = new THREE.Mesh(SharedGeo.box, SharedMat.golemShield);
+                rightPane.scale.set(size * 0.92, size * 1.78, size * 0.12);
+                rightPane.position.set(size * 1.08, size * 0.04, -size * 0.10);
+                rightPane.rotation.y = -0.44;
+                shield.add(rightPane);
+
+                let shieldGlow = new THREE.Sprite(SharedMat.golemShieldGlow);
+                shieldGlow.scale.set(size * 5.2, size * 4.0, 1);
+                shieldGlow.position.set(0, size * 0.08, size * 0.22);
+                shield.add(shieldGlow);
+
+                group.add(shield);
+            }
+
+            parts.armL = armL; parts.armR = armR; parts.legL = legL; parts.legR = legR;
+            parts.core = core; parts.shield = shield;
       } else if (type === 'ring_walker') {
 
             let body = new THREE.Mesh(SharedGeo.planetSphere, mat);
@@ -13918,7 +14168,7 @@ startGame(diffMult) {
             bankShininess: 12, bankSpec: 0x182218,
             rimShininess: 8, rimSpec: 0x121212,
             fogOp: 0.15, dirInt: 1.16, ambInt: 0.68,
-            bedHex: 0x0e4f82, shoreY: -17.26, padY: -17.12,
+            bedHex: 0x166aa3, shoreY: -17.26, padY: -17.12,
             portalHex: 0x33ff66, portalSprite: SharedMat.spriteGreen,
             vignette: 'radial-gradient(circle at center, transparent 68%, rgba(14, 24, 8, 0.22) 88%, rgba(5, 10, 3, 0.48) 100%)'
         };
@@ -17085,9 +17335,9 @@ class GameMap {
                 const themeIdx = tIdx;
                 let pitColor, pitEmissive, pitOpacity, pitRoughness, pitMetalness;
                 if (themeIdx === 0) {
-                    pitColor = 0xffffff; pitEmissive = 0x0c4c82; pitOpacity = 0.94; pitRoughness = 0.22; pitMetalness = 0.04;
+                    pitColor = 0xffffff; pitEmissive = 0x1478b8; pitOpacity = 0.94; pitRoughness = 0.56; pitMetalness = 0.02;
                 } else if (themeIdx === 1) {
-                    pitColor = 0xffffff; pitEmissive = 0xff7b29; pitOpacity = 0.98; pitRoughness = 0.36; pitMetalness = 0.12;
+                    pitColor = 0xffffff; pitEmissive = 0xff5512; pitOpacity = 0.99; pitRoughness = 0.96; pitMetalness = 0.0;
                 } else {
                     pitColor = 0x2288d8; pitEmissive = 0x0f4d8a; pitOpacity = 0.96; pitRoughness = 0.45; pitMetalness = 0.05;
                 }
@@ -17095,22 +17345,22 @@ class GameMap {
             const PitMatClass = useMobPit ? THREE.MeshPhongMaterial : THREE.MeshStandardMaterial;
             const pitMatParams = {
                 color: pitColor, emissive: pitEmissive,
-                emissiveIntensity: themeIdx === 1 ? 1.15 : (themeIdx === 0 ? 0.34 : 0.66),
+                emissiveIntensity: themeIdx === 1 ? 1.24 : (themeIdx === 0 ? 0.36 : 0.66),
                 map: liquidTex, emissiveMap: liquidTex,
                 transparent: true, opacity: pitOpacity,
                 depthWrite: false
             };
             if (useMobPit) {
-                pitMatParams.shininess = themeIdx === 1 ? 38 : (themeIdx === 0 ? 24 : 36);
-                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x552208 : (themeIdx === 0 ? 0x0a3b6e : 0x1e4c70));
+                pitMatParams.shininess = themeIdx === 1 ? 4 : (themeIdx === 0 ? 24 : 36);
+                pitMatParams.specular = new THREE.Color(themeIdx === 1 ? 0x090200 : (themeIdx === 0 ? 0x186ea8 : 0x1e4c70));
             } else {
-                pitMatParams.roughness = themeIdx === 0 ? 0.62 : pitRoughness;
+                pitMatParams.roughness = themeIdx === 0 ? 0.58 : pitRoughness;
                 pitMatParams.metalness = themeIdx === 0 ? 0.02 : pitMetalness;
-                pitMatParams.envMapIntensity = themeIdx === 0 ? 0.22 : 0.68;
+                pitMatParams.envMapIntensity = themeIdx === 1 ? 0.02 : (themeIdx === 0 ? 0.20 : 0.45);
             }
             const cachedPitMat = new PitMatClass(pitMatParams);
 
-            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v20_' + themeIdx + (useMobPit ? '_m' : '_d');
+            cachedPitMat.customProgramCacheKey = () => 'pit_liquid_v21_' + themeIdx + (useMobPit ? '_m' : '_d');
             cachedPitMat.onBeforeCompile = (shader) => {
                 shader.uniforms.uTime = InteractiveGrassSystem.uniforms.uTime;
                 shader.uniforms.uPlayerPit = InteractiveGrassSystem.uniforms.uPlayerPit;
@@ -17134,9 +17384,13 @@ class GameMap {
                     float wSw1 = sin(wpPit.x * 0.068 + wpPit.z * 0.042 + uTime * 2.45);
                     float wSw2 = cos(wpPit.z * 0.074 - wpPit.x * 0.038 - uTime * 2.05);
                     transformed.y += (wSw1 * 0.58 + wSw2 * 0.42) * 0.95;
+                    ` : (themeIdx === 1 ? `
+                    float lv1 = sin(wpPit.x * 0.036 + uTime * 0.72 + cos(wpPit.z * 0.032 - uTime * 0.55) * 1.1);
+                    float lv2 = cos(wpPit.z * 0.044 - uTime * 0.64 + sin(wpPit.x * 0.040 + uTime * 0.48) * 1.1);
+                    transformed.y += (lv1 * 0.55 + lv2 * 0.45) * 0.85;
                     ` : `
                     transformed.y += sin(wpPit.x * 0.058 + uTime * 2.0) * cos(wpPit.z * 0.058 - uTime * 1.6) * 0.36;
-                    `}
+                    `)}
                     `
                 );
                 shader.fragmentShader = `
@@ -17220,33 +17474,33 @@ class GameMap {
 
                         // Palette Sorgente Azzurra: azzurro cristallino e vivace calibrato in spazio lineare per Ultra/MEGA
                         float bBal0 = clamp(uBloomActive, 0.0, 1.0);
-                        vec3 deepAbyssCol  = mix(vec3(0.005, 0.125, 0.450), vec3(0.005, 0.120, 0.435), bBal0);
-                        vec3 midLagoonCol  = mix(vec3(0.011, 0.235, 0.690), vec3(0.010, 0.225, 0.665), bBal0);
-                        vec3 brightAquaCol = mix(vec3(0.022, 0.355, 0.850), vec3(0.020, 0.340, 0.820), bBal0);
-                        vec3 fairyGlowCol  = mix(vec3(0.044, 0.455, 0.920), vec3(0.040, 0.435, 0.890), bBal0);
-                        vec3 crestFoamCol  = mix(vec3(0.115, 0.585, 0.960), vec3(0.100, 0.550, 0.930), bBal0);
+                        vec3 deepAbyssCol  = mix(vec3(0.014, 0.190, 0.540), vec3(0.012, 0.180, 0.515), bBal0);
+                        vec3 midLagoonCol  = mix(vec3(0.028, 0.325, 0.760), vec3(0.025, 0.310, 0.730), bBal0);
+                        vec3 brightAquaCol = mix(vec3(0.052, 0.460, 0.900), vec3(0.048, 0.440, 0.870), bBal0);
+                        vec3 fairyGlowCol  = mix(vec3(0.088, 0.570, 0.960), vec3(0.080, 0.545, 0.935), bBal0);
+                        vec3 crestFoamCol  = mix(vec3(0.185, 0.690, 0.985), vec3(0.165, 0.655, 0.960), bBal0);
 
                         vec3 waterCol = mix(deepAbyssCol, midLagoonCol, smoothstep(0.06, 0.54, waveH));
                         waterCol = mix(waterCol, brightAquaCol, smoothstep(0.36, 0.84, waveH * (0.62 + 0.38 * slopeLit)));
 
-                        // Dettaglio texture virato in azzurro luminoso senza sbiancare il fondale
+                        // Dettaglio texture virato in azzurro cielo senza sbiancare il fondale
                         float rawBright = clamp(mix(lA, lB, 0.5), 0.20, 0.94);
-                        vec3 azureTex = vec3(0.005, 0.145, 0.480) + vec3(0.015, 0.200, 0.360) * rawBright;
+                        vec3 azureTex = vec3(0.014, 0.215, 0.560) + vec3(0.036, 0.270, 0.390) * rawBright;
                         waterCol = mix(waterCol, azureTex, 0.26);
 
                         // Modulazione tridimensionale morbida e caustiche azzurre calibrate su Ultra/MEGA
                         waterCol *= mix(0.88, 1.12, slopeLit);
                         waterCol = mix(waterCol, fairyGlowCol, causticMain * mix(0.30, 0.24, bBal0) * (0.85 + 0.15 * fairyShimmer));
-                        waterCol += vec3(0.018, 0.210, 0.420) * (causticSharp * mix(0.24, 0.18, bBal0));
+                        waterCol += vec3(0.038, 0.260, 0.460) * (causticSharp * mix(0.24, 0.18, bBal0));
                         waterCol = mix(waterCol, fairyGlowCol, waveCrest * mix(0.34, 0.26, bBal0));
                         waterCol = mix(waterCol, crestFoamCol, clamp(foamRidge * 0.38 + sunGlint * 0.24, 0.0, mix(0.46, 0.36, bBal0)));
 
                         diffuseColor.rgb = waterCol;
                         totalEmissiveRadiance = mix(
-                            vec3(0.004, 0.095, 0.340),
-                            vec3(0.016, 0.220, 0.540),
+                            vec3(0.012, 0.145, 0.420),
+                            vec3(0.038, 0.300, 0.640),
                             clamp(waveH * 0.45 + causticMain * 0.45 + fairyShimmer * 0.20, 0.0, 1.0)
-                        ) * mix(0.42, 0.28, bBal0) + vec3(0.018, 0.180, 0.380) * (foamRidge * 0.20 + causticSharp * 0.15) * mix(1.0, 0.62, bBal0);
+                        ) * mix(0.42, 0.28, bBal0) + vec3(0.034, 0.230, 0.440) * (foamRidge * 0.20 + causticSharp * 0.15) * mix(1.0, 0.62, bBal0);
 
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
                             float maxR = mix(40.0, 64.0, moveInt);
@@ -17263,44 +17517,65 @@ class GameMap {
                             float rippleStrength = clamp(delicateRings * 0.58 + meniscus * 0.42, 0.0, 0.65) * uPlayerPit.w;
 
                             diffuseColor.rgb *= (1.0 - ringTrough);
-                            vec3 subtleRippleCol = mix(vec3(0.032, 0.400, 0.880), vec3(0.120, 0.620, 0.960), delicateRings);
+                            vec3 subtleRippleCol = mix(vec3(0.068, 0.500, 0.930), vec3(0.195, 0.710, 0.985), delicateRings);
                             diffuseColor.rgb = mix(diffuseColor.rgb, subtleRippleCol, rippleStrength * 0.70);
-                            totalEmissiveRadiance += vec3(0.018, 0.175, 0.380) * rippleStrength * mix(1.0, 0.62, bBal0);
+                            totalEmissiveRadiance += vec3(0.036, 0.230, 0.440) * rippleStrength * mix(1.0, 0.62, bBal0);
                         }
                         vec3 waterBaseCol = diffuseColor.rgb;
                     ` : (themeIdx === 1 ? `
                         float lavaSw1 = sin(vPitWPos.x * 0.036 + uTime * 0.68 + sin(vPitWPos.y * 0.040 - uTime * 0.52) * 1.2);
                         float lavaSw2 = cos(vPitWPos.y * 0.038 - uTime * 0.60 + cos(vPitWPos.x * 0.034 + uTime * 0.48) * 1.2);
                         float flow = 0.5 + 0.5 * lavaSw1 * lavaSw2;
+                        float lGradX = 0.0;
+                        float lGradZ = 0.0;
 
                     #ifdef USE_MAP
-                        vec2 lWarp = vec2(lavaSw1, lavaSw2) * 0.015 + pitRippleGrad * 0.018;
-                        vec2 uvLavaMain = vPitWPos / 145.0 + vec2(uTime * 0.016, uTime * 0.010) + lWarp;
-                        vec2 uvLavaSub  = vPitWPos / 195.0 + vec2(-uTime * 0.009, uTime * 0.013) - lWarp * 0.5;
+                        vec2 lWarp = vec2(lavaSw1, lavaSw2) * 0.016 + pitRippleGrad * 0.018;
+                        vec2 uvLavaMain = vPitWPos / 145.0 + vec2(uTime * 0.014, uTime * 0.009) + lWarp;
+                        vec2 uvLavaSub  = vPitWPos / 195.0 + vec2(-uTime * 0.008, uTime * 0.012) - lWarp * 0.5;
+                        vec2 uvLavaDx   = uvLavaMain + vec2(0.012, 0.0);
+                        vec2 uvLavaDz   = uvLavaMain + vec2(0.0, 0.012);
                         vec3 lMain = ${sampleWaterTex('uvLavaMain')}.rgb;
                         vec3 lSub  = ${sampleWaterTex('uvLavaSub')}.rgb;
+                        vec3 lDx   = ${sampleWaterTex('uvLavaDx')}.rgb;
+                        vec3 lDz   = ${sampleWaterTex('uvLavaDz')}.rgb;
                         float lumMain = dot(lMain, vec3(0.299, 0.587, 0.114));
                         float lumSub  = dot(lSub, vec3(0.299, 0.587, 0.114));
-                        // Preserva nitida la texture primaria lava_water.png usando il secondo strato solo come lieve profondità
-                        vec3 lavaTexCol = mix(lMain, lSub, 0.18);
-                        texLum = lumMain * 0.82 + lumSub * 0.18;
+                        lGradX = dot(lDx, vec3(0.299, 0.587, 0.114)) - lumMain;
+                        lGradZ = dot(lDz, vec3(0.299, 0.587, 0.114)) - lumMain;
+                        vec3 lavaTexCol = mix(lMain, lSub, 0.22);
+                        texLum = lumMain * 0.80 + lumSub * 0.20;
                     #else
                         vec3 lavaTexCol = diffuseColor.rgb;
                     #endif
 
-                        float texRelief = smoothstep(0.06, 0.54, texLum);
-                        float veinHot = smoothstep(0.30, 0.64, texLum) * (0.82 + 0.36 * flow);
+                        float crustField = sin(vPitWPos.x * 0.044 + lavaSw2 * 1.35) * cos(vPitWPos.y * 0.046 - lavaSw1 * 1.25);
+                        float crustCell = 0.5 + 0.5 * crustField;
+                        float emberCell = 0.5 + 0.5 * sin(vPitWPos.x * 0.095 - uTime * 0.42) * cos(vPitWPos.y * 0.092 + uTime * 0.36);
+                        float texRelief = smoothstep(0.08, 0.62, texLum);
+                        float magmaHeat = clamp(texRelief * 0.82 + crustCell * 0.26 - 0.06, 0.0, 1.0);
+                        float moltenMask = smoothstep(0.22, 0.66, magmaHeat);
+                        float fissureRim = smoothstep(0.08, 0.26, magmaHeat) * (1.0 - smoothstep(0.28, 0.56, magmaHeat));
+                        float veinHot = smoothstep(0.42, 0.82, magmaHeat) * (0.82 + 0.28 * emberCell) * (0.84 + 0.30 * flow);
                         float bBalLava = clamp(uBloomActive, 0.0, 1.0);
 
-                        vec3 crustCol = mix(vec3(0.065, 0.014, 0.010), lavaTexCol * 0.52, 0.72);
-                        vec3 magmaBase = lavaTexCol * mix(1.06, 1.32, texRelief);
-                        vec3 hotTint = mix(vec3(0.96, 0.26, 0.02), vec3(1.00, 0.78, 0.20), clamp(veinHot, 0.0, 1.0));
-                        vec3 magmaCol = mix(magmaBase, hotTint, 0.16 + 0.20 * clamp(veinHot, 0.0, 1.0));
+                        // Rilievo 3D delle placche di basalto scuro opaco e fessure incandescenti incise
+                        float bevelSlope = clamp((lGradX * 0.72 + lGradZ * 0.84) * 3.4 + (0.5 - crustCell) * 0.28, -0.35, 0.42);
+                        float crustShade = clamp(0.76 + bevelSlope, 0.34, 1.28);
+                        vec3 crustDark = mix(vec3(0.028, 0.008, 0.006), vec3(0.085, 0.022, 0.012), emberCell * 0.55 + texRelief * 0.45);
+                        vec3 crustCol = mix(crustDark, lavaTexCol * 0.32, 0.42) * crustShade;
+                        crustCol += vec3(0.62, 0.14, 0.01) * fissureRim * 0.45;
 
-                        vec3 lavaFinal = mix(crustCol, magmaCol, smoothstep(0.08, 0.72, texRelief + (flow - 0.5) * 0.12));
-                        diffuseColor.rgb = lavaFinal * mix(0.86, 0.78, bBalLava);
-                        diffuseColor.a = 0.98;
-                        totalEmissiveRadiance = mix(vec3(0.025, 0.005, 0.003), magmaCol * mix(0.76, 0.54, bBalLava), smoothstep(0.18, 0.85, texRelief));
+                        vec3 magmaBase = mix(lavaTexCol * 1.15, vec3(0.86, 0.20, 0.015), 0.30);
+                        vec3 hotCore = mix(vec3(0.95, 0.26, 0.02), vec3(1.00, 0.72, 0.16), clamp(veinHot, 0.0, 1.0));
+                        vec3 magmaCol = mix(magmaBase, hotCore, 0.28 + 0.46 * clamp(veinHot, 0.0, 1.0));
+                        magmaCol += vec3(0.18, 0.06, 0.00) * (1.0 - moltenMask) * emberCell * 0.25;
+
+                        vec3 lavaFinal = mix(crustCol, magmaCol, moltenMask);
+                        diffuseColor.rgb = lavaFinal * mix(0.86, 0.76, bBalLava);
+                        diffuseColor.a = 0.99;
+                        totalEmissiveRadiance = mix(vec3(0.006, 0.001, 0.001), magmaCol * mix(0.84, 0.58, bBalLava), moltenMask)
+                            + vec3(0.58, 0.14, 0.01) * fissureRim * mix(0.52, 0.36, bBalLava);
 
                         if (uPlayerPit.w > 0.01 && pDist < 68.0) {
                             float coreGlow = exp(-pDist * pDist * 0.0055) * (0.75 + 0.25 * sin(uTime * 3.4));
@@ -17385,6 +17660,12 @@ class GameMap {
                     ` : `
                         // Compressione morbida delle alte luci sulla lava: mantiene nitida la texture lava_water.png sotto Bloom e PointLight
                         vec3 lavaLit = gl_FragColor.rgb;
+                        ${themeIdx === 1 ? `
+                        // Preserva profondità tra crosta basaltica opaca e fessure laviche evitando patina grigia piatta
+                        float lavaLuma = dot(lavaLit, vec3(0.299, 0.587, 0.114));
+                        float crustSuppress = 1.0 - smoothstep(0.06, 0.28, lavaLuma);
+                        lavaLit = mix(lavaLit, lavaLit * vec3(0.72, 0.58, 0.54), crustSuppress * 0.65);
+                        ` : ''}
                         float bLava = clamp(uBloomActive, 0.0, 1.0);
                         float lavaCap = mix(0.94, 0.84, bLava);
                         float maxLavaC = max(lavaLit.r, max(lavaLit.g, lavaLit.b));
@@ -17393,6 +17674,8 @@ class GameMap {
                             float overLava = maxLavaC - lavaCap;
                             float compLava = lavaCap + (headLava * overLava) / (headLava + overLava);
                             gl_FragColor.rgb = lavaLit * (compLava / maxLavaC);
+                        } else {
+                            gl_FragColor.rgb = lavaLit;
                         }
                     `}
                     #include <dithering_fragment>
@@ -17448,7 +17731,7 @@ class GameMap {
         }
 
         if (pitAreaGeo) {
-            const bedHex = (themeIdx === 0) ? 0x08467a : ((themeIdx === 1) ? 0x240602 : 0x0d4a80);
+            const bedHex = (themeIdx === 0) ? 0x146aa3 : ((themeIdx === 1) ? 0x240602 : 0x0d4a80);
             const pitBedMat = new THREE.MeshBasicMaterial({ color: bedHex });
             const meshPitBed = new THREE.Mesh(pitAreaGeo, pitBedMat);
             meshPitBed.position.set(0, -24.2, 0);
@@ -23098,9 +23381,8 @@ class Enemy extends Entity {
         this._wasBuffedLastFrame = false;
 
         if (type === 'dark_prophet') {
-            this.maxLinks = 1;
-            if (level >= 9) this.maxLinks = 2;
-            if (level >= 15) this.maxLinks = 3;
+            const prophetEffFloor = Math.max(Math.floor(level || 1), (typeof Game !== 'undefined' && Game.floor) ? Game.floor : 1);
+            this.maxLinks = Math.min(3, prophetEffFloor >= 15 ? 3 : (prophetEffFloor >= 9 ? 2 : 1));
 
             if (!this.beams) {
                 this.beams = []; this.beamGlows = []; this.targetShields = [];
@@ -23258,6 +23540,8 @@ class Enemy extends Entity {
         if (this.modelParts) {
             if (this.modelParts.armL) this.modelParts.armL.rotation.set(0, 0, 0);
             if (this.modelParts.armR) this.modelParts.armR.rotation.set(0, 0, 0);
+            if (this.modelParts.legL) this.modelParts.legL.rotation.set(0, 0, 0);
+            if (this.modelParts.legR) this.modelParts.legR.rotation.set(0, 0, 0);
             if (this.type === 'orc' && this.modelParts.club) {
                 this.modelParts.club.visible = true;
             }
@@ -24211,8 +24495,14 @@ class Enemy extends Entity {
                     }
                 }
 
+                const linkCap = Math.min(3, this.maxLinks || 1);
+                while (this.buffTargets.length > linkCap) {
+                    let excess = this.buffTargets.pop();
+                    if (excess) excess.isProphetBuffed = false;
+                }
+
                 let nearbyP = Game.enemyGrid.findNearby(this, BEAM_ACQUIRE_RANGE);
-                if (this.buffTargets.length >= this.maxLinks) {
+                if (this.buffTargets.length >= linkCap) {
                     let lowestIdx = -1, lowestPrio = 99;
                     for (let i = 0; i < this.buffTargets.length; i++) {
                         let p = getTargetPriority(this.buffTargets[i]);
@@ -24233,8 +24523,8 @@ class Enemy extends Entity {
                     }
                 }
 
-                for (let prio = 4; prio >= 1 && this.buffTargets.length < this.maxLinks; prio--) {
-                    for (let i = 0; i < nearbyP.length && this.buffTargets.length < this.maxLinks; i++) {
+                for (let prio = 4; prio >= 1 && this.buffTargets.length < linkCap; prio--) {
+                    for (let i = 0; i < nearbyP.length && this.buffTargets.length < linkCap; i++) {
                         let e = nearbyP[i];
                         if (getTargetPriority(e) === prio && !e.isProphetBuffed && !this.buffTargets.includes(e) && MathUtils.distanceSq(this, e) <= BEAM_ACQUIRE_SQ) {
                             this.buffTargets.push(e);
@@ -25061,7 +25351,7 @@ class Enemy extends Entity {
                     }
 
                   if (this.telegraphTimer <= 0) {
-                        this.ringRecoverTimer = 3.0;
+                        this.ringRecoverTimer = 5.0;
                         this.modelParts.ringPivot.visible = false;
                         this.modelParts.fireRingMat.color.setHex(0xff1a1a);
                         this.modelParts.fireRingCoreMat.color.setHex(0xff3318);
@@ -25264,12 +25554,23 @@ if (this.type === 'trapper') {
                     if (this.modelParts && this.modelParts.wheelGroup) {
                         this.modelParts.wheelGroup.rotation.x += dt * 7.5;
                     }
-                }else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin' && this.type !== 'trapper') {
+                } else if (this.type === 'golem') {
+                    this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 2.2;
+                    this.mesh.rotation.z = Math.cos(walkPhase) * 0.045;
+                    if (this.modelParts.legL && this.modelParts.legR) {
+                        this.modelParts.legL.rotation.x *= 0.62;
+                        this.modelParts.legR.rotation.x *= 0.62;
+                    }
+                    if (this.modelParts.core) {
+                        this.modelParts.core.rotation.y += dt * 1.8;
+                        this.modelParts.core.rotation.x += dt * 1.1;
+                    }
+                } else if (this.type !== 'mage' && this.type !== 'pyromancer' && this.type !== 'dark_prophet' && this.type !== 'goblin' && this.type !== 'trapper') {
                     this.mesh.position.y = Math.abs(Math.sin(walkPhase)) * 4.5;
                     this.mesh.rotation.z = Math.cos(walkPhase) * 0.11;
                 }
                 if (this.modelParts.armL && this.modelParts.armR && this.type !== 'pyromancer' && this.type !== 'trapper') {
-                    let armSwing = Math.sin(walkPhase) * 0.65;
+                    let armSwing = Math.sin(walkPhase) * (this.type === 'golem' ? 0.29 : 0.65);
                     this.modelParts.armL.rotation.x = armSwing;
                     this.modelParts.armR.rotation.x = -armSwing;
                 }
@@ -25496,7 +25797,7 @@ if (this.type === 'trapper') {
             Game.getHazard().spawn(this.x, this.y, wallMaxRadius, wallDuration, actualDmg * 1.15, 0xff1e00, 'enemy_firewall', fireAngle, this);
             Game.spawnLightFlash(this.x, this.y, 0xff2200, 4.5, 340, 0.22);
             AudioEngine.playFireWall();
-            // Garantisce il completamento dell'intera finestra vulnerabile di 3.8s prima della ricarica
+            // Rateo di attacco invariato (finestra di ricarica scudo estesa a 5.0s)
             this.attackCooldown = Math.max(4.20, 4.60 * cdMult);
         }
         else if (this.type === 'orc' && !this.isBerserk) {
@@ -25882,6 +26183,10 @@ if (this.type === 'roller') {
                     else debrisType = 'roller_shell';
                     if (child.material === SharedMat.rollerSpike) pieceColor = 0xe2e8f0;
                     else if (child.material === SharedMat.enemyDark) pieceColor = 0x444444;
+                } else if (this.type === 'golem') {
+                    if (child.material === SharedMat.golemArmor) pieceColor = 0x3b4859;
+                    else if (child.material === SharedMat.golemShieldFrame) pieceColor = 0x1e293b;
+                    else if (child.material === SharedMat.golemCore || child.material === SharedMat.golemHead) pieceColor = 0x00ffff;
                 }
                 if (pMods.miserPact && pMods.bloodthirst) pieceColor = (pieceIdx % 2 === 0) ? 0xffd700 : 0xaa0011;
                 else if (pMods.miserPact) pieceColor = 0xffd700;
@@ -28603,9 +28908,9 @@ const Preloader = {
 
                     const foam = Math.pow(Math.max(0.0, waveSum * 0.5 + 0.5), 4.0);
 
-                    const r = Math.min(255, Math.floor(10 + (waveSum * 0.5 + 0.5) * 35 + caust * 140 + foam * 180));
-                    const g = Math.min(255, Math.floor(65 + (waveSum * 0.5 + 0.5) * 115 + caust * 190 + foam * 230));
-                    const b = Math.min(255, Math.floor(120 + (waveSum * 0.5 + 0.5) * 125 + caust * 135 + foam * 240));
+                    const r = Math.min(255, Math.floor(24 + (waveSum * 0.5 + 0.5) * 48 + caust * 145 + foam * 185));
+                    const g = Math.min(255, Math.floor(108 + (waveSum * 0.5 + 0.5) * 124 + caust * 195 + foam * 235));
+                    const b = Math.min(255, Math.floor(165 + (waveSum * 0.5 + 0.5) * 90 + caust * 120 + foam * 240));
 
                     const idx = (y * 256 + x) * 4;
                     d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = 255;
